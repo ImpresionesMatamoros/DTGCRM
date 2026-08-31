@@ -59,7 +59,9 @@ button{cursor:pointer;}
 .brand{
   display:flex; align-items:baseline; gap:6px; padding:2px 2px 6px;
   font-family:var(--font-mono); letter-spacing:.02em;
+  background:none; border:none; cursor:pointer; text-align:left; border-radius:var(--radius-s);
 }
+.brand:hover{ opacity:.75; }
 .brand-mark{color:var(--accent); font-weight:600;}
 .brand-name{color:var(--text); font-weight:600; font-size:13px;}
 .btn{
@@ -88,6 +90,7 @@ button{cursor:pointer;}
   color:var(--text-muted); font-size:13px; background:none; border:none; width:100%; text-align:left;
 }
 .nav-stub:hover{background:var(--surface-3); color:var(--text);}
+.nav-stub.active{background:var(--surface); color:var(--text); box-shadow:var(--shadow);}
 .nav-stub .tag{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); border:1px solid var(--border); border-radius:999px; padding:1px 6px;}
 .sidebar-scroll{flex:1; overflow-y:auto; padding:6px 8px 10px;}
 .group-label{
@@ -139,6 +142,11 @@ button{cursor:pointer;}
   display:flex; flex-direction:column; gap:8px; flex-shrink:0;
 }
 .ticket-header-top{display:flex; align-items:center; gap:10px; justify-content:space-between;}
+.home-header{
+  border-bottom:1px solid var(--border); padding:14px 22px; background:var(--surface);
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-shrink:0;
+}
+.home-header h1{font-size:15px; margin:0; color:var(--text); font-weight:600;}
 .ticket-id{font-family:var(--font-mono); color:var(--text-faint); font-size:12px;}
 .ticket-header-actions{display:flex; align-items:center; gap:4px;}
 .field-grid{display:flex; flex-wrap:wrap; gap:6px 4px; align-items:center;}
@@ -155,6 +163,12 @@ button{cursor:pointer;}
 .totals-line{font-size:12.5px; color:var(--text-muted); font-family:var(--font-mono);}
 .totals-line .known{color:var(--text); font-weight:600;}
 .totals-line .pending{color:var(--gold);}
+.totals-link{
+  background:none; border:none; padding:4px 2px; margin:-4px 0; font:inherit; color:inherit; cursor:pointer;
+  border-bottom:1px dashed var(--text-faint); min-height:28px;
+}
+.totals-link:hover{border-bottom-color:var(--accent);}
+.totals-link.pending{color:var(--gold); border-bottom-color:var(--gold);}
 
 .thread{flex:1; overflow-y:auto; padding:16px 22px 8px;}
 .thread-item{display:flex; gap:10px; padding:7px 0; max-width:640px;}
@@ -173,6 +187,53 @@ button{cursor:pointer;}
 .thread-text{font-size:13.5px; color:var(--text); white-space:pre-wrap; word-break:break-word;}
 .thread-sub{font-size:12.5px; color:var(--text-muted); font-family:var(--font-mono); margin-top:1px;}
 .thread-img{margin-top:6px; max-width:260px; border-radius:var(--radius-m); border:1px solid var(--border); display:block;}
+
+/* Mensajes efímeros (/help, /estado, /pendientes, /dinero…): viven dentro
+   del mismo hilo que las notas/productos/pagos, pero se distinguen a
+   propósito — borde punteado, sin punto de color sólido — para que sea
+   obvio de un vistazo que esto es una consulta momentánea, no algo
+   guardado. */
+.thread-dot.ephemeral{background:transparent; border:1.5px dashed var(--text-faint); width:7px; height:7px;}
+.ephemeral-item .thread-meta{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.ephemeral-dismiss{font-size:14px; line-height:1; padding:2px 7px;}
+.ephemeral-card{
+  border:1px dashed var(--border); border-radius:var(--radius-m); background:var(--surface-2);
+  padding:10px 12px;
+}
+.ephemeral-title{font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px;}
+.ephemeral-row{font-size:12.5px; color:var(--text-muted); margin-bottom:3px;}
+.ephemeral-row strong{color:var(--text);}
+.ephemeral-sub{font-size:11.5px; color:var(--text-faint); margin-top:4px;}
+.help-cmd-btn, .help-example-btn{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left; box-sizing:border-box;
+  border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text);
+  padding:9px 10px; margin-bottom:5px; font-size:12.5px; min-height:36px; cursor:pointer;
+}
+.help-cmd-btn:hover, .help-example-btn:hover{background:var(--surface-3); border-color:var(--accent);}
+.help-cmd-btn code{font-family:var(--font-mono); color:var(--accent); flex-shrink:0;}
+.help-cmd-btn .desc{color:var(--text-muted);}
+.help-example-btn{font-family:var(--font-mono); color:var(--text-muted);}
+
+/* Vista editable de productos (sección 7) — dentro de un mensaje efímero,
+   así que nunca compite por espacio con un módulo aparte. Grid de 4
+   columnas: descripción se estira, cantidad/precio angostos, total fijo. */
+.producto-edit-row{
+  display:grid; grid-template-columns:1fr 56px 84px 84px; gap:6px; align-items:center; margin-bottom:6px;
+}
+.producto-edit-header{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); margin-bottom:4px;
+}
+.producto-edit-row input{
+  border:1px solid var(--border); border-radius:var(--radius-s); padding:7px 8px; font-size:12.5px;
+  background:var(--surface); color:var(--text); min-height:32px; width:100%; box-sizing:border-box;
+}
+.producto-edit-row .pe-total{font-family:var(--font-mono); font-size:12.5px; text-align:right; color:var(--text);}
+.producto-edit-row .pe-total.pending{color:var(--gold);}
+@media (max-width:520px){
+  .producto-edit-row{grid-template-columns:1fr; gap:4px; border-bottom:1px dashed var(--border); padding-bottom:8px;}
+  .producto-edit-header{display:none;}
+  .producto-edit-row .pe-total{text-align:left;}
+}
 .prod-toggle{
   display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; flex-shrink:0;
 }
@@ -195,6 +256,16 @@ button{cursor:pointer;}
 .task-extra{color:var(--text-faint); font-size:11px; white-space:nowrap;}
 
 .composer-wrap{border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; position:relative;}
+/* Preview en vivo de /producto (sección 6): mismo parser que guarda, en
+   modo solo-lectura — se actualiza con cada tecla, nunca toca datos.
+   Colores discretos para distinguir cantidad/descripción/precio de un
+   vistazo, sin competir visualmente con el compositor. */
+.producto-preview{padding:2px 14px 8px; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);}
+.producto-preview[hidden]{display:none;}
+.producto-preview .pv-qty{color:var(--cyan); font-weight:600;}
+.producto-preview .pv-desc{color:var(--text);}
+.producto-preview .pv-price, .producto-preview .pv-total{color:var(--accent); font-weight:600;}
+.producto-preview .pv-pending{color:var(--gold); font-weight:600;}
 .popover{
   position:absolute; bottom:100%; left:20px; margin-bottom:8px; background:var(--surface); border:1px solid var(--border);
   border-radius:var(--radius-m); box-shadow:var(--shadow); padding:10px; width:280px; z-index:20;
@@ -244,8 +315,13 @@ button{cursor:pointer;}
   .sidebar{position:fixed; inset:0 auto 0 0; z-index:30; transform:translateX(-100%); transition:transform .18s ease;}
   .sidebar.open{transform:translateX(0);}
   .sidebar-toggle{display:inline-flex!important;}
+  .mobile-topbar{display:flex!important;}
+  .sidebar-backdrop{display:block!important;}
 }
-.sidebar-toggle{display:none; margin-right:4px;}
+.sidebar-toggle{display:none; margin-right:4px; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font-size:16px; cursor:pointer;}
+.mobile-topbar{display:none; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--surface);}
+.mobile-topbar-brand{font-weight:600; font-size:13.5px;}
+.sidebar-backdrop{display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:25;}
 .fatal-banner{
   background:var(--danger-soft); color:var(--danger); font-size:12.5px; font-weight:600;
   padding:7px 20px; border-bottom:1px solid var(--border); text-align:center;
@@ -269,6 +345,10 @@ button{cursor:pointer;}
 .doc-card-total{ font-family:var(--font-mono); font-weight:600; font-size:14.5px; color:var(--text); margin-top:2px; }
 .doc-card-meta{ font-size:11px; color:var(--text-faint); margin-top:2px; }
 .doc-card-link{ font-size:12px; color:var(--accent); font-weight:600; margin-top:4px; }
+.doc-badge{ font-size:12.5px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; }
+.doc-new-actions{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+.doc-new-actions .help-cmd-btn{ width:auto; flex:1 1 140px; justify-content:center; }
+@media (max-width:520px){ .doc-new-actions{ flex-direction:column; } .doc-new-actions .help-cmd-btn{ width:100%; } }
 
 /* ---------- documento comercial: elección de tipo + formulario ---------- */
 .doc-type-choice{ display:flex; flex-direction:column; gap:6px; }
@@ -282,43 +362,60 @@ button{cursor:pointer;}
 .doc-pending-note{ font-size:11.5px; color:var(--gold); }
 .doc-total-preview{ font-family:var(--font-mono); font-weight:600; font-size:13.5px; border-top:1px solid var(--border); padding-top:6px; margin-top:2px; }
 
-/* ---------- documento comercial: modal de vista limpia ---------- */
+/* ---------- documento comercial: modal + "hoja" con look de papel ----------
+   La barra de acciones (.doc-modal-top) respeta el tema de la app; la hoja
+   (.doc-paper) NO — siempre se ve clara/impresa, igual en modo oscuro,
+   porque es exactamente lo que el cliente recibe impreso o en PDF. */
 .doc-modal-overlay{
   position:fixed; inset:0; background:rgba(0,0,0,.42); z-index:60;
   display:flex; align-items:center; justify-content:center; padding:24px;
 }
 .doc-modal{
   background:var(--surface); border-radius:var(--radius-l); box-shadow:var(--shadow);
-  width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:28px 32px;
-  display:flex; flex-direction:column; gap:14px;
+  width:100%; max-width:560px; max-height:90vh; overflow-y:auto; padding:16px 16px 0;
+  display:flex; flex-direction:column; gap:12px;
 }
-.doc-modal-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.doc-modal-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:0 4px; }
 .doc-modal-back{ font-size:12.5px; color:var(--text-muted); background:none; border:none; cursor:pointer; padding:4px 0; }
 .doc-modal-back:hover{ color:var(--text); }
-.doc-modal-actions{ display:flex; gap:6px; }
-.doc-modal-brand{ font-family:var(--font-mono); font-size:11px; letter-spacing:.04em; color:var(--text-faint); text-transform:uppercase; }
-.doc-modal-heading{ font-size:19px; font-weight:600; color:var(--text); }
-.doc-modal-sub{ font-size:12.5px; color:var(--text-muted); }
-.doc-modal-table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
-.doc-modal-table th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); font-weight:600; padding:0 0 6px; border-bottom:1px solid var(--border); }
-.doc-modal-table td{ padding:7px 0; border-bottom:1px solid var(--border); color:var(--text); }
-.doc-modal-table td.num, .doc-modal-table th.num{ text-align:right; font-family:var(--font-mono); }
-.doc-modal-total-row td{ border-bottom:none; font-weight:600; font-size:15px; padding-top:10px; }
-.doc-modal-notes{ font-size:12.5px; color:var(--text-muted); white-space:pre-wrap; }
-.doc-modal-pending{ color:var(--gold); font-size:11.5px; }
+.doc-modal-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+
+.doc-paper{
+  --pk-ink:#211F1A; --pk-muted:#726C5C; --pk-faint:#A39C89; --pk-line:#E4E0D4; --pk-accent:#9C1458;
+  background:#FFFFFF; color:var(--pk-ink); border:1px solid var(--pk-line); border-radius:var(--radius-m);
+  padding:26px 24px 22px; margin-bottom:16px; font-family:var(--font-sans);
+}
+.doc-paper-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; border-bottom:2px solid var(--pk-accent); padding-bottom:14px; }
+.doc-paper-brand{ font-size:19px; font-weight:700; letter-spacing:.01em; }
+.doc-paper-tagline{ font-size:11.5px; color:var(--pk-muted); margin-top:2px; }
+.doc-paper-type{ text-align:right; }
+.doc-paper-type-label{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--pk-accent); }
+.doc-paper-type-num{ font-family:var(--font-mono); font-size:15px; font-weight:600; margin-top:2px; }
+.doc-paper-meta{ display:flex; gap:28px; flex-wrap:wrap; margin:14px 0 4px; }
+.doc-paper-meta .field-label{ color:var(--pk-faint); display:block; margin-bottom:2px; }
+.doc-paper .doc-modal-table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+.doc-paper .doc-modal-table th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--pk-faint); font-weight:600; padding:0 0 6px; border-bottom:1px solid var(--pk-line); }
+.doc-paper .doc-modal-table td{ padding:7px 0; border-bottom:1px solid var(--pk-line); color:var(--pk-ink); }
+.doc-paper .doc-modal-table td.num, .doc-paper .doc-modal-table th.num{ text-align:right; font-family:var(--font-mono); }
+.doc-paper .doc-modal-total-row td{ border-bottom:none; font-weight:700; font-size:15.5px; padding-top:10px; }
+.doc-paper-notes{ font-size:12.5px; color:var(--pk-muted); white-space:pre-wrap; margin-top:14px; border-top:1px solid var(--pk-line); padding-top:10px; }
+.doc-paper-notes .field-label{ color:var(--pk-faint); display:block; margin-bottom:3px; }
+.doc-paper-foot{ font-size:11px; color:var(--pk-faint); text-align:center; margin-top:20px; }
+.doc-modal-pending{ color:#9C6A08; font-size:11.5px; }
 
 @media print{
   body > *:not(.doc-modal-overlay){ display:none!important; }
   .doc-modal-overlay{ position:static; background:none; padding:0; display:block; }
-  .doc-modal{ box-shadow:none; max-width:none; max-height:none; width:auto; border-radius:0; padding:0; }
-  .doc-modal-back, .doc-modal-actions{ display:none!important; }
+  .doc-modal{ box-shadow:none; max-width:none; max-height:none; width:auto; border-radius:0; padding:0; overflow:visible; }
+  .doc-modal-top{ display:none!important; }
+  .doc-paper{ border:none; margin-bottom:0; padding:0; }
 }
 
 /* ---------- slash commands ---------- */
 .slash-menu{
   position:absolute; bottom:100%; left:20px; margin-bottom:8px; background:var(--surface);
   border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);
-  width:260px; padding:6px; z-index:20;
+  width:260px; padding:6px; z-index:20; max-height:min(360px, 60vh); overflow-y:auto;
 }
 .slash-menu-item{
   display:flex; align-items:baseline; gap:8px; width:100%; text-align:left; padding:7px 8px; border:none;
@@ -327,14 +424,6 @@ button{cursor:pointer;}
 .slash-menu-item.active, .slash-menu-item:hover{ background:var(--surface-3); }
 .slash-menu-item code{ font-family:var(--font-mono); color:var(--accent); font-weight:600; }
 .slash-menu-item span.desc{ color:var(--text-muted); font-size:12px; }
-.slash-help{
-  position:absolute; bottom:100%; left:20px; right:20px; margin-bottom:8px; background:var(--surface);
-  border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);
-  padding:12px 14px; font-size:12.5px; color:var(--text); z-index:20; max-height:220px; overflow-y:auto;
-}
-.slash-help code{ font-family:var(--font-mono); color:var(--accent); }
-.slash-help-row{ margin-bottom:6px; }
-.slash-help-row .ex{ color:var(--text-muted); font-size:12px; margin-left:2px; }
 .slash-confirm{
   position:absolute; bottom:100%; left:20px; margin-bottom:8px; background:var(--surface);
   border:1px solid var(--accent); border-radius:var(--radius-m); box-shadow:var(--shadow);
@@ -357,10 +446,11 @@ var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
 
 var sb = null;
-var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [] };
+var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
   docDraft: null, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
-  pendingConfirm: null, slashHelp: null, ephemeralCard: null };
+  pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
+  clienteEditDraft: null, docsListOpen: false };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 
@@ -414,6 +504,27 @@ async function ensureSession(){
   return signed.data.session;
 }
 
+/* La tabla clientes es opcional hasta que se aplique la migración 0005 —
+   si todavía no existe, la app sigue funcionando igual que antes (solo los
+   comandos /cliente y /editarcliente lo dirán claramente en vez de romper
+   el arranque de toda la app). */
+async function fetchClientes(){
+  try{
+    var res = await sb.from("clientes").select("*");
+    if(res.error) throw res.error;
+    return { rows: res.data || [], missing: false };
+  }catch(e){
+    return { rows: [], missing: true };
+  }
+}
+function mapClienteRow(row){
+  return {
+    id: row.id, nombre: row.nombre || "", empresa: row.empresa || "", telefono: row.telefono || "",
+    email: row.email || "", notasComerciales: row.notas_comerciales || "", preautorizado: !!row.preautorizado,
+    createdAt: row.created_at
+  };
+}
+
 async function fetchAllState(){
   var results = await Promise.all([
     sb.from("tickets").select("*"),
@@ -428,12 +539,13 @@ async function fetchAllState(){
   var ticketsRows = results[0].data, productosRows = results[1].data, tareasRows = results[2].data,
       pagosRows = results[3].data, bitacoraRows = results[4].data, settingsRows = results[5].data,
       documentosRows = results[6].data;
+  var clientesInfo = await fetchClientes();
 
   var byTicket = {};
   ticketsRows.forEach(function(row){
     byTicket[row.id] = {
       id: row.id, seq: row.seq, createdAt: row.created_at, lastActivityAt: row.last_activity_at,
-      pinned: row.pinned, cliente: row.cliente || "", queSigue: row.que_sigue || "",
+      pinned: row.pinned, cliente: row.cliente || "", clienteId: row.cliente_id || null, queSigue: row.que_sigue || "",
       responsable: row.responsable || "", fechaAtencion: row.fecha_atencion || "", fechaCompromiso: row.fecha_compromiso || "",
       productos: [], tareas: [], pagos: [], documentos: [], thread: []
     };
@@ -464,11 +576,23 @@ async function fetchAllState(){
     if(row.key === "que_sigue_options") settings.queSigueOptions = row.values || [];
     if(row.key === "team_names") settings.teamNames = row.values || [];
   });
-  return { meta: settings, tickets: Object.keys(byTicket).map(function(k){ return byTicket[k]; }) };
+  return {
+    meta: settings,
+    tickets: Object.keys(byTicket).map(function(k){ return byTicket[k]; }),
+    clientes: clientesInfo.rows.map(mapClienteRow),
+    clientesTableMissing: clientesInfo.missing
+  };
 }
 
 var refreshInFlight = null;
-async function refreshFromServer(){
+/* opts.refocus: la próxima vez que esto termine en un render(), el
+   compositor debe quedar vacío y enfocado — lo pide cualquier mutación
+   disparada desde un comando o desde el botón "+", nunca las
+   actualizaciones de fondo (realtime) ni las ediciones directas de campos
+   del encabezado. Ver applyFocus(). */
+async function refreshFromServer(opts){
+  opts = opts || {};
+  if(opts.refocus) UI.pendingFocus = UI.pendingFocus || "composer";
   if(refreshInFlight) return refreshInFlight;
   refreshInFlight = (async function(){
     try{
@@ -489,7 +613,7 @@ var realtimeTimer = null;
 function scheduleRefresh(){ clearTimeout(realtimeTimer); realtimeTimer = setTimeout(refreshFromServer, 300); }
 function subscribeRealtime(){
   var channel = sb.channel("dtg-changes");
-  ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos"].forEach(function(table){
+  ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes"].forEach(function(table){
     channel.on("postgres_changes", { event: "*", schema: "public", table: table }, scheduleRefresh);
   });
   channel.subscribe();
@@ -500,6 +624,35 @@ function subscribeRealtime(){
 function findTicket(id){
   for(var i=0;i<STATE.tickets.length;i++){ if(STATE.tickets[i].id===id) return STATE.tickets[i]; }
   return null;
+}
+
+/* Un solo punto de entrada para "cambiar de ticket" (clic en la lista, J/K,
+   /ticket, crear uno nuevo) y otro para "ir a Inicio" (logo, nav, /help
+   fuera de ticket que decide navegar) — así el reseteo de popovers/estado
+   y el foco de vuelta al compositor nunca se hace distinto según quién lo
+   dispare. */
+function openTicketById(id){
+  UI.selectedTicketId = id;
+  UI.composer = null;
+  UI.docDraft = null;
+  UI.slashMenuOpen = false;
+  UI.pendingConfirm = null;
+  UI.pendingFocus = "composer";
+  UI.sidebarOpen = false; /* en móvil el sidebar es un cajón: elegir un ticket lo cierra */
+  saveUi();
+  render();
+}
+function goHome(){
+  UI.selectedTicketId = null;
+  UI.composer = null;
+  UI.docDraft = null;
+  UI.viewingDocId = null;
+  UI.slashMenuOpen = false;
+  UI.pendingConfirm = null;
+  UI.pendingFocus = "composer";
+  UI.sidebarOpen = false; /* mismo criterio: ir a Inicio también cierra el cajón en móvil */
+  saveUi();
+  render();
 }
 
 async function rememberName(name){
@@ -567,18 +720,12 @@ function renderTicketRow(t){
   );
 }
 
-function renderSidebarList(){
+/* Una sola función construye el orden agrupado (fijados + Hoy/Ayer/…) y
+   otra aplana ese mismo orden para búsqueda o navegación por teclado — el
+   renderer y J/K comparten exactamente el mismo criterio, nunca dos
+   ordenamientos que puedan desalinearse. */
+function groupedTicketOrder(){
   var tickets = STATE.tickets.slice();
-  if(UI.search.trim()){
-    var q = UI.search.trim();
-    var filtered = tickets.filter(function(t){ return matchesSearch(t, q); });
-    filtered.sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
-    if(!filtered.length) return '<div class="empty-list">Sin resultados para “' + escapeHtml(q) + '”.</div>';
-    return filtered.map(renderTicketRow).join("");
-  }
-  if(!tickets.length){
-    return '<div class="empty-list">Todavía no hay tickets. Crea el primero arriba.</div>';
-  }
   var pinned = tickets.filter(function(t){ return t.pinned; })
     .sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
   var rest = tickets.filter(function(t){ return !t.pinned; });
@@ -587,13 +734,39 @@ function renderSidebarList(){
   Object.keys(groups).forEach(function(k){
     groups[k].sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
   });
+  return { pinned: pinned, groups: groups };
+}
+function visualTicketOrder(){
+  if(UI.search.trim()){
+    var q = UI.search.trim();
+    var filtered = STATE.tickets.filter(function(t){ return matchesSearch(t, q); });
+    filtered.sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
+    return filtered;
+  }
+  var g = groupedTicketOrder();
+  var ordered = g.pinned.slice();
+  ["Hoy","Ayer","Últimos días","Anteriores"].forEach(function(k){ ordered = ordered.concat(g.groups[k]); });
+  return ordered;
+}
+
+function renderSidebarList(){
+  if(UI.search.trim()){
+    var q = UI.search.trim();
+    var ordered = visualTicketOrder();
+    if(!ordered.length) return '<div class="empty-list">Sin resultados para “' + escapeHtml(q) + '”.</div>';
+    return ordered.map(renderTicketRow).join("");
+  }
+  if(!STATE.tickets.length){
+    return '<div class="empty-list">Todavía no hay tickets. Crea el primero arriba.</div>';
+  }
+  var g = groupedTicketOrder();
   var html = "";
-  if(pinned.length){
-    html += '<div class="group-label">Fijados</div>' + pinned.map(renderTicketRow).join("");
+  if(g.pinned.length){
+    html += '<div class="group-label">Fijados</div>' + g.pinned.map(renderTicketRow).join("");
   }
   ["Hoy","Ayer","Últimos días","Anteriores"].forEach(function(k){
-    if(groups[k].length){
-      html += '<div class="group-label">' + k + '</div>' + groups[k].map(renderTicketRow).join("");
+    if(g.groups[k].length){
+      html += '<div class="group-label">' + k + '</div>' + g.groups[k].map(renderTicketRow).join("");
     }
   });
   return html || '<div class="empty-list">Sin resultados.</div>';
@@ -603,13 +776,14 @@ function renderSidebar(){
   var stubs = ["Atención","Kanban","Producción","Cuentas por cobrar","Informes"];
   return (
     '<div class="sidebar-top">' +
-      '<div class="brand"><span class="brand-mark">&#9679;</span><span class="brand-name">Design To Go</span></div>' +
+      '<button class="brand" data-action="go-home" title="Ir a Inicio"><span class="brand-mark">&#9679;</span><span class="brand-name">Design To Go</span></button>' +
       '<button class="btn btn-primary" data-action="new-ticket">+ Nuevo ticket</button>' +
       '<div class="search-wrap">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
         '<input type="text" placeholder="Buscar tickets" id="search-input" value="' + escapeHtml(UI.search) + '">' +
       "</div>" +
       '<ul class="nav-stubs">' +
+        '<button class="nav-stub' + (!UI.selectedTicketId?" active":"") + '" data-action="go-home"><span>Inicio</span></button>' +
         stubs.map(function(s){
           return '<button class="nav-stub" data-action="stub" data-name="' + s + '"><span>' + s + '</span><span class="tag">pronto</span></button>';
         }).join("") +
@@ -709,8 +883,13 @@ function renderTicketHeader(t){
   var totals = computeTotals(t);
   var totalsLine = "";
   if(t.productos.length){
-    totalsLine = '<div class="totals-line">Total conocido: <span class="known">' + fmtMoney(totals.known) + "</span>" +
-      (totals.pending ? ' <span class="pending">+ ' + totals.pending + (totals.pending===1?" producto pendiente de precio":" productos pendientes de precio") + "</span>" : "") +
+    /* "Total conocido" y "N pendientes de precio" son botones, no solo
+       texto (sección 7): tocarlos abre la misma vista de productos —
+       completa o filtrada a los que faltan precio — para poder resolverlos
+       ahí mismo en vez de tener que adivinar cómo llegar a ellos. */
+    totalsLine = '<div class="totals-line">' +
+      '<button class="totals-link" data-action="show-productos" data-ticket="' + t.id + '" data-filter="all">Total conocido: <span class="known">' + fmtMoney(totals.known) + "</span></button>" +
+      (totals.pending ? ' <button class="totals-link pending" data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending">+ ' + totals.pending + (totals.pending===1?" producto pendiente de precio":" productos pendientes de precio") + "</button>" : "") +
       "</div>";
   }
   return (
@@ -718,6 +897,7 @@ function renderTicketHeader(t){
       '<div class="ticket-header-top">' +
         '<span class="ticket-id">#' + t.seq + " · creado " + fmtDateShort(t.createdAt) + "</span>" +
         '<div class="ticket-header-actions">' +
+          '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">&#128196; Documentos · ' + t.documentos.length + "</button>" +
           '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
         "</div>" +
       "</div>" +
@@ -838,9 +1018,11 @@ function renderComposer(){
   else if(UI.composer === "doc_form") pop = docForm();
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.pendingConfirm) pop = slashConfirmBanner();
-  else if(UI.slashHelp) pop = slashHelpPanel();
   else if(UI.slashMenuOpen) pop = slashMenu();
-  else if(UI.ephemeralCard) pop = renderEphemeralCard();
+  /* /help, /estado, /pendientes, /dinero ya NO son popovers flotantes —
+     viven como mensajes efímeros dentro del hilo (ver renderEphemeralEntry),
+     igual que una consola. Aquí solo quedan los overlays de "interacción"
+     momentánea: confirmación y autocomplete. */
   var plusBtn = hasTicket ? '<button class="composer-plus" data-action="toggle-menu" title="Agregar">+</button>' : "";
   var placeholder = hasTicket ? "Escribe / para comandos (nota, producto, pago…)" : "Escribe / para comandos (buscar, ticket, ayuda…)";
   return (
@@ -849,8 +1031,32 @@ function renderComposer(){
         '<textarea id="composer-input" rows="1" placeholder="' + placeholder + '"></textarea>' +
         '<button class="composer-send" id="composer-send" data-action="send-note" disabled>&#8593;</button>' +
       "</div>" +
+      '<div class="producto-preview" id="producto-preview" hidden></div>' +
     "</div>"
   );
+}
+
+/* Vista previa en vivo de /producto (sección 6): usa el MISMO parser que
+   guarda (parseProductoArg) en modo solo-lectura — nunca hay una segunda
+   copia de la lógica para "cómo se ve" vs "qué se guarda". Se actualiza con
+   cada tecla directamente sobre el DOM (sin pasar por render()) para no
+   perder la posición del cursor a media edición; es puramente ephemeral,
+   nunca toca STATE ni Supabase. */
+function updateProductoPreview(rawValue){
+  var el = document.getElementById("producto-preview");
+  if(!el) return;
+  var m = rawValue.match(/^\/(producto|product)(\s+(.*))?$/i);
+  if(!m || !(m[3] || "").trim()){ el.hidden = true; el.innerHTML = ""; return; }
+  var p = parseProductoArg(m[3]);
+  if(!p.desc){ el.hidden = true; el.innerHTML = ""; return; }
+  var html = '<span class="pv-qty">' + p.cantidad + " ×</span> <span class=\"pv-desc\">" + escapeHtml(p.desc) + "</span>";
+  if(p.precio == null){
+    html += ' · <span class="pv-pending">precio pendiente</span>';
+  } else {
+    html += ' · <span class="pv-price">' + fmtMoney(p.precio) + " c/u</span> · <span class=\"pv-total\">Total " + fmtMoney(p.cantidad * p.precio) + "</span>";
+  }
+  el.innerHTML = html;
+  el.hidden = false;
 }
 
 /* ---------------- slash commands: UI (autocomplete, ayuda, confirmación, tarjetas efímeras) ----------------
@@ -892,33 +1098,233 @@ function slashMenu(){
   return html;
 }
 
-function slashHelpPanel(){
-  var hasTicket = !!findTicket(UI.selectedTicketId);
-  var query = ((UI.slashHelp && UI.slashHelp.query) || "").toLowerCase().trim();
-  var html = '<div class="slash-help" id="slash-help">';
-  var exact = query ? COMMANDS.filter(function(c){ return c.key===query || c.aliases.indexOf(query)!==-1; })[0] : null;
-  if(exact){
-    html += '<div class="popover-title">/' + exact.aliases[0] + " — " + escapeHtml(exact.summary) + "</div>";
-    html += '<div class="slash-help-row"><code>' + escapeHtml(exact.syntax) + "</code></div>";
-    (exact.examples || []).forEach(function(ex){
-      html += '<div class="slash-help-row ex">' + escapeHtml(ex) + "</div>";
-    });
-    if(exact.aliases.length > 1){
-      html += '<div class="slash-help-row" style="color:var(--text-faint);">También: ' + exact.aliases.slice(1).map(function(a){ return "/"+a; }).join(", ") + "</div>";
-    }
+/* Contenido de un mensaje efímero de /help — sigue derivando exclusivamente
+   del registro COMMANDS (única fuente de verdad para comandos/alias/ayuda),
+   pero ahora cada comando y cada ejemplo es un botón: tocarlo escribe el
+   texto en el compositor (con el cursor al final) SIN ejecutarlo, para que
+   /help sirva a la vez de documentación, menú táctil y atajo de captura
+   rápida (sección 4). El detalle de un comando exacto también puede
+   completarse tecleando /help <comando>. */
+
+/* Vista editable de productos (sección 7) — un solo renderer parametrizado
+   reutilizado por /productos, por "Total conocido" y por "N pendientes de
+   precio" en el encabezado (nunca un módulo de productos aparte). Cada
+   campo se guarda solo (blur/change) llamando a updateProductoCore, la
+   misma función que usaría cualquier otro camino de edición. */
+function productoEditRow(t, p){
+  return (
+    '<div class="producto-edit-row">' +
+      '<input type="text" class="pe-desc" data-producto-edit="' + p.id + '" data-field="desc" data-ticket="' + t.id + '" value="' + escapeHtml(p.desc) + '">' +
+      '<input type="number" class="pe-cant" min="0" step="1" data-producto-edit="' + p.id + '" data-field="cantidad" data-ticket="' + t.id + '" value="' + p.cantidad + '">' +
+      '<input type="number" class="pe-precio" min="0" step="0.01" placeholder="pendiente" data-producto-edit="' + p.id + '" data-field="precio" data-ticket="' + t.id + '" value="' + (p.precio==null?"":p.precio) + '">' +
+      '<span class="pe-total' + (p.precio==null?" pending":"") + '">' + (p.precio==null ? "pendiente" : fmtMoney(p.cantidad*p.precio)) + "</span>" +
+    "</div>"
+  );
+}
+function productosEntryContent(entry){
+  var t = entry.ticketId ? findTicket(entry.ticketId) : null;
+  if(!t) return { title: "Productos", html: '<div class="ephemeral-sub">Este ticket ya no está disponible.</div>' };
+  var onlyPending = !!(entry.params && entry.params.filter === "pending");
+  var list = onlyPending ? t.productos.filter(function(p){ return p.precio == null; }) : t.productos;
+  var title = (onlyPending ? "Productos pendientes de precio — " : "Productos — ") + ticketLabel(t);
+  if(!list.length){
+    var msg = onlyPending ? "Ya no hay productos pendientes de precio." : "Este ticket todavía no tiene productos.";
+    return { title: title, html: '<div class="ephemeral-sub">' + msg + "</div>" };
+  }
+  var header = '<div class="producto-edit-row producto-edit-header"><span>Descripción</span><span>Cant.</span><span>Precio u.</span><span>Total</span></div>';
+  var rows = list.map(function(p){ return productoEditRow(t, p); }).join("");
+  var note = '<div class="ephemeral-sub">Editar aquí actualiza el producto del ticket — nunca modifica una cotización o invoice ya creado.</div>';
+  return { title: title, html: header + rows + note };
+}
+
+/* ---------------- Documentos (sección 12): badge "Documentos · N" en el
+   encabezado del ticket. Solo lista/crea — reutiliza tal cual el flujo ya
+   existente (openDocumentForm/openDocumentViewer, wireEvents ya los ata
+   dentro de #app), sin lógica nueva de creación ni de PDF. */
+function documentosEntryContent(entry){
+  var t = entry.ticketId ? findTicket(entry.ticketId) : null;
+  if(!t) return { title: "Documentos", html: '<div class="ephemeral-sub">Este ticket ya no está disponible.</div>' };
+  var title = "Documentos — " + ticketLabel(t);
+  var docs = t.documentos.slice().sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+  var html = "";
+  if(!docs.length){
+    html += '<div class="ephemeral-sub">Este ticket todavía no tiene documentos comerciales.</div>';
   } else {
-    var list = query ? filterCommands(hasTicket, query) : visibleCommands(hasTicket);
-    if(!list.length){
-      html += '<div class="slash-help-row">Sin comandos que coincidan con "' + escapeHtml(query) + '".</div>';
+    html += docs.map(function(d){
+      var docLabel = d.tipo === "invoice" ? "Invoice" : "Cotización";
+      return (
+        '<button class="doc-card" data-action="open-doc" data-id="' + escapeHtml(d.id) + '">' +
+          '<div class="doc-card-title">' + docLabel + " #" + escapeHtml(d.numero||"") + "</div>" +
+          (d.clienteNombre ? '<div class="doc-card-cliente">' + escapeHtml(d.clienteNombre) + "</div>" : "") +
+          '<div class="doc-card-total">' + fmtMoney(d.total) + "</div>" +
+          '<div class="doc-card-meta">' + fmtDateShort(d.createdAt) + "</div>" +
+        "</button>"
+      );
+    }).join("");
+  }
+  html +=
+    '<div class="doc-new-actions">' +
+      '<button class="help-cmd-btn" data-doc-type="cotizacion"><span class="desc">+ Nueva cotización</span></button>' +
+      '<button class="help-cmd-btn" data-doc-type="invoice"><span class="desc">+ Nuevo invoice</span></button>' +
+    "</div>";
+  return { title: title, html: html };
+}
+
+/* ---------------- /cliente (sección 9): contextual — dentro de un ticket
+   actúa sobre ese ticket, fuera de un ticket solo consulta. Todo lo que
+   aparece aquí sale de STATE.clientes en vivo, igual que el resto de los
+   mensajes efímeros. */
+function clienteLabel(c){ return c.nombre + (c.empresa ? " · " + c.empresa : ""); }
+function findClienteMatches(query){
+  var q = (query || "").toLowerCase().trim();
+  if(!q) return [];
+  return STATE.clientes.filter(function(c){
+    return c.nombre.toLowerCase().indexOf(q) !== -1 || (c.empresa && c.empresa.toLowerCase().indexOf(q) !== -1);
+  });
+}
+function ticketsForCliente(c){
+  return STATE.tickets.filter(function(t){ return t.clienteId === c.id; });
+}
+function clienteFinancials(c){
+  var tickets = ticketsForCliente(c);
+  var known = 0, cobrado = 0, pend = 0;
+  tickets.forEach(function(t){
+    var totals = computeTotals(t);
+    known += totals.known; pend += totals.pending;
+    cobrado += t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
+  });
+  return { tickets: tickets, known: known, cobrado: cobrado, pend: pend, saldo: known - cobrado };
+}
+function clienteFichaContent(c, t, mode){
+  var fin = clienteFinancials(c);
+  var lines = [["Cliente", c.nombre]];
+  if(c.empresa) lines.push(["Empresa", c.empresa]);
+  if(c.telefono) lines.push(["Teléfono", c.telefono]);
+  if(c.email) lines.push(["Email", c.email]);
+  if(c.notasComerciales) lines.push(["Notas comerciales", c.notasComerciales]);
+  lines.push(["Preautorizado", c.preautorizado ? "Sí" : "No"]);
+  if(fin.tickets.length){
+    lines.push(["Tickets relacionados", fin.tickets.map(ticketLabel).join(", ")]);
+    lines.push(["Total conocido (todos sus tickets)", fmtMoney(fin.known) + (fin.pend ? " (+" + fin.pend + " sin precio)" : "")]);
+    lines.push(["Cobrado (todos sus tickets)", fmtMoney(fin.cobrado)]);
+    lines.push(["Saldo", fmtMoney(fin.saldo)]);
+  }
+  var html = lines.map(lineRow).join("");
+  if(mode === "ticket" && t){
+    if(t.clienteId === c.id){
+      html += '<div class="ephemeral-sub">Ya vinculado a este ticket.</div>';
     } else {
-      list.forEach(function(c){
-        html += '<div class="slash-help-row"><code>/' + c.aliases[0] + "</code> — " + escapeHtml(c.summary) + "</div>";
-      });
-      html += '<div class="slash-help-row" style="color:var(--text-faint);">/help &lt;comando&gt; para ver ejemplos</div>';
+      html += '<button class="help-cmd-btn" data-action="cliente-link" data-client-id="' + c.id + '" data-ticket="' + t.id + '"><span class="desc">Vincular "' + escapeHtml(c.nombre) + '" a este ticket</span></button>';
     }
   }
-  html += "</div>";
-  return html;
+  return { title: clienteLabel(c), html: html };
+}
+function clienteEntryContent(entry){
+  if(STATE.clientesTableMissing){
+    return { title: "Clientes", html: '<div class="ephemeral-sub">La función de clientes todavía no está activada — falta aplicar una migración pendiente en Supabase. Mientras tanto, "Cliente" sigue funcionando como texto libre en el encabezado del ticket.</div>' };
+  }
+  var t = entry.ticketId ? findTicket(entry.ticketId) : null;
+  var mode = (entry.params && entry.params.mode) || (t ? "ticket" : "home");
+  var query = (entry.params && entry.params.query) || "";
+  if(entry.params && entry.params.resolvedId){
+    var resolved = STATE.clientes.filter(function(c){ return c.id === entry.params.resolvedId; })[0];
+    if(!resolved) return { title: "Cliente", html: '<div class="ephemeral-sub">Ese cliente ya no existe.</div>' };
+    return clienteFichaContent(resolved, t, mode);
+  }
+  var matches = findClienteMatches(query);
+  var title = 'Cliente — "' + query + '"';
+  if(matches.length === 1) return clienteFichaContent(matches[0], t, mode);
+  if(matches.length > 1){
+    var rows = matches.map(function(c){
+      return '<button class="help-cmd-btn" data-action="cliente-select" data-client-id="' + c.id + '" data-ticket="' + (t?t.id:"") + '" data-mode="' + mode + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
+    }).join("");
+    return { title: title, html: rows + '<div class="ephemeral-sub">Varias coincidencias — toca la correcta.</div>' };
+  }
+  var html = '<div class="ephemeral-sub">No encontré ningún cliente que coincida con "' + escapeHtml(query) + '".</div>';
+  if(mode === "ticket" && t){
+    html += '<button class="help-cmd-btn" data-action="cliente-create" data-name="' + escapeHtml(query) + '" data-ticket="' + t.id + '"><span class="desc">+ Crear cliente "' + escapeHtml(query) + '"</span></button>';
+  }
+  return { title: title, html: html };
+}
+
+/* ---------------- /editarcliente (sección 10): siempre confirma antes de
+   guardar — nunca sobrescribe en silencio, y muestra "actual → nuevo"
+   cuando un valor va a cambiar de verdad. */
+function editarClienteEntryContent(entry){
+  if(STATE.clientesTableMissing){
+    return { title: "Editar cliente", html: '<div class="ephemeral-sub">La función de clientes todavía no está activada — falta aplicar una migración pendiente en Supabase.</div>' };
+  }
+  var patch = (entry.params && entry.params.patch) || {};
+  if(!Object.keys(patch).length){
+    return { title: "Editar cliente", html: '<div class="ephemeral-sub">No reconocí ningún dato para actualizar. Ejemplo: /editarcliente Angela telefono 9565612970</div>' };
+  }
+  var target = null;
+  var nameQuery = entry.params && entry.params.nameQuery;
+  if(entry.params && entry.params.targetId){
+    target = STATE.clientes.filter(function(c){ return c.id === entry.params.targetId; })[0];
+  } else if(nameQuery){
+    var matches = findClienteMatches(nameQuery);
+    if(!matches.length){
+      return { title: 'Editar cliente — "' + nameQuery + '"', html: '<div class="ephemeral-sub">No encontré ningún cliente llamado "' + escapeHtml(nameQuery) + '". Usa /cliente para crearlo primero.</div>' };
+    }
+    if(matches.length > 1){
+      var rows = matches.map(function(c){
+        return '<button class="help-cmd-btn" data-action="editarcliente-select" data-client-id="' + c.id + '" data-ephemeral-id="' + entry.id + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
+      }).join("");
+      return { title: 'Editar cliente — "' + nameQuery + '"', html: rows + '<div class="ephemeral-sub">Varias coincidencias — toca la correcta para revisar los cambios.</div>' };
+    }
+    target = matches[0];
+  } else {
+    return { title: "Editar cliente", html: '<div class="ephemeral-sub">Fuera de un ticket, especifica primero el nombre del cliente, ej. /editarcliente Angela telefono 9565612970.</div>' };
+  }
+  if(!target) return { title: "Editar cliente", html: '<div class="ephemeral-sub">Ese cliente ya no existe.</div>' };
+
+  var fieldLabels = { nombre:"Cliente", empresa:"Empresa", telefono:"Teléfono", email:"Email", notasComerciales:"Notas comerciales", preautorizado:"Preautorizado" };
+  var rows2 = Object.keys(patch).map(function(f){
+    var newVal = patch[f];
+    var curVal = target[f];
+    var newDisplay = f === "preautorizado" ? (newVal ? "Sí" : "No") : newVal;
+    var curDisplay = f === "preautorizado" ? (curVal ? "Sí" : "No") : (curVal || "(sin definir)");
+    var changed = String(curVal||"") !== String(newVal);
+    return '<div class="ephemeral-row"><strong>' + fieldLabels[f] + ":</strong> " +
+      (changed ? escapeHtml(String(curDisplay)) + " &rarr; <strong>" + escapeHtml(String(newDisplay)) + "</strong>" : escapeHtml(String(newDisplay)) + " (sin cambio)") +
+      "</div>";
+  }).join("");
+  /* Línea informativa "Cliente: X" para confirmar CUÁL cliente se resolvió
+     antes de mostrar los cambios — salvo que "nombre" ya sea uno de los
+     campos que cambian, donde esa misma fila ya lo deja claro. */
+  var headerLine = patch.nombre === undefined ? '<div class="ephemeral-row"><strong>Cliente:</strong> ' + escapeHtml(target.nombre) + "</div>" : "";
+  var html = headerLine + rows2 + '<button class="help-cmd-btn" data-action="editarcliente-confirm" data-client-id="' + target.id + '" data-ephemeral-id="' + entry.id + '"><span class="desc">Guardar cambios de ' + escapeHtml(target.nombre) + "</span></button>";
+  return { title: "Confirmar edición — " + clienteLabel(target), html: html };
+}
+
+function helpEntryContent(entry){
+  var hasTicket = !!(entry.ticketId && findTicket(entry.ticketId));
+  var query = ((entry.params && entry.params.query) || "").toLowerCase().trim();
+  var exact = query ? COMMANDS.filter(function(c){ return c.key===query || c.aliases.indexOf(query)!==-1; })[0] : null;
+  var html = "", title;
+  if(exact){
+    title = "/" + exact.aliases[0] + " — " + exact.summary;
+    html += '<button class="help-cmd-btn" data-action="help-fill" data-text="/' + exact.aliases[0] + ' "><code>' + escapeHtml(exact.syntax) + "</code></button>";
+    (exact.examples || []).forEach(function(ex){
+      html += '<button class="help-example-btn" data-action="help-fill" data-text="' + escapeHtml(ex) + '">' + escapeHtml(ex) + "</button>";
+    });
+    if(exact.aliases.length > 1){
+      html += '<div class="ephemeral-sub">También: ' + exact.aliases.slice(1).map(function(a){ return "/"+a; }).join(", ") + "</div>";
+    }
+  } else {
+    title = query ? 'Ayuda — "' + query + '"' : "Ayuda — comandos disponibles";
+    var list = query ? filterCommands(hasTicket, query) : visibleCommands(hasTicket);
+    if(!list.length){
+      html += '<div class="ephemeral-sub">Sin comandos que coincidan con "' + escapeHtml(query) + '".</div>';
+    } else {
+      list.forEach(function(c){
+        html += '<button class="help-cmd-btn" data-action="help-fill" data-text="/' + c.aliases[0] + ' "><code>/' + c.aliases[0] + "</code><span class=\"desc\">" + escapeHtml(c.summary) + "</span></button>";
+      });
+      html += '<div class="ephemeral-sub">Toca un comando para escribirlo · /help &lt;comando&gt; para ver ejemplos.</div>';
+    }
+  }
+  return { title: title, html: html };
 }
 
 function slashConfirmBanner(){
@@ -1007,53 +1413,136 @@ function dineroLinesGlobal(){
   return lines;
 }
 
-function renderEphemeralCard(){
-  var card = UI.ephemeralCard;
-  if(!card) return "";
-  var t = card.ticketId ? findTicket(card.ticketId) : null;
-  var title, lines;
-  if(card.kind === "estado"){
+/* ---------------- log efímero: consola dentro del hilo, no ventanas flotantes ----------------
+   /help, /estado, /pendientes, /dinero (y en el futuro /productos, /cliente…)
+   ya no son popovers — quedan anotados en UI.ephemeralLog como entradas
+   ligeras ({id, ticketId, kind, ts, params}) y su contenido se recalcula
+   EN VIVO a partir de STATE en cada render (nunca se guarda un snapshot),
+   así que si algo cambia mientras el mensaje sigue visible, se actualiza
+   solo. Nunca se escribe nada en Supabase ni en la bitácora por esto. */
+
+function pushEphemeral(kind, ticketId, params){
+  UI.ephemeralLog.push({ id: uid(), ticketId: ticketId || null, kind: kind, ts: new Date().toISOString(), params: params || {} });
+  UI.pendingFocus = "composer";
+  render();
+}
+function dismissEphemeral(id){
+  UI.ephemeralLog = UI.ephemeralLog.filter(function(e){ return e.id !== id; });
+  UI.pendingFocus = "composer";
+  render();
+}
+/* /clear · /limpiar: solo quita los mensajes efímeros de la vista actual
+   (los de este ticket, o los globales si estamos en Inicio) — nunca toca
+   notas/productos/pagos/tareas/documentos, que son permanentes. */
+function clearEphemeralForContext(ticketId){
+  var scope = ticketId || null;
+  UI.ephemeralLog = UI.ephemeralLog.filter(function(e){ return e.ticketId !== scope; });
+}
+
+function lineRow(l){
+  return '<div class="ephemeral-row">' + (l[0] ? "<strong>" + escapeHtml(l[0]) + ":</strong> " : "") + escapeHtml(String(l[1])) + "</div>";
+}
+
+function renderEphemeralEntry(entry){
+  var t = entry.ticketId ? findTicket(entry.ticketId) : null;
+  var title, bodyHtml;
+  if(entry.kind === "estado"){
     if(!t) return "";
     title = "Estado actual — " + ticketLabel(t);
-    lines = estadoCardLines(t);
-  } else if(card.kind === "pendientes"){
+    bodyHtml = estadoCardLines(t).map(lineRow).join("");
+  } else if(entry.kind === "pendientes"){
     title = t ? "Pendientes — " + ticketLabel(t) : "Pendientes (todos los tickets)";
-    lines = t ? pendientesLinesForTicket(t) : pendientesLinesGlobal();
-  } else if(card.kind === "dinero"){
+    bodyHtml = (t ? pendientesLinesForTicket(t) : pendientesLinesGlobal()).map(lineRow).join("");
+  } else if(entry.kind === "dinero"){
     title = t ? "Dinero — " + ticketLabel(t) : "Dinero (todos los tickets)";
-    lines = t ? dineroLinesForTicket(t) : dineroLinesGlobal();
+    bodyHtml = (t ? dineroLinesForTicket(t) : dineroLinesGlobal()).map(lineRow).join("");
+  } else if(entry.kind === "help"){
+    var hc = helpEntryContent(entry);
+    title = hc.title;
+    bodyHtml = hc.html;
+  } else if(entry.kind === "productos"){
+    var pc = productosEntryContent(entry);
+    title = pc.title;
+    bodyHtml = pc.html;
+  } else if(entry.kind === "cliente"){
+    var clc = clienteEntryContent(entry);
+    title = clc.title;
+    bodyHtml = clc.html;
+  } else if(entry.kind === "editarcliente"){
+    var ecc = editarClienteEntryContent(entry);
+    title = ecc.title;
+    bodyHtml = ecc.html;
+  } else if(entry.kind === "documentos"){
+    var dc = documentosEntryContent(entry);
+    title = dc.title;
+    bodyHtml = dc.html;
   } else {
     return "";
   }
-  var rows = lines.map(function(l){
-    return '<div class="slash-help-row">' + (l[0] ? "<strong>" + escapeHtml(l[0]) + ":</strong> " : "") + escapeHtml(String(l[1])) + "</div>";
-  }).join("");
   return (
-    '<div class="slash-help" id="ephemeral-card">' +
-      '<div class="popover-title" style="display:flex;justify-content:space-between;align-items:center;">' + escapeHtml(title) +
-        '<button class="btn-plain" data-action="close-ephemeral" style="padding:2px 4px;">&times;</button></div>' +
-      rows +
-      '<div class="doc-card-meta">No se guarda — este resumen se genera al momento a partir de la información actual.</div>' +
+    '<div class="thread-item ephemeral-item">' +
+      '<div class="thread-dot ephemeral"></div>' +
+      '<div class="thread-body">' +
+        '<div class="thread-meta"><span>' + fmtTime(entry.ts) + ' · no se guarda</span>' +
+          '<button class="btn-plain ephemeral-dismiss" data-action="dismiss-ephemeral" data-id="' + entry.id + '" title="Quitar">&times;</button>' +
+        "</div>" +
+        '<div class="ephemeral-card">' +
+          '<div class="ephemeral-title">' + escapeHtml(title) + "</div>" +
+          bodyHtml +
+        "</div>" +
+      "</div>" +
     "</div>"
   );
+}
+
+/* Fusiona lo permanente (t.thread) con lo efímero de este ticket, ordenado
+   por fecha, para que la consola se lea como un solo hilo continuo — igual
+   que un chat — en vez de dos zonas separadas. */
+function mergedThreadHtml(t){
+  var permanent = t.thread.map(function(ev){ return { ts: ev.ts, html: renderThreadItem(ev) }; });
+  var ephemeral = UI.ephemeralLog.filter(function(e){ return e.ticketId === t.id; })
+    .map(function(e){ return { ts: e.ts, html: renderEphemeralEntry(e) }; });
+  var merged = permanent.concat(ephemeral);
+  merged.sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); });
+  return merged.map(function(m){ return m.html; }).join("");
+}
+/* Mismo criterio para Inicio / Centro de consulta: solo hay mensajes
+   efímeros globales (ticketId null) — no hay hilo permanente sin ticket. */
+function globalEphemeralHtml(){
+  var ephemeral = UI.ephemeralLog.filter(function(e){ return !e.ticketId; })
+    .sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); });
+  return ephemeral.map(renderEphemeralEntry).join("");
 }
 
 function renderMain(){
   var t = UI.selectedTicketId ? findTicket(UI.selectedTicketId) : null;
   if(!t){
+    /* Inicio / Centro de consulta: no selecciona ni modifica ningún ticket.
+       Sin nada efímero todavía, es la bienvenida de siempre; en cuanto se
+       usa /pendientes, /dinero, /help o /buscar aparece la misma consola
+       que dentro de un ticket, para que "consultar sin abrir nada" también
+       se sienta como el mismo hilo continuo. */
+    var globalHtml = globalEphemeralHtml();
+    if(!globalHtml){
+      return (
+        '<div class="empty-state">' +
+          "<h1>¿Qué necesitas encontrar?</h1>" +
+          "<p>Este es el centro de consulta: usa / para buscar un ticket, abrir uno por número, ver pendientes o dinero de todos los tickets, o pedir ayuda. Nada de esto modifica ningún ticket.</p>" +
+          '<button class="btn btn-primary" data-action="new-ticket">+ Nuevo ticket</button>' +
+        "</div>" +
+        renderComposer()
+      );
+    }
     return (
-      '<div class="empty-state">' +
-        "<h1>Selecciona un ticket o crea uno nuevo</h1>" +
-        "<p>Cada ticket es un contenedor vivo: puede empezar casi vacío y crecer conforme aparece información real del cliente. Desde aquí también puedes usar / para buscar o abrir un ticket por número.</p>" +
-        '<button class="btn btn-primary" data-action="new-ticket">+ Nuevo ticket</button>' +
-      "</div>" +
+      '<div class="home-header"><h1>¿Qué necesitas encontrar?</h1><button class="btn btn-ghost" data-action="new-ticket">+ Nuevo ticket</button></div>' +
+      '<div class="thread" id="thread-scroll">' + globalHtml + "</div>" +
       renderComposer()
     );
   }
   return (
     renderTicketHeader(t) +
     renderTasksPanel(t) +
-    '<div class="thread" id="thread-scroll">' + t.thread.map(renderThreadItem).join("") + "</div>" +
+    '<div class="thread" id="thread-scroll">' + mergedThreadHtml(t) + "</div>" +
     renderComposer()
   );
 }
@@ -1069,7 +1558,11 @@ function render(){
     '<datalist id="dtg-team-names">' + teamOptions + "</datalist>" +
     '<div class="app">' +
       '<div class="sidebar' + (UI.sidebarOpen?" open":"") + '" id="sidebar">' + renderSidebar() + "</div>" +
-      '<div class="main">' + renderMain() + "</div>" +
+      (UI.sidebarOpen ? '<div class="sidebar-backdrop" data-action="close-sidebar"></div>' : "") +
+      '<div class="main">' +
+        '<div class="mobile-topbar"><button class="sidebar-toggle" data-action="toggle-sidebar" aria-label="Abrir menú">&#9776;</button><span class="mobile-topbar-brand">Design To Go</span></div>' +
+        renderMain() +
+      "</div>" +
     "</div>" +
     renderDocModal() +
     '<div class="toast" id="toast"></div>';
@@ -1079,18 +1572,21 @@ function render(){
   if(threadEl) threadEl.scrollTop = threadEl.scrollHeight;
   var composerInput = document.getElementById("composer-input");
   if(composerInput){
+    updateProductoPreview(composerInput.value);
     composerInput.addEventListener("input", function(){
       var v = composerInput.value;
       document.getElementById("composer-send").disabled = !v.trim();
       composerInput.style.height = "auto";
       composerInput.style.height = Math.min(composerInput.scrollHeight, 120) + "px";
-      /* Cualquier panel que no sea el menú de "/" (confirmación, ayuda,
-         tarjeta efímera) se descarta en cuanto el usuario vuelve a escribir
-         o borra el texto — nunca debe quedar "pegado" mostrando algo viejo. */
-      var hadOverlay = !!(UI.pendingConfirm || UI.ephemeralCard || UI.slashHelp);
+      /* El único overlay que se descarta en cuanto el usuario vuelve a
+         escribir o borra el texto es la confirmación pendiente — nunca debe
+         quedar "pegada" mostrando algo viejo. Los mensajes efímeros
+         (/help, /estado, /pendientes, /dinero) ya no son overlays: viven
+         dentro del hilo como una consola y se quedan ahí hasta que se
+         cierran uno por uno o con /clear, sin importar lo que se escriba
+         después en el compositor. */
+      var hadOverlay = !!UI.pendingConfirm;
       UI.pendingConfirm = null;
-      UI.ephemeralCard = null;
-      UI.slashHelp = null;
       var m = v.match(/^\/([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)$/);
       var shouldOpen = !!m;
       var fragment = m ? m[1] : "";
@@ -1104,6 +1600,7 @@ function render(){
         render();
         restoreComposerText(v);
       }
+      updateProductoPreview(v);
     });
     composerInput.addEventListener("keydown", function(e){
       if(UI.slashMenuOpen){
@@ -1137,6 +1634,14 @@ function render(){
           return;
         }
         if(e.key === "Escape"){ e.preventDefault(); UI.slashMenuOpen = false; var v3=composerInput.value; render(); restoreComposerText(v3); return; }
+        if(e.key === "Tab"){
+          /* Dentro del autocomplete de "/", Tab completa el comando
+             seleccionado sin ejecutarlo (a diferencia de Enter) — igual que
+             cualquier autocomplete de terminal/IDE. */
+          e.preventDefault();
+          if(list.length) pickSlashCommand(list[UI.slashActiveIndex].aliases[0]);
+          return;
+        }
       }
       if(UI.pendingConfirm){
         if(e.key === "Enter"){ e.preventDefault(); confirmPendingSlash(); return; }
@@ -1144,6 +1649,37 @@ function render(){
       }
       if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitNote(); }
     });
+  }
+  applyFocus();
+}
+
+/* Único punto que decide qué se enfoca después de cada render() — el
+   helper de foco reutilizable que pide la sección 1: nadie más debe
+   llamar a .focus() directamente sobre el compositor o un campo de
+   fecha, todos pasan por aquí vía UI.pendingFocus. Prioridad:
+   1) un elemento explícito (fallback de fecha no reconocida)
+   2) el primer campo dentro de un popover del compositor ya abierto
+      (confirmación, ayuda, autocomplete)
+   3) el compositor en genérico, vacío y listo para el siguiente comando. */
+function applyFocus(){
+  var target = UI.pendingFocus;
+  UI.pendingFocus = null;
+  if(!target) return;
+  if(typeof target === "object" && target.elId){
+    var explicit = document.getElementById(target.elId);
+    if(explicit){ explicit.focus(); try{ explicit.select(); }catch(e){} return; }
+  }
+  var popoverField = document.querySelector('#composer-popover input, #composer-popover select, #composer-popover textarea, #composer-popover button');
+  if(popoverField){ popoverField.focus(); return; }
+  if(target === "composer"){
+    var input = document.getElementById("composer-input");
+    if(input){
+      input.value = "";
+      input.style.height = "auto";
+      var sendBtn = document.getElementById("composer-send");
+      if(sendBtn) sendBtn.disabled = true;
+      input.focus();
+    }
   }
 }
 
@@ -1155,6 +1691,7 @@ function restoreComposerText(v){
   el.selectionStart = el.selectionEnd = v.length;
   var sendBtn = document.getElementById("composer-send");
   if(sendBtn) sendBtn.disabled = !v.trim();
+  updateProductoPreview(v);
 }
 
 function pickSlashCommand(cmd){
@@ -1197,12 +1734,8 @@ async function createTicketFlow(){
     if(ins.error) throw ins.error;
     var newId = ins.data.id;
     await sb.from("bitacora").insert({ ticket_id: newId, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Ticket creado" } });
-    UI.selectedTicketId = newId;
-    UI.composer = null;
-    UI.ephemeralCard = null;
-    UI.slashHelp = null;
-    saveUi();
-    await refreshFromServer();
+    openTicketById(newId);
+    await refreshFromServer({refocus:true});
   }catch(e){ showToast("No se pudo crear el ticket: " + (e.message || "error")); }
 }
 
@@ -1240,7 +1773,99 @@ async function addProductoCore(t, desc, cantidad, precio){
     var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: UI.whoami || null, payload: { desc: desc, cantidad: cantidad, precio: precio } });
     if(r2.error) throw r2.error;
   }catch(e){ showToast("No se pudo guardar el producto: " + (e.message || "error")); }
+  refreshFromServer({refocus:true});
+}
+
+/* Edición de un producto ya existente (sección 7) — misma tabla, mismo
+   bitácora-trace que cualquier otra mutación, así que "editar un producto"
+   y "agregar uno nuevo" nunca se sienten como dos sistemas distintos. Solo
+   toca la tabla productos: los documentos comerciales ya creados guardan su
+   propia fotografía (items) y jamás se leen ni se recalculan desde aquí, así
+   que editar un producto del ticket nunca altera una cotización/invoice ya
+   emitida. */
+async function updateProductoCore(t, productoId, patch){
+  var prod = t.productos.filter(function(p){ return p.id === productoId; })[0];
+  if(!prod) return;
+  Object.assign(prod, patch);
+  render();
+  try{
+    var dbPatch = {};
+    if(patch.desc !== undefined) dbPatch.descripcion = patch.desc;
+    if(patch.cantidad !== undefined) dbPatch.cantidad = patch.cantidad;
+    if("precio" in patch) dbPatch.precio = patch.precio;
+    var r1 = await sb.from("productos").update(dbPatch).eq("id", productoId);
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Producto editado: " + prod.desc + " — " + (prod.precio==null ? "precio pendiente" : prod.cantidad + " × " + fmtMoney(prod.precio)) } });
+  }catch(e){ showToast("No se pudo actualizar el producto: " + (e.message || "error")); }
   refreshFromServer();
+}
+
+/* ---------------- clientes (sección 8/9): entidad mínima, "no Salesforce" ----------------
+   Crear y vincular son mutaciones explícitas de un clic (igual que agregar
+   un producto desde el botón "+"), disparadas desde dentro de un mensaje
+   efímero de /cliente — nunca automáticas, nunca por el solo hecho de
+   buscar. Vincular denormaliza el nombre también en tickets.cliente para
+   que todo el código existente que ya lee ese campo de texto libre siga
+   funcionando exactamente igual. */
+async function linkClienteToTicket(t, cliente){
+  t.clienteId = cliente.id;
+  t.cliente = cliente.nombre;
+  render();
+  try{
+    var r1 = await sb.from("tickets").update({ cliente_id: cliente.id, cliente: cliente.nombre }).eq("id", t.id);
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Cliente vinculado: " + clienteLabel(cliente) } });
+  }catch(e){ showToast("No se pudo vincular el cliente: " + (e.message || "error")); }
+  refreshFromServer({refocus:true});
+}
+async function createClienteCore(nombre){
+  try{
+    var ins = await sb.from("clientes").insert({ nombre: nombre }).select().single();
+    if(ins.error) throw ins.error;
+    var c = mapClienteRow(ins.data);
+    STATE.clientes.push(c);
+    return c;
+  }catch(e){
+    showToast("No se pudo crear el cliente: " + (e.message || "error"));
+    return null;
+  }
+}
+/* Aplica los cambios ya confirmados por el usuario en /editarcliente
+   (nunca se llama antes de esa confirmación explícita). Si el nombre
+   cambia, también actualiza tickets.cliente en cualquier ticket vinculado
+   para no desincronizar el texto libre que el resto de la app ya lee. */
+async function updateClienteCore(clientId, patch, ticketIdForLog){
+  var c = STATE.clientes.filter(function(x){ return x.id === clientId; })[0];
+  if(!c) return false;
+  Object.assign(c, patch);
+  render();
+  try{
+    var dbPatch = {};
+    if(patch.nombre !== undefined) dbPatch.nombre = patch.nombre;
+    if(patch.empresa !== undefined) dbPatch.empresa = patch.empresa;
+    if(patch.telefono !== undefined) dbPatch.telefono = patch.telefono;
+    if(patch.email !== undefined) dbPatch.email = patch.email;
+    if(patch.notasComerciales !== undefined) dbPatch.notas_comerciales = patch.notasComerciales;
+    if(patch.preautorizado !== undefined) dbPatch.preautorizado = patch.preautorizado;
+    var r1 = await sb.from("clientes").update(dbPatch).eq("id", clientId);
+    if(r1.error) throw r1.error;
+    if(patch.nombre !== undefined){
+      var linked = STATE.tickets.filter(function(t){ return t.clienteId === clientId; });
+      if(linked.length){
+        linked.forEach(function(t){ t.cliente = patch.nombre; });
+        var r2 = await sb.from("tickets").update({ cliente: patch.nombre }).eq("cliente_id", clientId);
+        if(r2.error) throw r2.error;
+      }
+    }
+    if(ticketIdForLog){
+      await sb.from("bitacora").insert({ ticket_id: ticketIdForLog, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Cliente editado: " + Object.keys(patch).join(", ") } });
+    }
+  }catch(e){
+    showToast("No se pudo actualizar el cliente: " + (e.message || "error"));
+    return false;
+  }
+  refreshFromServer();
+  return true;
 }
 
 async function addTareaCore(t, tipo, desc, responsable, fechaAtencion){
@@ -1254,7 +1879,7 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion){
     var r4 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: kind, autor: UI.whoami || null, payload: { desc: desc, responsable: responsable, fechaAtencion: fechaAtencion, estado: tipo==="produccion" ? "pendiente" : null } });
     if(r4.error) throw r4.error;
   }catch(e){ showToast("No se pudo guardar la tarea: " + (e.message || "error")); }
-  refreshFromServer();
+  refreshFromServer({refocus:true});
 }
 
 async function addPagoCore(t, monto, fecha, metodo, concepto){
@@ -1266,7 +1891,7 @@ async function addPagoCore(t, monto, fecha, metodo, concepto){
     var r6 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "pago", autor: UI.whoami || null, payload: { monto: monto, fecha: fecha, metodo: metodo, concepto: concepto } });
     if(r6.error) throw r6.error;
   }catch(e){ showToast("No se pudo guardar el pago: " + (e.message || "error")); }
-  refreshFromServer();
+  refreshFromServer({refocus:true});
 }
 
 async function addNotaCore(t, text){
@@ -1277,7 +1902,7 @@ async function addNotaCore(t, text){
     var res = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "nota", autor: UI.whoami || null, payload: { text: text } });
     if(res.error) throw res.error;
   }catch(e){ showToast("No se pudo guardar la nota: " + (e.message || "error")); }
-  refreshFromServer();
+  refreshFromServer({refocus:true});
 }
 
 async function submitForm(kind){
@@ -1324,7 +1949,7 @@ async function submitForm(kind){
       var r7 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: UI.whoami || null, payload: { storage_path: path, filename: file.name, caption: caption } });
       if(r7.error) throw r7.error;
     }catch(e){ showToast("No se pudo subir la foto: " + (e.message || "error")); }
-    refreshFromServer();
+    refreshFromServer({refocus:true});
   }
 }
 
@@ -1341,6 +1966,27 @@ function openDocumentForm(tipo){
   render();
 }
 
+/* Núcleo compartido de creación de documento — usado por el formulario
+   multi-paso (composer "doc_form") Y por los comandos de un solo paso
+   /factura y /cotizacion (sección 13/14), para no duplicar la lógica de
+   guardado ni el evento de bitácora. */
+async function createDocumentoCore(t, tipo, items, clienteNombre, notas){
+  var total = items.reduce(function(sum,it){ return sum + (it.precio==null?0:it.precio*it.cantidad); }, 0);
+  showToast("Creando " + (tipo==="invoice"?"invoice":"cotización") + "…");
+  try{
+    var ins = await sb.from("documentos").insert({
+      ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
+      items: items, total: total, autor: UI.whoami || null
+    }).select().single();
+    if(ins.error) throw ins.error;
+    var doc = ins.data;
+    var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: UI.whoami || null,
+      payload: { documento_id: doc.id, tipo: tipo, numero: doc.numero, total: total, cliente_nombre: clienteNombre } });
+    if(r8.error) throw r8.error;
+  }catch(e){ showToast("No se pudo crear el documento: " + (e.message || "error")); }
+  refreshFromServer({refocus:true});
+}
+
 async function createDocumento(){
   var t = findTicket(UI.selectedTicketId);
   if(!t || !UI.docDraft) return;
@@ -1355,24 +2001,11 @@ async function createDocumento(){
     UI.docDraft.items[idx].precio = raw === "" ? null : parseFloat(raw);
   });
   var items = UI.docDraft.items;
-  var total = items.reduce(function(sum,it){ return sum + (it.precio==null?0:it.precio*it.cantidad); }, 0);
   var tipo = UI.docDraft.tipo;
   UI.composer = null;
   UI.docDraft = null;
   render();
-  showToast("Creando " + (tipo==="invoice"?"invoice":"cotización") + "…");
-  try{
-    var ins = await sb.from("documentos").insert({
-      ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
-      items: items, total: total, autor: UI.whoami || null
-    }).select().single();
-    if(ins.error) throw ins.error;
-    var doc = ins.data;
-    var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: UI.whoami || null,
-      payload: { documento_id: doc.id, tipo: tipo, numero: doc.numero, total: total, cliente_nombre: clienteNombre } });
-    if(r8.error) throw r8.error;
-  }catch(e){ showToast("No se pudo crear el documento: " + (e.message || "error")); }
-  refreshFromServer();
+  await createDocumentoCore(t, tipo, items, clienteNombre, notas);
 }
 
 function openDocumentViewer(docId){
@@ -1384,18 +2017,29 @@ function closeDocumentViewer(){
   render();
 }
 
-function renderDocModal(){
-  var docId = UI.viewingDocId;
-  if(!docId) return "";
+function findDocumentoById(docId){
   var doc = null;
   for(var i=0;i<STATE.tickets.length && !doc;i++){
     doc = (STATE.tickets[i].documentos||[]).filter(function(d){ return d.id === docId; })[0] || null;
   }
+  return doc;
+}
+
+/* ---------------- Rediseño de documento (sección 15) ----------------
+   El documento se muestra como una "hoja" (.doc-paper) con look de papel
+   fijo — SIEMPRE clara, sin importar el tema claro/oscuro de la app — para
+   que se vea igual que lo que el cliente recibirá impreso o en PDF. Las
+   acciones (Volver / Imprimir / Descargar PDF) sí respetan el tema de la
+   app, viven fuera de la hoja. */
+function renderDocModal(){
+  var docId = UI.viewingDocId;
+  if(!docId) return "";
+  var doc = findDocumentoById(docId);
   if(!doc){
     return (
       '<div class="doc-modal-overlay" id="doc-modal-overlay">' +
-        '<div class="doc-modal"><button class="doc-modal-back" data-action="close-doc">&#8592; Volver al ticket</button>' +
-        '<p>Este documento ya no está disponible.</p></div>' +
+        '<div class="doc-modal"><div class="doc-modal-top"><button class="doc-modal-back" data-action="close-doc">&#8592; Volver al ticket</button></div>' +
+        '<div class="doc-paper"><p>Este documento ya no está disponible.</p></div></div>' +
       "</div>"
     );
   }
@@ -1414,19 +2058,209 @@ function renderDocModal(){
       '<div class="doc-modal">' +
         '<div class="doc-modal-top">' +
           '<button class="doc-modal-back" data-action="close-doc">&#8592; Volver al ticket</button>' +
-          '<div class="doc-modal-actions"><button class="btn btn-ghost" data-action="print-doc">Imprimir / Guardar PDF</button></div>' +
+          '<div class="doc-modal-actions">' +
+            '<button class="btn btn-ghost" data-action="print-doc">Imprimir</button>' +
+            '<button class="btn btn-primary" data-action="download-pdf" data-id="' + escapeHtml(doc.id) + '">&#11015; Descargar PDF</button>' +
+          "</div>" +
         "</div>" +
-        '<div class="doc-modal-brand">Design To Go</div>' +
-        '<div class="doc-modal-heading">' + label + " #" + escapeHtml(doc.numero||"") + "</div>" +
-        '<div class="doc-modal-sub">' + (doc.clienteNombre ? escapeHtml(doc.clienteNombre) + " · " : "") + "Creado " + fmtDateShort(doc.createdAt) + " " + fmtTime(doc.createdAt) + "</div>" +
-        '<table class="doc-modal-table"><thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead><tbody>' +
-          rows +
-          '<tr class="doc-modal-total-row"><td colspan="3">Total</td><td class="num">' + fmtMoney(doc.total) + "</td></tr>" +
-        "</tbody></table>" +
-        (doc.notas ? '<div class="doc-modal-notes">' + escapeHtml(doc.notas) + "</div>" : "") +
+        '<div class="doc-paper">' +
+          '<div class="doc-paper-head">' +
+            '<div>' +
+              '<div class="doc-paper-brand">Design To Go</div>' +
+              '<div class="doc-paper-tagline">Impresión, rotulación y señalización</div>' +
+            "</div>" +
+            '<div class="doc-paper-type">' +
+              '<div class="doc-paper-type-label">' + label + "</div>" +
+              '<div class="doc-paper-type-num">#' + escapeHtml(doc.numero||"") + "</div>" +
+            "</div>" +
+          "</div>" +
+          '<div class="doc-paper-meta">' +
+            '<div><span class="field-label">Fecha</span>' + fmtDateShort(doc.createdAt) + " " + fmtTime(doc.createdAt) + "</div>" +
+            '<div><span class="field-label">Cliente</span>' + (doc.clienteNombre ? escapeHtml(doc.clienteNombre) : "—") + "</div>" +
+          "</div>" +
+          '<table class="doc-modal-table"><thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead><tbody>' +
+            rows +
+            '<tr class="doc-modal-total-row"><td colspan="3">Total</td><td class="num">' + fmtMoney(doc.total) + "</td></tr>" +
+          "</tbody></table>" +
+          (doc.notas ? '<div class="doc-paper-notes"><span class="field-label">Notas</span><div>' + escapeHtml(doc.notas) + "</div></div>" : "") +
+          '<div class="doc-paper-foot">Gracias por su preferencia — Design To Go</div>' +
+        "</div>" +
       "</div>" +
     "</div>"
   );
+}
+
+/* ---------------- PDF real descargable, sin librerías externas ----------------
+   Arma el archivo PDF byte a byte usando solo los operadores básicos de
+   texto y línea del formato PDF (nada que traer de un CDN, así funciona
+   también sin internet). Usa Courier/Courier-Bold — ancho fijo por
+   carácter — para que alinear la tabla y partir renglones largos sea
+   aritmética exacta, sin tener que medir texto con métricas de fuente. */
+function pdfPad(ch, n){ return n > 0 ? new Array(n+1).join(ch) : ""; }
+function padR(s, n){ s = String(s); return s.length >= n ? s.slice(0, n) : s + pdfPad(" ", n - s.length); }
+function padL(s, n){ s = String(s); return s.length >= n ? s.slice(-n) : pdfPad(" ", n - s.length) + s; }
+function wrapMonoText(text, width){
+  var words = String(text||"").split(/\s+/).filter(Boolean);
+  var lines = [], cur = "";
+  words.forEach(function(w){
+    while(w.length > width){
+      if(cur){ lines.push(cur); cur = ""; }
+      lines.push(w.slice(0, width));
+      w = w.slice(width);
+    }
+    var candidate = cur ? cur + " " + w : w;
+    if(candidate.length > width){ lines.push(cur); cur = w; }
+    else cur = candidate;
+  });
+  if(cur) lines.push(cur);
+  return lines.length ? lines : [""];
+}
+/* Un puñado de caracteres Unicode "altos" caen igual dentro de WinAnsiEncoding
+   (Windows-1252) en el bloque 0x80-0x9F — sobre todo la raya larga "—" que
+   usamos en el pie del documento — así que se remapean a su byte real en
+   vez de perderse como "?". Todo lo demás fuera de Latin-1 (emoji, CJK,
+   etc., si algún día alguien los escribe en una descripción) sí cae a "?":
+   no hay fuente Unicode embebida en este generador mínimo. */
+var PDF_WINANSI_HIGH_MAP = { 0x2013:0x96, 0x2014:0x97, 0x2018:0x91, 0x2019:0x92, 0x201C:0x93, 0x201D:0x94, 0x2022:0x95, 0x2026:0x85 };
+function pdfEscapeText(s){
+  var out = "";
+  for(var i=0;i<String(s).length;i++){
+    var c = s.charCodeAt(i);
+    var byte = c <= 255 ? c : PDF_WINANSI_HIGH_MAP[c];
+    var ch = byte == null ? "?" : String.fromCharCode(byte);
+    if(ch === "\\" || ch === "(" || ch === ")") out += "\\" + ch;
+    else out += ch;
+  }
+  return out;
+}
+function pdfDateLong(iso){
+  try{ return new Date(iso).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; }
+}
+function buildDocumentPdfOps(doc){
+  var M = 54, PW = 612, PH = 792, RIGHT = PW - M;
+  var pages = [], curOps = [], y = PH - M;
+  function newPage(){ pages.push(curOps); curOps = []; y = PH - M; }
+  function ensure(space){ if(y - space < M) newPage(); }
+  function line(str, font, size, opts){
+    opts = opts || {};
+    if(opts.gray != null) curOps.push({ op:"g", v:opts.gray });
+    curOps.push({ op:"t", x: M, y: y, font: font, size: size, str: str });
+    if(opts.gray != null) curOps.push({ op:"g", v:0 });
+    y -= (opts.leading || (size + 4));
+  }
+  function rule(){ curOps.push({ op:"l", x1:M, y1:y, x2:RIGHT, y2:y }); y -= 10; }
+  function blank(n){ y -= (n||10); }
+
+  var W_DESC=38, W_CANT=7, W_PRECIO=13, W_SUB=15;
+  var labelEs = doc.tipo === "invoice" ? "Invoice" : "Cotización";
+
+  line("DESIGN TO GO", "CB", 20);
+  line("Impresión, rotulación y señalización", "C", 9, { gray:0.45 });
+  blank(6);
+  line(labelEs.toUpperCase() + "   No. " + (doc.numero||""), "CB", 13);
+  line("Fecha: " + pdfDateLong(doc.createdAt) + "   Cliente: " + (doc.clienteNombre || "—"), "C", 10, { gray:0.25 });
+  blank(4);
+  rule();
+  line(padR("PRODUCTO", W_DESC) + padL("CANT.", W_CANT) + padL("PRECIO", W_PRECIO) + padL("SUBTOTAL", W_SUB), "CB", 9.5);
+  rule();
+
+  (doc.items||[]).forEach(function(it){
+    var pending = it.precio == null;
+    var subtotal = pending ? null : it.precio * it.cantidad;
+    var descLines = wrapMonoText(it.desc, W_DESC);
+    ensure(14);
+    line(padR(descLines[0], W_DESC) + padL(String(it.cantidad), W_CANT) + padL(pending?"pendiente":fmtMoney(it.precio), W_PRECIO) + padL(pending?"—":fmtMoney(subtotal), W_SUB), "C", 9.5);
+    for(var i=1;i<descLines.length;i++){ ensure(14); line(padR(descLines[i], W_DESC), "C", 9.5); }
+  });
+
+  rule();
+  ensure(18);
+  line(padR("TOTAL", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(doc.total), W_SUB), "CB", 11);
+
+  if(doc.notas){
+    blank(8);
+    ensure(14);
+    line("Notas:", "CB", 9.5);
+    wrapMonoText(doc.notas, W_DESC+W_CANT+W_PRECIO+W_SUB).forEach(function(l){ ensure(14); line(l, "C", 9.5); });
+  }
+
+  blank(16);
+  ensure(14);
+  line("Gracias por su preferencia — Design To Go", "C", 9, { gray:0.45 });
+
+  pages.push(curOps);
+  return pages;
+}
+function pdfOpsToContentStream(ops){
+  var parts = [];
+  ops.forEach(function(o){
+    if(o.op === "g") parts.push(o.v.toFixed(2) + " g");
+    else if(o.op === "l"){
+      parts.push("1 w");
+      parts.push(o.x1.toFixed(2) + " " + o.y1.toFixed(2) + " m");
+      parts.push(o.x2.toFixed(2) + " " + o.y2.toFixed(2) + " l");
+      parts.push("S");
+    } else if(o.op === "t"){
+      var fontRes = o.font === "CB" ? "/F2" : "/F1";
+      parts.push("BT");
+      parts.push(fontRes + " " + o.size + " Tf");
+      parts.push("1 0 0 1 " + o.x.toFixed(2) + " " + o.y.toFixed(2) + " Tm");
+      parts.push("(" + pdfEscapeText(o.str) + ") Tj");
+      parts.push("ET");
+    }
+  });
+  return parts.join("\n");
+}
+function pdfPadOffset(n){ var s = String(n); return pdfPad("0", 10-s.length) + s; }
+function buildDocumentPdfBytes(doc){
+  var pages = buildDocumentPdfOps(doc);
+  var n = pages.length;
+  var objects = [];
+  var kids = [];
+  for(var i=0;i<n;i++) kids.push((5+i*2) + " 0 R");
+  objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objects[2] = "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + n + " >>";
+  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>";
+  objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>";
+  for(i=0;i<n;i++){
+    var pageObjNum = 5+i*2, contentObjNum = 6+i*2;
+    var stream = pdfOpsToContentStream(pages[i]);
+    objects[pageObjNum] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + contentObjNum + " 0 R >>";
+    objects[contentObjNum] = { stream: stream };
+  }
+  var out = "%PDF-1.4\n";
+  var maxObj = 4 + n*2;
+  var offsets = [0];
+  for(var num=1; num<=maxObj; num++){
+    offsets[num] = out.length;
+    var body = objects[num];
+    if(body && typeof body === "object" && body.stream != null){
+      out += num + " 0 obj\n<< /Length " + body.stream.length + " >>\nstream\n" + body.stream + "\nendstream\nendobj\n";
+    } else {
+      out += num + " 0 obj\n" + body + "\nendobj\n";
+    }
+  }
+  var xrefStart = out.length;
+  out += "xref\n0 " + (maxObj+1) + "\n0000000000 65535 f \n";
+  for(num=1; num<=maxObj; num++) out += pdfPadOffset(offsets[num]) + " 00000 n \n";
+  out += "trailer\n<< /Size " + (maxObj+1) + " /Root 1 0 R >>\nstartxref\n" + xrefStart + "\n%%EOF";
+  return out;
+}
+function downloadDocumentPdf(docId){
+  var doc = findDocumentoById(docId);
+  if(!doc) return;
+  var bstr = buildDocumentPdfBytes(doc);
+  var bytes = new Uint8Array(bstr.length);
+  for(var i=0;i<bstr.length;i++) bytes[i] = bstr.charCodeAt(i) & 0xFF;
+  var blob = new Blob([bytes], { type: "application/pdf" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = (doc.tipo==="invoice"?"Invoice-":"Cotizacion-") + (doc.numero||doc.id) + ".pdf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
 }
 
 function resizeImageToBlob(file, maxDim, quality){
@@ -1504,7 +2338,7 @@ var HEADER_FIELDS = {
   "field-fecha-compromiso":{ key: "fechaCompromiso",   col: "fecha_compromiso", label: "Fecha de compromiso" }
 };
 
-async function commitHeaderField(elId, value){
+async function commitHeaderField(elId, value, opts){
   var t = findTicket(UI.selectedTicketId);
   if(!t) return;
   var def = HEADER_FIELDS[elId];
@@ -1519,10 +2353,10 @@ async function commitHeaderField(elId, value){
     if(r1.error) throw r1.error;
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: def.label + ": " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
-  refreshFromServer();
+  refreshFromServer(opts);
 }
 
-async function commitQueSigue(value){
+async function commitQueSigue(value, opts){
   var t = findTicket(UI.selectedTicketId);
   if(!t) return;
   if(value === "__custom__"){
@@ -1543,7 +2377,7 @@ async function commitQueSigue(value){
     if(r1.error) throw r1.error;
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Qué sigue: " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
-  refreshFromServer();
+  refreshFromServer(opts);
 }
 
 /* ---------------- slash commands: parsing y ejecución ----------------
@@ -1559,27 +2393,177 @@ function parseSlashCommand(raw){
   return { cmd: cmd, arg: arg };
 }
 
+/* Parser de /producto — sintaxis humana y flexible a propósito (sección 5):
+   /producto [cantidad opcional] [descripción] [precio opcional]
+   Se usa TAL CUAL, sin ninguna copia, tanto para guardar (COMMANDS
+   "producto") como para la vista previa en vivo mientras se escribe (ver
+   productoPreviewLine) — un solo parser, nunca dos que puedan desincronizarse.
+
+   Orden de prioridad para detectar el precio (de mayor a menor, se detiene
+   en el primero que aplique — nunca se inventa un precio que no esté
+   explícito en el texto):
+     1) "sin precio" / "no price" en cualquier parte -> precio pendiente,
+        sin importar qué números haya alrededor (escape explícito).
+     2) "... total <n>" al final -> <n> es el TOTAL; precio unitario = total/cantidad.
+     3) "... precio <n>" / "... price <n>" al final -> <n> es el precio unitario.
+     4) "...$<n>" / "...$ <n>" al final -> <n> es el precio unitario.
+     5) "...<n>dlls|dls|dolares|dólares" (con o sin espacio) al final -> <n> es el precio unitario.
+     6) Si después de quitar la cantidad el ÚLTIMO token de todo lo que
+        queda es puramente numérico, se toma como precio unitario (ej.
+        "banner 50"). Si no, el precio queda pendiente — nunca se asume $0. */
 function parseProductoArg(arg){
-  var cantidad = 1, rest = arg;
-  var mCant = arg.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
-  if(mCant){ cantidad = parseFloat(mCant[1]); rest = mCant[2]; }
-  var mTotal = rest.match(/^(.*\S)\s+total\s+(\d+(?:\.\d+)?)\s*$/i);
+  var tokens = (arg || "").trim().split(/\s+/).filter(Boolean);
+  var cantidad = 1;
+  if(tokens.length > 1 && /^\d+(?:\.\d+)?$/.test(tokens[0])){
+    cantidad = parseFloat(tokens.shift());
+  }
+  var rest = tokens.join(" ");
+
+  var sinPrecioRe = /\s*\b(?:sin\s+precio|no\s+price)\b\s*/i;
+  if(sinPrecioRe.test(rest)){
+    return { desc: rest.replace(sinPrecioRe, " ").trim(), cantidad: cantidad, precio: null, total: null };
+  }
+
+  var mTotal = rest.match(/^(.*?)\btotal\s+(\d+(?:\.\d+)?)\s*$/i);
   if(mTotal){
-    var desc1 = mTotal[1].trim();
     var total = parseFloat(mTotal[2]);
-    return { desc: desc1, cantidad: cantidad, precio: cantidad ? total / cantidad : null, total: total };
+    return { desc: mTotal[1].trim(), cantidad: cantidad, precio: cantidad ? (total / cantidad) : null, total: total };
   }
-  var mPrecio = rest.match(/^(.*\S)\s+(\d+(?:\.\d+)?)\s*$/);
-  if(mPrecio){
-    return { desc: mPrecio[1].trim(), cantidad: cantidad, precio: parseFloat(mPrecio[2]) };
+
+  var mPrecioKw = rest.match(/^(.*?)\b(?:precio|price)\s+(\d+(?:\.\d+)?)\s*$/i);
+  if(mPrecioKw){
+    return { desc: mPrecioKw[1].trim(), cantidad: cantidad, precio: parseFloat(mPrecioKw[2]), total: null };
   }
-  return { desc: rest.trim(), cantidad: cantidad, precio: null };
+
+  var mDollar = rest.match(/^(.*?)\$\s*(\d+(?:\.\d+)?)\s*$/);
+  if(mDollar){
+    return { desc: mDollar[1].trim(), cantidad: cantidad, precio: parseFloat(mDollar[2]), total: null };
+  }
+
+  var mUnidad = rest.match(/^(.*?[^\d])?(\d+(?:\.\d+)?)\s*(?:dlls|dls|dolares|d[oó]lares)\s*$/i);
+  if(mUnidad){
+    return { desc: (mUnidad[1]||"").trim(), cantidad: cantidad, precio: parseFloat(mUnidad[2]), total: null };
+  }
+
+  var restTokens = rest.split(/\s+/).filter(Boolean);
+  if(restTokens.length > 1 && /^\d+(?:\.\d+)?$/.test(restTokens[restTokens.length-1])){
+    return { desc: restTokens.slice(0,-1).join(" "), cantidad: cantidad, precio: parseFloat(restTokens[restTokens.length-1]), total: null };
+  }
+
+  return { desc: rest.trim(), cantidad: cantidad, precio: null, total: null };
 }
 
 function parsePagoArg(arg){
   var m = arg.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
   if(!m) return null;
   return { monto: parseFloat(m[1]), concepto: (m[2]||"").trim() };
+}
+
+/* /factura y /cotizacion (sección 13/14): crean el documento comercial
+   completo en un solo paso, reutilizando tal cual los productos y el
+   cliente que ya están en el ticket — sin abrir el formulario de varios
+   pasos. Todo el texto que sigue al comando (opcional) se guarda como
+   notas del documento, ej. "/factura pagado por transferencia". Nunca
+   inventa un precio: si algún producto todavía no tiene precio, se pide
+   resolverlo primero con /productos en vez de facturar/cotizar con huecos. */
+function parseDocCommand(arg, ctx, tipo){
+  var t = ctx.ticket;
+  var tipoLabel = tipo === "invoice" ? "un invoice" : "una cotización";
+  if(!t.productos.length) return { ok:false, error: "Agrega al menos un producto antes de crear " + tipoLabel + ", ej. /producto banner 50" };
+  var pending = t.productos.filter(function(p){ return p.precio == null; });
+  if(pending.length) return { ok:false, error: "Hay " + pending.length + (pending.length===1?" producto":" productos") + " sin precio — resuélvelo con /productos antes de crear " + tipoLabel };
+  var items = t.productos.map(function(p){ return { desc: p.desc, cantidad: p.cantidad, precio: p.precio }; });
+  var total = items.reduce(function(s,it){ return s + it.cantidad*it.precio; }, 0);
+  return { ok:true, data: { tipo: tipo, items: items, total: total, clienteNombre: t.cliente || "", notas: (arg||"").trim() } };
+}
+function docConfirmSummary(data){
+  return (data.clienteNombre ? escapeHtml(data.clienteNombre) + " — " : "") +
+    data.items.length + (data.items.length===1?" producto":" productos") + " · " + fmtMoney(data.total) +
+    (data.notas ? " · " + escapeHtml(data.notas) : "");
+}
+
+/* Parser de /editarcliente (sección 10) — sintaxis pequeña y predecible,
+   nunca lenguaje natural genérico. Dos modos, nunca mezclados:
+     1) Forma con palabra clave en cualquier parte del texto ("telefono",
+        "email", "empresa", "nombre", "notas", "preautorizado") — todo lo
+        que sigue a la palabra clave es el valor de ESE campo. Si hay texto
+        antes de la palabra clave y todavía no hay un cliente resuelto por
+        contexto (ticket con cliente vinculado), ese texto es el nombre a
+        buscar (ej. "/editarcliente Angela telefono 9565612970").
+     2) Sin ninguna palabra clave — detección automática por formato: un
+        correo (por su forma), un teléfono (una racha de 7+ dígitos, con o
+        sin separadores), la primera palabra restante como nombre a buscar
+        (si hace falta) y lo que sobra como empresa propuesta.
+   Nunca inventa ni sobrescribe un campo que no aparece explícito en el
+   texto — el resultado son solo los campos detectados, listos para
+   mostrarse en confirmación antes de guardar nada. */
+function normalizeWord(w){
+  return (w||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+var CLIENTE_FIELD_KEYWORDS = {
+  telefono: "telefono", phone: "telefono",
+  email: "email", correo: "email",
+  empresa: "empresa", company: "empresa",
+  nombre: "nombre", name: "nombre",
+  notas: "notasComerciales", notes: "notasComerciales",
+  preautorizado: "preautorizado", preauthorized: "preautorizado"
+};
+function formatPhoneDigits(digits){
+  if(digits.length === 10) return digits.slice(0,3) + "-" + digits.slice(3,6) + "-" + digits.slice(6);
+  return digits;
+}
+function parseEditarClienteArg(arg){
+  var tokens = (arg||"").trim().split(/\s+/).filter(Boolean);
+  var kwIndex = -1, kwField = null;
+  for(var i=0;i<tokens.length;i++){
+    var f = CLIENTE_FIELD_KEYWORDS[normalizeWord(tokens[i])];
+    if(f){ kwIndex = i; kwField = f; break; }
+  }
+  var patch = {}, nameQuery = null;
+  if(kwField){
+    var before = tokens.slice(0, kwIndex).join(" ").trim();
+    var value = tokens.slice(kwIndex+1).join(" ").trim();
+    if(kwField === "telefono"){
+      var digits = value.replace(/\D/g, "");
+      patch.telefono = digits.length >= 7 ? formatPhoneDigits(digits) : value;
+    } else if(kwField === "preautorizado"){
+      var v = normalizeWord(value);
+      patch.preautorizado = (v === "si" || v === "true" || v === "yes" || v === "1");
+    } else if(value){
+      patch[kwField] = value;
+    }
+    /* Si hay texto ANTES de la palabra clave, es explícitamente el nombre
+       del cliente a buscar (ej. "Angela telefono 9565612970") y siempre
+       gana sobre cualquier cliente ya vinculado por contexto. Sin texto
+       antes ("telefono 9565612970" a secas), no hay nombre explícito: el
+       llamador decide si cae al cliente vinculado del ticket actual. */
+    if(before) nameQuery = before;
+    return { nameQuery: nameQuery, patch: patch };
+  }
+
+  var rest = (arg||"").trim();
+  var emailMatch = rest.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/);
+  if(emailMatch){
+    patch.email = emailMatch[0];
+    rest = (rest.slice(0, emailMatch.index) + " " + rest.slice(emailMatch.index + emailMatch[0].length)).replace(/\s+/g, " ").trim();
+  }
+  var phoneMatch = rest.match(/(\+?\d[\d\-.\s]{5,}\d)/);
+  if(phoneMatch){
+    var digits2 = phoneMatch[0].replace(/\D/g, "");
+    if(digits2.length >= 7){
+      patch.telefono = formatPhoneDigits(digits2);
+      rest = (rest.slice(0, phoneMatch.index) + " " + rest.slice(phoneMatch.index + phoneMatch[0].length)).replace(/\s+/g, " ").trim();
+    }
+  }
+  /* Sin palabra clave, la PRIMERA palabra que sobra es siempre el nombre a
+     buscar (ej. "Angela Top Builders 9565612970 ..." -> nombre "Angela",
+     el resto se propone como empresa) — igual gana sobre un cliente ya
+     vinculado por contexto si el texto trae un nombre explícito. */
+  var restTokens = rest.split(/\s+/).filter(Boolean);
+  if(restTokens.length) nameQuery = restTokens.shift();
+  var empresa = restTokens.join(" ").trim();
+  if(empresa) patch.empresa = empresa;
+  return { nameQuery: nameQuery, patch: patch };
 }
 
 /* ---------------- fecha humana: un solo parser reutilizable ----------------
@@ -1668,8 +2652,8 @@ var COMMANDS = [
   },
   {
     key: "producto", aliases: ["producto","product"], type: "write", requiresTicket: true,
-    syntax: "/producto <cantidad> <descripción> [precio | total <monto>]", summary: "Agregar un producto al ticket",
-    examples: ["/producto 10 banners 50", "/producto 10 banners total 500", "/producto 10 banners"],
+    syntax: "/producto [cantidad] <descripción> [precio | $precio | total <monto> | sin precio]", summary: "Agregar un producto al ticket",
+    examples: ["/producto 10 banners 50", "/producto 10 banners total 500", "/producto 10 banners", "/producto banner 50 aniversario $350", "/producto playera talla 50 sin precio"],
     parse: function(arg){
       if(!arg) return { ok:false, showHelp:true };
       var p = parseProductoArg(arg);
@@ -1677,6 +2661,36 @@ var COMMANDS = [
       return { ok:true, data: { desc:p.desc, cantidad:p.cantidad, precio: (p.precio==null||isNaN(p.precio)) ? null : p.precio } };
     },
     run: function(data, ctx){ return addProductoCore(ctx.ticket, data.desc, data.cantidad, data.precio); }
+  },
+  {
+    key: "productos", aliases: ["productos","products"], type: "read", requiresTicket: true,
+    syntax: "/productos", summary: "Ver y editar los productos del ticket (no modifica nada por sí solo)",
+    examples: ["/productos"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(data, ctx){ pushEphemeral("productos", ctx.ticket.id, { filter: "all" }); }
+  },
+  {
+    key: "documentos", aliases: ["documentos","docs"], type: "read", requiresTicket: true,
+    syntax: "/documentos", summary: "Ver los documentos comerciales del ticket (cotizaciones/invoices) y crear uno nuevo",
+    examples: ["/documentos"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(data, ctx){ pushEphemeral("documentos", ctx.ticket.id, {}); }
+  },
+  {
+    key: "factura", aliases: ["factura","invoice"], type: "write", requiresTicket: true, confirm: true,
+    confirmTitle: "Crear invoice", confirmSummary: docConfirmSummary,
+    syntax: "/factura [notas]", summary: "Crear un invoice de un solo paso con los productos y el cliente actuales del ticket",
+    examples: ["/factura", "/factura pagado por transferencia"],
+    parse: function(arg, ctx){ return parseDocCommand(arg, ctx, "invoice"); },
+    run: function(data, ctx){ return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas); }
+  },
+  {
+    key: "cotizacion", aliases: ["cotizacion","cotización","quote"], type: "write", requiresTicket: true, confirm: true,
+    confirmTitle: "Crear cotización", confirmSummary: docConfirmSummary,
+    syntax: "/cotizacion [notas]", summary: "Crear una cotización de un solo paso con los productos y el cliente actuales del ticket",
+    examples: ["/cotizacion", "/cotizacion válida por 15 días"],
+    parse: function(arg, ctx){ return parseDocCommand(arg, ctx, "cotizacion"); },
+    run: function(data, ctx){ return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas); }
   },
   {
     key: "pago", aliases: ["pago","payment"], type: "write", requiresTicket: true, confirm: true,
@@ -1715,7 +2729,7 @@ var COMMANDS = [
       var match = STATE.meta.queSigueOptions.filter(function(o){ return o.toLowerCase() === arg.toLowerCase(); })[0];
       return { ok:true, data: { value: match || arg } };
     },
-    run: function(data){ return commitQueSigue(data.value); }
+    run: function(data){ return commitQueSigue(data.value, {refocus:true}); }
   },
   {
     key: "atender", aliases: ["atender","attention"], type: "write", requiresTicket: true,
@@ -1724,10 +2738,10 @@ var COMMANDS = [
     parse: function(arg){
       if(!arg) return { ok:false, showHelp:true };
       var r = parseHumanDate(arg);
-      if(r.status !== "confident") return { ok:false, error: 'No estoy seguro de esa fecha — usa el selector "Atender" del encabezado del ticket.' };
+      if(r.status !== "confident") return { ok:false, error: 'No estoy seguro de esa fecha — usa el selector "Atender" del encabezado del ticket.', focusElId: "field-fecha-atencion" };
       return { ok:true, data: { iso: isoDate(r.date) } };
     },
-    run: function(data){ return commitHeaderField("field-fecha-atencion", data.iso); }
+    run: function(data){ return commitHeaderField("field-fecha-atencion", data.iso, {refocus:true}); }
   },
   {
     key: "compromiso", aliases: ["compromiso","commitment"], type: "write", requiresTicket: true,
@@ -1736,38 +2750,38 @@ var COMMANDS = [
     parse: function(arg){
       if(!arg) return { ok:false, showHelp:true };
       var r = parseHumanDate(arg);
-      if(r.status !== "confident") return { ok:false, error: 'No estoy seguro de esa fecha — usa el selector "Compromiso" del encabezado del ticket.' };
+      if(r.status !== "confident") return { ok:false, error: 'No estoy seguro de esa fecha — usa el selector "Compromiso" del encabezado del ticket.', focusElId: "field-fecha-compromiso" };
       return { ok:true, data: { iso: isoDate(r.date) } };
     },
-    run: function(data){ return commitHeaderField("field-fecha-compromiso", data.iso); }
+    run: function(data){ return commitHeaderField("field-fecha-compromiso", data.iso, {refocus:true}); }
   },
   {
     key: "estado", aliases: ["estado","resumen","status","summary"], type: "read", requiresTicket: true,
     syntax: "/estado", summary: "Ver un resumen del ticket (no guarda nada)",
     examples: ["/estado"],
     parse: function(){ return { ok:true, data:{} }; },
-    run: function(data, ctx){ UI.ephemeralCard = { kind:"estado", ticketId: ctx.ticket.id }; render(); }
+    run: function(data, ctx){ pushEphemeral("estado", ctx.ticket.id); }
   },
   {
     key: "pendientes", aliases: ["pendientes","pending"], type: "read", requiresTicket: false,
     syntax: "/pendientes", summary: "Ver tareas y precios pendientes",
     examples: ["/pendientes"],
     parse: function(){ return { ok:true, data:{} }; },
-    run: function(data, ctx){ UI.ephemeralCard = { kind:"pendientes", ticketId: ctx.ticket ? ctx.ticket.id : null }; render(); }
+    run: function(data, ctx){ pushEphemeral("pendientes", ctx.ticket ? ctx.ticket.id : null); }
   },
   {
     key: "dinero", aliases: ["dinero","money"], type: "read", requiresTicket: false,
     syntax: "/dinero", summary: "Ver totales y saldo",
     examples: ["/dinero"],
     parse: function(){ return { ok:true, data:{} }; },
-    run: function(data, ctx){ UI.ephemeralCard = { kind:"dinero", ticketId: ctx.ticket ? ctx.ticket.id : null }; render(); }
+    run: function(data, ctx){ pushEphemeral("dinero", ctx.ticket ? ctx.ticket.id : null); }
   },
   {
     key: "buscar", aliases: ["buscar","search"], type: "read", requiresTicket: false,
     syntax: "/buscar <texto>", summary: "Buscar tickets",
     examples: ["/buscar Ángela", "/buscar banners"],
     parse: function(arg){ return arg ? { ok:true, data:{ q: arg } } : { ok:false, showHelp:true }; },
-    run: function(data){ UI.search = data.q; saveUi(); render(); }
+    run: function(data){ UI.search = data.q; UI.pendingFocus = "composer"; saveUi(); render(); }
   },
   {
     key: "ticket", aliases: ["ticket","go"], type: "read", requiresTicket: false,
@@ -1782,8 +2796,55 @@ var COMMANDS = [
     run: function(data){
       var found = STATE.tickets.filter(function(t){ return t.seq === data.seq; })[0];
       if(!found){ showToast("No encontré el ticket #" + data.seq + "."); return; }
-      UI.selectedTicketId = found.id; UI.search = ""; UI.ephemeralCard = null; saveUi(); render();
+      UI.search = "";
+      openTicketById(found.id);
     }
+  },
+  {
+    key: "cliente", aliases: ["cliente","client"], type: "read", requiresTicket: false,
+    syntax: "/cliente <nombre>", summary: "Dentro de un ticket: buscar/vincular un cliente. Fuera de un ticket: solo consultar su ficha",
+    examples: ["/cliente Angela"],
+    parse: function(arg){ return arg ? { ok:true, data:{ q: arg } } : { ok:false, showHelp:true }; },
+    run: function(data, ctx){
+      pushEphemeral("cliente", ctx.ticket ? ctx.ticket.id : null, { mode: ctx.ticket ? "ticket" : "home", query: data.q });
+    }
+  },
+  {
+    key: "editarcliente", aliases: ["editarcliente","clientedit"], type: "read", requiresTicket: false,
+    syntax: "/editarcliente [nombre] [campo valor | datos libres]", summary: "Proponer cambios a un cliente existente (siempre pide confirmación antes de guardar)",
+    examples: ["/editarcliente Angela Top Builders 9565612970 angela@topbuilders.com", "/editarcliente telefono 9565612970"],
+    parse: function(arg){ return arg ? { ok:true, data:{ raw: arg } } : { ok:false, showHelp:true }; },
+    run: function(data, ctx){
+      var parsed = parseEditarClienteArg(data.raw);
+      /* Un nombre explícito en el texto siempre gana. Solo se cae al
+         cliente ya vinculado del ticket actual cuando el texto no trae
+         ningún nombre (la forma "/editarcliente telefono 9565612970"
+         dentro de un ticket con cliente vinculado). */
+      var fallbackId = (!parsed.nameQuery && ctx.ticket && ctx.ticket.clienteId) ? ctx.ticket.clienteId : null;
+      pushEphemeral("editarcliente", ctx.ticket ? ctx.ticket.id : null, {
+        patch: parsed.patch,
+        targetId: fallbackId,
+        nameQuery: fallbackId ? null : parsed.nameQuery
+      });
+    }
+  },
+  {
+    key: "clear", aliases: ["clear","limpiar"], type: "read", requiresTicket: false,
+    syntax: "/clear", summary: "Quitar los mensajes efímeros de esta vista (no borra nada guardado)",
+    examples: ["/clear"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(data, ctx){
+      clearEphemeralForContext(ctx.ticket ? ctx.ticket.id : null);
+      UI.pendingFocus = "composer";
+      render();
+    }
+  },
+  {
+    key: "refresh", aliases: ["refresh","refrescar"], type: "read", requiresTicket: false,
+    syntax: "/refresh", summary: "Releer los datos de Supabase y actualizar la vista",
+    examples: ["/refresh"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(){ return refreshFromServer({refocus:true}); }
   },
   {
     key: "help", aliases: ["help","ayuda"], type: "read", requiresTicket: false,
@@ -1810,11 +2871,8 @@ async function dispatchCommand(raw){
   var t = findTicket(UI.selectedTicketId);
   var hasTicket = !!t;
 
-  UI.slashHelp = null; // cada comando que se despacha empieza sin ayuda pegada de antes
-
   if(aliasKey === "help" || aliasKey === "ayuda"){
-    UI.slashHelp = { query: parsed.arg.replace(/^\//, "").trim() };
-    render();
+    pushEphemeral("help", hasTicket ? t.id : null, { query: parsed.arg.replace(/^\//, "").trim() });
     return;
   }
   if(!aliasKey){
@@ -1837,8 +2895,21 @@ async function dispatchCommand(raw){
   var ctx = { ticket: t };
   var result = cmd.parse(parsed.arg, ctx);
   if(!result.ok){
-    if(result.showHelp){ UI.slashHelp = { query: key }; render(); }
-    else if(result.error){ showToast(result.error); }
+    if(result.showHelp){ pushEphemeral("help", hasTicket ? t.id : null, { query: key }); }
+    else if(result.error){
+      /* Fecha ambigua/no reconocida: en vez de solo avisar, mandamos el foco
+         directo al selector de fecha nativo del encabezado — cuando el
+         usuario termine con él (bindField), el foco vuelve al compositor
+         porque UI.dateFallbackElId lo marca como "vino de un fallback".
+         render() reconstruye el DOM (incluido el toast, que empieza vacío),
+         así que el aviso siempre se muestra DESPUÉS de renderizar. */
+      if(result.focusElId){
+        UI.dateFallbackElId = result.focusElId;
+        UI.pendingFocus = { elId: result.focusElId };
+        render();
+      }
+      showToast(result.error);
+    }
     return;
   }
   return runWithConfirm(cmd, result.data, ctx);
@@ -1877,14 +2948,21 @@ function wireEvents(){
   });
 
   root.querySelectorAll('[data-action="open-ticket"]').forEach(function(b){
-    b.addEventListener("click", function(){
-      UI.selectedTicketId = b.getAttribute("data-id");
-      UI.composer = null;
-      UI.ephemeralCard = null;
-      UI.slashHelp = null;
-      saveUi();
-      render();
-    });
+    b.addEventListener("click", function(){ openTicketById(b.getAttribute("data-id")); });
+  });
+
+  root.querySelectorAll('[data-action="go-home"]').forEach(function(b){
+    b.addEventListener("click", function(){ goHome(); });
+  });
+
+  /* Menú lateral en móvil (sección 16: el sidebar ya tenía el CSS de cajón
+     y UI.sidebarOpen, pero le faltaba el botón para abrirlo — sin esto era
+     imposible llegar al sidebar en una pantalla angosta). */
+  root.querySelectorAll('[data-action="toggle-sidebar"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.sidebarOpen = !UI.sidebarOpen; render(); });
+  });
+  root.querySelectorAll('[data-action="close-sidebar"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.sidebarOpen = false; render(); });
   });
 
   root.querySelectorAll('[data-action="stub"]').forEach(function(b){
@@ -1967,6 +3045,8 @@ function wireEvents(){
   if(closeDocBtn) closeDocBtn.addEventListener("click", closeDocumentViewer);
   var printDocBtn = root.querySelector('[data-action="print-doc"]');
   if(printDocBtn) printDocBtn.addEventListener("click", function(){ window.print(); });
+  var downloadPdfBtn = root.querySelector('[data-action="download-pdf"]');
+  if(downloadPdfBtn) downloadPdfBtn.addEventListener("click", function(){ downloadDocumentPdf(downloadPdfBtn.getAttribute("data-id")); });
   var docOverlay = document.getElementById("doc-modal-overlay");
   if(docOverlay){
     docOverlay.addEventListener("click", function(e){ if(e.target === docOverlay) closeDocumentViewer(); });
@@ -1975,15 +3055,20 @@ function wireEvents(){
   root.querySelectorAll('[data-slash-cmd]').forEach(function(b){
     b.addEventListener("click", function(){ pickSlashCommand(b.getAttribute("data-slash-cmd")); });
   });
-
-  var closeEphemeralBtn = root.querySelector('[data-action="close-ephemeral"]');
-  if(closeEphemeralBtn) closeEphemeralBtn.addEventListener("click", function(){ UI.ephemeralCard = null; render(); });
 }
 
 function bindField(id, evtName){
   var el = document.getElementById(id);
   if(!el) return;
-  el.addEventListener(evtName, function(){ commitHeaderField(id, el.value); });
+  el.addEventListener(evtName, function(){
+    /* Si este campo recibió el foco como fallback de una fecha ambigua
+       (/atender, /compromiso), terminar de usarlo devuelve el foco al
+       compositor — en cualquier otro caso (edición directa del encabezado
+       con el mouse) el foco se queda donde el usuario lo dejó. */
+    var opts;
+    if(UI.dateFallbackElId === id){ UI.dateFallbackElId = null; opts = {refocus:true}; }
+    commitHeaderField(id, el.value, opts);
+  });
 }
 
 /* single delegated document-level listener, registered once at boot (never re-added on render).
@@ -1995,6 +3080,56 @@ document.addEventListener("click", function(e){
   if(normalBtn){ toggleNormalTask(normalBtn.getAttribute("data-ticket"), normalBtn.getAttribute("data-toggle-normal-task")); return; }
   var docCard = e.target.closest && e.target.closest('[data-action="open-doc"]');
   if(docCard){ openDocumentViewer(docCard.getAttribute("data-id")); return; }
+  var dismissBtn = e.target.closest && e.target.closest('[data-action="dismiss-ephemeral"]');
+  if(dismissBtn){ dismissEphemeral(dismissBtn.getAttribute("data-id")); return; }
+  var helpFillBtn = e.target.closest && e.target.closest('[data-action="help-fill"]');
+  if(helpFillBtn){ restoreComposerText(helpFillBtn.getAttribute("data-text")); return; }
+  var showProdBtn = e.target.closest && e.target.closest('[data-action="show-productos"]');
+  if(showProdBtn){ pushEphemeral("productos", showProdBtn.getAttribute("data-ticket"), { filter: showProdBtn.getAttribute("data-filter") }); return; }
+  var showDocsBtn = e.target.closest && e.target.closest('[data-action="show-documentos"]');
+  if(showDocsBtn){ pushEphemeral("documentos", showDocsBtn.getAttribute("data-ticket"), {}); return; }
+  var clienteSelectBtn = e.target.closest && e.target.closest('[data-action="cliente-select"]');
+  if(clienteSelectBtn){
+    pushEphemeral("cliente", clienteSelectBtn.getAttribute("data-ticket") || null, { mode: clienteSelectBtn.getAttribute("data-mode"), resolvedId: clienteSelectBtn.getAttribute("data-client-id") });
+    return;
+  }
+  var clienteLinkBtn = e.target.closest && e.target.closest('[data-action="cliente-link"]');
+  if(clienteLinkBtn){
+    var linkTicket = findTicket(clienteLinkBtn.getAttribute("data-ticket"));
+    var linkCliente = STATE.clientes.filter(function(c){ return c.id === clienteLinkBtn.getAttribute("data-client-id"); })[0];
+    if(linkTicket && linkCliente) linkClienteToTicket(linkTicket, linkCliente);
+    return;
+  }
+  var clienteCreateBtn = e.target.closest && e.target.closest('[data-action="cliente-create"]');
+  if(clienteCreateBtn){
+    var createTicket = findTicket(clienteCreateBtn.getAttribute("data-ticket"));
+    var createName = clienteCreateBtn.getAttribute("data-name");
+    if(createTicket && createName){
+      createClienteCore(createName).then(function(c){ if(c) linkClienteToTicket(createTicket, c); });
+    }
+    return;
+  }
+  var editSelectBtn = e.target.closest && e.target.closest('[data-action="editarcliente-select"]');
+  if(editSelectBtn){
+    var oldEntry = UI.ephemeralLog.filter(function(en){ return en.id === editSelectBtn.getAttribute("data-ephemeral-id"); })[0];
+    if(oldEntry){
+      var reTicketId = oldEntry.ticketId, rePatch = oldEntry.params.patch;
+      dismissEphemeral(oldEntry.id);
+      pushEphemeral("editarcliente", reTicketId, { patch: rePatch, targetId: editSelectBtn.getAttribute("data-client-id"), nameQuery: null });
+    }
+    return;
+  }
+  var editConfirmBtn = e.target.closest && e.target.closest('[data-action="editarcliente-confirm"]');
+  if(editConfirmBtn){
+    var confEntry = UI.ephemeralLog.filter(function(en){ return en.id === editConfirmBtn.getAttribute("data-ephemeral-id"); })[0];
+    var confClientId = editConfirmBtn.getAttribute("data-client-id");
+    if(confEntry){
+      updateClienteCore(confClientId, confEntry.params.patch, confEntry.ticketId).then(function(ok){
+        if(ok){ dismissEphemeral(confEntry.id); showToast("Cliente actualizado."); }
+      });
+    }
+    return;
+  }
   if(UI.composer){
     var pop = document.getElementById("composer-popover");
     var plus = document.querySelector('[data-action="toggle-menu"]');
@@ -2004,8 +3139,81 @@ document.addEventListener("click", function(e){
   }
 }, true);
 
+/* Edición inline de productos (sección 7) dentro de un mensaje efímero de
+   /productos: delegado a nivel documento porque las filas se recrean en
+   cada render() (el log efímero se recalcula en vivo) — un listener normal
+   atado en wireEvents() se perdería en cuanto el usuario editara un segundo
+   campo y el DOM se reconstruyera. "change" ya burbujea, así que no hace
+   falta capture. */
+document.addEventListener("change", function(e){
+  var el = e.target.closest && e.target.closest("[data-producto-edit]");
+  if(!el) return;
+  var productoId = el.getAttribute("data-producto-edit");
+  var field = el.getAttribute("data-field");
+  var t = findTicket(el.getAttribute("data-ticket"));
+  if(!t) return;
+  var patch = {};
+  if(field === "desc"){
+    var desc = el.value.trim();
+    if(!desc){ showToast("La descripción no puede quedar vacía."); render(); return; }
+    patch.desc = desc;
+  } else if(field === "cantidad"){
+    var cantidad = parseFloat(el.value);
+    if(!cantidad || cantidad <= 0){ showToast("Cantidad inválida."); render(); return; }
+    patch.cantidad = cantidad;
+  } else if(field === "precio"){
+    patch.precio = el.value === "" ? null : parseFloat(el.value);
+  } else {
+    return;
+  }
+  updateProductoCore(t, productoId, patch);
+});
+
+/* true si el evento viene de algo donde escribir es normal (campo de texto,
+   select, contenteditable) — ahí J/K deben comportarse como letras, nunca
+   como navegación. Caso especial: el compositor VACÍO es el estado de
+   "listo para el siguiente comando" (foco continuo, sección 1) — justo
+   después de cambiar de ticket el foco vuelve ahí, así que si contara como
+   "escribiendo" la navegación consecutiva (J, J, J…) sería imposible sin
+   hacer clic para quitarle el foco. En cuanto el compositor tiene contenido
+   (una letra, "/", lo que sea) vuelve a comportarse como cualquier campo de
+   texto normal y J/K dejan de interceptarse. */
+function isTypingTarget(el){
+  if(!el) return false;
+  var tag = (el.tagName || "").toLowerCase();
+  if(el.id === "composer-input") return !!el.value;
+  if(tag === "input" || tag === "textarea" || tag === "select") return true;
+  if(el.isContentEditable) return true;
+  return false;
+}
+
 document.addEventListener("keydown", function(e){
-  if(e.key === "Escape" && UI.viewingDocId){ closeDocumentViewer(); }
+  if(e.key === "Escape" && UI.viewingDocId){ closeDocumentViewer(); return; }
+
+  /* Navegación J/K entre tickets, respetando el mismo orden visual que ve
+     el usuario en el sidebar (visualTicketOrder — pinneados, luego
+     agrupados por fecha, o el resultado de una búsqueda activa). No debe
+     interferir con la navegación estándar de formularios: se ignora por
+     completo mientras se escribe en cualquier campo, dentro de un modal de
+     documento, con el menú de "/" abierto, con una confirmación pendiente,
+     con un popover del compositor abierto, o con Ctrl/Cmd/Alt presionados. */
+  if((e.key === "j" || e.key === "k" || e.key === "J" || e.key === "K") &&
+     !e.ctrlKey && !e.metaKey && !e.altKey &&
+     !isTypingTarget(e.target) &&
+     !UI.viewingDocId && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer){
+    var order = visualTicketOrder();
+    if(order.length){
+      var idx = order.findIndex(function(t){ return t.id === UI.selectedTicketId; });
+      var dir = (e.key === "j" || e.key === "J") ? 1 : -1;
+      var nextIdx;
+      if(idx === -1) nextIdx = dir === 1 ? 0 : order.length - 1;
+      else nextIdx = Math.max(0, Math.min(order.length - 1, idx + dir));
+      if(order[nextIdx] && order[nextIdx].id !== UI.selectedTicketId){
+        e.preventDefault();
+        openTicketById(order[nextIdx].id);
+      }
+    }
+  }
 });
 
 /* ---------------- boot ---------------- */
