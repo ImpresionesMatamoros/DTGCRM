@@ -107,10 +107,15 @@ button{cursor:pointer;}
 }
 .ticket-row:hover{background:var(--surface-3);}
 .ticket-row.active{background:var(--surface); box-shadow:var(--shadow);}
-.ticket-row-top{display:flex; align-items:center; gap:6px; justify-content:space-between;}
-.ticket-title{font-weight:600; font-size:13.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.ticket-row-top{display:flex; align-items:baseline; gap:6px;}
+.ticket-num{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); flex-shrink:0;}
+.ticket-title{font-weight:600; font-size:13.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;}
+.ticket-title.muted{font-weight:500; color:var(--text-faint); font-style:italic;}
 .ticket-pin{color:var(--gold); flex-shrink:0;}
-.ticket-meta{display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:11.5px;}
+.ticket-row-product{font-size:11.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px;}
+.ticket-row-product.muted{color:var(--text-faint); font-style:italic;}
+.ticket-meta{display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:11.5px; margin-top:3px;}
+.ticket-meta:empty{display:none;}
 .pill{
   display:inline-flex; align-items:center; padding:1px 7px; border-radius:999px; font-size:11px;
   font-weight:600; white-space:nowrap; max-width:150px; overflow:hidden; text-overflow:ellipsis;
@@ -238,27 +243,30 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 
 /* ---------- Comanda del ticket (sección 3/4/5) ----------
    "LA CABECERA EXPLICA EL PRESENTE": más jerarquía visual que el
-   historial (que sigue chico y denso, sin tocar). */
+   historial (que sigue chico y denso, sin tocar). Sigue siendo una barra
+   compacta, sin cards ni cajas dentro de cajas — la jerarquía se logra con
+   tipografía/ritmo, no con contenedores nuevos. */
 .status-pill.status-abierto{background:var(--cyan-soft); color:var(--cyan);}
 .status-pill.status-entregado{background:var(--success-soft); color:var(--success-ink);}
 .status-pill.status-cerrado_pagado{background:var(--surface-3); color:var(--text-muted);}
 .status-pill.status-cerrado_cancelado{background:var(--danger-soft); color:var(--danger);}
 .ticket-row-inactive .ticket-title{color:var(--text-muted);}
 
-.comanda-meta{font-family:var(--font-mono); color:var(--text-faint); font-size:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
-.comanda-identity{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+.comanda-meta{font-family:var(--font-mono); color:var(--text-faint); font-size:11.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.comanda-identity{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:2px;}
 .comanda-identity-btn{
   background:none; border:none; padding:0; font:inherit; cursor:pointer; text-align:left;
-  font-size:21px; font-weight:700; display:inline-flex; align-items:baseline; gap:5px;
+  font-size:25px; font-weight:700; letter-spacing:-.01em; line-height:1.15;
+  display:inline-flex; align-items:baseline; gap:6px;
 }
 /* .comanda-cliente-btn: SOLO cuando hay un cliente real vinculado (distinto
    de .comanda-cliente-plain) — algo se apoya en esta distinción para saber
    si el ticket ya tiene una entidad de cliente real, no solo texto libre. */
 .comanda-cliente-btn{color:var(--text);}
 .comanda-cliente-btn:hover{color:var(--accent-ink);}
-.comanda-cliente-chevron{font-size:15px; color:var(--text-faint); font-weight:500;}
-.comanda-cliente-plain{color:var(--text-muted); font-style:italic;}
-.comanda-summary{font-size:13px; color:var(--text-muted); margin-top:1px;}
+.comanda-cliente-chevron{font-size:16px; color:var(--text-faint); font-weight:500;}
+.comanda-cliente-plain{color:var(--text-muted); font-style:italic; font-size:21px;}
+.comanda-summary{font-size:13.5px; color:var(--text-muted); margin-top:2px;}
 .comanda-actions-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;}
 .btn-success{background:var(--success); color:#fff; font-weight:600; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.15);}
 .btn-success:hover{background:var(--success-ink);}
@@ -274,22 +282,40 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 }
 .comanda-cerrado-note b{color:var(--text);}
 
-.comanda-zones{display:flex; gap:18px; flex-wrap:wrap; margin-top:4px;}
-.comanda-zone{display:flex; flex-direction:column; gap:3px; min-width:180px; flex:1;}
-.comanda-zone-title{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); font-weight:700; margin-bottom:1px;}
-.comanda-row{
-  display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px;
-  background:none; border:none; padding:3px 2px; text-align:left; cursor:pointer; color:var(--text); border-radius:var(--radius-s);
+/* OPERACIÓN | COMERCIAL: dos zonas realmente diferenciadas — separador
+   vertical fino entre ellas (nunca una caja/card nueva) y cada campo es un
+   botón compacto tipo "stat" que aprovecha el ancho en horizontal en vez de
+   apilarse en una lista vertical de filas sueltas. */
+.comanda-zones{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; row-gap:12px; margin-top:12px; padding-top:10px; border-top:1px solid var(--border);}
+.comanda-zone{display:flex; flex-direction:column; gap:6px; padding-right:26px;}
+.comanda-zone-comercial{padding-left:26px; border-left:1px solid var(--border); margin-left:2px;}
+.comanda-zone-title{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); font-weight:700;}
+.comanda-zone-fields{display:flex; align-items:flex-end; gap:22px; flex-wrap:wrap; row-gap:8px;}
+.comanda-zone:not(.comanda-zone-comercial) .comanda-zone-fields{align-items:flex-start;}
+.comanda-field{
+  display:flex; flex-direction:column; gap:2px; font-size:13px;
+  background:none; border:none; padding:3px 6px; margin:-3px -6px; text-align:left; cursor:pointer; color:var(--text); border-radius:var(--radius-s);
 }
-.comanda-row:hover{background:var(--surface-3);}
-.comanda-row-label{color:var(--text-faint); font-size:12px;}
-.comanda-row-value{font-weight:600; color:var(--text); text-align:right;}
-.comanda-row-value.muted{color:var(--text-faint); font-weight:500; font-style:italic;}
-.comanda-row-value.accent{color:var(--accent-ink);}
-.comanda-row-value.known{color:var(--text);}
-.comanda-row-value.pending{color:var(--gold);}
+.comanda-field:hover{background:var(--surface-3);}
+.comanda-field-label{color:var(--text-faint); font-size:11px;}
+.comanda-field-value{font-weight:600; color:var(--text); font-size:14px;}
+.comanda-field-value.muted{color:var(--text-faint); font-weight:500; font-style:italic;}
+.comanda-field-value.accent{color:var(--accent-ink); font-weight:700;}
+.comanda-field-value.known{color:var(--text);}
+.comanda-field-value.pending{color:var(--gold);}
+/* .comanda-stat: COMERCIAL invierte el orden (número primero, etiqueta
+   debajo) — en esta zona lo que se escanea es la cifra, no el nombre del
+   campo (sección "valores importantes fáciles de escanear"). */
+.comanda-stat{gap:1px;}
+.comanda-stat .comanda-field-value{font-family:var(--font-mono); font-size:16px; font-weight:700;}
+.comanda-stat .comanda-field-value.cobrado{color:var(--success-ink);}
+.comanda-stat .comanda-field-label{font-size:10.5px;}
 .comanda-edit-inline{padding:2px; display:flex; align-items:center; gap:6px;}
 .comanda-edit-inline .field-label{display:none;}
+@media (max-width:640px){
+  .comanda-identity-btn, .comanda-cliente-plain{font-size:20px;}
+  .comanda-zone-comercial{border-left:none; padding-left:0; margin-left:0; margin-top:2px; padding-top:10px; border-top:1px dashed var(--border);}
+}
 
 /* Modal de cierre: chico y centrado, se dispara desde el encabezado (no
    desde el compositor de abajo) — mismo criterio que el visor de doc. */
@@ -358,6 +384,14 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .help-cmd-btn:hover, .help-example-btn:hover{background:var(--surface-3); border-color:var(--accent);}
 .help-cmd-btn code{font-family:var(--font-mono); color:var(--accent); flex-shrink:0;}
 .help-cmd-btn .desc{color:var(--text-muted);}
+/* Vincular/crear cliente (sección 5): la decisión principal de /cliente NO
+   puede leerse como texto informativo gris — necesita contraste real de
+   acción, igual que cualquier otro botón primario de la app. Mismo botón,
+   misma lógica (cliente-link/cliente-create) — solo cambia el peso visual. */
+.cliente-cta{border-color:var(--accent-soft); background:var(--accent-soft);}
+.cliente-cta .desc{color:var(--accent-ink); font-weight:700;}
+.cliente-cta:hover{background:var(--accent); border-color:var(--accent);}
+.cliente-cta:hover .desc{color:#fff;}
 .help-example-btn{font-family:var(--font-mono); color:var(--text-muted);}
 
 /* Vista editable de productos (sección 7) — dentro de un mensaje efímero,
@@ -491,7 +525,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .doc-card-total{ font-family:var(--font-mono); font-weight:600; font-size:14.5px; color:var(--text); margin-top:2px; }
 .doc-card-meta{ font-size:11px; color:var(--text-faint); margin-top:2px; }
 .doc-card-link{ font-size:12px; color:var(--accent); font-weight:600; margin-top:4px; }
-.doc-badge{ font-size:12.5px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; }
+.doc-badge{ font-size:12.5px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; white-space:nowrap; }
 .doc-new-actions{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
 .doc-new-actions .help-cmd-btn{ width:auto; flex:1 1 140px; justify-content:center; }
 @media (max-width:520px){ .doc-new-actions{ flex-direction:column; } .doc-new-actions .help-cmd-btn{ width:100%; } }
@@ -591,7 +625,15 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   position:absolute; bottom:100%; left:20px; margin-bottom:8px; background:var(--surface);
   border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);
   width:260px; padding:6px; z-index:20; max-height:min(360px, 60vh); overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:var(--border) transparent;
 }
+/* Scrollbar discreta pero SIEMPRE visible (no la finita/auto-ocultable de
+   macOS/trackpad) — es la señal de "hay más abajo" sin agregar flechas,
+   fades ni contadores nuevos al menú. */
+.slash-menu::-webkit-scrollbar{width:7px;}
+.slash-menu::-webkit-scrollbar-track{background:transparent;}
+.slash-menu::-webkit-scrollbar-thumb{background:var(--border); border-radius:99px;}
+.slash-menu::-webkit-scrollbar-thumb:hover{background:var(--text-faint);}
 .slash-menu-item{
   display:flex; align-items:baseline; gap:8px; width:100%; text-align:left; padding:7px 8px; border:none;
   background:none; border-radius:var(--radius-s); font-size:13px;
@@ -777,32 +819,59 @@ async function fetchAllState(){
 }
 
 var refreshInFlight = null;
+/* Si llega una mutación (o un evento de Realtime) MIENTRAS ya hay un
+   fetchAllState() en camino, no la descartamos con el dedup de abajo:
+   la encolamos para correr OTRA vez en cuanto termine la actual. Sin esto,
+   una escritura que termina justo después de que arrancó un fetch anterior
+   (muy común: cualquier mutación dispara su propio touch_ticket_* trigger
+   en Postgres, que a su vez dispara un evento de Realtime sobre "tickets"
+   casi al mismo tiempo) podía quedar "tragada" por ese fetch viejo, que
+   sobreescribe STATE con una foto tomada antes de que esa escritura se
+   reflejara — y como el dedup nunca reintentaba, la comanda se quedaba
+   mostrando el valor anterior hasta el siguiente refresh manual. Esa era
+   la causa de fondo de "algunos cambios no se reflejan inmediatamente". */
+var refreshPending = null; // null | { background: boolean }
 /* opts.refocus: la próxima vez que esto termine en un render(), el
    compositor debe quedar vacío y enfocado — lo pide cualquier mutación
    disparada desde un comando o desde el botón "+", nunca las
    actualizaciones de fondo (realtime) ni las ediciones directas de campos
-   del encabezado. Ver applyFocus(). */
+   del encabezado. Ver applyFocus().
+   opts.background: SOLO lo pasa scheduleRefresh() (Realtime). Marca que
+   este render no lo pidió el usuario, así que debe preservar cualquier
+   campo vivo (compositor, edición de la comanda, formulario del "+") que
+   esté a medio escribir — ver renderKeepingLiveInputs(). Si mientras tanto
+   llega también una llamada "de primera mano" (sin background), esa gana:
+   el render final se comporta como uno normal. */
 async function refreshFromServer(opts){
   opts = opts || {};
   if(opts.refocus) UI.pendingFocus = UI.pendingFocus || "composer";
-  if(refreshInFlight) return refreshInFlight;
+  if(refreshInFlight){
+    refreshPending = refreshPending || { background: true };
+    if(!opts.background) refreshPending.background = false;
+    return refreshInFlight;
+  }
   refreshInFlight = (async function(){
-    try{
-      var fresh = await fetchAllState();
-      STATE = fresh;
-      if(UI.selectedTicketId && !findTicket(UI.selectedTicketId)) UI.selectedTicketId = null;
-      render();
-    }catch(e){
-      showToast("No se pudo sincronizar: " + (e.message || "error de red"));
-    }finally{
-      refreshInFlight = null;
+    var background = !!opts.background;
+    for(;;){
+      try{
+        var fresh = await fetchAllState();
+        STATE = fresh;
+        if(UI.selectedTicketId && !findTicket(UI.selectedTicketId)) UI.selectedTicketId = null;
+        if(background) renderKeepingLiveInputs(); else render();
+      }catch(e){
+        showToast("No se pudo sincronizar: " + (e.message || "error de red"));
+      }
+      if(!refreshPending) break;
+      background = refreshPending.background;
+      refreshPending = null;
     }
+    refreshInFlight = null;
   })();
   return refreshInFlight;
 }
 
 var realtimeTimer = null;
-function scheduleRefresh(){ clearTimeout(realtimeTimer); realtimeTimer = setTimeout(refreshFromServer, 300); }
+function scheduleRefresh(){ clearTimeout(realtimeTimer); realtimeTimer = setTimeout(function(){ refreshFromServer({ background: true }); }, 300); }
 function subscribeRealtime(){
   var channel = sb.channel("dtg-changes");
   ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes"].forEach(function(table){
@@ -948,18 +1017,48 @@ function estadoLabel(e){
 
 /* ---------------- rendering (unchanged visual language from V0.1) ---------------- */
 
+/* Helpers SOLO para la identificación del sidebar (sección 20) — NO tocar
+   ticketLabel(), que se usa en otros contextos (búsqueda, /ticket, ficha de
+   cliente) con otro significado. El sidebar necesita reconocerse por
+   Número + Cliente + Producto principal, no solo por el nombre del
+   cliente. */
+function sidebarClienteLabel(t){ return t.cliente ? t.cliente : "Sin cliente"; }
+/* Producto principal = mayor cantidad × precio conocido. Un producto sin
+   precio (precio null) nunca supera arbitrariamente a uno cuyo valor sí
+   conocemos — se le da un valor de comparación de -1, menor que cualquier
+   precio real (incluido $0). Si NINGÚN producto tiene precio, ninguno
+   supera nunca al primero (todos empatan en -1) y por lo tanto gana el
+   primero de la lista, exactamente el fallback pedido. Comparación con ">"
+   estricto: en empate se conserva el orden existente, nunca se reordena. */
+function sidebarProductoPrincipal(t){
+  var productos = t.productos || [];
+  if(!productos.length) return "Sin producto";
+  var best = productos[0];
+  var bestValue = best.precio == null ? -1 : (best.cantidad||1) * best.precio;
+  for(var i=1;i<productos.length;i++){
+    var p = productos[i];
+    var value = p.precio == null ? -1 : (p.cantidad||1) * p.precio;
+    if(value > bestValue){ best = p; bestValue = value; }
+  }
+  return ((best.cantidad && best.cantidad !== 1) ? (best.cantidad + " ") : "") + best.desc;
+}
+
 function renderTicketRow(t){
   var active = t.id === UI.selectedTicketId;
   var estado = ticketEstado(t);
   var pill = t.queSigue ? '<span class="pill pill-accent">' + escapeHtml(t.queSigue) + "</span>" : "";
   var estadoPill = estado !== "abierto" ? '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>" : "";
+  var noCliente = !t.cliente;
+  var noProducto = !(t.productos && t.productos.length);
   return (
     '<button class="ticket-row' + (active?" active":"") + (estado!=="abierto"?" ticket-row-inactive":"") + '" data-action="open-ticket" data-id="' + t.id + '">' +
       '<div class="ticket-row-top">' +
-        '<span class="ticket-title">' + escapeHtml(ticketLabel(t)) + "</span>" +
+        '<span class="ticket-num">#' + t.seq + "</span>" +
+        '<span class="ticket-title' + (noCliente?" muted":"") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</span>" +
         (t.pinned ? '<span class="ticket-pin" title="Fijado">&#9733;</span>' : "") +
       "</div>" +
-      '<div class="ticket-meta"><span>#' + t.seq + "</span>" + estadoPill + pill + "</div>" +
+      '<div class="ticket-row-product' + (noProducto?" muted":"") + '">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" +
+      '<div class="ticket-meta">' + estadoPill + pill + "</div>" +
     "</button>"
   );
 }
@@ -1195,8 +1294,21 @@ function ticketWorkSummary(t){
 /* Fila "clic para actuar" reutilizada por OPERACIÓN y COMERCIAL (sección
    10: "ver algo debe acercarme a actuar sobre ello") — un solo renderer,
    nunca una copia por zona. */
-function comandaRow(label, valueHtml, dataAttrs){
-  return '<button class="comanda-row" ' + (dataAttrs||"") + '><span class="comanda-row-label">' + label + '</span><span class="comanda-row-value' + "" + '">' + valueHtml + "</span></button>";
+/* Dos formas del mismo patrón "clic para actuar" (sección 10), nunca dos
+   lógicas de guardado distintas — ambas son botones normales con el mismo
+   data-action/data-field que ya consume wireEvents/openHeaderEdit. Difieren
+   solo en el orden visual: OPERACIÓN se lee primero por el nombre del campo
+   (¿qué es esto?), COMERCIAL se lee primero por el número (¿cuánto es?). */
+/* valueHtml siempre trae su propio <span class="comanda-field-value ...">
+   ya armado por quien llama (con el modificador muted/known/accent/pending
+   que aplique) — el helper solo pone el label y el botón alrededor, nunca
+   envuelve el valor por su cuenta, para no terminar con dos spans
+   "comanda-field-value" anidados. */
+function comandaField(label, valueHtml, dataAttrs){
+  return '<button class="comanda-field" ' + (dataAttrs||"") + '><span class="comanda-field-label">' + label + "</span>" + valueHtml + "</button>";
+}
+function comandaStat(label, valueHtml, dataAttrs){
+  return '<button class="comanda-field comanda-stat" ' + (dataAttrs||"") + '>' + valueHtml + '<span class="comanda-field-label">' + label + "</span></button>";
 }
 
 function renderTicketHeader(t){
@@ -1269,27 +1381,30 @@ function renderTicketHeader(t){
   var opRows = "";
   opRows += (editing === "quesigue")
     ? '<div class="comanda-edit-inline">' + renderQueSigueSelect(t) + "</div>"
-    : comandaRow("Qué sigue", t.queSigue ? escapeHtml(t.queSigue) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="quesigue"');
+    : comandaField("Qué sigue", t.queSigue ? '<span class="comanda-field-value accent">' + escapeHtml(t.queSigue) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="quesigue"');
   opRows += (editing === "responsable")
     ? '<div class="comanda-edit-inline"><input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '"></div>'
-    : comandaRow("Responsable", t.responsable ? escapeHtml(t.responsable) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
+    : comandaField("Responsable", t.responsable ? '<span class="comanda-field-value">' + escapeHtml(t.responsable) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
   opRows += (editing === "atencion")
     ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-atencion" value="' + (t.fechaAtencion||"") + '"></div>'
-    : comandaRow("Atender", t.fechaAtencion ? fmtDateShort(t.fechaAtencion) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
+    : comandaField("Atender", t.fechaAtencion ? '<span class="comanda-field-value">' + fmtDateShort(t.fechaAtencion) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
   opRows += (editing === "compromiso")
     ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-compromiso" value="' + (t.fechaCompromiso||"") + '"></div>'
-    : comandaRow("Compromiso", t.fechaCompromiso ? fmtDateShort(t.fechaCompromiso) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
+    : comandaField("Compromiso", t.fechaCompromiso ? '<span class="comanda-field-value">' + fmtDateShort(t.fechaCompromiso) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
 
   /* 5 — COMERCIAL: SOLO hechos ya calculados en otro lado (computeTotals,
-     pagos) — jamás una deuda/saldo inventada aquí ("PRECIO ≠ DEUDA"). */
+     pagos) — jamás una deuda/saldo inventada aquí ("PRECIO ≠ DEUDA"). Los
+     números van primero (comandaStat): en esta zona lo que se escanea es
+     la cifra, no el nombre del campo. */
   var comRows = "";
   comRows += t.productos.length
-    ? comandaRow("Total conocido", '<span class="comanda-row-value known">' + fmtMoney(totals.known) + "</span> &rsaquo;", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"')
-    : comandaRow("Total conocido", '<span class="comanda-row-value muted">Sin productos &rsaquo;</span>', 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"');
-  comRows += comandaRow("Cobrado", '<span class="comanda-row-value known">' + fmtMoney(cobrado) + "</span> &rsaquo;", 'data-action="show-dinero" data-ticket="' + t.id + '"');
+    ? comandaStat("Total conocido", '<span class="comanda-field-value known">' + fmtMoney(totals.known) + "</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"')
+    : comandaStat("Total conocido", '<span class="comanda-field-value muted">Sin productos</span>', 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"');
+  comRows += comandaStat("Cobrado", '<span class="comanda-field-value known cobrado">' + fmtMoney(cobrado) + "</span>", 'data-action="show-dinero" data-ticket="' + t.id + '"');
   if(totals.pending){
-    comRows += comandaRow("Precio pendiente", '<span class="comanda-row-value pending">' + totals.pending + (totals.pending===1?" pendiente":" pendientes") + "</span> &rsaquo;", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending"');
+    comRows += comandaStat(totals.pending===1?"Precio pendiente":"Precios pendientes", '<span class="comanda-field-value pending">' + totals.pending + "</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending"');
   }
+  comRows += comandaStat("Documentos", '<span class="comanda-field-value">' + t.documentos.length + "</span>", 'data-action="show-documentos" data-ticket="' + t.id + '"');
 
   return (
     '<div class="ticket-header">' +
@@ -1297,8 +1412,8 @@ function renderTicketHeader(t){
       identity +
       actionsRow +
       '<div class="comanda-zones">' +
-        '<div class="comanda-zone"><div class="comanda-zone-title">Operación</div>' + opRows + "</div>" +
-        '<div class="comanda-zone"><div class="comanda-zone-title">Comercial</div>' + comRows + "</div>" +
+        '<div class="comanda-zone"><div class="comanda-zone-title">Operación</div><div class="comanda-zone-fields">' + opRows + "</div></div>" +
+        '<div class="comanda-zone comanda-zone-comercial"><div class="comanda-zone-title">Comercial</div><div class="comanda-zone-fields">' + comRows + "</div></div>" +
       "</div>" +
     "</div>"
   );
@@ -1732,7 +1847,7 @@ function clienteFichaContent(c, t, mode){
     if(t.clienteId === c.id){
       html += '<div class="ephemeral-sub">Ya vinculado a este ticket.</div>';
     } else {
-      html += '<button class="help-cmd-btn" data-action="cliente-link" data-client-id="' + c.id + '" data-ticket="' + t.id + '"><span class="desc">Vincular "' + escapeHtml(c.nombre) + '" a este ticket</span></button>';
+      html += '<button class="help-cmd-btn cliente-cta cliente-cta-link" data-action="cliente-link" data-client-id="' + c.id + '" data-ticket="' + t.id + '"><span class="desc">Vincular "' + escapeHtml(c.nombre) + '" a este ticket &rsaquo;</span></button>';
     }
   } else {
     /* Fuera de un ticket, /cliente solo consulta (sección 1.10) — el
@@ -1781,7 +1896,7 @@ function clienteEntryContent(entry){
   }
   var html = '<div class="ephemeral-sub">No encontré ningún cliente que coincida con "' + escapeHtml(query) + '".</div>';
   if(mode === "ticket" && t){
-    html += '<button class="help-cmd-btn" data-action="cliente-create" data-name="' + escapeHtml(query) + '" data-ticket="' + t.id + '"><span class="desc">+ Crear cliente "' + escapeHtml(query) + '"</span></button>';
+    html += '<button class="help-cmd-btn cliente-cta cliente-cta-create" data-action="cliente-create" data-name="' + escapeHtml(query) + '" data-ticket="' + t.id + '"><span class="desc">+ Crear y vincular cliente "' + escapeHtml(query) + '"</span></button>';
   }
   return { title: title, html: html };
 }
@@ -2321,8 +2436,8 @@ function render(){
       if(UI.slashMenuOpen){
         var hasTicket = !!findTicket(UI.selectedTicketId);
         var list = filterCommands(hasTicket, UI.slashQuery);
-        if(e.key === "ArrowDown"){ e.preventDefault(); if(list.length) UI.slashActiveIndex = (UI.slashActiveIndex+1) % list.length; var v1=composerInput.value; render(); restoreComposerText(v1); return; }
-        if(e.key === "ArrowUp"){ e.preventDefault(); if(list.length) UI.slashActiveIndex = (UI.slashActiveIndex-1+list.length) % list.length; var v2=composerInput.value; render(); restoreComposerText(v2); return; }
+        if(e.key === "ArrowDown"){ e.preventDefault(); if(list.length) UI.slashActiveIndex = (UI.slashActiveIndex+1) % list.length; var v1=composerInput.value; render(); restoreComposerText(v1); scrollActiveMenuItemIntoView("slash-menu"); return; }
+        if(e.key === "ArrowUp"){ e.preventDefault(); if(list.length) UI.slashActiveIndex = (UI.slashActiveIndex-1+list.length) % list.length; var v2=composerInput.value; render(); restoreComposerText(v2); scrollActiveMenuItemIntoView("slash-menu"); return; }
         if(e.key === "Enter"){
           e.preventDefault();
           UI.slashMenuOpen = false;
@@ -2360,8 +2475,8 @@ function render(){
       }
       if(UI.cliSuggestOpen){
         var cliList = rankClientes(UI.cliSuggestQuery).slice(0, 8);
-        if(e.key === "ArrowDown"){ e.preventDefault(); if(cliList.length) UI.cliSuggestIndex = (UI.cliSuggestIndex+1) % cliList.length; var cv1=composerInput.value; render(); restoreComposerText(cv1); return; }
-        if(e.key === "ArrowUp"){ e.preventDefault(); if(cliList.length) UI.cliSuggestIndex = (UI.cliSuggestIndex-1+cliList.length) % cliList.length; var cv2=composerInput.value; render(); restoreComposerText(cv2); return; }
+        if(e.key === "ArrowDown"){ e.preventDefault(); if(cliList.length) UI.cliSuggestIndex = (UI.cliSuggestIndex+1) % cliList.length; var cv1=composerInput.value; render(); restoreComposerText(cv1); scrollActiveMenuItemIntoView("cli-suggest-menu"); return; }
+        if(e.key === "ArrowUp"){ e.preventDefault(); if(cliList.length) UI.cliSuggestIndex = (UI.cliSuggestIndex-1+cliList.length) % cliList.length; var cv2=composerInput.value; render(); restoreComposerText(cv2); scrollActiveMenuItemIntoView("cli-suggest-menu"); return; }
         if(e.key === "Enter"){
           /* A propósito NO ejecuta la sugerencia resaltada: Enter siempre
              corre el comando con el texto que el usuario realmente escribió
@@ -2450,6 +2565,79 @@ function restoreComposerText(v){
   var sendBtn = document.getElementById("composer-send");
   if(sendBtn) sendBtn.disabled = !v.trim();
   updateProductoPreview(v);
+}
+
+/* render() reconstruye TODO el DOM de #app desde cero (app.innerHTML = ...)
+   — es lo que mantiene toda la UI en un solo camino de verdad, pero
+   significa que cualquier valor que el usuario haya tecleado y todavía no
+   haya confirmado (el compositor, un campo de la comanda abierto para
+   editar, un formulario del "+", el precio de un renglón en un borrador de
+   documento, el motivo de un cierre) vive solo en el DOM viejo y se pierde
+   en la reconstrucción. Para una acción del propio usuario eso no importa
+   (la acción ya terminó, o el flujo decide explícitamente qué hacer con el
+   foco vía UI.pendingFocus/applyFocus). Para un refresh de FONDO disparado
+   por Realtime, sí importa — nunca debe sentirse como que otra persona en
+   otro dispositivo te borra lo que estás escribiendo. Este wrapper es la
+   única diferencia: toma una foto de cada campo vivo antes de renderizar y
+   la restaura después, sin tocar STATE/UI ni la lógica de guardado. */
+function renderKeepingLiveInputs(){
+  var appBefore = document.getElementById("app");
+  var active = document.activeElement;
+  var activeId = (active && appBefore && appBefore.contains(active)) ? active.id : null;
+  var activeSel = null;
+  if(activeId && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")){
+    try{ activeSel = [active.selectionStart, active.selectionEnd]; }catch(e){ activeSel = null; }
+  }
+  var values = {};
+  var docPriceValues = {};
+  if(appBefore){
+    appBefore.querySelectorAll("input[id], textarea[id], select[id]").forEach(function(el){ values[el.id] = el.value; });
+    appBefore.querySelectorAll("[data-doc-item-price]").forEach(function(el){ docPriceValues[el.getAttribute("data-doc-item-price")] = el.value; });
+  }
+
+  render();
+
+  var appAfter = document.getElementById("app");
+  if(appAfter){
+    appAfter.querySelectorAll("input[id], textarea[id], select[id]").forEach(function(el){
+      if(el.id in values) el.value = values[el.id];
+    });
+    appAfter.querySelectorAll("[data-doc-item-price]").forEach(function(el){
+      var idx = el.getAttribute("data-doc-item-price");
+      if(idx in docPriceValues) el.value = docPriceValues[idx];
+    });
+  }
+  var composerInput = document.getElementById("composer-input");
+  if(composerInput){
+    composerInput.style.height = "auto";
+    composerInput.style.height = Math.min(composerInput.scrollHeight, 120) + "px";
+    var sendBtn = document.getElementById("composer-send");
+    if(sendBtn) sendBtn.disabled = !composerInput.value.trim();
+    updateProductoPreview(composerInput.value);
+  }
+  if(activeId){
+    var newActive = document.getElementById(activeId);
+    if(newActive){
+      newActive.focus();
+      if(activeSel){
+        try{ newActive.selectionStart = activeSel[0]; newActive.selectionEnd = activeSel[1]; }catch(e){}
+      }
+    }
+  }
+}
+
+/* El menú "/" y el de sugerencia de cliente comparten el mismo problema:
+   con ~20 comandos registrados, el contenedor ya tenía scroll (overflow-y:
+   auto + max-height) pero navegar con ↑/↓ nunca movía ese scroll — la
+   selección se salía del recuadro visible y, sin ningún indicio de que
+   había más abajo, se sentía como si el menú solo tuviera los primeros 6-8
+   comandos. block:"nearest" mueve lo mínimo necesario para que el
+   seleccionado quede visible, sin saltar de más cuando ya lo está. */
+function scrollActiveMenuItemIntoView(containerId){
+  var container = document.getElementById(containerId);
+  if(!container) return;
+  var active = container.querySelector(".slash-menu-item.active");
+  if(active && active.scrollIntoView) active.scrollIntoView({ block: "nearest" });
 }
 
 function pickSlashCommand(cmd){
@@ -2969,36 +3157,71 @@ function renderDocModal(){
 }
 
 /* ---------------- PDF real descargable, sin librerías externas ----------------
-   Arma el archivo PDF byte a byte usando solo los operadores básicos de
-   texto y línea del formato PDF (nada que traer de un CDN, así funciona
-   también sin internet). Usa Courier/Courier-Bold — ancho fijo por
-   carácter — para que alinear la tabla y partir renglones largos sea
-   aritmética exacta, sin tener que medir texto con métricas de fuente. */
-function pdfPad(ch, n){ return n > 0 ? new Array(n+1).join(ch) : ""; }
-function padR(s, n){ s = String(s); return s.length >= n ? s.slice(0, n) : s + pdfPad(" ", n - s.length); }
-function padL(s, n){ s = String(s); return s.length >= n ? s.slice(-n) : pdfPad(" ", n - s.length) + s; }
-function wrapMonoText(text, width){
+   Arma el archivo PDF byte a byte usando solo los operadores básicos del
+   formato (texto, línea, color de relleno/trazo) — nada que traer de un
+   CDN, así funciona también sin internet y sin vendorizar nada nuevo en el
+   repo. Usa dos de las 14 fuentes estándar que trae cualquier visor de PDF
+   (Helvetica / Helvetica-Bold) — no Courier, no hace falta embeber ningún
+   programa de fuente — con una tabla AFM de anchos reales (measureText/
+   wrapText) para que el wrapping y la alineación de la tabla sean tan
+   exactos como con una fuente monoespaciada, pero con tipografía sans-serif
+   profesional real. Los mismos colores que .doc-paper en el visor HTML
+   (PDF_COLOR), para que el documento descargado y el que se ve en pantalla
+   sean, de verdad, la misma representación. */
+
+/* Anchos reales (1/1000 em) de Helvetica y Helvetica-Bold para el rango
+   ASCII imprimible — valores AFM estándar de Adobe, los mismos que ya trae
+   cualquier visor de PDF sin necesidad de embeber la fuente. */
+var HELV_WIDTHS = {" ":278,"!":278,"\"":355,"#":556,"$":556,"%":889,"&":667,"'":191,"(":333,")":333,"*":389,"+":584,",":278,"-":333,".":278,"/":278,"0":556,"1":556,"2":556,"3":556,"4":556,"5":556,"6":556,"7":556,"8":556,"9":556,":":278,";":278,"<":584,"=":584,">":584,"?":556,"@":1015,"A":667,"B":667,"C":722,"D":722,"E":667,"F":611,"G":778,"H":722,"I":278,"J":500,"K":667,"L":556,"M":833,"N":722,"O":778,"P":667,"Q":778,"R":722,"S":667,"T":611,"U":722,"V":667,"W":944,"X":667,"Y":667,"Z":611,"[":278,"\\":278,"]":278,"^":469,"_":556,"`":333,"a":556,"b":556,"c":500,"d":556,"e":556,"f":278,"g":556,"h":556,"i":222,"j":222,"k":500,"l":222,"m":833,"n":556,"o":556,"p":556,"q":556,"r":333,"s":500,"t":278,"u":556,"v":500,"w":722,"x":500,"y":500,"z":500,"{":334,"|":260,"}":334,"~":584};
+var HELV_BOLD_WIDTHS = {" ":278,"!":333,"\"":474,"#":556,"$":556,"%":889,"&":722,"'":238,"(":333,")":333,"*":389,"+":584,",":278,"-":333,".":278,"/":278,"0":556,"1":556,"2":556,"3":556,"4":556,"5":556,"6":556,"7":556,"8":556,"9":556,":":333,";":333,"<":584,"=":584,">":584,"?":611,"@":975,"A":722,"B":722,"C":722,"D":722,"E":667,"F":611,"G":778,"H":722,"I":278,"J":556,"K":722,"L":611,"M":833,"N":722,"O":778,"P":667,"Q":778,"R":722,"S":667,"T":611,"U":722,"V":667,"W":944,"X":667,"Y":667,"Z":611,"[":333,"\\":278,"]":333,"^":584,"_":556,"`":333,"a":556,"b":611,"c":556,"d":611,"e":556,"f":333,"g":611,"h":611,"i":278,"j":278,"k":556,"l":278,"m":889,"n":611,"o":611,"p":611,"q":611,"r":389,"s":556,"t":333,"u":611,"v":556,"w":778,"x":556,"y":556,"z":500,"{":389,"|":280,"}":389,"~":584};
+/* Vocales acentuadas / ñ / ü / ç: en las métricas AFM reales de Helvetica
+   comparten el mismo ancho que su letra base, así que basta con mapear a
+   la base en vez de duplicar toda la tabla para cada variante. */
+var PDF_ACCENT_BASE = {"á":"a","é":"e","í":"i","ó":"o","ú":"u","à":"a","è":"e","ì":"i","ò":"o","ù":"u","ä":"a","ë":"e","ï":"i","ö":"o","ü":"u","â":"a","ê":"e","î":"i","ô":"o","û":"u","ñ":"n","ç":"c","Á":"A","É":"E","Í":"I","Ó":"O","Ú":"U","À":"A","È":"E","Ì":"I","Ò":"O","Ù":"U","Ä":"A","Ë":"E","Ï":"I","Ö":"O","Ü":"U","Ñ":"N","Ç":"C"};
+function pdfCharWidth(ch, bold){
+  var table = bold ? HELV_BOLD_WIDTHS : HELV_WIDTHS;
+  if(table[ch] != null) return table[ch];
+  var base = PDF_ACCENT_BASE[ch];
+  if(base && table[base] != null) return table[base];
+  return bold ? 611 : 556; // fallback razonable para lo no mapeado — nunca rompe el layout
+}
+function measureText(str, size, bold){
+  var w = 0; str = String(str||"");
+  for(var i=0;i<str.length;i++) w += pdfCharWidth(str.charAt(i), bold);
+  return w / 1000 * size;
+}
+/* Wrapping real por ancho disponible en puntos, no por conteo de
+   caracteres — es lo que hace posible usar una fuente proporcional
+   (Helvetica) en vez de una monoespaciada y seguir alineando la tabla con
+   exactitud. Una palabra más larga que la columna se parte a la fuerza
+   (búsqueda binaria del corte que sí cabe) para nunca desbordar la página. */
+function wrapText(text, size, bold, maxWidth){
   var words = String(text||"").split(/\s+/).filter(Boolean);
   var lines = [], cur = "";
   words.forEach(function(w){
-    while(w.length > width){
+    while(measureText(w, size, bold) > maxWidth && w.length > 1){
+      var lo = 1, hi = w.length, fit = 1;
+      while(lo <= hi){
+        var mid = (lo+hi) >> 1;
+        if(measureText(w.slice(0, mid), size, bold) <= maxWidth){ fit = mid; lo = mid+1; } else hi = mid-1;
+      }
       if(cur){ lines.push(cur); cur = ""; }
-      lines.push(w.slice(0, width));
-      w = w.slice(width);
+      lines.push(w.slice(0, fit));
+      w = w.slice(fit);
     }
     var candidate = cur ? cur + " " + w : w;
-    if(candidate.length > width){ lines.push(cur); cur = w; }
+    if(cur && measureText(candidate, size, bold) > maxWidth){ lines.push(cur); cur = w; }
     else cur = candidate;
   });
-  if(cur) lines.push(cur);
-  return lines.length ? lines : [""];
+  if(cur || !lines.length) lines.push(cur);
+  return lines;
 }
-/* Un puñado de caracteres Unicode "altos" caen igual dentro de WinAnsiEncoding
-   (Windows-1252) en el bloque 0x80-0x9F — sobre todo la raya larga "—" que
-   usamos en el pie del documento — así que se remapean a su byte real en
-   vez de perderse como "?". Todo lo demás fuera de Latin-1 (emoji, CJK,
-   etc., si algún día alguien los escribe en una descripción) sí cae a "?":
-   no hay fuente Unicode embebida en este generador mínimo. */
+/* Un puñado de caracteres Unicode "altos" (los que puede escribir el
+   compositor pero no existen tal cual en WinAnsiEncoding) caen igual dentro
+   del bloque 0x80-0x9F — sobre todo la raya larga "—" y las comillas
+   tipográficas — así que se remapean a su byte real en vez de perderse
+   como "?". Todo lo demás fuera de Latin-1 (emoji, CJK) sí cae a "?": no
+   hay fuente Unicode embebida en este generador mínimo. */
 var PDF_WINANSI_HIGH_MAP = { 0x2013:0x96, 0x2014:0x97, 0x2018:0x91, 0x2019:0x92, 0x201C:0x93, 0x201D:0x94, 0x2022:0x95, 0x2026:0x85 };
 function pdfEscapeText(s){
   var out = "";
@@ -3014,114 +3237,191 @@ function pdfEscapeText(s){
 function pdfDateLong(iso){
   try{ return new Date(iso).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; }
 }
-/* Reorganizado para el nuevo diseño (sección 21): mismo motor propio byte a
-   byte (Courier/Courier-Bold, sin librería externa — cdnjs está bloqueado
-   en este sandbox, ver plan), ahora reflejando BILL TO / status / Subtotal
-   · Payments received · AMOUNT DUE / Payment · Notes / pie con la
-   identidad completa — nunca contenido en español ni referencias a México. */
+/* Misma paleta que .doc-paper en el visor HTML (--pk-ink/--pk-muted/
+   --pk-faint/--pk-line/--pk-accent) — el PDF descargado y lo que se ve en
+   pantalla usan literalmente los mismos números RGB. */
+var PDF_COLOR = {
+  ink:    [0.129, 0.122, 0.102],
+  muted:  [0.447, 0.424, 0.361],
+  faint:  [0.639, 0.612, 0.537],
+  line:   [0.894, 0.878, 0.831],
+  accent: [0.612, 0.078, 0.345]
+};
+
+/* Genera las operaciones de dibujo del documento, página por página, con
+   posiciones reales en puntos (US Letter: 612×792pt = 8.5×11in) — texto,
+   líneas y color, todo medido con measureText/wrapText en vez de conteo de
+   caracteres. Misma información y jerarquía que renderDocModal (BILL TO,
+   tabla Description/Qty/Rate/Amount, Subtotal/Payments received/AMOUNT
+   DUE, Payment/Notes, pie con la identidad completa) — es la misma fuente
+   de datos (doc), solo cambia el motor de dibujo. */
 function buildDocumentPdfOps(doc){
   var M = 54, PW = 612, PH = 792, RIGHT = PW - M;
-  var pages = [], curOps = [], y = PH - M;
-  function newPage(){ pages.push(curOps); curOps = []; y = PH - M; }
-  function ensure(space){ if(y - space < M) newPage(); }
-  function line(str, font, size, opts){
-    opts = opts || {};
-    if(opts.gray != null) curOps.push({ op:"g", v:opts.gray });
-    curOps.push({ op:"t", x: M, y: y, font: font, size: size, str: str });
-    if(opts.gray != null) curOps.push({ op:"g", v:0 });
-    y -= (opts.leading || (size + 4));
-  }
-  function rule(){ curOps.push({ op:"l", x1:M, y1:y, x2:RIGHT, y2:y }); y -= 10; }
-  function blank(n){ y -= (n||10); }
-
-  var W_DESC=38, W_CANT=7, W_PRECIO=13, W_SUB=15;
-  var FULL = W_DESC+W_CANT+W_PRECIO+W_SUB;
   var isInvoice = doc.tipo === "invoice";
-  var label = isInvoice ? "INVOICE" : "QUOTE / COTIZACION";
+  var label = isInvoice ? "INVOICE" : "QUOTE";
   var status = documentPaymentStatus(doc);
   var bt = doc.billTo || {};
   var btNombre = bt.nombre || doc.clienteNombre || "";
 
-  line(DTG_IDENTITY.name.toUpperCase(), "CB", 20);
-  line(DTG_IDENTITY.tagline, "C", 9, { gray:0.45 });
-  blank(6);
-  line(label + "   No. " + (doc.numero||""), "CB", 13);
-  if(status) line("Status: " + status, "CB", 9.5);
-  line("Date: " + pdfDateLong(doc.createdAt), "C", 10, { gray:0.25 });
-  blank(4);
+  var COL_DESC_X = M, COL_DESC_W = 300;
+  var COL_QTY_R = M + 350;
+  var COL_RATE_R = M + 430;
+  var COL_AMT_R = RIGHT;
 
+  var pages = [], curOps = [], y = PH - M, inTable = false;
+  function put(str, x, yy, size, bold, color){ curOps.push({ op:"t", x:x, y:yy, size:size, bold:!!bold, str:str, color:color||PDF_COLOR.ink }); }
+  function putRight(str, rightX, yy, size, bold, color){ put(str, rightX - measureText(str, size, bold), yy, size, bold, color); }
+  function putCenter(str, cx, yy, size, bold, color){ put(str, cx - measureText(str, size, bold)/2, yy, size, bold, color); }
+  function ruleAt(yy, color, x1, x2, w){ curOps.push({ op:"l", x1:x1==null?M:x1, y1:yy, x2:x2==null?RIGHT:x2, y2:yy, color:color||PDF_COLOR.line, width:w||1 }); }
+  function tableHeaderRow(){
+    put("DESCRIPTION", COL_DESC_X, y, 9, true, PDF_COLOR.faint);
+    putRight("QTY", COL_QTY_R, y, 9, true, PDF_COLOR.faint);
+    putRight("RATE", COL_RATE_R, y, 9, true, PDF_COLOR.faint);
+    putRight("AMOUNT", COL_AMT_R, y, 9, true, PDF_COLOR.faint);
+    y -= 8; ruleAt(y, PDF_COLOR.line); y -= 16;
+  }
+  /* Paginación real: una página nueva a media tabla repite el encabezado de
+     columnas y agrega una línea de continuación discreta — nunca se ve como
+     que el documento "se cortó" a la mitad sin avisar. */
+  function newPage(){
+    if(curOps.length) pages.push(curOps);
+    curOps = []; y = PH - M;
+    put(DTG_IDENTITY.name + "  ·  " + label + " #" + (doc.numero||"") + "  ·  continued", M, y, 9, false, PDF_COLOR.faint);
+    y -= 16; ruleAt(y, PDF_COLOR.line); y -= 18;
+    if(inTable) tableHeaderRow();
+  }
+  function ensure(space){ if(y - space < M) newPage(); }
+
+  // ---- Encabezado: marca a la izquierda, tipo/número/status a la derecha ----
+  var headTop = y;
+  put(DTG_IDENTITY.name.toUpperCase(), M, y, 21, true, PDF_COLOR.ink);
+  y -= 15;
+  put(DTG_IDENTITY.tagline, M, y, 9.5, false, PDF_COLOR.muted);
+  var leftBottom = y;
+
+  var ry = headTop;
+  putRight(label, RIGHT, ry, 18, true, PDF_COLOR.accent); ry -= 16;
+  putRight("#" + (doc.numero||""), RIGHT, ry, 12, true, PDF_COLOR.ink); ry -= 14;
+  if(status) putRight(status, RIGHT, ry, 9, true, PDF_COLOR.accent);
+
+  y = Math.min(leftBottom, ry) - 12;
+  ruleAt(y, PDF_COLOR.accent, M, RIGHT, 1.6);
+  y -= 20;
+
+  put("Date", M, y, 9, true, PDF_COLOR.faint);
+  put(pdfDateLong(doc.createdAt), M + 40, y, 10, false, PDF_COLOR.ink);
+  y -= 24;
+
+  // ---- BILL TO ----
   var billToLines = [];
   if(btNombre) billToLines.push(btNombre);
   if(bt.empresa) billToLines.push(bt.empresa);
   if(bt.telefono) billToLines.push(bt.telefono);
   if(bt.email) billToLines.push(bt.email);
   if(billToLines.length){
-    line("BILL TO", "CB", 9);
-    billToLines.forEach(function(l){ line(l, "C", 10); });
-    blank(2);
-  }
+    put("BILL TO", M, y, 9, true, PDF_COLOR.accent); y -= 15;
+    billToLines.forEach(function(l, i){ put(l, M, y, i===0?11:10, i===0, PDF_COLOR.ink); y -= (i===0?15:14); });
+    y -= 6;
+  } else { y -= 2; }
 
-  rule();
-  line(padR("DESCRIPTION", W_DESC) + padL("QTY", W_CANT) + padL("RATE", W_PRECIO) + padL("AMOUNT", W_SUB), "CB", 9.5);
-  rule();
-
+  // ---- Tabla de items ----
+  ensure(40);
+  inTable = true;
+  tableHeaderRow();
   (doc.items||[]).forEach(function(it){
     var pending = it.precio == null;
     var subtotal = pending ? null : it.precio * it.cantidad;
-    var descLines = wrapMonoText(it.desc, W_DESC);
-    ensure(14);
-    line(padR(descLines[0], W_DESC) + padL(String(it.cantidad), W_CANT) + padL(pending?"pending":fmtMoney(it.precio), W_PRECIO) + padL(pending?"—":fmtMoney(subtotal), W_SUB), "C", 9.5);
-    for(var i=1;i<descLines.length;i++){ ensure(14); line(padR(descLines[i], W_DESC), "C", 9.5); }
+    var descLines = wrapText(it.desc, 10.5, false, COL_DESC_W - 6);
+    ensure(descLines.length * 13 + 12);
+    var rowTop = y;
+    descLines.forEach(function(l, i){ put(l, COL_DESC_X, y, 10.5, i===0, PDF_COLOR.ink); y -= 13; });
+    putRight(String(it.cantidad), COL_QTY_R, rowTop, 10, false, PDF_COLOR.muted);
+    putRight(pending ? "pending" : fmtMoney(it.precio), COL_RATE_R, rowTop, 10, false, PDF_COLOR.muted);
+    putRight(pending ? "—" : fmtMoney(subtotal), COL_AMT_R, rowTop, 10.5, true, PDF_COLOR.ink);
+    y -= 3; ruleAt(y, PDF_COLOR.line); y -= 13;
   });
+  inTable = false;
 
-  rule();
-  ensure(18);
+  // ---- Resumen: Subtotal / Payments received / AMOUNT DUE (o Total) ----
+  ensure(isInvoice ? 92 : 46);
+  y -= 4;
   if(isInvoice){
-    line(padR("Subtotal", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(doc.total), W_SUB), "C", 10);
-    if(doc.cobradoAlCrear > 0) line(padR("Payments received", W_DESC+W_CANT+W_PRECIO) + padL("-" + fmtMoney(doc.cobradoAlCrear), W_SUB), "C", 10);
-    line(padR("AMOUNT DUE", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(documentAmountDue(doc)), W_SUB), "CB", 12);
+    putRight("Subtotal", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
+    putRight(fmtMoney(doc.total), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
+    y -= 15;
+    if(doc.cobradoAlCrear > 0){
+      putRight("Payments received", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
+      putRight("-" + fmtMoney(doc.cobradoAlCrear), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
+      y -= 15;
+    }
+    ruleAt(y + 5, PDF_COLOR.line, COL_RATE_R - 30, RIGHT);
+    y -= 4;
+    putRight("AMOUNT DUE", COL_AMT_R, y, 10.5, true, PDF_COLOR.accent);
+    y -= 26;
+    putRight(fmtMoney(documentAmountDue(doc)), COL_AMT_R, y, 24, true, PDF_COLOR.accent);
+    y -= 18;
   } else {
-    line(padR("TOTAL", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(doc.total), W_SUB), "CB", 11);
+    ruleAt(y + 5, PDF_COLOR.line, COL_RATE_R - 30, RIGHT);
+    y -= 4;
+    putRight("TOTAL", COL_AMT_R, y, 12, true, PDF_COLOR.ink);
+    y -= 22;
+    putRight(fmtMoney(doc.total), COL_AMT_R, y, 18, true, PDF_COLOR.ink);
+    y -= 14;
   }
 
+  // ---- Payment / Notes a dos columnas (solo invoice) ----
   if(isInvoice){
-    blank(10);
-    ensure(14);
-    line("PAYMENT", "CB", 9);
-    DTG_PAYMENT_INFO.forEach(function(p){ line(p.label + ": " + p.value, "C", 9.5); });
-    line("Please include Invoice #" + (doc.numero||"") + " in the payment reference.", "C", 8.5, { gray:0.45 });
-    blank(6);
-    ensure(14);
-    line("NOTES", "CB", 9);
-    line("Thank you for your business.", "C", 9.5);
-    if(doc.notas) wrapMonoText(doc.notas, FULL).forEach(function(l){ ensure(14); line(l, "C", 9.5); });
-    line("Please reference Invoice #" + (doc.numero||"") + " when making payment.", "C", 9.5);
+    ensure(78);
+    y -= 12;
+    var colTop = y, leftX = M, rightX = M + 260, colW = RIGHT - rightX;
+    put("PAYMENT", leftX, colTop, 9, true, PDF_COLOR.accent);
+    var py = colTop - 15;
+    DTG_PAYMENT_INFO.forEach(function(p){
+      put(p.label + ":", leftX, py, 9.5, true, PDF_COLOR.ink);
+      put(p.value, leftX + 46, py, 9.5, false, PDF_COLOR.ink);
+      py -= 13;
+    });
+    wrapText("Please include Invoice #" + (doc.numero||"") + " in the payment reference.", 8.5, false, rightX - leftX - 10)
+      .forEach(function(l){ put(l, leftX, py, 8.5, false, PDF_COLOR.faint); py -= 11; });
+
+    put("NOTES", rightX, colTop, 9, true, PDF_COLOR.accent);
+    var ny = colTop - 15;
+    put("Thank you for your business.", rightX, ny, 9.5, false, PDF_COLOR.ink); ny -= 13;
+    if(doc.notas) wrapText(doc.notas, 9.5, false, colW).forEach(function(l){ put(l, rightX, ny, 9.5, false, PDF_COLOR.ink); ny -= 13; });
+    wrapText("Please reference Invoice #" + (doc.numero||"") + " when making payment.", 9.5, false, colW)
+      .forEach(function(l){ put(l, rightX, ny, 9.5, false, PDF_COLOR.ink); ny -= 13; });
+
+    y = Math.min(py, ny) - 8;
   } else if(doc.notas){
-    blank(8);
-    ensure(14);
-    line("Notes:", "CB", 9.5);
-    wrapMonoText(doc.notas, FULL).forEach(function(l){ ensure(14); line(l, "C", 9.5); });
+    ensure(40);
+    y -= 8;
+    put("Notes", M, y, 9, true, PDF_COLOR.accent); y -= 15;
+    wrapText(doc.notas, 9.5, false, RIGHT - M).forEach(function(l){ put(l, M, y, 9.5, false, PDF_COLOR.ink); y -= 13; });
   }
 
-  blank(16);
-  ensure(14);
-  line(DTG_IDENTITY.name + " - " + DTG_IDENTITY.tagline, "C", 8.5, { gray:0.45 });
-  line(DTG_IDENTITY.phone + " - " + DTG_IDENTITY.city + " - " + DTG_IDENTITY.serviceArea, "C", 8.5, { gray:0.45 });
+  // ---- Pie ----
+  ensure(34);
+  y -= 10; ruleAt(y, PDF_COLOR.line); y -= 16;
+  var cx = (M + RIGHT) / 2;
+  putCenter(DTG_IDENTITY.name + "  ·  " + DTG_IDENTITY.tagline, cx, y, 8.5, false, PDF_COLOR.faint); y -= 12;
+  putCenter(DTG_IDENTITY.phone + "  ·  " + DTG_IDENTITY.city + "  ·  " + DTG_IDENTITY.serviceArea, cx, y, 8.5, false, PDF_COLOR.faint);
 
   pages.push(curOps);
   return pages;
 }
+function pdfColorTriplet(c){ return c[0].toFixed(3) + " " + c[1].toFixed(3) + " " + c[2].toFixed(3); }
 function pdfOpsToContentStream(ops){
   var parts = [];
   ops.forEach(function(o){
-    if(o.op === "g") parts.push(o.v.toFixed(2) + " g");
-    else if(o.op === "l"){
-      parts.push("1 w");
+    if(o.op === "l"){
+      parts.push(pdfColorTriplet(o.color) + " RG");
+      parts.push((o.width||1).toFixed(2) + " w");
       parts.push(o.x1.toFixed(2) + " " + o.y1.toFixed(2) + " m");
       parts.push(o.x2.toFixed(2) + " " + o.y2.toFixed(2) + " l");
       parts.push("S");
     } else if(o.op === "t"){
-      var fontRes = o.font === "CB" ? "/F2" : "/F1";
+      var fontRes = o.bold ? "/F2" : "/F1";
+      parts.push(pdfColorTriplet(o.color) + " rg");
       parts.push("BT");
       parts.push(fontRes + " " + o.size + " Tf");
       parts.push("1 0 0 1 " + o.x.toFixed(2) + " " + o.y.toFixed(2) + " Tm");
@@ -3131,7 +3431,7 @@ function pdfOpsToContentStream(ops){
   });
   return parts.join("\n");
 }
-function pdfPadOffset(n){ var s = String(n); return pdfPad("0", 10-s.length) + s; }
+function pdfPadOffset(n){ var s = String(n); while(s.length < 10) s = "0" + s; return s; }
 function buildDocumentPdfBytes(doc){
   var pages = buildDocumentPdfOps(doc);
   var n = pages.length;
@@ -3140,8 +3440,8 @@ function buildDocumentPdfBytes(doc){
   for(var i=0;i<n;i++) kids.push((5+i*2) + " 0 R");
   objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
   objects[2] = "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + n + " >>";
-  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>";
-  objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>";
+  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+  objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
   for(i=0;i<n;i++){
     var pageObjNum = 5+i*2, contentObjNum = 6+i*2;
     var stream = pdfOpsToContentStream(pages[i]);
