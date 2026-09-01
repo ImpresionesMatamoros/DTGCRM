@@ -8,6 +8,7 @@
   --cyan:#00728F; --cyan-soft:#D9EDF2;
   --gold:#9C6A08; --gold-soft:#F1E3BF;
   --danger:#B3261E; --danger-soft:#F6DCD9;
+  --success:#1D7A3C; --success-soft:#DDEFE1; --success-ink:#145C2C;
   --shadow:0 1px 2px rgba(33,31,26,.07),0 8px 24px rgba(33,31,26,.08);
   --radius-s:6px; --radius-m:10px; --radius-l:16px;
   --font-sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -22,6 +23,7 @@
     --cyan:#3FC3E8; --cyan-soft:#12313B;
     --gold:#E7B23D; --gold-soft:#3A2E12;
     --danger:#FF6B61; --danger-soft:#3A2220;
+    --success:#3FD97A; --success-soft:#173321; --success-ink:#8FF0B3;
     --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 28px rgba(0,0,0,.45);
     color-scheme: dark;
   }
@@ -33,6 +35,7 @@
   --cyan:#3FC3E8; --cyan-soft:#12313B;
   --gold:#E7B23D; --gold-soft:#3A2E12;
   --danger:#FF6B61; --danger-soft:#3A2220;
+  --success:#3FD97A; --success-soft:#173321; --success-ink:#8FF0B3;
   --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 28px rgba(0,0,0,.45);
   color-scheme: dark;
 }
@@ -232,6 +235,86 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 }
 .totals-link:hover{border-bottom-color:var(--accent);}
 .totals-link.pending{color:var(--gold); border-bottom-color:var(--gold);}
+
+/* ---------- Comanda del ticket (sección 3/4/5) ----------
+   "LA CABECERA EXPLICA EL PRESENTE": más jerarquía visual que el
+   historial (que sigue chico y denso, sin tocar). */
+.status-pill.status-abierto{background:var(--cyan-soft); color:var(--cyan);}
+.status-pill.status-entregado{background:var(--success-soft); color:var(--success-ink);}
+.status-pill.status-cerrado_pagado{background:var(--surface-3); color:var(--text-muted);}
+.status-pill.status-cerrado_cancelado{background:var(--danger-soft); color:var(--danger);}
+.ticket-row-inactive .ticket-title{color:var(--text-muted);}
+
+.comanda-meta{font-family:var(--font-mono); color:var(--text-faint); font-size:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.comanda-identity{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+.comanda-identity-btn{
+  background:none; border:none; padding:0; font:inherit; cursor:pointer; text-align:left;
+  font-size:21px; font-weight:700; display:inline-flex; align-items:baseline; gap:5px;
+}
+/* .comanda-cliente-btn: SOLO cuando hay un cliente real vinculado (distinto
+   de .comanda-cliente-plain) — algo se apoya en esta distinción para saber
+   si el ticket ya tiene una entidad de cliente real, no solo texto libre. */
+.comanda-cliente-btn{color:var(--text);}
+.comanda-cliente-btn:hover{color:var(--accent-ink);}
+.comanda-cliente-chevron{font-size:15px; color:var(--text-faint); font-weight:500;}
+.comanda-cliente-plain{color:var(--text-muted); font-style:italic;}
+.comanda-summary{font-size:13px; color:var(--text-muted); margin-top:1px;}
+.comanda-actions-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;}
+.btn-success{background:var(--success); color:#fff; font-weight:600; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.btn-success:hover{background:var(--success-ink);}
+.btn-cierre-secondary{
+  background:transparent; border:1px solid var(--border); color:var(--text-muted); font-size:12.5px; padding:7px 12px;
+}
+.btn-cierre-secondary:hover{background:var(--surface-3); color:var(--text);}
+.comanda-entregado-note{font-size:12px; color:var(--text-muted);}
+.comanda-entregado-note button{background:none; border:none; padding:0; color:var(--text-faint); text-decoration:underline; cursor:pointer; font:inherit;}
+.comanda-cerrado-note{
+  font-size:12.5px; color:var(--text-muted); background:var(--surface-2); border-radius:var(--radius-s);
+  padding:7px 10px; margin-top:2px;
+}
+.comanda-cerrado-note b{color:var(--text);}
+
+.comanda-zones{display:flex; gap:18px; flex-wrap:wrap; margin-top:4px;}
+.comanda-zone{display:flex; flex-direction:column; gap:3px; min-width:180px; flex:1;}
+.comanda-zone-title{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); font-weight:700; margin-bottom:1px;}
+.comanda-row{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px;
+  background:none; border:none; padding:3px 2px; text-align:left; cursor:pointer; color:var(--text); border-radius:var(--radius-s);
+}
+.comanda-row:hover{background:var(--surface-3);}
+.comanda-row-label{color:var(--text-faint); font-size:12px;}
+.comanda-row-value{font-weight:600; color:var(--text); text-align:right;}
+.comanda-row-value.muted{color:var(--text-faint); font-weight:500; font-style:italic;}
+.comanda-row-value.accent{color:var(--accent-ink);}
+.comanda-row-value.known{color:var(--text);}
+.comanda-row-value.pending{color:var(--gold);}
+.comanda-edit-inline{padding:2px; display:flex; align-items:center; gap:6px;}
+.comanda-edit-inline .field-label{display:none;}
+
+/* Modal de cierre: chico y centrado, se dispara desde el encabezado (no
+   desde el compositor de abajo) — mismo criterio que el visor de doc. */
+.cierre-modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center;
+  padding:16px; z-index:60;
+}
+.cierre-modal{
+  background:var(--surface); border-radius:var(--radius-l); box-shadow:var(--shadow); padding:18px;
+  width:100%; max-width:380px; display:flex; flex-direction:column; gap:10px;
+}
+.cierre-modal-title{font-size:15px; font-weight:700; color:var(--text);}
+.cierre-modal-sub{font-size:12px; color:var(--text-faint); margin-top:-6px;}
+.cierre-tipo-btn{
+  display:flex; flex-direction:column; gap:2px; align-items:flex-start; text-align:left;
+  border:1px solid var(--border); border-radius:var(--radius-m); padding:10px 12px; background:var(--surface-2); cursor:pointer;
+}
+.cierre-tipo-btn:hover{background:var(--surface-3);}
+.cierre-tipo-label{font-weight:700; font-size:13.5px; color:var(--text);}
+.cierre-tipo-desc{font-size:12px; color:var(--text-muted);}
+.cierre-razon-label{display:flex; flex-direction:column; gap:5px; font-size:12px; color:var(--text-muted);}
+.cierre-razon-label textarea{
+  font:inherit; font-size:13.5px; border:1px solid var(--border); border-radius:var(--radius-s); padding:8px;
+  background:var(--surface); color:var(--text); resize:vertical;
+}
 
 .thread{flex:1; overflow-y:auto; padding:16px 22px 8px;}
 .thread-item{display:flex; gap:10px; padding:7px 0; max-width:640px;}
@@ -466,6 +549,35 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .doc-paper-foot{ font-size:11px; color:var(--pk-faint); text-align:center; margin-top:20px; }
 .doc-modal-pending{ color:#9C6A08; font-size:11.5px; }
 
+/* Status pequeño y elegante (sección 15: "no giant stamps") */
+.doc-status-pill{
+  display:inline-block; margin-top:6px; font-size:10.5px; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; padding:2px 9px; border-radius:999px;
+}
+.doc-status-paid{ background:#DDEFE1; color:#1D7A3C; }
+.doc-status-partially-paid{ background:#F1E3BF; color:#8A5A00; }
+.doc-status-unpaid{ background:#F6DCD9; color:#A32C22; }
+
+/* BILL TO — colapsa con gracia cuando faltan datos (sección 15) */
+.doc-billto{ margin:14px 0 4px; font-size:13px; line-height:1.5; }
+.doc-billto-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--pk-faint); font-weight:700; margin-bottom:3px; }
+.doc-billto div:not(.doc-billto-label){ color:var(--pk-ink); }
+
+/* Resumen financiero — AMOUNT DUE es la única cifra que de verdad importa
+   (sección 16), con peso visual pero sin exagerar. */
+.doc-summary{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--pk-line); }
+.doc-summary-row{ display:flex; gap:22px; font-size:13px; color:var(--pk-muted); min-width:220px; justify-content:space-between; }
+.doc-summary-row span:last-child{ font-family:var(--font-mono); }
+.doc-summary-due{ font-size:17px; font-weight:700; color:var(--pk-accent); margin-top:2px; }
+
+/* Payment / Notes lado a lado (sección 18/19) */
+.doc-two-col{ display:flex; gap:22px; flex-wrap:wrap; margin-top:16px; padding-top:12px; border-top:1px solid var(--pk-line); }
+.doc-col{ flex:1; min-width:200px; font-size:12.5px; color:var(--pk-muted); line-height:1.6; }
+.doc-col-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--pk-faint); font-weight:700; margin-bottom:4px; }
+.doc-payment-row{ display:flex; gap:8px; }
+.doc-payment-label{ color:var(--pk-ink); font-weight:600; min-width:62px; }
+.doc-payment-ref{ margin-top:6px; font-style:italic; color:var(--pk-faint); font-size:11.5px; }
+
 @media print{
   body > *:not(.doc-modal-overlay){ display:none!important; }
   .doc-modal-overlay{ position:static; background:none; padding:0; display:block; }
@@ -513,7 +625,7 @@ var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], cliente
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
   docDraft: null, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
   pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
-  clienteEditDraft: null, docsListOpen: false,
+  clienteEditDraft: null, docsListOpen: false, cierreModal: null, headerEditField: null,
   /* Sección Clientes (vista visual persistente, no efímera): mainView es
      null cuando estamos en un ticket o en Inicio, y "clientes" cuando se ve
      la lista o la ficha completa de un cliente. clienteReturnTicketId solo
@@ -624,6 +736,9 @@ async function fetchAllState(){
       id: row.id, seq: row.seq, createdAt: row.created_at, lastActivityAt: row.last_activity_at,
       pinned: row.pinned, cliente: row.cliente || "", clienteId: row.cliente_id || null, queSigue: row.que_sigue || "",
       responsable: row.responsable || "", fechaAtencion: row.fecha_atencion || "", fechaCompromiso: row.fecha_compromiso || "",
+      entregadoAt: row.entregado_at || null, entregadoPor: row.entregado_por || "",
+      cierreTipo: row.cierre_tipo || null, cerradoAt: row.cerrado_at || null,
+      razonCierre: row.razon_cierre || "", cerradoPor: row.cerrado_por || "",
       productos: [], tareas: [], pagos: [], documentos: [], thread: []
     };
   });
@@ -641,7 +756,7 @@ async function fetchAllState(){
   });
   documentosRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
-    t.documentos.push({ id: row.id, tipo: row.tipo, numero: row.numero, clienteNombre: row.cliente_nombre || "", notas: row.notas || "", items: row.items || [], total: Number(row.total), autor: row.autor, createdAt: row.created_at });
+    t.documentos.push({ id: row.id, tipo: row.tipo, numero: row.numero, clienteNombre: row.cliente_nombre || "", notas: row.notas || "", items: row.items || [], total: Number(row.total), cobradoAlCrear: Number(row.cobrado_al_crear||0), billTo: row.bill_to || {}, autor: row.autor, createdAt: row.created_at });
   });
   bitacoraRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
@@ -717,6 +832,7 @@ function openTicketById(id){
   UI.docDraft = null;
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
+  UI.headerEditField = null;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* en móvil el sidebar es un cajón: elegir un ticket lo cierra */
   saveUi();
@@ -834,14 +950,16 @@ function estadoLabel(e){
 
 function renderTicketRow(t){
   var active = t.id === UI.selectedTicketId;
+  var estado = ticketEstado(t);
   var pill = t.queSigue ? '<span class="pill pill-accent">' + escapeHtml(t.queSigue) + "</span>" : "";
+  var estadoPill = estado !== "abierto" ? '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>" : "";
   return (
-    '<button class="ticket-row' + (active?" active":"") + '" data-action="open-ticket" data-id="' + t.id + '">' +
+    '<button class="ticket-row' + (active?" active":"") + (estado!=="abierto"?" ticket-row-inactive":"") + '" data-action="open-ticket" data-id="' + t.id + '">' +
       '<div class="ticket-row-top">' +
         '<span class="ticket-title">' + escapeHtml(ticketLabel(t)) + "</span>" +
         (t.pinned ? '<span class="ticket-pin" title="Fijado">&#9733;</span>' : "") +
       "</div>" +
-      '<div class="ticket-meta"><span>#' + t.seq + "</span>" + pill + "</div>" +
+      '<div class="ticket-meta"><span>#' + t.seq + "</span>" + estadoPill + pill + "</div>" +
     "</button>"
   );
 }
@@ -852,13 +970,21 @@ function renderTicketRow(t){
    ordenamientos que puedan desalinearse. */
 function groupedTicketOrder(){
   var tickets = STATE.tickets.slice();
-  var pinned = tickets.filter(function(t){ return t.pinned; })
-    .sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
+  /* Dentro de cada grupo, primero por estado (abierto < entregado < cerrado
+     — sección 6: "entregado se mueve debajo de los activos", cerrado al
+     fondo) y solo como desempate por actividad reciente. Nada desaparece,
+     solo se hunde dentro de su propio grupo de fecha. */
+  function byRankThenActivity(a,b){
+    var ra = ticketOrderRank(a), rb = ticketOrderRank(b);
+    if(ra !== rb) return ra - rb;
+    return new Date(b.lastActivityAt) - new Date(a.lastActivityAt);
+  }
+  var pinned = tickets.filter(function(t){ return t.pinned; }).sort(byRankThenActivity);
   var rest = tickets.filter(function(t){ return !t.pinned; });
   var groups = {"Hoy":[], "Ayer":[], "Últimos días":[], "Anteriores":[]};
   rest.forEach(function(t){ groups[bucketFor(t)].push(t); });
   Object.keys(groups).forEach(function(k){
-    groups[k].sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
+    groups[k].sort(byRankThenActivity);
   });
   return { pinned: pinned, groups: groups };
 }
@@ -1029,60 +1155,151 @@ function renderTasksPanel(t){
   return '<div class="tasks-panel"><div class="tasks-title">Tareas</div>' + rows + "</div>";
 }
 
-/* Identidad del cliente en el encabezado (secciones 1.8/1.9/5.1): con
-   cliente_id la entidad real es la referencia primaria y se muestra con
-   más jerarquía y clicable a su ficha; sin cliente_id pero con texto libre
-   se marca como provisional — un poka-yoke visual discreto, nunca una
-   alerta — y sigue funcionando exactamente igual que antes. */
-function renderClienteChip(t){
-  if(t.clienteId){
-    var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
-    if(c){
-      return '<button class="cliente-chip cliente-chip-linked" data-action="open-cliente-ficha" data-client-id="' + c.id + '" data-ticket="' + t.id + '" title="Abrir ficha de cliente">' +
-        escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + ' <span class="cliente-chip-chevron">&rsaquo;</span>' +
-      "</button>";
-    }
-  }
-  if(t.cliente){
-    return '<span class="cliente-chip cliente-chip-provisional" title="Todavía no vinculado a un cliente real">Cliente provisional: ' + escapeHtml(t.cliente) + "</span>";
-  }
-  return "";
+/* Nota: la identidad del cliente en el encabezado del ticket (vinculado vs.
+   provisional, secciones 1.8/1.9/5.1) ahora vive directamente en
+   renderTicketHeader como parte de la comanda (sección 3.2, más abajo) —
+   con más jerarquía visual que el chip pequeño que había antes. */
+
+/* OPERACIÓN/identidad como "clic para actuar" en vez de inputs siempre
+   visibles (sección 4): un solo campo se revela a la vez, con el mismo
+   input/select y el mismo commitHeaderField/commitQueSigue de siempre —
+   nunca una segunda lógica de guardado por abrir/cerrar la vista. */
+var HEADER_EDIT_FOCUS_EL = { cliente:"field-cliente", quesigue:"field-quesigue", responsable:"field-responsable", atencion:"field-fecha-atencion", compromiso:"field-fecha-compromiso" };
+function openHeaderEdit(field){
+  UI.headerEditField = field;
+  /* Token que cambia en cada apertura: el blur de un input de comanda agenda
+     su cierre 150ms después (ver wireEvents), pero si en ese lapso el mismo
+     u otro campo se reabre programáticamente (p.ej. el fallback de fecha
+     ambigua en applyFocus), ese cierre quedaría "viejo" y borraría la
+     reapertura sin que el usuario haya tocado nada. Comparando el token en
+     ese momento contra el actual, un cierre viejo simplemente no hace nada. */
+  UI.headerEditToken = (UI.headerEditToken||0) + 1;
+  UI.pendingFocus = { elId: HEADER_EDIT_FOCUS_EL[field] };
+  render();
+}
+function closeHeaderEdit(){
+  if(UI.headerEditField){ UI.headerEditField = null; render(); }
+}
+
+/* Resumen corto de trabajo (sección 3.2) — derivado de los productos que ya
+   existen, nunca un campo nuevo obligatorio. Sin productos, simplemente no
+   hay subtítulo (no se inventa texto). */
+function ticketWorkSummary(t){
+  if(!t.productos.length) return "";
+  var first = t.productos[0];
+  var head = ((first.cantidad && first.cantidad !== 1) ? (first.cantidad + " ") : "") + first.desc;
+  var rest = t.productos.length - 1;
+  return head + (rest > 0 ? " · +" + rest + (rest===1 ? " producto más" : " productos más") : "");
+}
+
+/* Fila "clic para actuar" reutilizada por OPERACIÓN y COMERCIAL (sección
+   10: "ver algo debe acercarme a actuar sobre ello") — un solo renderer,
+   nunca una copia por zona. */
+function comandaRow(label, valueHtml, dataAttrs){
+  return '<button class="comanda-row" ' + (dataAttrs||"") + '><span class="comanda-row-label">' + label + '</span><span class="comanda-row-value' + "" + '">' + valueHtml + "</span></button>";
 }
 
 function renderTicketHeader(t){
   var totals = computeTotals(t);
   var cobrado = t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
-  var totalsLine = "";
-  if(t.productos.length || t.pagos.length){
-    /* "Total conocido", "N pendientes de precio" y "Cobrado" son botones,
-       no solo texto (secciones 5.2/7): tocarlos abre la vista/consola que
-       ya calcula exactamente ese dato (/productos, /dinero) — nunca se
-       inventa una segunda fuente de verdad para el dinero del ticket. */
-    totalsLine = '<div class="totals-line">' +
-      (t.productos.length ? '<button class="totals-link" data-action="show-productos" data-ticket="' + t.id + '" data-filter="all">Total conocido: <span class="known">' + fmtMoney(totals.known) + "</span></button>" : "") +
-      (totals.pending ? ' <button class="totals-link pending" data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending">+ ' + totals.pending + (totals.pending===1?" producto pendiente de precio":" productos pendientes de precio") + "</button>" : "") +
-      ' <button class="totals-link" data-action="show-dinero" data-ticket="' + t.id + '">Cobrado: <span class="known">' + fmtMoney(cobrado) + "</span></button>" +
-      "</div>";
+  var estado = ticketEstado(t);
+  var editing = UI.headerEditField;
+
+  /* 3.1 — barra superior chica: folio+fecha+pastilla de estado a la
+     izquierda, Documentos/Fijar a la derecha (el "•••" de la sección 3.1
+     no agrega nada más que "deshacer entrega", que ya vive junto al botón
+     de entrega — no se construye un menú aparte solo para eso). */
+  var topBar =
+    '<div class="ticket-header-top">' +
+      '<div class="comanda-meta"><span class="ticket-id">#' + t.seq + " · creado " + fmtDateShort(t.createdAt) + '</span>' +
+        '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span></div>" +
+      '<div class="ticket-header-actions">' +
+        '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">&#128196; Documentos · ' + t.documentos.length + "</button>" +
+        '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
+      "</div>" +
+    "</div>";
+
+  /* 3.2 — identidad: cliente grande y clicable (o el mismo campo libre
+     editable en línea si todavía no está vinculado a un cliente real),
+     más el resumen de trabajo derivado de productos. */
+  var identityMain;
+  if(t.clienteId){
+    var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
+    identityMain = c
+      ? '<button class="comanda-identity-btn comanda-cliente-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '" data-ticket="' + t.id + '">' +
+          escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") +
+          ' <span class="comanda-cliente-chevron">&rsaquo;</span>' +
+        "</button>"
+      : "";
+  } else if(editing === "cliente"){
+    identityMain = '<div class="comanda-edit-inline"><input type="text" id="field-cliente" placeholder="Sin definir" value="' + escapeHtml(t.cliente) + '"></div>';
+  } else {
+    identityMain = '<button class="comanda-identity-btn comanda-cliente-plain" data-action="header-edit" data-field="cliente">' +
+      (t.cliente ? escapeHtml(t.cliente) : "Sin cliente definido") + " <span class=\"comanda-cliente-chevron\">&rsaquo;</span></button>";
   }
-  var clienteChip = renderClienteChip(t);
+  var workSummary = ticketWorkSummary(t);
+  var identity =
+    '<div class="comanda-identity"><div>' + identityMain +
+      (workSummary ? '<div class="comanda-summary">' + escapeHtml(workSummary) + "</div>" : "") +
+    "</div></div>";
+
+  /* 6/7 — acciones primaria/secundaria, y el estado ya resuelto (nota de
+     entrega o de cierre) cuando aplica. "ENTREGADO NO SIGNIFICA CERRADO":
+     el botón de cerrar sigue disponible después de entregar. */
+  var actionsRow = "";
+  if(estado === "abierto" || estado === "entregado"){
+    actionsRow = '<div class="comanda-actions-row">';
+    if(estado === "abierto"){
+      actionsRow += '<button class="btn btn-success" data-action="marcar-entregado" data-ticket="' + t.id + '">&#10003; Marcar entregado</button>';
+    } else {
+      actionsRow += '<span class="comanda-entregado-note">Entregado ' + fmtDateShort(t.entregadoAt) + (t.entregadoPor ? " · " + escapeHtml(t.entregadoPor) : "") +
+        ' · <button data-action="deshacer-entrega" data-ticket="' + t.id + '">deshacer</button></span>';
+    }
+    actionsRow += '<button class="btn btn-cierre-secondary" data-action="abrir-cierre">Cerrar ticket &#9662;</button>';
+    actionsRow += "</div>";
+  } else {
+    actionsRow = '<div class="comanda-cerrado-note"><b>' + ticketEstadoLabel(estado) + "</b> · " + fmtDateShort(t.cerradoAt) +
+      (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") +
+      (t.razonCierre ? '<div>' + escapeHtml(t.razonCierre) + "</div>" : "") + "</div>";
+  }
+
+  /* 4 — OPERACIÓN: clic para actuar, no inputs siempre visibles. Cada fila,
+     al abrirse, es EXACTAMENTE el mismo control que ya existía (misma
+     commitHeaderField/commitQueSigue) — solo cambia cuándo se muestra. */
+  var opRows = "";
+  opRows += (editing === "quesigue")
+    ? '<div class="comanda-edit-inline">' + renderQueSigueSelect(t) + "</div>"
+    : comandaRow("Qué sigue", t.queSigue ? escapeHtml(t.queSigue) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="quesigue"');
+  opRows += (editing === "responsable")
+    ? '<div class="comanda-edit-inline"><input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '"></div>'
+    : comandaRow("Responsable", t.responsable ? escapeHtml(t.responsable) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
+  opRows += (editing === "atencion")
+    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-atencion" value="' + (t.fechaAtencion||"") + '"></div>'
+    : comandaRow("Atender", t.fechaAtencion ? fmtDateShort(t.fechaAtencion) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
+  opRows += (editing === "compromiso")
+    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-compromiso" value="' + (t.fechaCompromiso||"") + '"></div>'
+    : comandaRow("Compromiso", t.fechaCompromiso ? fmtDateShort(t.fechaCompromiso) + " &rsaquo;" : '<span class="comanda-row-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
+
+  /* 5 — COMERCIAL: SOLO hechos ya calculados en otro lado (computeTotals,
+     pagos) — jamás una deuda/saldo inventada aquí ("PRECIO ≠ DEUDA"). */
+  var comRows = "";
+  comRows += t.productos.length
+    ? comandaRow("Total conocido", '<span class="comanda-row-value known">' + fmtMoney(totals.known) + "</span> &rsaquo;", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"')
+    : comandaRow("Total conocido", '<span class="comanda-row-value muted">Sin productos &rsaquo;</span>', 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"');
+  comRows += comandaRow("Cobrado", '<span class="comanda-row-value known">' + fmtMoney(cobrado) + "</span> &rsaquo;", 'data-action="show-dinero" data-ticket="' + t.id + '"');
+  if(totals.pending){
+    comRows += comandaRow("Precio pendiente", '<span class="comanda-row-value pending">' + totals.pending + (totals.pending===1?" pendiente":" pendientes") + "</span> &rsaquo;", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending"');
+  }
+
   return (
     '<div class="ticket-header">' +
-      '<div class="ticket-header-top">' +
-        '<span class="ticket-id">#' + t.seq + " · creado " + fmtDateShort(t.createdAt) + "</span>" +
-        '<div class="ticket-header-actions">' +
-          '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">&#128196; Documentos · ' + t.documentos.length + "</button>" +
-          '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
-        "</div>" +
+      topBar +
+      identity +
+      actionsRow +
+      '<div class="comanda-zones">' +
+        '<div class="comanda-zone"><div class="comanda-zone-title">Operación</div>' + opRows + "</div>" +
+        '<div class="comanda-zone"><div class="comanda-zone-title">Comercial</div>' + comRows + "</div>" +
       "</div>" +
-      (clienteChip ? '<div class="cliente-chip-row">' + clienteChip + "</div>" : "") +
-      '<div class="field-grid">' +
-        '<div class="field"><span class="field-label">Cliente</span><input type="text" id="field-cliente" placeholder="Sin definir" value="' + escapeHtml(t.cliente) + '"></div>' +
-        '<div class="field"><span class="field-label">Qué sigue</span>' + renderQueSigueSelect(t) + "</div>" +
-        '<div class="field"><span class="field-label">Responsable</span><input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '"></div>' +
-        '<div class="field"><span class="field-label">Atender</span><input type="date" id="field-fecha-atencion" value="' + (t.fechaAtencion||"") + '"></div>' +
-        '<div class="field"><span class="field-label">Compromiso</span><input type="date" id="field-fecha-compromiso" value="' + (t.fechaCompromiso||"") + '"></div>' +
-      "</div>" +
-      totalsLine +
     "</div>"
   );
 }
@@ -1451,18 +1668,36 @@ function findClienteMatches(query){
 function ticketsForCliente(c){
   return STATE.tickets.filter(function(t){ return t.clienteId === c.id; });
 }
-/* "Ticket activo" (sección 1.4, AHORA vs HISTORIA): el modelo de datos
-   actual no tiene ningún campo de estado/cerrado/archivado en tickets —
-   se decidió, como opción más simple compatible con los datos existentes
-   (sin inventar un campo ni una migración nueva), que un ticket es AHORA
-   mientras le quede algo pendiente: un "qué sigue" activo, una tarea sin
-   terminar, o un producto sin precio. Sin nada de eso, pasa a HISTORIA.
-   Ver nota en el handoff. */
-function ticketIsActivo(t){
-  if(t.queSigue) return true;
-  if((t.tareas||[]).some(function(x){ return x.estado !== "terminado"; })) return true;
-  if(computeTotals(t).pending > 0) return true;
-  return false;
+/* Cierre explícito del ticket (sección 7 de la iteración "Comanda + Entrega
+   + Cierre"): fuente ÚNICA de verdad para si un ticket está vivo o
+   terminado. Reemplaza al heurístico anterior (ticketIsActivo, que deducía
+   "activo" observando qué sigue/tareas/precio pendiente) — ese heurístico
+   generaba falsos "cerrados" apenas un ticket se quedaba sin qué-sigue
+   aunque el trabajo siguiera vivo. Ahora:
+     - "abierto": sin cierre — vive en AHORA, sin importar qué sigue/tareas.
+     - "entregado": se marcó entregado pero NO se cerró — sigue en AHORA
+       ("entregado no significa cerrado": puede faltar cobrar o admin).
+     - "cerrado_pagado" / "cerrado_cancelado": cierre explícito — HISTORIA.
+   Qué sigue, tareas y productos sin precio siguen existiendo igual que
+   antes; simplemente ya no deciden esto. */
+function ticketEstado(t){
+  if(t.cierreTipo === "pagado") return "cerrado_pagado";
+  if(t.cierreTipo === "cancelado") return "cerrado_cancelado";
+  if(t.entregadoAt) return "entregado";
+  return "abierto";
+}
+function ticketEstadoLabel(estado){
+  return { abierto: "Abierto", entregado: "Entregado", cerrado_pagado: "Cerrado · Pagado", cerrado_cancelado: "Cerrado · Cancelado" }[estado] || "Abierto";
+}
+function ticketIsCerrado(t){ return !!t.cierreTipo; }
+/* Rango de orden para el sidebar (sección 6: "entregado se mueve debajo de
+   los activos") — solo reordena, nunca oculta: abiertos primero, entregados
+   sin cerrar después, cerrados al final de su mismo grupo de fecha. */
+function ticketOrderRank(t){
+  var e = ticketEstado(t);
+  if(e === "abierto") return 0;
+  if(e === "entregado") return 1;
+  return 2; // cerrado_pagado / cerrado_cancelado
 }
 function clienteFinancials(c){
   var tickets = ticketsForCliente(c);
@@ -1471,7 +1706,7 @@ function clienteFinancials(c){
     var totals = computeTotals(t);
     known += totals.known; pend += totals.pending;
     cobrado += t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
-    if(ticketIsActivo(t)) activos++;
+    if(!ticketIsCerrado(t)) activos++;
     var ts = t.lastActivityAt ? new Date(t.lastActivityAt).getTime() : 0;
     if(ts > lastTs) lastTs = ts;
   });
@@ -1822,7 +2057,7 @@ function globalEphemeralHtml(){
    No es un CRM aparte: solo dos vistas nuevas sobre datos que ya existen
    (clientes, tickets, productos, tareas, pagos, documentos, bitácora),
    usando exactamente rankClientes/ticketsForCliente/clienteFinancials/
-   ticketIsActivo — nada de esto guarda ni lee una tabla nueva. */
+   ticketIsCerrado/ticketEstado — nada de esto guarda ni lee una tabla nueva. */
 
 function fmtRelativeActivity(iso){
   if(!iso) return "";
@@ -1892,7 +2127,7 @@ function clienteHistoryItems(c, filter){
   var fin = clienteFinancials(c);
   var items = [];
   fin.tickets.forEach(function(t){
-    if(!ticketIsActivo(t) && (filter === "todo" || filter === "tickets")){
+    if(ticketIsCerrado(t) && (filter === "todo" || filter === "tickets")){
       items.push({ ts: t.lastActivityAt, kind: "ticket", ticket: t });
     }
     if(filter === "todo" || filter === "productos" || filter === "documentos" || filter === "pagos" || filter === "archivos"){
@@ -1933,7 +2168,7 @@ function renderClienteFichaView(){
     );
   }
   var fin = clienteFinancials(c);
-  var ahora = fin.tickets.filter(ticketIsActivo);
+  var ahora = fin.tickets.filter(function(t){ return !ticketIsCerrado(t); });
   var breadcrumb = UI.clienteReturnTicketId
     ? '<button class="btn-plain" data-action="open-ticket" data-id="' + UI.clienteReturnTicketId + '">&larr; Volver al Ticket #' + (findTicket(UI.clienteReturnTicketId) ? findTicket(UI.clienteReturnTicketId).seq : "") + "</button>"
     : '<button class="btn-plain" data-action="go-clientes">&larr; Clientes</button>';
@@ -2029,6 +2264,7 @@ function render(){
       "</div>" +
     "</div>" +
     renderDocModal() +
+    renderCierreModal() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -2167,11 +2403,27 @@ function render(){
    2) el primer campo dentro de un popover del compositor ya abierto
       (confirmación, ayuda, autocomplete)
    3) el compositor en genérico, vacío y listo para el siguiente comando. */
+/* elId -> qué campo de la comanda hay que "revelar" antes de poder
+   enfocarlo — desde que esos campos son clic-para-editar (sección 4) ya no
+   están siempre en el DOM, así que un fallback como "/atender 15" (fecha
+   ambigua) necesita abrir la edición en línea antes de poder enfocar el
+   selector de fecha nativo. */
+var HEADER_EDIT_FIELD_BY_EL = { "field-cliente":"cliente", "field-quesigue":"quesigue", "field-responsable":"responsable", "field-fecha-atencion":"atencion", "field-fecha-compromiso":"compromiso" };
 function applyFocus(){
   var target = UI.pendingFocus;
   UI.pendingFocus = null;
   if(!target) return;
   if(typeof target === "object" && target.elId){
+    var wantField = HEADER_EDIT_FIELD_BY_EL[target.elId];
+    if(wantField){
+      /* Bumpear el token SIEMPRE, incluso si el campo ya estaba "abierto"
+         lógicamente: el composer pudo haber robado el foco un instante
+         antes (p.ej. al escribir "/compromiso 15"), dejando agendado un
+         cierre por blur que de otro modo cerraría este campo 150ms después
+         de haberlo vuelto a enfocar aquí — ver comentario en openHeaderEdit. */
+      UI.headerEditToken = (UI.headerEditToken||0) + 1;
+      if(UI.headerEditField !== wantField){ UI.headerEditField = wantField; render(); }
+    }
     var explicit = document.getElementById(target.elId);
     if(explicit){ explicit.focus(); try{ explicit.select(); }catch(e){} return; }
   }
@@ -2475,22 +2727,40 @@ function openDocumentForm(tipo){
 /* Núcleo compartido de creación de documento — usado por el formulario
    multi-paso (composer "doc_form") Y por los comandos de un solo paso
    /factura y /cotizacion (sección 13/14), para no duplicar la lógica de
-   guardado ni el evento de bitácora. */
+   guardado ni el evento de bitácora. Desde la sección 17 ("SNAPSHOT
+   HISTÓRICO"), aquí también se congela lo que hace falta para que el
+   documento nunca cambie después: cobrado_al_crear (para Amount Due) y
+   bill_to (nombre/empresa/teléfono/email tal como estaban en ese momento —
+   nunca una referencia en vivo a clientes ni a pagos). Devuelve el id del
+   documento creado (o null si falló) para que quien llama pueda abrirlo de
+   inmediato (sección 20: "el usuario nunca debería tener que ir a
+   buscarlo"). */
 async function createDocumentoCore(t, tipo, items, clienteNombre, notas){
   var total = items.reduce(function(sum,it){ return sum + (it.precio==null?0:it.precio*it.cantidad); }, 0);
+  var cobradoAlCrear = (t.pagos||[]).reduce(function(s,p){ return s + p.monto; }, 0);
+  var linked = t.clienteId ? STATE.clientes.filter(function(c){ return c.id === t.clienteId; })[0] : null;
+  var billTo = {
+    nombre: clienteNombre || (linked ? linked.nombre : "") || "",
+    empresa: (linked && linked.empresa) || null,
+    telefono: (linked && linked.telefono) || null,
+    email: (linked && linked.email) || null
+  };
   showToast("Creando " + (tipo==="invoice"?"invoice":"cotización") + "…");
+  var newDocId = null;
   try{
     var ins = await sb.from("documentos").insert({
       ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
-      items: items, total: total, autor: UI.whoami || null
+      items: items, total: total, cobrado_al_crear: cobradoAlCrear, bill_to: billTo, autor: UI.whoami || null
     }).select().single();
     if(ins.error) throw ins.error;
     var doc = ins.data;
+    newDocId = doc.id;
     var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: UI.whoami || null,
       payload: { documento_id: doc.id, tipo: tipo, numero: doc.numero, total: total, cliente_nombre: clienteNombre } });
     if(r8.error) throw r8.error;
   }catch(e){ showToast("No se pudo crear el documento: " + (e.message || "error")); }
-  refreshFromServer({refocus:true});
+  await refreshFromServer({refocus:true});
+  return newDocId;
 }
 
 async function createDocumento(){
@@ -2511,15 +2781,28 @@ async function createDocumento(){
   UI.composer = null;
   UI.docDraft = null;
   render();
-  await createDocumentoCore(t, tipo, items, clienteNombre, notas);
+  var newDocId = await createDocumentoCore(t, tipo, items, clienteNombre, notas);
+  if(newDocId) openDocumentViewer(newDocId, {refocus:true});
 }
 
-function openDocumentViewer(docId){
+/* opts.refocus: usado al abrir automáticamente el documento recién creado
+   (sección 20) — el compositor debe seguir listo para lo siguiente en
+   cuanto el usuario cierre el visor (foco continuo, sección 12), y como
+   render() reemplaza todo el DOM, el pendingFocus tiene que fijarse en el
+   MISMO render que abre el visor — si se fijó en un render() anterior
+   (como el de refreshFromServer), este nuevo render lo pierde. */
+function openDocumentViewer(docId, opts){
   UI.viewingDocId = docId;
+  if(opts && opts.refocus) UI.pendingFocus = UI.pendingFocus || "composer";
   render();
 }
 function closeDocumentViewer(){
   UI.viewingDocId = null;
+  /* Volver al ticket debe dejar el compositor listo para lo siguiente
+     (sección 12, foco continuo) — más aún ahora que el visor se abre solo
+     al crear un documento (sección 20): cerrar "Cerrar ticket" es, en la
+     práctica, el último paso de ese flujo. */
+  UI.pendingFocus = UI.pendingFocus || "composer";
   render();
 }
 
@@ -2529,6 +2812,40 @@ function findDocumentoById(docId){
     doc = (STATE.tickets[i].documentos||[]).filter(function(d){ return d.id === docId; })[0] || null;
   }
   return doc;
+}
+
+/* ---------------- Identidad y pago de Design To Go (secciones 14/18) ----
+   Constante simple en el código — "usa la solución más simple compatible
+   con la arquitectura actual" (sección 18): no existe todavía un módulo de
+   configuración de negocio, y construir uno solo para esto sería inventar
+   complejidad para un caso que hoy es un puñado de datos fijos. Si más
+   adelante cambian los métodos de pago, se edita aquí en un solo lugar —
+   nunca a mano en cada documento. 100% EE.UU./Rio Grande Valley: cero
+   referencias a Matamoros/Tamaulipas/México/teléfonos mexicanos. */
+var DTG_IDENTITY = {
+  name: "Design To Go",
+  tagline: "Printing · Signs · Apparel · Custom Production",
+  phone: "956-561-2970",
+  city: "Brownsville, Texas",
+  serviceArea: "Serving the Rio Grande Valley"
+};
+var DTG_PAYMENT_INFO = [
+  { label: "Zelle", value: "956-561-2970 · Design To Go" },
+  { label: "Cash App", value: "$DesignToGo" }
+];
+
+/* Estado de cobro de un Invoice — se deriva del snapshot congelado en el
+   propio documento (cobrado_al_crear), NUNCA de los pagos en vivo del
+   ticket (sección 17: "SNAPSHOT HISTÓRICO" — un Invoice ya creado no
+   cambia aunque después llegue un pago nuevo). Solo aplica a invoice: una
+   cotización no tiene estado de cobro (no es un documento de cobro). */
+function documentAmountDue(doc){ return Math.max(0, doc.total - (doc.cobradoAlCrear||0)); }
+function documentPaymentStatus(doc){
+  if(doc.tipo !== "invoice") return null;
+  var due = doc.total - (doc.cobradoAlCrear||0);
+  if(due <= 0.005) return "PAID";
+  if((doc.cobradoAlCrear||0) > 0) return "PARTIALLY PAID";
+  return "UNPAID";
 }
 
 /* ---------------- Rediseño de documento (sección 15) ----------------
@@ -2549,16 +2866,70 @@ function renderDocModal(){
       "</div>"
     );
   }
-  var label = doc.tipo === "invoice" ? "Invoice" : "Cotización";
+  var isInvoice = doc.tipo === "invoice";
+  var label = isInvoice ? "INVOICE" : "QUOTE / COTIZACIÓN";
+  var status = documentPaymentStatus(doc);
+  var bt = doc.billTo || {};
+  var btNombre = bt.nombre || doc.clienteNombre || "";
+
   var rows = (doc.items||[]).map(function(it){
     var pending = it.precio == null;
     var subtotal = pending ? null : it.precio * it.cantidad;
     return (
       "<tr><td>" + escapeHtml(it.desc) + "</td><td class=\"num\">" + it.cantidad + "</td>" +
-      "<td class=\"num\">" + (pending ? '<span class="doc-modal-pending">pendiente</span>' : fmtMoney(it.precio)) + "</td>" +
+      "<td class=\"num\">" + (pending ? '<span class="doc-modal-pending">pending</span>' : fmtMoney(it.precio)) + "</td>" +
       "<td class=\"num\">" + (pending ? "—" : fmtMoney(subtotal)) + "</td></tr>"
     );
   }).join("");
+
+  /* BILL TO (sección 15): colapsa con gracia — nunca una etiqueta con un
+     valor vacío. Solo aparece el bloque completo si hay al menos un dato. */
+  var billToLines = [];
+  if(btNombre) billToLines.push(escapeHtml(btNombre));
+  if(bt.empresa) billToLines.push(escapeHtml(bt.empresa));
+  if(bt.telefono) billToLines.push(escapeHtml(bt.telefono));
+  if(bt.email) billToLines.push(escapeHtml(bt.email));
+  var billToBlock = billToLines.length
+    ? '<div class="doc-billto"><div class="doc-billto-label">Bill To</div>' + billToLines.map(function(l){ return '<div>' + l + "</div>"; }).join("") + "</div>"
+    : "";
+
+  /* Resumen financiero: SOLO el invoice tiene Amount Due — es un
+     documento de cobro deliberado (sección 5: "PRECIO ≠ DEUDA" en el
+     ticket; aquí sí puede existir un saldo, porque es exactamente para
+     eso que existe un invoice). La cotización se queda en un Total simple. */
+  var summaryBlock;
+  if(isInvoice){
+    var due = documentAmountDue(doc);
+    summaryBlock =
+      '<div class="doc-summary">' +
+        '<div class="doc-summary-row"><span>Subtotal</span><span>' + fmtMoney(doc.total) + "</span></div>" +
+        (doc.cobradoAlCrear > 0 ? '<div class="doc-summary-row"><span>Payments received</span><span>-' + fmtMoney(doc.cobradoAlCrear) + "</span></div>" : "") +
+        '<div class="doc-summary-row doc-summary-due"><span>AMOUNT DUE</span><span>' + fmtMoney(due) + "</span></div>" +
+      "</div>";
+  } else {
+    summaryBlock = '<div class="doc-summary"><div class="doc-summary-row doc-summary-due"><span>Total</span><span>' + fmtMoney(doc.total) + "</span></div></div>";
+  }
+
+  /* Payment + Notes lado a lado (sección 18/19) — solo tiene sentido en un
+     documento de cobro, así que es exclusivo del invoice. */
+  var paymentNotesBlock = "";
+  if(isInvoice){
+    var paymentRows = DTG_PAYMENT_INFO.map(function(p){ return '<div class="doc-payment-row"><span class="doc-payment-label">' + escapeHtml(p.label) + "</span><span>" + escapeHtml(p.value) + "</span></div>"; }).join("");
+    paymentNotesBlock =
+      '<div class="doc-two-col">' +
+        '<div class="doc-col"><div class="doc-col-title">Payment</div>' + paymentRows +
+          '<div class="doc-payment-ref">Please include Invoice #' + escapeHtml(doc.numero||"") + ' in the payment reference.</div>' +
+        "</div>" +
+        '<div class="doc-col"><div class="doc-col-title">Notes</div>' +
+          '<div>Thank you for your business.</div>' +
+          (doc.notas ? "<div>" + escapeHtml(doc.notas) + "</div>" : "") +
+          '<div>Please reference Invoice #' + escapeHtml(doc.numero||"") + " when making payment.</div>" +
+        "</div>" +
+      "</div>";
+  } else if(doc.notas){
+    paymentNotesBlock = '<div class="doc-paper-notes"><span class="field-label">Notes</span><div>' + escapeHtml(doc.notas) + "</div></div>";
+  }
+
   return (
     '<div class="doc-modal-overlay" id="doc-modal-overlay">' +
       '<div class="doc-modal">' +
@@ -2572,24 +2943,25 @@ function renderDocModal(){
         '<div class="doc-paper">' +
           '<div class="doc-paper-head">' +
             '<div>' +
-              '<div class="doc-paper-brand">Design To Go</div>' +
-              '<div class="doc-paper-tagline">Impresión, rotulación y señalización</div>' +
+              '<div class="doc-paper-brand">' + DTG_IDENTITY.name + "</div>" +
+              '<div class="doc-paper-tagline">' + DTG_IDENTITY.tagline + "</div>" +
             "</div>" +
             '<div class="doc-paper-type">' +
               '<div class="doc-paper-type-label">' + label + "</div>" +
               '<div class="doc-paper-type-num">#' + escapeHtml(doc.numero||"") + "</div>" +
+              (status ? '<div class="doc-status-pill doc-status-' + status.replace(/\s/g,"-").toLowerCase() + '">' + status + "</div>" : "") +
             "</div>" +
           "</div>" +
           '<div class="doc-paper-meta">' +
-            '<div><span class="field-label">Fecha</span>' + fmtDateShort(doc.createdAt) + " " + fmtTime(doc.createdAt) + "</div>" +
-            '<div><span class="field-label">Cliente</span>' + (doc.clienteNombre ? escapeHtml(doc.clienteNombre) : "—") + "</div>" +
+            '<div><span class="field-label">Date</span>' + fmtDateShort(doc.createdAt) + "</div>" +
           "</div>" +
-          '<table class="doc-modal-table"><thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead><tbody>' +
+          billToBlock +
+          '<table class="doc-modal-table"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>' +
             rows +
-            '<tr class="doc-modal-total-row"><td colspan="3">Total</td><td class="num">' + fmtMoney(doc.total) + "</td></tr>" +
           "</tbody></table>" +
-          (doc.notas ? '<div class="doc-paper-notes"><span class="field-label">Notas</span><div>' + escapeHtml(doc.notas) + "</div></div>" : "") +
-          '<div class="doc-paper-foot">Gracias por su preferencia — Design To Go</div>' +
+          summaryBlock +
+          paymentNotesBlock +
+          '<div class="doc-paper-foot">' + DTG_IDENTITY.name + " · " + DTG_IDENTITY.tagline + " · " + DTG_IDENTITY.phone + " · " + DTG_IDENTITY.city + " · " + DTG_IDENTITY.serviceArea + "</div>" +
         "</div>" +
       "</div>" +
     "</div>"
@@ -2640,8 +3012,13 @@ function pdfEscapeText(s){
   return out;
 }
 function pdfDateLong(iso){
-  try{ return new Date(iso).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; }
+  try{ return new Date(iso).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; }
 }
+/* Reorganizado para el nuevo diseño (sección 21): mismo motor propio byte a
+   byte (Courier/Courier-Bold, sin librería externa — cdnjs está bloqueado
+   en este sandbox, ver plan), ahora reflejando BILL TO / status / Subtotal
+   · Payments received · AMOUNT DUE / Payment · Notes / pie con la
+   identidad completa — nunca contenido en español ni referencias a México. */
 function buildDocumentPdfOps(doc){
   var M = 54, PW = 612, PH = 792, RIGHT = PW - M;
   var pages = [], curOps = [], y = PH - M;
@@ -2658,16 +3035,34 @@ function buildDocumentPdfOps(doc){
   function blank(n){ y -= (n||10); }
 
   var W_DESC=38, W_CANT=7, W_PRECIO=13, W_SUB=15;
-  var labelEs = doc.tipo === "invoice" ? "Invoice" : "Cotización";
+  var FULL = W_DESC+W_CANT+W_PRECIO+W_SUB;
+  var isInvoice = doc.tipo === "invoice";
+  var label = isInvoice ? "INVOICE" : "QUOTE / COTIZACION";
+  var status = documentPaymentStatus(doc);
+  var bt = doc.billTo || {};
+  var btNombre = bt.nombre || doc.clienteNombre || "";
 
-  line("DESIGN TO GO", "CB", 20);
-  line("Impresión, rotulación y señalización", "C", 9, { gray:0.45 });
+  line(DTG_IDENTITY.name.toUpperCase(), "CB", 20);
+  line(DTG_IDENTITY.tagline, "C", 9, { gray:0.45 });
   blank(6);
-  line(labelEs.toUpperCase() + "   No. " + (doc.numero||""), "CB", 13);
-  line("Fecha: " + pdfDateLong(doc.createdAt) + "   Cliente: " + (doc.clienteNombre || "—"), "C", 10, { gray:0.25 });
+  line(label + "   No. " + (doc.numero||""), "CB", 13);
+  if(status) line("Status: " + status, "CB", 9.5);
+  line("Date: " + pdfDateLong(doc.createdAt), "C", 10, { gray:0.25 });
   blank(4);
+
+  var billToLines = [];
+  if(btNombre) billToLines.push(btNombre);
+  if(bt.empresa) billToLines.push(bt.empresa);
+  if(bt.telefono) billToLines.push(bt.telefono);
+  if(bt.email) billToLines.push(bt.email);
+  if(billToLines.length){
+    line("BILL TO", "CB", 9);
+    billToLines.forEach(function(l){ line(l, "C", 10); });
+    blank(2);
+  }
+
   rule();
-  line(padR("PRODUCTO", W_DESC) + padL("CANT.", W_CANT) + padL("PRECIO", W_PRECIO) + padL("SUBTOTAL", W_SUB), "CB", 9.5);
+  line(padR("DESCRIPTION", W_DESC) + padL("QTY", W_CANT) + padL("RATE", W_PRECIO) + padL("AMOUNT", W_SUB), "CB", 9.5);
   rule();
 
   (doc.items||[]).forEach(function(it){
@@ -2675,24 +3070,43 @@ function buildDocumentPdfOps(doc){
     var subtotal = pending ? null : it.precio * it.cantidad;
     var descLines = wrapMonoText(it.desc, W_DESC);
     ensure(14);
-    line(padR(descLines[0], W_DESC) + padL(String(it.cantidad), W_CANT) + padL(pending?"pendiente":fmtMoney(it.precio), W_PRECIO) + padL(pending?"—":fmtMoney(subtotal), W_SUB), "C", 9.5);
+    line(padR(descLines[0], W_DESC) + padL(String(it.cantidad), W_CANT) + padL(pending?"pending":fmtMoney(it.precio), W_PRECIO) + padL(pending?"—":fmtMoney(subtotal), W_SUB), "C", 9.5);
     for(var i=1;i<descLines.length;i++){ ensure(14); line(padR(descLines[i], W_DESC), "C", 9.5); }
   });
 
   rule();
   ensure(18);
-  line(padR("TOTAL", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(doc.total), W_SUB), "CB", 11);
+  if(isInvoice){
+    line(padR("Subtotal", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(doc.total), W_SUB), "C", 10);
+    if(doc.cobradoAlCrear > 0) line(padR("Payments received", W_DESC+W_CANT+W_PRECIO) + padL("-" + fmtMoney(doc.cobradoAlCrear), W_SUB), "C", 10);
+    line(padR("AMOUNT DUE", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(documentAmountDue(doc)), W_SUB), "CB", 12);
+  } else {
+    line(padR("TOTAL", W_DESC+W_CANT+W_PRECIO) + padL(fmtMoney(doc.total), W_SUB), "CB", 11);
+  }
 
-  if(doc.notas){
+  if(isInvoice){
+    blank(10);
+    ensure(14);
+    line("PAYMENT", "CB", 9);
+    DTG_PAYMENT_INFO.forEach(function(p){ line(p.label + ": " + p.value, "C", 9.5); });
+    line("Please include Invoice #" + (doc.numero||"") + " in the payment reference.", "C", 8.5, { gray:0.45 });
+    blank(6);
+    ensure(14);
+    line("NOTES", "CB", 9);
+    line("Thank you for your business.", "C", 9.5);
+    if(doc.notas) wrapMonoText(doc.notas, FULL).forEach(function(l){ ensure(14); line(l, "C", 9.5); });
+    line("Please reference Invoice #" + (doc.numero||"") + " when making payment.", "C", 9.5);
+  } else if(doc.notas){
     blank(8);
     ensure(14);
-    line("Notas:", "CB", 9.5);
-    wrapMonoText(doc.notas, W_DESC+W_CANT+W_PRECIO+W_SUB).forEach(function(l){ ensure(14); line(l, "C", 9.5); });
+    line("Notes:", "CB", 9.5);
+    wrapMonoText(doc.notas, FULL).forEach(function(l){ ensure(14); line(l, "C", 9.5); });
   }
 
   blank(16);
   ensure(14);
-  line("Gracias por su preferencia — Design To Go", "C", 9, { gray:0.45 });
+  line(DTG_IDENTITY.name + " - " + DTG_IDENTITY.tagline, "C", 8.5, { gray:0.45 });
+  line(DTG_IDENTITY.phone + " - " + DTG_IDENTITY.city + " - " + DTG_IDENTITY.serviceArea, "C", 8.5, { gray:0.45 });
 
   pages.push(curOps);
   return pages;
@@ -2851,6 +3265,7 @@ async function commitHeaderField(elId, value, opts){
   if(!def) return;
   if(t[def.key] === value) return;
   t[def.key] = value;
+  UI.headerEditField = null;
   render();
   if(def.key === "responsable" && value) rememberName(value);
   try{
@@ -2868,7 +3283,7 @@ async function commitQueSigue(value, opts){
   if(value === "__custom__"){
     var custom = window.prompt('Nueva opción de "Qué sigue":', "");
     custom = (custom || "").trim();
-    if(!custom){ render(); return; }
+    if(!custom){ UI.headerEditField = null; render(); return; }
     if(STATE.meta.queSigueOptions.indexOf(custom) === -1){
       STATE.meta.queSigueOptions = STATE.meta.queSigueOptions.concat([custom]);
       sb.from("app_settings").update({ values: STATE.meta.queSigueOptions }).eq("key", "que_sigue_options").then(function(){});
@@ -2877,6 +3292,7 @@ async function commitQueSigue(value, opts){
   }
   if(t.queSigue === value) return;
   t.queSigue = value;
+  UI.headerEditField = null;
   render();
   try{
     var r1 = await sb.from("tickets").update({ que_sigue: value }).eq("id", t.id);
@@ -2884,6 +3300,117 @@ async function commitQueSigue(value, opts){
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Qué sigue: " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
+}
+
+/* ---------------- Entrega y cierre (sección 6/7 de la iteración "Comanda")
+   ----------------
+   Dos operaciones centrales, cada una con un único camino de guardado —
+   los tres caminos posibles de la UI (botón grande del encabezado, menú
+   "•••", y en el futuro un comando) siempre llaman a estas mismas
+   funciones (sección 11: redundancia en los caminos, no en la lógica).
+   "ENTREGADO NO SIGNIFICA CERRADO": marcarEntregadoCore nunca toca
+   cierre_tipo. "PRECIO ≠ DEUDA": ninguna de estas funciones calcula ni
+   guarda un saldo/deuda — solo registran hechos (se entregó, se cerró). */
+async function marcarEntregadoCore(t){
+  if(!t || t.entregadoAt) return;
+  var now = new Date().toISOString();
+  t.entregadoAt = now; t.entregadoPor = UI.whoami || "";
+  render();
+  try{
+    var r1 = await sb.from("tickets").update({ entregado_at: now, entregado_por: UI.whoami || null }).eq("id", t.id);
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Marcado como entregado" } });
+  }catch(e){ showToast("No se pudo marcar como entregado: " + (e.message || "error")); }
+  refreshFromServer();
+}
+/* Corrección de un error de captura (marcar por accidente) — misma
+   sencillez que togglePin, no una "reapertura" de ticket cerrado (eso no
+   existe en esta iteración a propósito: no hay máquina de estados nueva). */
+async function deshacerEntregaCore(t){
+  if(!t || !t.entregadoAt || t.cierreTipo) return;
+  t.entregadoAt = null; t.entregadoPor = "";
+  render();
+  try{
+    var r1 = await sb.from("tickets").update({ entregado_at: null, entregado_por: null }).eq("id", t.id);
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Se deshizo la entrega" } });
+  }catch(e){ showToast("No se pudo deshacer: " + (e.message || "error")); }
+  refreshFromServer();
+}
+/* Cierre explícito — exige tipo + motivo, nunca se infiere. Una vez cerrado,
+   el ticket pasa a HISTORIA (ticketIsCerrado) en Clientes; el sidebar solo
+   lo hunde al fondo de su grupo de fecha, nunca lo oculta. */
+async function cerrarTicketCore(t, tipo, razon){
+  if(!t || (tipo !== "pagado" && tipo !== "cancelado") || !(razon||"").trim()) return;
+  var now = new Date().toISOString();
+  razon = razon.trim();
+  t.cierreTipo = tipo; t.cerradoAt = now; t.razonCierre = razon; t.cerradoPor = UI.whoami || "";
+  UI.composer = null; UI.cierreDraft = null;
+  render();
+  try{
+    var r1 = await sb.from("tickets").update({ cierre_tipo: tipo, cerrado_at: now, razon_cierre: razon, cerrado_por: UI.whoami || null }).eq("id", t.id);
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null,
+      payload: { text: "Ticket cerrado · " + (tipo==="pagado"?"Pagado":"Cancelado") + " — " + razon } });
+  }catch(e){ showToast("No se pudo cerrar el ticket: " + (e.message || "error")); }
+  refreshFromServer({refocus:true});
+}
+
+/* Modal chico y centrado (no el popover del compositor) porque "Cerrar
+   ticket" se dispara desde el ENCABEZADO, no desde la barra de abajo — la
+   misma razón por la que el visor de documentos ya es un overlay propio en
+   vez de un popover del compositor. Dos pasos: elegir tipo, luego escribir
+   el motivo obligatorio (sección 7.2) — nunca se guarda sin ambos. */
+function openCierreModal(){ UI.cierreModal = { step: "choice" }; render(); }
+function closeCierreModal(){ UI.cierreModal = null; render(); }
+function chooseCierreTipo(tipo){
+  UI.cierreModal = { step: "form", tipo: tipo };
+  UI.pendingFocus = { elId: "cierre-razon" };
+  render();
+}
+function submitCierreForm(){
+  var t = findTicket(UI.selectedTicketId);
+  var razonEl = document.getElementById("cierre-razon");
+  var razon = (razonEl && razonEl.value || "").trim();
+  if(!razon){ if(razonEl) razonEl.focus(); showToast("Escribe el motivo del cierre."); return; }
+  if(!t || !UI.cierreModal) return;
+  var tipo = UI.cierreModal.tipo;
+  UI.cierreModal = null;
+  cerrarTicketCore(t, tipo, razon);
+}
+function renderCierreModal(){
+  if(!UI.cierreModal) return "";
+  var t = findTicket(UI.selectedTicketId);
+  if(!t){ UI.cierreModal = null; return ""; }
+  var inner;
+  if(UI.cierreModal.step === "choice"){
+    inner =
+      '<div class="cierre-modal-title">Cerrar ticket</div>' +
+      '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + ' · #' + t.seq + "</div>" +
+      '<button class="cierre-tipo-btn cierre-tipo-pagado" data-action="cierre-tipo" data-tipo="pagado">' +
+        '<span class="cierre-tipo-label">Cerrado · Pagado</span>' +
+        '<span class="cierre-tipo-desc">El trabajo terminó y la situación económica quedó resuelta.</span>' +
+      "</button>" +
+      '<button class="cierre-tipo-btn cierre-tipo-cancelado" data-action="cierre-tipo" data-tipo="cancelado">' +
+        '<span class="cierre-tipo-label">Cerrado · Cancelado</span>' +
+        '<span class="cierre-tipo-desc">El trabajo no va a continuar.</span>' +
+      "</button>" +
+      '<div class="popover-actions"><button class="btn btn-ghost" data-action="cierre-cancel">Cancelar</button></div>';
+  } else {
+    var tipo = UI.cierreModal.tipo;
+    inner =
+      '<div class="cierre-modal-title">Cerrar ticket · ' + (tipo==="pagado"?"Pagado":"Cancelado") + "</div>" +
+      '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + ' · #' + t.seq + "</div>" +
+      '<label class="cierre-razon-label">Motivo (obligatorio)<textarea id="cierre-razon" rows="3" placeholder="' +
+        (tipo==="pagado" ? "Ej. Trabajo entregado y liquidado por transferencia." : "Ej. Cliente decidió cancelar el proyecto por cambio de presupuesto.") +
+      '"></textarea></label>' +
+      '<div class="popover-actions"><button class="btn btn-ghost" data-action="cierre-cancel">Cancelar</button><button class="btn btn-primary" data-action="cierre-confirm">Confirmar cierre</button></div>';
+  }
+  return (
+    '<div class="cierre-modal-overlay" id="cierre-modal-overlay">' +
+      '<div class="cierre-modal">' + inner + "</div>" +
+    "</div>"
+  );
 }
 
 /* ---------------- slash commands: parsing y ejecución ----------------
@@ -3188,7 +3715,11 @@ var COMMANDS = [
     syntax: "/factura [notas]", summary: "Crear un invoice de un solo paso con los productos y el cliente actuales del ticket",
     examples: ["/factura", "/factura pagado por transferencia"],
     parse: function(arg, ctx){ return parseDocCommand(arg, ctx, "invoice"); },
-    run: function(data, ctx){ return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas); }
+    run: function(data, ctx){
+      return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas).then(function(newDocId){
+        if(newDocId) openDocumentViewer(newDocId, {refocus:true});
+      });
+    }
   },
   {
     key: "cotizacion", aliases: ["cotizacion","cotización","quote"], type: "write", requiresTicket: true, confirm: true,
@@ -3196,7 +3727,11 @@ var COMMANDS = [
     syntax: "/cotizacion [notas]", summary: "Crear una cotización de un solo paso con los productos y el cliente actuales del ticket",
     examples: ["/cotizacion", "/cotizacion válida por 15 días"],
     parse: function(arg, ctx){ return parseDocCommand(arg, ctx, "cotizacion"); },
-    run: function(data, ctx){ return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas); }
+    run: function(data, ctx){
+      return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas).then(function(newDocId){
+        if(newDocId) openDocumentViewer(newDocId, {refocus:true});
+      });
+    }
   },
   {
     key: "pago", aliases: ["pago","payment"], type: "write", requiresTicket: true, confirm: true,
@@ -3517,6 +4052,24 @@ function wireEvents(){
   bindField("field-fecha-compromiso", "change");
   var qsEl = document.getElementById("field-quesigue");
   if(qsEl) qsEl.addEventListener("change", function(){ commitQueSigue(qsEl.value); });
+  /* Campos de la comanda que se revelan al hacer clic (sección 4): al
+     perder el foco vuelven a su forma compacta de lectura, se haya
+     guardado un cambio o no — commitHeaderField/commitQueSigue ya cierran
+     la edición cuando SÍ cambia algo; este blur cubre el caso "abrí para
+     ver y cerré sin tocar nada". */
+  ["field-cliente","field-responsable","field-fecha-atencion","field-fecha-compromiso","field-quesigue"].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener("blur", function(){
+      /* Ver comentario en openHeaderEdit: un cierre agendado por un blur
+         viejo no debe pisar una reapertura programática que haya ocurrido
+         mientras esperaba (p.ej. el selector de fecha ambigua). */
+      var tok = UI.headerEditToken;
+      setTimeout(function(){ if(UI.headerEditToken === tok) closeHeaderEdit(); }, 150);
+    });
+  });
+  root.querySelectorAll('[data-action="header-edit"]').forEach(function(b){
+    b.addEventListener("click", function(){ openHeaderEdit(b.getAttribute("data-field")); });
+  });
 
   var plusBtn = root.querySelector('[data-action="toggle-menu"]');
   if(plusBtn){
@@ -3572,6 +4125,30 @@ function wireEvents(){
   var docOverlay = document.getElementById("doc-modal-overlay");
   if(docOverlay){
     docOverlay.addEventListener("click", function(e){ if(e.target === docOverlay) closeDocumentViewer(); });
+  }
+
+  var marcarEntregadoBtn = root.querySelector('[data-action="marcar-entregado"]');
+  if(marcarEntregadoBtn){
+    marcarEntregadoBtn.addEventListener("click", function(){ marcarEntregadoCore(findTicket(marcarEntregadoBtn.getAttribute("data-ticket"))); });
+  }
+  var deshacerEntregaBtn = root.querySelector('[data-action="deshacer-entrega"]');
+  if(deshacerEntregaBtn){
+    deshacerEntregaBtn.addEventListener("click", function(){ deshacerEntregaCore(findTicket(deshacerEntregaBtn.getAttribute("data-ticket"))); });
+  }
+  var abrirCierreBtn = root.querySelector('[data-action="abrir-cierre"]');
+  if(abrirCierreBtn) abrirCierreBtn.addEventListener("click", openCierreModal);
+  root.querySelectorAll('[data-action="cierre-tipo"]').forEach(function(b){
+    b.addEventListener("click", function(){ chooseCierreTipo(b.getAttribute("data-tipo")); });
+  });
+  root.querySelectorAll('[data-action="cierre-cancel"]').forEach(function(b){
+    b.addEventListener("click", closeCierreModal);
+  });
+  root.querySelectorAll('[data-action="cierre-confirm"]').forEach(function(b){
+    b.addEventListener("click", submitCierreForm);
+  });
+  var cierreOverlay = document.getElementById("cierre-modal-overlay");
+  if(cierreOverlay){
+    cierreOverlay.addEventListener("click", function(e){ if(e.target === cierreOverlay) closeCierreModal(); });
   }
 
   root.querySelectorAll('[data-slash-cmd]').forEach(function(b){
@@ -3729,6 +4306,8 @@ function isTypingTarget(el){
 
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.viewingDocId){ closeDocumentViewer(); return; }
+  if(e.key === "Escape" && UI.cierreModal){ closeCierreModal(); return; }
+  if(e.key === "Escape" && UI.headerEditField){ closeHeaderEdit(); return; }
 
   /* Navegación J/K entre tickets, respetando el mismo orden visual que ve
      el usuario en el sidebar (visualTicketOrder — pinneados, luego
@@ -3740,7 +4319,7 @@ document.addEventListener("keydown", function(e){
   if((e.key === "j" || e.key === "k" || e.key === "J" || e.key === "K") &&
      !e.ctrlKey && !e.metaKey && !e.altKey &&
      !isTypingTarget(e.target) &&
-     !UI.viewingDocId && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer){
+     !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer){
     var order = visualTicketOrder();
     if(order.length){
       var idx = order.findIndex(function(t){ return t.id === UI.selectedTicketId; });
