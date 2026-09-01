@@ -124,6 +124,69 @@ button{cursor:pointer;}
   background:var(--surface); color:var(--text); font-size:12.5px;
 }
 
+/* ---------- sección Clientes ---------- */
+.clientes-view{padding:14px 22px 22px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px;}
+.clientes-search-wrap{max-width:360px;}
+.clientes-search-wrap input{width:100%;}
+.clientes-list{display:flex; flex-direction:column; gap:1px;}
+.cliente-row-empresa{color:var(--text-muted); font-weight:500;}
+/* Identidad de cliente en el encabezado del ticket (secciones 1.8/1.9/5.1):
+   el color y la forma distinguen "vinculado a una entidad real" de
+   "todavía solo texto libre" sin usar una alerta — un poka-yoke visual,
+   nunca un bloqueo (sección 1.9). */
+.cliente-chip-row{display:flex;}
+.cliente-chip{
+  display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600;
+  border-radius:var(--radius-s); padding:3px 8px; margin:0; border:none; max-width:100%;
+}
+.cliente-chip-linked{
+  background:var(--accent-soft); color:var(--accent-ink); cursor:pointer;
+  text-decoration:none; border:1px solid transparent;
+}
+.cliente-chip-linked:hover{ text-decoration:underline; border-color:var(--accent-ink); }
+.cliente-chip-empresa{font-weight:500; opacity:.85;}
+.cliente-chip-chevron{opacity:.7;}
+.cliente-chip-provisional{
+  background:transparent; color:var(--text-muted); font-weight:500; font-style:italic;
+  border:1px dashed var(--border); cursor:default;
+}
+.ficha-header{border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:2px;}
+.ficha-name{font-size:19px; margin:0 0 8px; color:var(--text);}
+.ficha-empresa{color:var(--text-muted); font-weight:500; font-size:15px;}
+.ficha-section-title{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:600; margin-bottom:6px;}
+.ficha-section{display:flex; flex-direction:column; gap:2px;}
+.ficha-tabs{display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;}
+.ficha-tab{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:4px 12px;
+  font-size:12.5px; color:var(--text-muted);
+}
+.ficha-tab:hover{background:var(--surface-3); color:var(--text);}
+.ficha-tab.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+.ficha-history-list{display:flex; flex-direction:column; gap:8px;}
+.cliente-history-item{border:1px solid var(--border); border-radius:var(--radius-m); padding:8px 10px; background:var(--surface);}
+.cliente-history-ticket{border:1px solid var(--border); border-radius:var(--radius-m); background:var(--surface); margin-bottom:2px;}
+.history-ticket-pill{
+  background:none; border:none; color:var(--cyan); font-size:11px; font-weight:600; padding:0 0 4px;
+  cursor:pointer;
+}
+.history-ticket-pill:hover{text-decoration:underline;}
+/* Lenguaje de color por tipo de dato dentro de una misma línea (sección 4):
+   cantidad/descripción/precio son datos distintos y se ven distintos —
+   nunca toda la línea del mismo color — con subrayado/cursor como
+   refuerzo no dependiente del color (sección 4.1). */
+.hist-producto-line{
+  background:none; border:none; padding:0; font:inherit; color:inherit; text-align:left;
+  display:block; width:100%; cursor:pointer;
+}
+button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-ink);}
+.hist-cantidad{color:var(--cyan); font-weight:600;}
+.hist-desc{color:var(--text);}
+.hist-precio{color:var(--gold); font-weight:600;}
+.hist-precio:not(.hist-pending){color:#2E7D32;}
+:root[data-theme="dark"] .hist-precio:not(.hist-pending){color:#7FD98A;}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .hist-precio:not(.hist-pending){color:#7FD98A;} }
+.hist-total{color:var(--text-muted); font-weight:600;}
+
 /* ---------- main ---------- */
 .main{flex:1; display:flex; flex-direction:column; min-width:0; height:100%; position:relative;}
 .readonly-banner{
@@ -450,7 +513,17 @@ var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], cliente
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
   docDraft: null, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
   pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
-  clienteEditDraft: null, docsListOpen: false };
+  clienteEditDraft: null, docsListOpen: false,
+  /* Sección Clientes (vista visual persistente, no efímera): mainView es
+     null cuando estamos en un ticket o en Inicio, y "clientes" cuando se ve
+     la lista o la ficha completa de un cliente. clienteReturnTicketId solo
+     se llena cuando se entró a la ficha desde el encabezado de un ticket
+     (sección 1.8) — "no perder el lugar del que vino el usuario". */
+  mainView: null, selectedClienteId: null, clienteReturnTicketId: null, clientesSearch: "",
+  clienteHistoriaFilter: "todo",
+  /* Autocomplete predictivo de /cliente dentro del compositor (sección 1.2/6.2):
+     mismo patrón de interacción que el menú de "/", pero para el argumento. */
+  cliSuggestOpen: false, cliSuggestQuery: "", cliSuggestIndex: 0 };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 
@@ -481,12 +554,16 @@ function loadUi(){
       var parsed = JSON.parse(raw);
       UI.selectedTicketId = parsed.selectedTicketId || null;
       UI.search = parsed.search || "";
+      UI.mainView = parsed.mainView || null;
+      UI.selectedClienteId = parsed.selectedClienteId || null;
+      UI.clienteReturnTicketId = parsed.clienteReturnTicketId || null;
     }
   }catch(e){}
   try{ UI.whoami = localStorage.getItem("dtg_whoami") || ""; }catch(e){ UI.whoami = ""; }
 }
 function saveUi(){
-  try{ localStorage.setItem("dtg_ui", JSON.stringify({selectedTicketId:UI.selectedTicketId, search:UI.search})); }catch(e){}
+  try{ localStorage.setItem("dtg_ui", JSON.stringify({selectedTicketId:UI.selectedTicketId, search:UI.search,
+    mainView:UI.mainView, selectedClienteId:UI.selectedClienteId, clienteReturnTicketId:UI.clienteReturnTicketId})); }catch(e){}
 }
 function saveWhoami(v){
   UI.whoami = v;
@@ -633,6 +710,9 @@ function findTicket(id){
    dispare. */
 function openTicketById(id){
   UI.selectedTicketId = id;
+  UI.mainView = null;
+  UI.selectedClienteId = null;
+  UI.clienteReturnTicketId = null;
   UI.composer = null;
   UI.docDraft = null;
   UI.slashMenuOpen = false;
@@ -644,6 +724,9 @@ function openTicketById(id){
 }
 function goHome(){
   UI.selectedTicketId = null;
+  UI.mainView = null;
+  UI.selectedClienteId = null;
+  UI.clienteReturnTicketId = null;
   UI.composer = null;
   UI.docDraft = null;
   UI.viewingDocId = null;
@@ -651,6 +734,49 @@ function goHome(){
   UI.pendingConfirm = null;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* mismo criterio: ir a Inicio también cierra el cajón en móvil */
+  saveUi();
+  render();
+}
+
+/* Sección Clientes (vista visual, no un módulo aparte): mismo patrón que
+   openTicketById/goHome — un único punto de entrada que resetea los
+   popovers/overlays del compositor y decide el foco, para que entrar aquí
+   desde el sidebar, desde /cliente o desde el encabezado de un ticket se
+   comporte siempre igual. */
+function goToClientes(){
+  UI.selectedTicketId = null;
+  UI.mainView = "clientes";
+  UI.selectedClienteId = null;
+  UI.clienteReturnTicketId = null;
+  UI.composer = null;
+  UI.docDraft = null;
+  UI.viewingDocId = null;
+  UI.slashMenuOpen = false;
+  UI.pendingConfirm = null;
+  UI.pendingFocus = { elId: "clientes-search-input" };
+  UI.sidebarOpen = false;
+  saveUi();
+  render();
+}
+/* opts.fromTicketId: cuando se entra desde el nombre del cliente en el
+   encabezado de un ticket (sección 1.8) — permite mostrar "← Volver al
+   Ticket #N" sin perder ese contexto. Si se entra desde la lista de
+   Clientes o desde /cliente fuera de un ticket, queda null y no hay nada
+   a lo que volver (la ficha misma es el punto de partida). */
+function openClienteFicha(clienteId, opts){
+  opts = opts || {};
+  UI.selectedTicketId = null;
+  UI.mainView = "clientes";
+  UI.selectedClienteId = clienteId;
+  UI.clienteReturnTicketId = opts.fromTicketId || null;
+  UI.clienteHistoriaFilter = "todo";
+  UI.composer = null;
+  UI.docDraft = null;
+  UI.viewingDocId = null;
+  UI.slashMenuOpen = false;
+  UI.pendingConfirm = null;
+  UI.pendingFocus = "composer";
+  UI.sidebarOpen = false;
   saveUi();
   render();
 }
@@ -773,7 +899,13 @@ function renderSidebarList(){
 }
 
 function renderSidebar(){
-  var stubs = ["Atención","Kanban","Producción","Cuentas por cobrar","Informes"];
+  /* Clientes es una vista real sobre los mismos datos, no un módulo aparte
+     (sección 1) — convive con los stubs "pronto" en el orden exacto pedido:
+     Inicio, Atención, Kanban, Producción, Cuentas por cobrar, Clientes,
+     Informes. */
+  var stubsBefore = ["Atención","Kanban","Producción","Cuentas por cobrar"];
+  var stubsAfter = ["Informes"];
+  var onClientesView = UI.mainView === "clientes";
   return (
     '<div class="sidebar-top">' +
       '<button class="brand" data-action="go-home" title="Ir a Inicio"><span class="brand-mark">&#9679;</span><span class="brand-name">Design To Go</span></button>' +
@@ -783,8 +915,12 @@ function renderSidebar(){
         '<input type="text" placeholder="Buscar tickets" id="search-input" value="' + escapeHtml(UI.search) + '">' +
       "</div>" +
       '<ul class="nav-stubs">' +
-        '<button class="nav-stub' + (!UI.selectedTicketId?" active":"") + '" data-action="go-home"><span>Inicio</span></button>' +
-        stubs.map(function(s){
+        '<button class="nav-stub' + (!UI.selectedTicketId && !onClientesView?" active":"") + '" data-action="go-home"><span>Inicio</span></button>' +
+        stubsBefore.map(function(s){
+          return '<button class="nav-stub" data-action="stub" data-name="' + s + '"><span>' + s + '</span><span class="tag">pronto</span></button>';
+        }).join("") +
+        '<button class="nav-stub' + (onClientesView?" active":"") + '" data-action="go-clientes"><span>Clientes</span></button>' +
+        stubsAfter.map(function(s){
           return '<button class="nav-stub" data-action="stub" data-name="' + s + '"><span>' + s + '</span><span class="tag">pronto</span></button>';
         }).join("") +
       "</ul>" +
@@ -797,7 +933,7 @@ function renderSidebar(){
   );
 }
 
-function renderThreadItem(ev){
+function renderThreadItem(ev, ticketId){
   var dotClass = ev.type;
   var body = "";
   var meta = (ev.autor ? '<span class="autor">' + escapeHtml(ev.autor) + "</span> · " : "") + fmtTime(ev.ts) + " · " + fmtDateShort(ev.ts);
@@ -806,8 +942,22 @@ function renderThreadItem(ev){
   } else if(ev.type === "sistema"){
     body = '<div class="thread-sub">' + escapeHtml(ev.text) + "</div>";
   } else if(ev.type === "producto"){
-    var sub = ev.precio == null ? "precio pendiente" : (ev.cantidad + " × " + fmtMoney(ev.precio) + " = " + fmtMoney(ev.cantidad*ev.precio));
-    body = '<div class="thread-text">Producto agregado</div><div class="thread-sub">' + escapeHtml(ev.desc) + " — " + sub + "</div>";
+    /* El historial nunca se reescribe (sección 3): este renglón sigue
+       diciendo exactamente lo que pasó cuando se agregó. Lo nuevo es que
+       ahora es clicable — abre el MISMO editor de productos que ya usan
+       /productos y los botones "Total conocido"/"pendientes" del
+       encabezado, nunca una copia — y usa color como lenguaje funcional
+       (sección 4): cantidad en cian, precio en verde o dorado si está
+       pendiente, sin que la línea completa comparta un solo color. */
+    var cantidadSpan = '<span class="hist-cantidad">' + ev.cantidad + " ×</span>";
+    var precioSpan = ev.precio == null
+      ? '<span class="hist-precio hist-pending">precio pendiente</span>'
+      : '<span class="hist-precio">' + fmtMoney(ev.precio) + " c/u</span> = <span class=\"hist-total\">" + fmtMoney(ev.cantidad*ev.precio) + "</span>";
+    var descSpan = '<span class="hist-desc">' + escapeHtml(ev.desc) + "</span>";
+    var clickable = ticketId ? (' data-action="show-productos" data-ticket="' + ticketId + '" data-filter="all"') : "";
+    var Tag = ticketId ? "button" : "div";
+    body = '<' + Tag + ' class="thread-text hist-producto-line"' + clickable + '>Producto agregado</' + Tag + '>' +
+      '<div class="thread-sub">' + cantidadSpan + " " + descSpan + " · " + precioSpan + "</div>";
   } else if(ev.type === "tarea" || ev.type === "tarea_produccion"){
     var label = ev.type === "tarea_produccion" ? "Tarea de producción" : "Tarea";
     body = '<div class="thread-text">' + label + ": " + escapeHtml(ev.desc) + "</div>";
@@ -879,19 +1029,42 @@ function renderTasksPanel(t){
   return '<div class="tasks-panel"><div class="tasks-title">Tareas</div>' + rows + "</div>";
 }
 
+/* Identidad del cliente en el encabezado (secciones 1.8/1.9/5.1): con
+   cliente_id la entidad real es la referencia primaria y se muestra con
+   más jerarquía y clicable a su ficha; sin cliente_id pero con texto libre
+   se marca como provisional — un poka-yoke visual discreto, nunca una
+   alerta — y sigue funcionando exactamente igual que antes. */
+function renderClienteChip(t){
+  if(t.clienteId){
+    var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
+    if(c){
+      return '<button class="cliente-chip cliente-chip-linked" data-action="open-cliente-ficha" data-client-id="' + c.id + '" data-ticket="' + t.id + '" title="Abrir ficha de cliente">' +
+        escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + ' <span class="cliente-chip-chevron">&rsaquo;</span>' +
+      "</button>";
+    }
+  }
+  if(t.cliente){
+    return '<span class="cliente-chip cliente-chip-provisional" title="Todavía no vinculado a un cliente real">Cliente provisional: ' + escapeHtml(t.cliente) + "</span>";
+  }
+  return "";
+}
+
 function renderTicketHeader(t){
   var totals = computeTotals(t);
+  var cobrado = t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
   var totalsLine = "";
-  if(t.productos.length){
-    /* "Total conocido" y "N pendientes de precio" son botones, no solo
-       texto (sección 7): tocarlos abre la misma vista de productos —
-       completa o filtrada a los que faltan precio — para poder resolverlos
-       ahí mismo en vez de tener que adivinar cómo llegar a ellos. */
+  if(t.productos.length || t.pagos.length){
+    /* "Total conocido", "N pendientes de precio" y "Cobrado" son botones,
+       no solo texto (secciones 5.2/7): tocarlos abre la vista/consola que
+       ya calcula exactamente ese dato (/productos, /dinero) — nunca se
+       inventa una segunda fuente de verdad para el dinero del ticket. */
     totalsLine = '<div class="totals-line">' +
-      '<button class="totals-link" data-action="show-productos" data-ticket="' + t.id + '" data-filter="all">Total conocido: <span class="known">' + fmtMoney(totals.known) + "</span></button>" +
+      (t.productos.length ? '<button class="totals-link" data-action="show-productos" data-ticket="' + t.id + '" data-filter="all">Total conocido: <span class="known">' + fmtMoney(totals.known) + "</span></button>" : "") +
       (totals.pending ? ' <button class="totals-link pending" data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending">+ ' + totals.pending + (totals.pending===1?" producto pendiente de precio":" productos pendientes de precio") + "</button>" : "") +
+      ' <button class="totals-link" data-action="show-dinero" data-ticket="' + t.id + '">Cobrado: <span class="known">' + fmtMoney(cobrado) + "</span></button>" +
       "</div>";
   }
+  var clienteChip = renderClienteChip(t);
   return (
     '<div class="ticket-header">' +
       '<div class="ticket-header-top">' +
@@ -901,6 +1074,7 @@ function renderTicketHeader(t){
           '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
         "</div>" +
       "</div>" +
+      (clienteChip ? '<div class="cliente-chip-row">' + clienteChip + "</div>" : "") +
       '<div class="field-grid">' +
         '<div class="field"><span class="field-label">Cliente</span><input type="text" id="field-cliente" placeholder="Sin definir" value="' + escapeHtml(t.cliente) + '"></div>' +
         '<div class="field"><span class="field-label">Qué sigue</span>' + renderQueSigueSelect(t) + "</div>" +
@@ -1019,6 +1193,7 @@ function renderComposer(){
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.pendingConfirm) pop = slashConfirmBanner();
   else if(UI.slashMenuOpen) pop = slashMenu();
+  else if(UI.cliSuggestOpen) pop = clienteSuggestPopover();
   /* /help, /estado, /pendientes, /dinero ya NO son popovers flotantes —
      viven como mensajes efímeros dentro del hilo (ver renderEphemeralEntry),
      igual que una consola. Aquí solo quedan los overlays de "interacción"
@@ -1098,6 +1273,47 @@ function slashMenu(){
   return html;
 }
 
+/* Autocomplete predictivo de /cliente (secciones 1.2/6.2/6.3): mismo
+   componente visual que el menú de "/" (.slash-menu), mismo rankClientes
+   que usa la sección Clientes — nunca un tercer buscador con su propio
+   criterio. Vacío después de "/cliente " ya muestra frecuentes, escribir
+   filtra en vivo sin esperar Enter. */
+function clienteSuggestList(){ return rankClientes(UI.cliSuggestQuery).slice(0, 8); }
+function clienteSuggestPopover(){
+  var list = clienteSuggestList();
+  if(UI.cliSuggestIndex >= list.length) UI.cliSuggestIndex = 0;
+  var html = '<div class="slash-menu" id="cli-suggest-menu">';
+  if(!list.length){
+    html += '<div class="slash-menu-item" style="color:var(--text-faint);">' +
+      (STATE.clientes.length ? "Sin coincidencias — Enter para buscar de todos modos." : "Aún no hay clientes registrados.") +
+      "</div>";
+  } else {
+    list.forEach(function(c, idx){
+      html += '<button class="slash-menu-item' + (idx===UI.cliSuggestIndex?" active":"") + '" data-cli-suggest-idx="' + idx + '"><code>' + escapeHtml(c.nombre) + '</code><span class="desc">' + (c.empresa ? escapeHtml(c.empresa) : "") + "</span></button>";
+    });
+  }
+  html += "</div>";
+  return html;
+}
+/* execute=true (Enter o clic): resuelve directamente al cliente elegido,
+   igual que tocar un resultado de "varias coincidencias" en /cliente.
+   execute=false (Tab): solo completa el texto del compositor, sin
+   ejecutar — el usuario decide cuándo confirmar. */
+function chooseCliSuggestion(idx, execute){
+  var list = clienteSuggestList();
+  var chosen = list[idx];
+  if(!chosen) return;
+  UI.cliSuggestOpen = false;
+  if(execute){
+    var hasTicket = !!findTicket(UI.selectedTicketId);
+    pushEphemeral("cliente", hasTicket ? UI.selectedTicketId : null, { mode: hasTicket ? "ticket" : "home", resolvedId: chosen.id });
+  } else {
+    var text = "/cliente " + chosen.nombre;
+    render();
+    restoreComposerText(text);
+  }
+}
+
 /* Contenido de un mensaje efímero de /help — sigue derivando exclusivamente
    del registro COMMANDS (única fuente de verdad para comandos/alias/ayuda),
    pero ahora cada comando y cada ejemplo es un botón: tocarlo escribe el
@@ -1175,25 +1391,92 @@ function documentosEntryContent(entry){
    aparece aquí sale de STATE.clientes en vivo, igual que el resto de los
    mensajes efímeros. */
 function clienteLabel(c){ return c.nombre + (c.empresa ? " · " + c.empresa : ""); }
-function findClienteMatches(query){
-  var q = (query || "").toLowerCase().trim();
-  if(!q) return [];
-  return STATE.clientes.filter(function(c){
-    return c.nombre.toLowerCase().indexOf(q) !== -1 || (c.empresa && c.empresa.toLowerCase().indexOf(q) !== -1);
+
+/* Única función de ranking/orden de clientes (sección 1.2): la usan por
+   igual la sección Clientes, /cliente y cualquier otro selector de
+   clientes que exista o se agregue — "no crear tres buscadores con
+   comportamientos diferentes". Criterio, en este orden:
+     1) coincide al inicio del nombre
+     2) coincide al inicio de la empresa
+     3) coincidencia parcial en el nombre
+     4) coincidencia parcial en la empresa
+     5) frecuencia de uso / actividad reciente, solo como desempate
+   Sin texto de búsqueda, se listan directamente por actividad reciente
+   (clientes "frecuentes/relevantes") — nada de esto usa una tabla ni un
+   campo nuevo, todo sale de tickets ya existentes vía ticketsForCliente. */
+function clienteActivityScore(c){
+  var tickets = ticketsForCliente(c);
+  var lastTs = 0;
+  tickets.forEach(function(t){
+    var ts = t.lastActivityAt ? new Date(t.lastActivityAt).getTime() : 0;
+    if(ts > lastTs) lastTs = ts;
   });
+  return { count: tickets.length, lastTs: lastTs };
+}
+function compareClienteRelevance(a, b){
+  var sa = clienteActivityScore(a), sb = clienteActivityScore(b);
+  if(sb.lastTs !== sa.lastTs) return sb.lastTs - sa.lastTs;
+  if(sb.count !== sa.count) return sb.count - sa.count;
+  return (a.nombre||"").localeCompare(b.nombre||"");
+}
+function clienteRankTier(c, q){
+  var nombre = normalizeWord(c.nombre||"");
+  var empresa = normalizeWord(c.empresa||"");
+  if(nombre.indexOf(q) === 0) return 1;
+  if(empresa.indexOf(q) === 0) return 2;
+  if(nombre.indexOf(q) !== -1) return 3;
+  if(empresa.indexOf(q) !== -1) return 4;
+  return 99;
+}
+function rankClientes(query){
+  var q = normalizeWord((query||"").trim());
+  var list = STATE.clientes.slice();
+  if(!q) return list.sort(compareClienteRelevance);
+  return list
+    .filter(function(c){ return clienteRankTier(c, q) < 99; })
+    .sort(function(a,b){
+      var ta = clienteRankTier(a, q), tb = clienteRankTier(b, q);
+      if(ta !== tb) return ta - tb;
+      return compareClienteRelevance(a, b);
+    });
+}
+/* Envoltorio delgado sobre rankClientes que conserva el contrato original
+   (query vacía = sin resultados) para no tocar el comportamiento de sus
+   llamadores existentes (clienteEntryContent con resolvedId, editarcliente). */
+function findClienteMatches(query){
+  var q = (query || "").trim();
+  if(!q) return [];
+  return rankClientes(q);
 }
 function ticketsForCliente(c){
   return STATE.tickets.filter(function(t){ return t.clienteId === c.id; });
 }
+/* "Ticket activo" (sección 1.4, AHORA vs HISTORIA): el modelo de datos
+   actual no tiene ningún campo de estado/cerrado/archivado en tickets —
+   se decidió, como opción más simple compatible con los datos existentes
+   (sin inventar un campo ni una migración nueva), que un ticket es AHORA
+   mientras le quede algo pendiente: un "qué sigue" activo, una tarea sin
+   terminar, o un producto sin precio. Sin nada de eso, pasa a HISTORIA.
+   Ver nota en el handoff. */
+function ticketIsActivo(t){
+  if(t.queSigue) return true;
+  if((t.tareas||[]).some(function(x){ return x.estado !== "terminado"; })) return true;
+  if(computeTotals(t).pending > 0) return true;
+  return false;
+}
 function clienteFinancials(c){
   var tickets = ticketsForCliente(c);
-  var known = 0, cobrado = 0, pend = 0;
+  var known = 0, cobrado = 0, pend = 0, activos = 0, lastTs = 0;
   tickets.forEach(function(t){
     var totals = computeTotals(t);
     known += totals.known; pend += totals.pending;
     cobrado += t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
+    if(ticketIsActivo(t)) activos++;
+    var ts = t.lastActivityAt ? new Date(t.lastActivityAt).getTime() : 0;
+    if(ts > lastTs) lastTs = ts;
   });
-  return { tickets: tickets, known: known, cobrado: cobrado, pend: pend, saldo: known - cobrado };
+  return { tickets: tickets, known: known, cobrado: cobrado, pend: pend, saldo: known - cobrado,
+    activos: activos, lastActivityAt: lastTs ? new Date(lastTs).toISOString() : null };
 }
 function clienteFichaContent(c, t, mode){
   var fin = clienteFinancials(c);
@@ -1216,6 +1499,11 @@ function clienteFichaContent(c, t, mode){
     } else {
       html += '<button class="help-cmd-btn" data-action="cliente-link" data-client-id="' + c.id + '" data-ticket="' + t.id + '"><span class="desc">Vincular "' + escapeHtml(c.nombre) + '" a este ticket</span></button>';
     }
+  } else {
+    /* Fuera de un ticket, /cliente solo consulta (sección 1.10) — el
+       resumen efímero siempre ofrece el camino a la ficha completa, que es
+       donde vive AHORA/HISTORIA, archivos y documentos. */
+    html += '<button class="help-cmd-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '"><span class="desc">Abrir ficha completa &#8594;</span></button>';
   }
   return { title: clienteLabel(c), html: html };
 }
@@ -1230,6 +1518,22 @@ function clienteEntryContent(entry){
     var resolved = STATE.clientes.filter(function(c){ return c.id === entry.params.resolvedId; })[0];
     if(!resolved) return { title: "Cliente", html: '<div class="ephemeral-sub">Ese cliente ya no existe.</div>' };
     return clienteFichaContent(resolved, t, mode);
+  }
+  if(!query.trim()){
+    /* /cliente sin nada después (sección 1.2): en vez de pedir ayuda,
+       muestra de inmediato los clientes frecuentes/relevantes — mismo
+       rankClientes("") que usa la sección Clientes con el buscador vacío. */
+    var frequent = rankClientes("").slice(0, 8);
+    if(!frequent.length){
+      var emptyHtml = '<div class="ephemeral-sub">Todavía no hay clientes registrados.' +
+        (mode === "ticket" ? " Escribe /cliente seguido de un nombre para crear el primero." : "") + "</div>";
+      return { title: "Clientes", html: emptyHtml };
+    }
+    var freqRows = frequent.map(function(c){
+      return '<button class="help-cmd-btn" data-action="cliente-select" data-client-id="' + c.id + '" data-ticket="' + (t?t.id:"") + '" data-mode="' + mode + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
+    }).join("");
+    var freqFooter = mode !== "ticket" ? '<button class="help-cmd-btn" data-action="go-clientes"><span class="desc">Ver todos en Clientes &#8594;</span></button>' : "";
+    return { title: "Clientes frecuentes", html: freqRows + freqFooter + '<div class="ephemeral-sub">Sigue escribiendo un nombre o empresa para buscar.</div>' };
   }
   var matches = findClienteMatches(query);
   var title = 'Cliente — "' + query + '"';
@@ -1499,7 +1803,7 @@ function renderEphemeralEntry(entry){
    por fecha, para que la consola se lea como un solo hilo continuo — igual
    que un chat — en vez de dos zonas separadas. */
 function mergedThreadHtml(t){
-  var permanent = t.thread.map(function(ev){ return { ts: ev.ts, html: renderThreadItem(ev) }; });
+  var permanent = t.thread.map(function(ev){ return { ts: ev.ts, html: renderThreadItem(ev, t.id) }; });
   var ephemeral = UI.ephemeralLog.filter(function(e){ return e.ticketId === t.id; })
     .map(function(e){ return { ts: e.ts, html: renderEphemeralEntry(e) }; });
   var merged = permanent.concat(ephemeral);
@@ -1514,7 +1818,167 @@ function globalEphemeralHtml(){
   return ephemeral.map(renderEphemeralEntry).join("");
 }
 
+/* ---------------- sección Clientes (vista visual completa) ----------------
+   No es un CRM aparte: solo dos vistas nuevas sobre datos que ya existen
+   (clientes, tickets, productos, tareas, pagos, documentos, bitácora),
+   usando exactamente rankClientes/ticketsForCliente/clienteFinancials/
+   ticketIsActivo — nada de esto guarda ni lee una tabla nueva. */
+
+function fmtRelativeActivity(iso){
+  if(!iso) return "";
+  var diff = Date.now() - new Date(iso).getTime();
+  var days = Math.floor(diff / 86400000);
+  if(days <= 0) return "hoy";
+  if(days === 1) return "ayer";
+  if(days < 7) return "hace " + days + " días";
+  if(days < 30) return "hace " + Math.floor(days/7) + (Math.floor(days/7)===1?" semana":" semanas");
+  return "hace " + Math.floor(days/30) + (Math.floor(days/30)===1?" mes":" meses");
+}
+
+function renderClienteRow(c){
+  var fin = clienteFinancials(c);
+  var active = c.id === UI.selectedClienteId;
+  var meta = [];
+  if(fin.tickets.length) meta.push(fin.tickets.length + (fin.tickets.length===1?" ticket":" tickets"));
+  if(fin.lastActivityAt) meta.push(fmtRelativeActivity(fin.lastActivityAt));
+  return (
+    '<button class="ticket-row cliente-row' + (active?" active":"") + '" data-action="open-cliente-ficha" data-client-id="' + c.id + '">' +
+      '<div class="ticket-row-top">' +
+        '<span class="ticket-title">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-row-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</span>" +
+        (c.preautorizado ? '<span class="pill pill-accent" title="Preautorizado">Preautorizado</span>' : "") +
+      "</div>" +
+      (meta.length ? '<div class="ticket-meta"><span>' + meta.join(" · ") + "</span></div>" : "") +
+    "</button>"
+  );
+}
+
+function renderClientesListView(){
+  if(STATE.clientesTableMissing){
+    return (
+      '<div class="home-header"><h1>Clientes</h1></div>' +
+      '<div class="empty-state"><h1>Función pendiente de activar</h1>' +
+        '<p>Falta aplicar una migración en Supabase para tener una tabla real de clientes. Mientras tanto, "Cliente" sigue funcionando como texto libre en cada ticket.</p></div>'
+    );
+  }
+  var q = UI.clientesSearch || "";
+  var ordered = rankClientes(q);
+  var listHtml;
+  if(!STATE.clientes.length){
+    listHtml = '<div class="empty-list">Aún no hay clientes. Se crean al usar /cliente dentro de un ticket.</div>';
+  } else if(!ordered.length){
+    listHtml = '<div class="empty-list">Sin resultados para “' + escapeHtml(q) + '”.</div>';
+  } else {
+    if(!q.trim()) listHtml = '<div class="group-label">Frecuentes</div>' + ordered.map(renderClienteRow).join("");
+    else listHtml = ordered.map(renderClienteRow).join("");
+  }
+  return (
+    '<div class="home-header"><h1>Clientes</h1></div>' +
+    '<div class="clientes-view">' +
+      '<div class="search-wrap clientes-search-wrap">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+        '<input type="text" placeholder="Buscar por nombre o empresa" id="clientes-search-input" value="' + escapeHtml(q) + '">' +
+      "</div>" +
+      '<div class="clientes-list">' + listHtml + "</div>" +
+    "</div>"
+  );
+}
+
+/* Un solo consolidado cronológico con filtros simples (sección 1.4) en vez
+   de pestañas separadas por tipo — Todo/Tickets/Productos/Documentos/
+   Pagos/Archivos son solo un filtro sobre la MISMA lista, nunca datos
+   distintos ni copias. Cada evento sale del thread YA existente de cada
+   ticket del cliente — nunca se crea un álbum o historial paralelo. */
+function clienteHistoryItems(c, filter){
+  var fin = clienteFinancials(c);
+  var items = [];
+  fin.tickets.forEach(function(t){
+    if(!ticketIsActivo(t) && (filter === "todo" || filter === "tickets")){
+      items.push({ ts: t.lastActivityAt, kind: "ticket", ticket: t });
+    }
+    if(filter === "todo" || filter === "productos" || filter === "documentos" || filter === "pagos" || filter === "archivos"){
+      (t.thread||[]).forEach(function(ev){
+        var wantKind = { producto:"productos", documento:"documentos", pago:"pagos", archivo:"archivos" }[ev.type];
+        if(!wantKind) return;
+        if(filter !== "todo" && filter !== wantKind) return;
+        items.push({ ts: ev.ts, kind: ev.type, event: ev, ticket: t });
+      });
+    }
+  });
+  items.sort(function(a,b){ return new Date(b.ts) - new Date(a.ts); });
+  return items;
+}
+function renderClienteHistoryItem(item){
+  if(item.kind === "ticket"){
+    return (
+      '<button class="ticket-row cliente-history-ticket" data-action="open-ticket" data-id="' + item.ticket.id + '">' +
+        '<div class="ticket-row-top"><span class="ticket-title">' + escapeHtml(ticketLabel(item.ticket)) + "</span></div>" +
+        '<div class="ticket-meta"><span>#' + item.ticket.seq + " · " + fmtDateShort(item.ticket.lastActivityAt) + "</span></div>" +
+      "</button>"
+    );
+  }
+  return (
+    '<div class="cliente-history-item">' +
+      '<button class="history-ticket-pill" data-action="open-ticket" data-id="' + item.ticket.id + '">Ticket #' + item.ticket.seq + " &rsaquo;</button>" +
+      renderThreadItem(item.event, item.ticket.id) +
+    "</div>"
+  );
+}
+var HISTORIA_FILTERS = [["todo","Todo"],["tickets","Tickets"],["productos","Productos"],["documentos","Documentos"],["pagos","Pagos"],["archivos","Archivos"]];
+function renderClienteFichaView(){
+  var c = STATE.clientes.filter(function(x){ return x.id === UI.selectedClienteId; })[0];
+  if(!c){
+    return (
+      '<div class="home-header"><button class="btn-plain" data-action="go-clientes">&larr; Clientes</button></div>' +
+      '<div class="empty-state"><h1>Este cliente ya no existe</h1></div>'
+    );
+  }
+  var fin = clienteFinancials(c);
+  var ahora = fin.tickets.filter(ticketIsActivo);
+  var breadcrumb = UI.clienteReturnTicketId
+    ? '<button class="btn-plain" data-action="open-ticket" data-id="' + UI.clienteReturnTicketId + '">&larr; Volver al Ticket #' + (findTicket(UI.clienteReturnTicketId) ? findTicket(UI.clienteReturnTicketId).seq : "") + "</button>"
+    : '<button class="btn-plain" data-action="go-clientes">&larr; Clientes</button>';
+  var infoLines = [];
+  if(c.telefono) infoLines.push(["Teléfono", c.telefono]);
+  if(c.email) infoLines.push(["Email", c.email]);
+  if(c.notasComerciales) infoLines.push(["Notas comerciales", c.notasComerciales]);
+  infoLines.push(["Preautorizado", c.preautorizado ? "Sí" : "No"]);
+  infoLines.push(["Tickets activos", String(fin.activos)]);
+  if(fin.tickets.length) infoLines.push(["Saldo", fmtMoney(fin.saldo) + (fin.pend ? " (+" + fin.pend + " sin precio)" : "")]);
+  infoLines.push(["Última actividad", fin.lastActivityAt ? fmtRelativeActivity(fin.lastActivityAt) : "Sin actividad todavía"]);
+
+  var ahoraHtml = ahora.length
+    ? ahora.map(renderTicketRow).join("")
+    : '<div class="empty-list">Nada activo ahora mismo con este cliente.</div>';
+
+  var histItems = clienteHistoryItems(c, UI.clienteHistoriaFilter || "todo");
+  var histHtml = histItems.length
+    ? histItems.map(renderClienteHistoryItem).join("")
+    : '<div class="empty-list">Sin eventos históricos todavía en este filtro.</div>';
+  var tabsHtml = HISTORIA_FILTERS.map(function(f){
+    return '<button class="ficha-tab' + ((UI.clienteHistoriaFilter||"todo")===f[0]?" active":"") + '" data-action="cliente-historia-filter" data-filter="' + f[0] + '">' + f[1] + "</button>";
+  }).join("");
+
+  return (
+    '<div class="home-header">' + breadcrumb + "</div>" +
+    '<div class="clientes-view ficha-view">' +
+      '<div class="ficha-header">' +
+        '<h1 class="ficha-name">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="ficha-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</h1>" +
+        infoLines.map(lineRow).join("") +
+      "</div>" +
+      '<div class="ficha-section"><div class="ficha-section-title">Ahora</div>' + ahoraHtml + "</div>" +
+      '<div class="ficha-section">' +
+        '<div class="ficha-section-title">Historia</div>' +
+        '<div class="ficha-tabs">' + tabsHtml + "</div>" +
+        '<div class="ficha-history-list">' + histHtml + "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
 function renderMain(){
+  if(UI.mainView === "clientes" && !UI.selectedTicketId){
+    return UI.selectedClienteId ? renderClienteFichaView() : renderClientesListView();
+  }
   var t = UI.selectedTicketId ? findTicket(UI.selectedTicketId) : null;
   if(!t){
     /* Inicio / Centro de consulta: no selecciona ni modifica ningún ticket.
@@ -1596,7 +2060,22 @@ function render(){
         UI.slashQuery = fragment;
         UI.slashActiveIndex = 0;
       }
-      if(menuChanged || hadOverlay){
+      /* Autocomplete predictivo del ARGUMENTO de /cliente (secciones 1.2/6.2):
+         mismo patrón de interacción que el menú de "/" de arriba (↑/↓/Enter/
+         Esc/Tab), pero sobre lo que se escribe después del nombre del
+         comando — nunca dos sistemas de autocomplete distintos, solo el
+         mismo aplicado a otro momento de la escritura. Se actualiza en cada
+         tecla, sin esperar Enter. */
+      var argMatch = shouldOpen ? null : v.match(/^\/(cliente|client)\s(.*)$/i);
+      var shouldSuggest = !!argMatch;
+      var suggestQuery = argMatch ? argMatch[2] : "";
+      var suggestChanged = (shouldSuggest !== !!UI.cliSuggestOpen || suggestQuery !== UI.cliSuggestQuery);
+      if(suggestChanged){
+        UI.cliSuggestOpen = shouldSuggest;
+        UI.cliSuggestQuery = suggestQuery;
+        UI.cliSuggestIndex = 0;
+      }
+      if(menuChanged || suggestChanged || hadOverlay){
         render();
         restoreComposerText(v);
       }
@@ -1640,6 +2119,33 @@ function render(){
              cualquier autocomplete de terminal/IDE. */
           e.preventDefault();
           if(list.length) pickSlashCommand(list[UI.slashActiveIndex].aliases[0]);
+          return;
+        }
+      }
+      if(UI.cliSuggestOpen){
+        var cliList = rankClientes(UI.cliSuggestQuery).slice(0, 8);
+        if(e.key === "ArrowDown"){ e.preventDefault(); if(cliList.length) UI.cliSuggestIndex = (UI.cliSuggestIndex+1) % cliList.length; var cv1=composerInput.value; render(); restoreComposerText(cv1); return; }
+        if(e.key === "ArrowUp"){ e.preventDefault(); if(cliList.length) UI.cliSuggestIndex = (UI.cliSuggestIndex-1+cliList.length) % cliList.length; var cv2=composerInput.value; render(); restoreComposerText(cv2); return; }
+        if(e.key === "Enter"){
+          /* A propósito NO ejecuta la sugerencia resaltada: Enter siempre
+             corre el comando con el texto que el usuario realmente escribió
+             (igual que cualquier otro comando de la app) — así una
+             coincidencia exacta como "/cliente Angela" nunca se resuelve
+             "sola" al primer sugerido más reciente si hay varios clientes
+             parecidos. Elegir una sugerencia puntual es cosa de tocarla,
+             o de Tab para completar el texto antes de decidir. */
+          e.preventDefault();
+          UI.cliSuggestOpen = false;
+          submitNote();
+          return;
+        }
+        if(e.key === "Escape"){ e.preventDefault(); UI.cliSuggestOpen = false; var cv3=composerInput.value; render(); restoreComposerText(cv3); return; }
+        if(e.key === "Tab"){
+          /* Tab acepta la recomendación (completa el texto) sin ejecutar,
+             y solo aplica mientras el foco está en el compositor — nunca
+             un atajo global (sección 6.3). */
+          e.preventDefault();
+          if(cliList.length) chooseCliSuggestion(UI.cliSuggestIndex, false);
           return;
         }
       }
@@ -1864,7 +2370,7 @@ async function updateClienteCore(clientId, patch, ticketIdForLog){
     showToast("No se pudo actualizar el cliente: " + (e.message || "error"));
     return false;
   }
-  refreshFromServer();
+  await refreshFromServer({refocus:true});
   return true;
 }
 
@@ -2802,9 +3308,12 @@ var COMMANDS = [
   },
   {
     key: "cliente", aliases: ["cliente","client"], type: "read", requiresTicket: false,
-    syntax: "/cliente <nombre>", summary: "Dentro de un ticket: buscar/vincular un cliente. Fuera de un ticket: solo consultar su ficha",
-    examples: ["/cliente Angela"],
-    parse: function(arg){ return arg ? { ok:true, data:{ q: arg } } : { ok:false, showHelp:true }; },
+    syntax: "/cliente [nombre]", summary: "Dentro de un ticket: buscar/vincular un cliente. Fuera de un ticket: solo consultar su ficha. Sin nombre: clientes frecuentes",
+    examples: ["/cliente Angela", "/cliente"],
+    /* Sin argumento (o solo espacios) ya no pide ayuda: resuelve igual,
+       con q vacía, para mostrar de inmediato los clientes frecuentes/
+       relevantes (sección 1.2) — nunca deja al usuario sin nada que ver. */
+    parse: function(arg){ return { ok:true, data:{ q: (arg||"").trim() } }; },
     run: function(data, ctx){
       pushEphemeral("cliente", ctx.ticket ? ctx.ticket.id : null, { mode: ctx.ticket ? "ticket" : "home", query: data.q });
     }
@@ -2954,6 +3463,9 @@ function wireEvents(){
   root.querySelectorAll('[data-action="go-home"]').forEach(function(b){
     b.addEventListener("click", function(){ goHome(); });
   });
+  root.querySelectorAll('[data-action="go-clientes"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToClientes(); });
+  });
 
   /* Menú lateral en móvil (sección 16: el sidebar ya tenía el CSS de cajón
      y UI.sidebarOpen, pero le faltaba el botón para abrirlo — sin esto era
@@ -2980,6 +3492,16 @@ function wireEvents(){
       saveUi();
       render();
       var again = document.getElementById("search-input");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
+
+  var clientesSearchInput = document.getElementById("clientes-search-input");
+  if(clientesSearchInput){
+    clientesSearchInput.addEventListener("input", function(){
+      UI.clientesSearch = clientesSearchInput.value;
+      render();
+      var again = document.getElementById("clientes-search-input");
       if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
     });
   }
@@ -3055,6 +3577,9 @@ function wireEvents(){
   root.querySelectorAll('[data-slash-cmd]').forEach(function(b){
     b.addEventListener("click", function(){ pickSlashCommand(b.getAttribute("data-slash-cmd")); });
   });
+  root.querySelectorAll('[data-cli-suggest-idx]').forEach(function(b){
+    b.addEventListener("click", function(){ chooseCliSuggestion(Number(b.getAttribute("data-cli-suggest-idx")), true); });
+  });
 }
 
 function bindField(id, evtName){
@@ -3088,6 +3613,8 @@ document.addEventListener("click", function(e){
   if(showProdBtn){ pushEphemeral("productos", showProdBtn.getAttribute("data-ticket"), { filter: showProdBtn.getAttribute("data-filter") }); return; }
   var showDocsBtn = e.target.closest && e.target.closest('[data-action="show-documentos"]');
   if(showDocsBtn){ pushEphemeral("documentos", showDocsBtn.getAttribute("data-ticket"), {}); return; }
+  var showDineroBtn = e.target.closest && e.target.closest('[data-action="show-dinero"]');
+  if(showDineroBtn){ pushEphemeral("dinero", showDineroBtn.getAttribute("data-ticket"), {}); return; }
   var clienteSelectBtn = e.target.closest && e.target.closest('[data-action="cliente-select"]');
   if(clienteSelectBtn){
     pushEphemeral("cliente", clienteSelectBtn.getAttribute("data-ticket") || null, { mode: clienteSelectBtn.getAttribute("data-mode"), resolvedId: clienteSelectBtn.getAttribute("data-client-id") });
@@ -3098,6 +3625,19 @@ document.addEventListener("click", function(e){
     var linkTicket = findTicket(clienteLinkBtn.getAttribute("data-ticket"));
     var linkCliente = STATE.clientes.filter(function(c){ return c.id === clienteLinkBtn.getAttribute("data-client-id"); })[0];
     if(linkTicket && linkCliente) linkClienteToTicket(linkTicket, linkCliente);
+    return;
+  }
+  var openFichaBtn = e.target.closest && e.target.closest('[data-action="open-cliente-ficha"]');
+  if(openFichaBtn){
+    var fichaClientId = openFichaBtn.getAttribute("data-client-id");
+    var fichaFromTicket = openFichaBtn.getAttribute("data-ticket") || null;
+    openClienteFicha(fichaClientId, { fromTicketId: fichaFromTicket });
+    return;
+  }
+  var historiaFilterBtn = e.target.closest && e.target.closest('[data-action="cliente-historia-filter"]');
+  if(historiaFilterBtn){
+    UI.clienteHistoriaFilter = historiaFilterBtn.getAttribute("data-filter");
+    render();
     return;
   }
   var clienteCreateBtn = e.target.closest && e.target.closest('[data-action="cliente-create"]');
