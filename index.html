@@ -106,12 +106,26 @@ button{cursor:pointer;}
   padding:8px 8px; border-radius:var(--radius-s); position:relative;
 }
 .ticket-row:hover{background:var(--surface-3);}
-.ticket-row.active{background:var(--surface); box-shadow:var(--shadow);}
+/* V0.5 §7: acento del ticket activo reforzado con un borde izquierdo fino
+   vía box-shadow inset (no cambia el padding/ancho de la fila, así que no
+   hay salto de layout al activarse/desactivarse). */
+.ticket-row.active{background:var(--surface); box-shadow:var(--shadow), inset 3px 0 0 var(--accent);}
 .ticket-row-top{display:flex; align-items:baseline; gap:6px;}
 .ticket-num{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); flex-shrink:0;}
 .ticket-title{font-weight:600; font-size:13.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;}
 .ticket-title.muted{font-weight:500; color:var(--text-faint); font-style:italic;}
 .ticket-pin{color:var(--gold); flex-shrink:0;}
+/* V0.5 §6: × de cancelar — discreta, solo visible en hover/focus, no
+   compite con el texto de cliente/producto (esquina superior derecha,
+   fuera del flujo del contenido). */
+.ticket-row-wrap{position:relative;}
+.ticket-row-cancel{
+  position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%;
+  border:none; background:transparent; color:var(--text-faint); font-size:15px; line-height:1;
+  display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .12s ease, background .12s ease, color .12s ease;
+}
+.ticket-row-wrap:hover .ticket-row-cancel, .ticket-row-cancel:focus-visible{opacity:1;}
+.ticket-row-cancel:hover{background:var(--danger-soft); color:var(--danger);}
 .ticket-row-product{font-size:11.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px;}
 .ticket-row-product.muted{color:var(--text-faint); font-style:italic;}
 .ticket-meta{display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:11.5px; margin-top:3px;}
@@ -208,9 +222,15 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .empty-state h1{font-size:17px; color:var(--text); font-weight:600; margin:0;}
 .empty-state p{margin:0; max-width:340px; font-size:13.5px;}
 
+/* V0.5 §3: "la cabecera explica el presente, el thread explica el pasado"
+   — más separación de profundidad (sombra sutil hacia abajo) y más aire
+   que antes para que la comanda se sienta como una superficie propia,
+   sin convertirla en una card ni cambiar su lógica. */
 .ticket-header{
-  border-bottom:1px solid var(--border); padding:14px 22px 10px; background:var(--surface);
-  display:flex; flex-direction:column; gap:8px; flex-shrink:0;
+  border-bottom:1px solid var(--border); padding:16px 22px 16px; background:var(--surface);
+  display:flex; flex-direction:column; gap:9px; flex-shrink:0;
+  box-shadow:0 6px 14px -10px rgba(0,0,0,.55);
+  position:relative; z-index:1;
 }
 .ticket-header-top{display:flex; align-items:center; gap:10px; justify-content:space-between;}
 .home-header{
@@ -286,9 +306,14 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
    vertical fino entre ellas (nunca una caja/card nueva) y cada campo es un
    botón compacto tipo "stat" que aprovecha el ancho en horizontal en vez de
    apilarse en una lista vertical de filas sueltas. */
+/* V0.5 §3: divisor vertical suavizado a propósito — ya no separa OPERACIÓN/
+   COMERCIAL como dos zonas fuertemente distintas, es una sola superficie
+   operativa. Se quita el border-left; el espaciado y las dos tipografías ya
+   existentes (etiqueta-primero vs número-primero) siguen bastando para
+   distinguir cada campo sin una línea dura entre ambos grupos. */
 .comanda-zones{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; row-gap:12px; margin-top:12px; padding-top:10px; border-top:1px solid var(--border);}
-.comanda-zone{display:flex; flex-direction:column; gap:6px; padding-right:26px;}
-.comanda-zone-comercial{padding-left:26px; border-left:1px solid var(--border); margin-left:2px;}
+.comanda-zone{display:flex; flex-direction:column; gap:6px; padding-right:22px;}
+.comanda-zone-comercial{padding-left:4px;}
 .comanda-zone-title{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); font-weight:700;}
 .comanda-zone-fields{display:flex; align-items:flex-end; gap:22px; flex-wrap:wrap; row-gap:8px;}
 .comanda-zone:not(.comanda-zone-comercial) .comanda-zone-fields{align-items:flex-start;}
@@ -298,7 +323,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 }
 .comanda-field:hover{background:var(--surface-3);}
 .comanda-field-label{color:var(--text-faint); font-size:11px;}
-.comanda-field-value{font-weight:600; color:var(--text); font-size:14px;}
+.comanda-field-value{font-weight:600; color:var(--text); font-size:14.5px;}
 .comanda-field-value.muted{color:var(--text-faint); font-weight:500; font-style:italic;}
 .comanda-field-value.accent{color:var(--accent-ink); font-weight:700;}
 .comanda-field-value.known{color:var(--text);}
@@ -307,7 +332,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
    debajo) — en esta zona lo que se escanea es la cifra, no el nombre del
    campo (sección "valores importantes fáciles de escanear"). */
 .comanda-stat{gap:1px;}
-.comanda-stat .comanda-field-value{font-family:var(--font-mono); font-size:16px; font-weight:700;}
+.comanda-stat .comanda-field-value{font-family:var(--font-mono); font-size:17px; font-weight:700;}
 .comanda-stat .comanda-field-value.cobrado{color:var(--success-ink);}
 .comanda-stat .comanda-field-label{font-size:10.5px;}
 .comanda-edit-inline{padding:2px; display:flex; align-items:center; gap:6px;}
@@ -355,7 +380,13 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .thread-dot.sistema{background:var(--border);}
 .thread-body{min-width:0; flex:1;}
 .thread-meta{font-size:11.5px; color:var(--text-faint); margin-bottom:2px;}
+.thread-meta:empty{display:none;}
 .thread-meta .autor{color:var(--text-muted); font-weight:600;}
+/* V0.5 §4: separador discreto de día dentro del timeline — reemplaza la
+   fecha repetida en cada evento. */
+.thread-day-sep{display:flex; align-items:center; gap:10px; margin:16px 0 8px; font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--text-faint);}
+.thread-day-sep:first-child{margin-top:2px;}
+.thread-day-sep-line{flex:1; height:1px; background:var(--border);}
 .thread-text{font-size:13.5px; color:var(--text); white-space:pre-wrap; word-break:break-word;}
 .thread-sub{font-size:12.5px; color:var(--text-muted); font-family:var(--font-mono); margin-top:1px;}
 .thread-img{margin-top:6px; max-width:260px; border-radius:var(--radius-m); border:1px solid var(--border); display:block;}
@@ -542,6 +573,56 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .doc-pending-note{ font-size:11.5px; color:var(--gold); }
 .doc-total-preview{ font-family:var(--font-mono); font-weight:600; font-size:13.5px; border-top:1px solid var(--border); padding-top:6px; margin-top:2px; }
 
+/* ---------- documento comercial: modal de creación (V0.5 §10-18/D10) ----------
+   Modal propio (no popover del compositor) porque el formulario ahora
+   incluye tax/fee/due-date/terms/PO además de los productos — necesitaba
+   una pantalla completa, no 300px flotando sobre el compositor. Misma
+   familia visual que .doc-modal/.cierre-modal (overlay oscuro + tarjeta
+   centrada), pero más ancho para que Cliente/PO y Terms/Due Date quepan
+   en dos columnas sin apretarse. */
+.docform-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:60;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.docform-modal{
+  background:var(--surface); border-radius:var(--radius-l); box-shadow:var(--shadow);
+  width:100%; max-width:560px; max-height:90vh; overflow-y:auto;
+  display:flex; flex-direction:column;
+}
+.docform-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+  padding:16px 18px; border-bottom:1px solid var(--border); position:sticky; top:0;
+  background:var(--surface); z-index:1;
+}
+.docform-title{ font-size:15px; font-weight:700; color:var(--text); display:flex; flex-direction:column; gap:2px; }
+.docform-title-sub{ font-size:11.5px; font-weight:400; color:var(--text-faint); }
+.docform-body{ padding:14px 18px 4px; display:flex; flex-direction:column; gap:10px; }
+.docform-body label{ font-size:11.5px; color:var(--text-muted); display:flex; flex-direction:column; gap:3px; }
+.docform-body input:not([type="checkbox"]), .docform-body select{
+  border:1px solid var(--border); border-radius:var(--radius-s); padding:6px 8px; font-size:13px;
+  background:var(--surface); color:var(--text); font:inherit;
+}
+.docform-check input[type="checkbox"]{ width:16px; height:16px; flex-shrink:0; }
+.docform-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+@media (max-width:480px){ .docform-grid{ grid-template-columns:1fr; } }
+.docform-section-title{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:600;
+  margin-top:4px; padding-top:8px; border-top:1px dashed var(--border);
+}
+.docform-check{ flex-direction:row!important; align-items:center; gap:7px!important; font-size:13px!important; color:var(--text)!important; }
+.docform-check input{ width:auto; }
+.docform-summary{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m);
+  padding:10px 12px; display:flex; flex-direction:column; gap:4px;
+}
+.docform-sum-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-muted); }
+.docform-sum-total{ font-size:14.5px; font-weight:700; color:var(--text); border-top:1px solid var(--border); padding-top:6px; margin-top:2px; }
+.docform-actions{
+  display:flex; justify-content:flex-end; gap:8px; padding:14px 18px; border-top:1px solid var(--border);
+  position:sticky; bottom:0; background:var(--surface);
+}
+@media (max-width:520px){ .docform-modal{ max-width:none; } .docform-actions{ flex-direction:column-reverse; } .docform-actions .btn{ width:100%; } }
+
 /* ---------- documento comercial: modal + "hoja" con look de papel ----------
    La barra de acciones (.doc-modal-top) respeta el tema de la app; la hoja
    (.doc-paper) NO — siempre se ve clara/impresa, igual en modo oscuro,
@@ -552,7 +633,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 }
 .doc-modal{
   background:var(--surface); border-radius:var(--radius-l); box-shadow:var(--shadow);
-  width:100%; max-width:560px; max-height:90vh; overflow-y:auto; padding:16px 16px 0;
+  width:100%; max-width:900px; max-height:90vh; overflow-y:auto; padding:16px 16px 0;
   display:flex; flex-direction:column; gap:12px;
 }
 .doc-modal-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:0 4px; }
@@ -606,6 +687,13 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 
 /* Payment / Notes lado a lado (sección 18/19) */
 .doc-two-col{ display:flex; gap:22px; flex-wrap:wrap; margin-top:16px; padding-top:12px; border-top:1px solid var(--pk-line); }
+/* Bill To/Details (V0.5 §12): mismo grid de dos columnas que Payment/Notes,
+   pero va justo debajo del encabezado (que ya trae su propio borde), así
+   que no repite otro borde arriba — solo el espaciado que antes tenía
+   .doc-billto en solitario. */
+.doc-two-col-top{ margin-top:14px; padding-top:0; border-top:none; margin-bottom:4px; }
+.doc-two-col-top .doc-col{ font-size:13px; line-height:1.5; color:var(--pk-ink); }
+.doc-two-col-top .doc-col-title{ margin-bottom:3px; }
 .doc-col{ flex:1; min-width:200px; font-size:12.5px; color:var(--pk-muted); line-height:1.6; }
 .doc-col-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--pk-faint); font-weight:700; margin-bottom:4px; }
 .doc-payment-row{ display:flex; gap:8px; }
@@ -657,6 +745,14 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 (function(){
 "use strict";
 
+/* Design To Go CRM = oscuro por defecto (V0.5 §2) — independiente del tema
+   del sistema operativo. Se fija ANTES de cualquier render (y antes de que
+   el navegador pinte el body) para no producir un flash claro→oscuro. El
+   CSS claro (:root sin [data-theme]) se conserva íntegro por si hace falta
+   después; simplemente deja de ser el default. No hay selector de tema ni
+   página de Settings — decisión explícita de producto, no un olvido. */
+document.documentElement.setAttribute("data-theme", "dark");
+
 /* ---------------- config ---------------- */
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
@@ -665,7 +761,7 @@ var FILES_BUCKET = "ticket-files";
 var sb = null;
 var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
-  docDraft: null, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
+  docDraft: null, docFormOpen: false, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
   pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
   clienteEditDraft: null, docsListOpen: false, cierreModal: null, headerEditField: null,
   /* Sección Clientes (vista visual persistente, no efímera): mainView es
@@ -675,6 +771,8 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      (sección 1.8) — "no perder el lugar del que vino el usuario". */
   mainView: null, selectedClienteId: null, clienteReturnTicketId: null, clientesSearch: "",
   clienteHistoriaFilter: "todo",
+  /* V0.5 §8.3: filtro Todos/Pagados/Cancelados de la vista Tickets cerrados. */
+  cerradosFilter: "todos",
   /* Autocomplete predictivo de /cliente dentro del compositor (sección 1.2/6.2):
      mismo patrón de interacción que el menú de "/", pero para el argumento. */
   cliSuggestOpen: false, cliSuggestQuery: "", cliSuggestIndex: 0 };
@@ -697,6 +795,62 @@ function fmtTime(iso){
 }
 function fmtDateShort(iso){
   try{ return new Date(iso).toLocaleDateString("es-MX",{day:"2-digit",month:"short"}); }catch(e){ return ""; }
+}
+/* V0.5: Due Date/Valid Until se guardan como "YYYY-MM-DD" puro (sin hora),
+   así que parsearlos con `new Date(iso)` (UTC medianoche) puede mostrar el
+   día anterior según la zona horaria del navegador. Se arma la fecha en
+   hora LOCAL a partir de sus partes en vez de dejar que Date interprete la
+   cadena como UTC. */
+function fmtDateOnlyShort(iso){
+  if(!iso) return "";
+  var parts = String(iso).split("-");
+  if(parts.length !== 3) return fmtDateShort(iso);
+  var d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  try{ return d.toLocaleDateString("es-MX",{day:"2-digit",month:"short"}); }catch(e){ return iso; }
+}
+/* ---------------- V0.5 §4: limpieza del timeline ----------------
+   La hora/fecha SIGUE guardándose igual en cada fila de bitácora — esto es
+   puramente de presentación. dayKey() agrupa eventos por día calendario
+   (para el separador "HOY · 1 SEP"); eventShowsTime() decide, por tipo de
+   evento, si la hora se muestra discreta junto al evento o se oculta por
+   defecto (queda disponible siempre vía el title/tooltip del renglón). */
+function dayKey(iso){ try{ return startOfDay(new Date(iso)).toDateString(); }catch(e){ return ""; } }
+function fmtDaySeparatorLabel(iso){
+  var d = startOfDay(new Date(iso));
+  var today = startOfDay(new Date());
+  var diffDays = Math.round((today - d) / 86400000);
+  var datePart = fmtDateShort(iso).toUpperCase();
+  if(diffDays === 0) return "HOY · " + datePart;
+  if(diffDays === 1) return "AYER · " + datePart;
+  return datePart;
+}
+function daySeparatorHtml(iso){
+  return '<div class="thread-day-sep"><span class="thread-day-sep-line"></span><span class="thread-day-sep-label">' +
+    escapeHtml(fmtDaySeparatorLabel(iso)) + '</span><span class="thread-day-sep-line"></span></div>';
+}
+/* Trazabilidad temporal real (pago, documento, entrega, cierre) muestra
+   hora discreta junto al evento; todo lo demás (nota, producto, tarea,
+   archivo, ediciones menores de "sistema") la oculta por defecto — el día
+   ya lo da el separador, y la hora exacta sigue disponible en el title del
+   renglón (ver renderThreadItem). */
+function eventShowsTime(ev){
+  if(ev.type === "pago" || ev.type === "documento") return true;
+  if(ev.type === "sistema" && (ev.kind === "entrega" || ev.kind === "cierre_pagado" || ev.kind === "cierre_cancelado")) return true;
+  return false;
+}
+/* Fusiona una lista ya ordenada cronológicamente de {ts, html} insertando
+   un separador de día cada vez que cambia el día calendario — un solo
+   helper reutilizado por el thread del ticket y por el historial de la
+   ficha de cliente (ambos son, en el fondo, "una lista cronológica de
+   eventos"), sin importar si el orden es ascendente o descendente. */
+function joinWithDaySeparators(items){
+  var out = "", lastDay = null;
+  items.forEach(function(m){
+    var dk = dayKey(m.ts);
+    if(dk !== lastDay){ out += daySeparatorHtml(m.ts); lastDay = dk; }
+    out += m.html;
+  });
+  return out;
 }
 
 /* ---------------- local UI-only storage (never the source of truth) ---------------- */
@@ -752,6 +906,13 @@ function mapClienteRow(row){
   return {
     id: row.id, nombre: row.nombre || "", empresa: row.empresa || "", telefono: row.telefono || "",
     email: row.email || "", notasComerciales: row.notas_comerciales || "", preautorizado: !!row.preautorizado,
+    /* V0.5 §15: atributo vivo del cliente (no es snapshot) — solo se lee al
+       ABRIR un documento nuevo para proponer un default de tax; un
+       documento ya creado nunca vuelve a leer esto (queda congelado en su
+       propio pricing_snapshot). row.tax_exempt puede no existir todavía si
+       la migración 0006 no se ha corrido — el `|| false`/`|| ""` cubre ese
+       caso sin romper el arranque de la app. */
+    taxExempt: !!row.tax_exempt, taxExemptReason: row.tax_exempt_reason || "", taxExemptRef: row.tax_exempt_ref || "",
     createdAt: row.created_at
   };
 }
@@ -798,7 +959,11 @@ async function fetchAllState(){
   });
   documentosRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
-    t.documentos.push({ id: row.id, tipo: row.tipo, numero: row.numero, clienteNombre: row.cliente_nombre || "", notas: row.notas || "", items: row.items || [], total: Number(row.total), cobradoAlCrear: Number(row.cobrado_al_crear||0), billTo: row.bill_to || {}, autor: row.autor, createdAt: row.created_at });
+    /* pricingSnapshot (V0.5 §18): null en documentos pre-V0.5 o si la
+       migración 0006 todavía no se corrió — se trata como "sin tax/fee/
+       due-date/terms/PO", que es exactamente lo que esos documentos ya
+       significaban antes de que existiera este campo. */
+    t.documentos.push({ id: row.id, tipo: row.tipo, numero: row.numero, clienteNombre: row.cliente_nombre || "", notas: row.notas || "", items: row.items || [], total: Number(row.total), cobradoAlCrear: Number(row.cobrado_al_crear||0), billTo: row.bill_to || {}, pricingSnapshot: row.pricing_snapshot || null, autor: row.autor, createdAt: row.created_at });
   });
   bitacoraRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
@@ -943,6 +1108,36 @@ function goToClientes(){
   saveUi();
   render();
 }
+/* V0.5 §8: mismo patrón exacto que goToClientes — un único punto de entrada
+   por vista que resetea popovers/overlays del compositor y decide el foco.
+   Ninguna de estas cuatro vistas es un módulo nuevo: son filtros derivados
+   sobre STATE.tickets, ver ticketsAtencion/ticketsProduccion/ticketsCerrados
+   más abajo. */
+function goToAtencion(){
+  UI.selectedTicketId = null; UI.mainView = "atencion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.pendingFocus = "composer"; UI.sidebarOpen = false;
+  saveUi(); render();
+}
+function goToProduccion(){
+  UI.selectedTicketId = null; UI.mainView = "produccion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.pendingFocus = "composer"; UI.sidebarOpen = false;
+  saveUi(); render();
+}
+function goToCerrados(){
+  UI.selectedTicketId = null; UI.mainView = "cerrados"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.pendingFocus = "composer"; UI.sidebarOpen = false;
+  saveUi(); render();
+}
+function goToCxc(){
+  UI.selectedTicketId = null; UI.mainView = "cxc"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.pendingFocus = "composer"; UI.sidebarOpen = false;
+  saveUi(); render();
+}
+
 /* opts.fromTicketId: cuando se entra desde el nombre del cliente en el
    encabezado de un ticket (sección 1.8) — permite mostrar "← Volver al
    Ticket #N" sin perder ese contexto. Si se entra desde la lista de
@@ -1043,14 +1238,21 @@ function sidebarProductoPrincipal(t){
   return ((best.cantidad && best.cantidad !== 1) ? (best.cantidad + " ") : "") + best.desc;
 }
 
-function renderTicketRow(t){
+/* opts.showCancel (V0.5 §6): SOLO la lista principal del sidebar lo activa
+   — Atención/Producción/Cerrados/ficha de cliente siguen usando esta misma
+   función sin cambios de markup (sin opts, se comporta exactamente igual
+   que antes). Cuando está activo, envuelve el <button> existente en un
+   <div> de posicionamiento para poder poner el botón "×" al lado sin anidar
+   <button> dentro de <button> (HTML inválido). */
+function renderTicketRow(t, opts){
+  opts = opts || {};
   var active = t.id === UI.selectedTicketId;
   var estado = ticketEstado(t);
   var pill = t.queSigue ? '<span class="pill pill-accent">' + escapeHtml(t.queSigue) + "</span>" : "";
   var estadoPill = estado !== "abierto" ? '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>" : "";
   var noCliente = !t.cliente;
   var noProducto = !(t.productos && t.productos.length);
-  return (
+  var row = (
     '<button class="ticket-row' + (active?" active":"") + (estado!=="abierto"?" ticket-row-inactive":"") + '" data-action="open-ticket" data-id="' + t.id + '">' +
       '<div class="ticket-row-top">' +
         '<span class="ticket-num">#' + t.seq + "</span>" +
@@ -1061,14 +1263,26 @@ function renderTicketRow(t){
       '<div class="ticket-meta">' + estadoPill + pill + "</div>" +
     "</button>"
   );
+  if(!opts.showCancel) return row;
+  return (
+    '<div class="ticket-row-wrap">' + row +
+      '<button class="ticket-row-cancel" data-action="cancel-ticket" data-id="' + t.id + '" title="Cancelar ticket">&times;</button>' +
+    "</div>"
+  );
 }
 
 /* Una sola función construye el orden agrupado (fijados + Hoy/Ayer/…) y
    otra aplana ese mismo orden para búsqueda o navegación por teclado — el
    renderer y J/K comparten exactamente el mismo criterio, nunca dos
    ordenamientos que puedan desalinearse. */
+/* V0.5 §5: la lista principal del sidebar es "solo trabajo vivo" — abierto
+   o entregado-sin-cerrar. Los cerrados (pagado/cancelado) no desaparecen de
+   la base de datos, solo dejan de listarse aquí; tienen su propia vista
+   ("Tickets cerrados", bloque 4) y siguen siendo alcanzables desde la ficha
+   de cliente y desde /ticket <número> (navegación histórica deliberada, no
+   limitada al conjunto visual del sidebar). */
 function groupedTicketOrder(){
-  var tickets = STATE.tickets.slice();
+  var tickets = STATE.tickets.filter(function(t){ return !ticketIsCerrado(t); });
   /* Dentro de cada grupo, primero por estado (abierto < entregado < cerrado
      — sección 6: "entregado se mueve debajo de los activos", cerrado al
      fondo) y solo como desempate por actividad reciente. Nada desaparece,
@@ -1090,7 +1304,10 @@ function groupedTicketOrder(){
 function visualTicketOrder(){
   if(UI.search.trim()){
     var q = UI.search.trim();
-    var filtered = STATE.tickets.filter(function(t){ return matchesSearch(t, q); });
+    /* La búsqueda del sidebar vive dentro del mismo conjunto "solo vivos"
+       que la lista (V0.5 §5/D3) — un ticket cerrado se busca en su propia
+       vista (Tickets cerrados), no aquí. */
+    var filtered = STATE.tickets.filter(function(t){ return !ticketIsCerrado(t) && matchesSearch(t, q); });
     filtered.sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
     return filtered;
   }
@@ -1100,12 +1317,16 @@ function visualTicketOrder(){
   return ordered;
 }
 
+/* Único lugar donde el × de cancelar aparece (V0.5 §6) — la lista principal
+   del sidebar, ya filtrada a "solo vivos" por groupedTicketOrder/
+   visualTicketOrder, así que todo lo que se renderiza aquí es cancelable. */
+function renderSidebarRow(t){ return renderTicketRow(t, { showCancel: true }); }
 function renderSidebarList(){
   if(UI.search.trim()){
     var q = UI.search.trim();
     var ordered = visualTicketOrder();
     if(!ordered.length) return '<div class="empty-list">Sin resultados para “' + escapeHtml(q) + '”.</div>';
-    return ordered.map(renderTicketRow).join("");
+    return ordered.map(renderSidebarRow).join("");
   }
   if(!STATE.tickets.length){
     return '<div class="empty-list">Todavía no hay tickets. Crea el primero arriba.</div>';
@@ -1113,24 +1334,23 @@ function renderSidebarList(){
   var g = groupedTicketOrder();
   var html = "";
   if(g.pinned.length){
-    html += '<div class="group-label">Fijados</div>' + g.pinned.map(renderTicketRow).join("");
+    html += '<div class="group-label">Fijados</div>' + g.pinned.map(renderSidebarRow).join("");
   }
   ["Hoy","Ayer","Últimos días","Anteriores"].forEach(function(k){
     if(g.groups[k].length){
-      html += '<div class="group-label">' + k + '</div>' + g.groups[k].map(renderTicketRow).join("");
+      html += '<div class="group-label">' + k + '</div>' + g.groups[k].map(renderSidebarRow).join("");
     }
   });
-  return html || '<div class="empty-list">Sin resultados.</div>';
+  return html || (STATE.tickets.length ? '<div class="empty-list">Nada activo ahora mismo — revisa Tickets cerrados.</div>' : '<div class="empty-list">Sin resultados.</div>');
 }
 
+/* V0.5 §8: Atención/Producción/Cuentas por cobrar dejan de ser stubs "pronto"
+   y se vuelven vistas reales (derivadas, sin tabla/módulo nuevo — igual que
+   Clientes). Kanban e Informes siguen siendo stubs a propósito (V0.5 §24).
+   "Tickets cerrados" es una entrada nueva, sin equivalente previo. */
+var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc"];
 function renderSidebar(){
-  /* Clientes es una vista real sobre los mismos datos, no un módulo aparte
-     (sección 1) — convive con los stubs "pronto" en el orden exacto pedido:
-     Inicio, Atención, Kanban, Producción, Cuentas por cobrar, Clientes,
-     Informes. */
-  var stubsBefore = ["Atención","Kanban","Producción","Cuentas por cobrar"];
-  var stubsAfter = ["Informes"];
-  var onClientesView = UI.mainView === "clientes";
+  var onOtherView = REAL_VIEWS.indexOf(UI.mainView) !== -1;
   return (
     '<div class="sidebar-top">' +
       '<button class="brand" data-action="go-home" title="Ir a Inicio"><span class="brand-mark">&#9679;</span><span class="brand-name">Design To Go</span></button>' +
@@ -1140,14 +1360,14 @@ function renderSidebar(){
         '<input type="text" placeholder="Buscar tickets" id="search-input" value="' + escapeHtml(UI.search) + '">' +
       "</div>" +
       '<ul class="nav-stubs">' +
-        '<button class="nav-stub' + (!UI.selectedTicketId && !onClientesView?" active":"") + '" data-action="go-home"><span>Inicio</span></button>' +
-        stubsBefore.map(function(s){
-          return '<button class="nav-stub" data-action="stub" data-name="' + s + '"><span>' + s + '</span><span class="tag">pronto</span></button>';
-        }).join("") +
-        '<button class="nav-stub' + (onClientesView?" active":"") + '" data-action="go-clientes"><span>Clientes</span></button>' +
-        stubsAfter.map(function(s){
-          return '<button class="nav-stub" data-action="stub" data-name="' + s + '"><span>' + s + '</span><span class="tag">pronto</span></button>';
-        }).join("") +
+        '<button class="nav-stub' + (!UI.selectedTicketId && !onOtherView?" active":"") + '" data-action="go-home"><span>Inicio</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="atencion"?" active":"") + '" data-action="go-atencion"><span>Atención</span></button>' +
+        '<button class="nav-stub" data-action="stub" data-name="Kanban"><span>Kanban</span><span class="tag">pronto</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="produccion"?" active":"") + '" data-action="go-produccion"><span>Producción</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="cxc"?" active":"") + '" data-action="go-cxc"><span>Cuentas por cobrar</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="cerrados"?" active":"") + '" data-action="go-cerrados"><span>Tickets cerrados</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="clientes"?" active":"") + '" data-action="go-clientes"><span>Clientes</span></button>' +
+        '<button class="nav-stub" data-action="stub" data-name="Informes"><span>Informes</span><span class="tag">pronto</span></button>' +
       "</ul>" +
     "</div>" +
     '<div class="sidebar-scroll" id="sidebar-scroll">' + renderSidebarList() + "</div>" +
@@ -1161,7 +1381,16 @@ function renderSidebar(){
 function renderThreadItem(ev, ticketId){
   var dotClass = ev.type;
   var body = "";
-  var meta = (ev.autor ? '<span class="autor">' + escapeHtml(ev.autor) + "</span> · " : "") + fmtTime(ev.ts) + " · " + fmtDateShort(ev.ts);
+  /* V0.5 §4: la hora ya no se repite en cada fila por defecto — el día lo
+     da el separador (joinWithDaySeparators) y eventShowsTime() decide si
+     ESTE evento en particular necesita trazabilidad de hora (pago,
+     documento, entrega, cierre). El timestamp completo sigue disponible
+     siempre vía el atributo title del renglón, nunca se pierde. */
+  var metaBits = [];
+  if(ev.autor) metaBits.push('<span class="autor">' + escapeHtml(ev.autor) + "</span>");
+  if(eventShowsTime(ev)) metaBits.push(fmtTime(ev.ts));
+  var meta = metaBits.join(" · ");
+  var fullStamp = escapeHtml(fmtDateShort(ev.ts) + " · " + fmtTime(ev.ts));
   if(ev.type === "nota"){
     body = '<div class="thread-text">' + escapeHtml(ev.text).replace(/\n/g,"<br>") + "</div>";
   } else if(ev.type === "sistema"){
@@ -1209,7 +1438,7 @@ function renderThreadItem(ev, ticketId){
       "</button>";
   }
   return (
-    '<div class="thread-item">' +
+    '<div class="thread-item" title="' + fullStamp + '">' +
       '<div class="thread-dot ' + dotClass + '"></div>' +
       '<div class="thread-body"><div class="thread-meta">' + meta + "</div>" + body + "</div>" +
     "</div>"
@@ -1443,39 +1672,198 @@ function docChoiceMenu(){
   );
 }
 
-function docForm(){
+/* V0.5 §10-18/D10: modal propio del formulario de documento — reemplaza el
+   popover angosto. Una sola pantalla (sin wizard), con Bill To/productos/
+   fechas/PO arriba, tax/fee en medio, y un resumen financiero en vivo
+   (docform-summary) que se recalcula leyendo el propio DOM del formulario
+   sin pasar por render() (igual criterio que updateProductoPreview: no
+   perder foco/cursor a media edición). Ningún dato se guarda hasta
+   submitDocFormCreate(). */
+function renderDocFormModal(){
+  if(!UI.docFormOpen || !UI.docDraft) return "";
   var t = findTicket(UI.selectedTicketId);
-  if(!t || !UI.docDraft) return "";
-  var tipo = UI.docDraft.tipo;
-  var items = UI.docDraft.items;
-  var pendingCount = items.filter(function(it){ return it.precio == null; }).length;
-  var rows = items.map(function(it, idx){
-    var pending = it.precio == null;
-    return (
-      '<div class="doc-item-row">' +
-        '<span class="doc-item-desc">' + escapeHtml(it.desc) + "</span>" +
-        '<span class="doc-item-qty">×' + it.cantidad + "</span>" +
-        '<span class="doc-item-price' + (pending?" pending":"") + '"><input type="number" min="0" step="0.01" data-doc-item-price="' + idx + '" placeholder="pendiente" value="' + (it.precio==null?"":it.precio) + '"></span>' +
-      "</div>"
-    );
-  }).join("");
-  var total = items.reduce(function(sum,it){ return sum + (it.precio==null?0:it.precio*it.cantidad); }, 0);
-  var itemsBlock = items.length
-    ? '<div class="doc-items-list">' + rows + "</div>" +
-      (pendingCount ? '<div class="doc-pending-note">' + pendingCount + (pendingCount===1?" producto sin precio — puedes completarlo aquí.":" productos sin precio — puedes completarlos aquí.") + "</div>" : "")
+  if(!t) return "";
+  var d = UI.docDraft;
+  var isInvoice = d.tipo === "invoice";
+  var items = d.items;
+
+  var itemsHtml = items.length
+    ? '<div class="doc-items-list">' + items.map(function(it, idx){
+        var pending = it.precio == null;
+        return (
+          '<div class="doc-item-row">' +
+            '<span class="doc-item-desc">' + escapeHtml(it.desc) + "</span>" +
+            '<span class="doc-item-qty">×' + it.cantidad + "</span>" +
+            '<span class="doc-item-price' + (pending?" pending":"") + '"><input type="number" min="0" step="0.01" data-docform-item-price="' + idx + '" placeholder="pendiente" value="' + (it.precio==null?"":it.precio) + '"></span>' +
+          "</div>"
+        );
+      }).join("") + "</div>"
     : '<div class="doc-pending-note">Este ticket todavía no tiene productos agregados.</div>';
+
+  var todayIso = isoDate(new Date());
+  var datesBlock;
+  if(isInvoice){
+    var initialDue = dueDateFromTerms("Due on Receipt", new Date());
+    datesBlock =
+      '<div class="popover-row">' +
+        '<label>Terms<select id="docform-terms">' +
+          TERMS_PRESETS.map(function(tp){ return '<option value="' + tp + '">' + tp + "</option>"; }).join("") +
+        "</select></label>" +
+        '<label>Due Date<input type="date" id="docform-duedate" value="' + initialDue + '"></label>' +
+      "</div>" +
+      '<div id="docform-terms-custom-wrap" hidden><label>Terms — texto libre<input type="text" id="docform-terms-custom" placeholder="Ej. 50% anticipo, resto contra entrega"></label></div>';
+  } else {
+    datesBlock = '<label>Valid Until (opcional)<input type="date" id="docform-validuntil"></label>';
+  }
+
+  var exemptHint = d.clientExempt
+    ? '<div class="ephemeral-sub">Cliente registrado como tax exempt' + (d.clientExemptReason ? " (" + escapeHtml(d.clientExemptReason) + ")" : "") + " — tax propuesto en OFF, puedes cambiarlo.</div>"
+    : "";
+
   return (
-    '<div class="popover" id="composer-popover" style="width:300px;">' +
-      '<div class="popover-title">' + (tipo==="invoice"?"Nuevo invoice":"Nueva cotización") + "</div>" +
-      '<div class="popover-form">' +
-        itemsBlock +
-        '<label>Cliente / empresa<input type="text" id="doc-cliente" value="' + escapeHtml(t.cliente) + '"></label>' +
-        '<label>Notas (opcional)<input type="text" id="doc-notas" placeholder="Se muestran en el documento"></label>' +
-        '<div class="doc-total-preview" id="doc-total-preview">Total: ' + fmtMoney(total) + "</div>" +
-        '<div class="popover-actions"><button class="btn btn-ghost" data-action="cancel-form">Cancelar</button><button class="btn btn-primary" data-action="create-documento">Crear ' + (tipo==="invoice"?"invoice":"cotización") + "</button></div>" +
+    '<div class="docform-overlay" id="docform-overlay">' +
+      '<div class="docform-modal">' +
+        '<div class="docform-head">' +
+          '<div class="docform-title">' + (isInvoice ? "Nuevo invoice" : "Nueva cotización") + '<span class="docform-title-sub">' + escapeHtml(ticketLabel(t)) + " · #" + t.seq + "</span></div>" +
+          '<button class="btn-plain" data-action="close-docform" title="Cerrar">&times;</button>' +
+        "</div>" +
+        '<div class="docform-body">' +
+          '<div class="docform-grid">' +
+            '<label>Cliente / empresa<input type="text" id="docform-cliente" value="' + escapeHtml(t.cliente) + '"></label>' +
+            '<label>PO / Reference (opcional)<input type="text" id="docform-po" placeholder="Ej. PO-48392"></label>' +
+          "</div>" +
+          datesBlock +
+          '<div class="docform-section-title">Productos</div>' +
+          itemsHtml +
+          '<div class="docform-section-title">Impuesto y cargos</div>' +
+          exemptHint +
+          '<label class="docform-check"><input type="checkbox" id="docform-tax-applied"' + (d.clientExempt?"":" checked") + '> Aplicar Sales Tax</label>' +
+          '<div id="docform-tax-rate-wrap"' + (d.clientExempt?" hidden":"") + '><label>Tasa (%)<input type="number" id="docform-tax-rate" min="0" step="0.01" value="' + (DEFAULT_SALES_TAX_RATE*100) + '"></label></div>' +
+          '<label class="docform-check"><input type="checkbox" id="docform-fee-enabled"> Agregar Processing Fee</label>' +
+          '<div id="docform-fee-detail" hidden>' +
+            '<div class="popover-row">' +
+              '<label>Concepto<input type="text" id="docform-fee-label" placeholder="Ej. Card processing fee"></label>' +
+              '<label>Tipo<select id="docform-fee-type"><option value="percentage">Percentage</option><option value="fixed">Fixed amount</option></select></label>' +
+            "</div>" +
+            '<label id="docform-fee-value-label">Valor (%)<input type="number" id="docform-fee-value" min="0" step="0.01" value="0"></label>' +
+          "</div>" +
+          '<label>Notas (opcional)<input type="text" id="docform-notas" placeholder="Se muestran en el documento"></label>' +
+          '<div class="docform-summary" id="docform-summary"></div>' +
+        "</div>" +
+        '<div class="docform-actions"><button class="btn btn-ghost" data-action="close-docform">Cancelar</button><button class="btn btn-primary" data-action="docform-create">Crear ' + (isInvoice?"invoice":"cotización") + "</button></div>" +
       "</div>" +
     "</div>"
   );
+}
+/* Recalcula el resumen financiero y la visibilidad de sub-campos leyendo
+   directamente el DOM del modal (nunca pasa por render(), así que nunca
+   pierde el cursor a media edición) — mismo criterio que
+   updateProductoPreview. Es también la única función que decide qué
+   significa "el total" mientras el documento todavía no existe; una vez
+   creado, ese cálculo se congela en pricing_snapshot y no se vuelve a
+   correr esta función sobre él. */
+function refreshDocFormUI(){
+  if(!UI.docDraft) return;
+  var priceInputs = document.querySelectorAll("[data-docform-item-price]");
+  var subtotal = 0, pendingCount = 0;
+  priceInputs.forEach(function(inp){
+    var idx = Number(inp.getAttribute("data-docform-item-price"));
+    var it = UI.docDraft.items[idx];
+    if(!it) return;
+    if(inp.value === ""){ pendingCount++; return; }
+    var precio = parseFloat(inp.value);
+    if(!isNaN(precio)) subtotal += precio * it.cantidad;
+  });
+
+  var taxAppliedEl = document.getElementById("docform-tax-applied");
+  var taxApplied = !!(taxAppliedEl && taxAppliedEl.checked);
+  var taxRateEl = document.getElementById("docform-tax-rate");
+  var taxRatePct = taxRateEl ? (parseFloat(taxRateEl.value) || 0) : 0;
+  var taxAmount = computeTaxAmount(subtotal, taxRatePct / 100, taxApplied);
+
+  var feeEnabledEl = document.getElementById("docform-fee-enabled");
+  var feeEnabled = !!(feeEnabledEl && feeEnabledEl.checked);
+  var feeTypeEl = document.getElementById("docform-fee-type");
+  var feeType = feeTypeEl ? feeTypeEl.value : "percentage";
+  var feeValueEl = document.getElementById("docform-fee-value");
+  var feeValue = feeValueEl ? (parseFloat(feeValueEl.value) || 0) : 0;
+  var feeLabelEl = document.getElementById("docform-fee-label");
+  var feeLabel = feeLabelEl ? feeLabelEl.value : "";
+  var feeAmount = computeFeeAmount(subtotal + taxAmount, { enabled: feeEnabled, type: feeType, value: feeValue });
+
+  var total = round2(subtotal + taxAmount + feeAmount);
+
+  var sumEl = document.getElementById("docform-summary");
+  if(sumEl){
+    var html = '<div class="docform-sum-row"><span>Subtotal</span><span>' + fmtMoney(subtotal) + "</span></div>";
+    html += '<div class="docform-sum-row"><span>Sales Tax' + (taxApplied ? " (" + taxRatePct + "%)" : " — off") + '</span><span>' + fmtMoney(taxAmount) + "</span></div>";
+    if(feeEnabled) html += '<div class="docform-sum-row"><span>' + escapeHtml(feeLabel || "Processing fee") + '</span><span>' + fmtMoney(feeAmount) + "</span></div>";
+    html += '<div class="docform-sum-row docform-sum-total"><span>TOTAL</span><span>' + fmtMoney(total) + "</span></div>";
+    if(pendingCount) html += '<div class="doc-pending-note">' + pendingCount + (pendingCount===1?" producto sin precio":" productos sin precio") + " — el total se actualizará cuando lo completes.</div>";
+    sumEl.innerHTML = html;
+  }
+  var taxRateWrap = document.getElementById("docform-tax-rate-wrap");
+  if(taxRateWrap) taxRateWrap.hidden = !taxApplied;
+  var feeDetail = document.getElementById("docform-fee-detail");
+  if(feeDetail) feeDetail.hidden = !feeEnabled;
+  var feeValueLabel = document.getElementById("docform-fee-value-label");
+  if(feeValueLabel) feeValueLabel.firstChild.textContent = feeType === "fixed" ? "Valor ($)" : "Valor (%)";
+  var termsEl = document.getElementById("docform-terms");
+  var termsCustomWrap = document.getElementById("docform-terms-custom-wrap");
+  if(termsCustomWrap && termsEl) termsCustomWrap.hidden = (termsEl.value !== "Custom");
+}
+/* Lee todo el formulario del DOM (mismo criterio que la createDocumento()
+   original: nada se mantuvo sincronizado en UI.docDraft mientras se
+   escribía) y llama al mismo núcleo compartido (createDocumentoCore) que
+   usan /factura y /cotizacion — nunca una segunda función de guardado. */
+async function submitDocFormCreate(){
+  var t = findTicket(UI.selectedTicketId);
+  if(!t || !UI.docDraft) return;
+  var d = UI.docDraft;
+  var isInvoice = d.tipo === "invoice";
+
+  document.querySelectorAll("[data-docform-item-price]").forEach(function(inp){
+    var idx = Number(inp.getAttribute("data-docform-item-price"));
+    if(!d.items[idx]) return;
+    var raw = inp.value;
+    d.items[idx].precio = raw === "" ? null : parseFloat(raw);
+  });
+
+  var val = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
+  var checked = function(id){ var el = document.getElementById(id); return !!(el && el.checked); };
+
+  var clienteNombre = val("docform-cliente").trim();
+  var notas = val("docform-notas").trim();
+  var poReference = val("docform-po").trim() || null;
+  var taxApplied = checked("docform-tax-applied");
+  var taxRatePct = parseFloat(val("docform-tax-rate")) || 0;
+  var feeEnabled = checked("docform-fee-enabled");
+  var feeType = val("docform-fee-type") || "percentage";
+  var feeLabel = val("docform-fee-label").trim();
+  var feeValue = parseFloat(val("docform-fee-value")) || 0;
+
+  var terms = null, dueDate = null, validUntil = null;
+  if(isInvoice){
+    var termsSel = val("docform-terms") || "Due on Receipt";
+    terms = termsSel === "Custom" ? (val("docform-terms-custom").trim() || "Custom") : termsSel;
+    dueDate = val("docform-duedate") || null;
+  } else {
+    validUntil = val("docform-validuntil") || null;
+  }
+
+  var pricing = {
+    taxApplied: taxApplied, taxRate: taxRatePct / 100,
+    taxExempt: d.clientExempt, taxExemptReason: d.clientExemptReason,
+    fee: { enabled: feeEnabled, type: feeType, label: feeLabel, value: feeValue },
+    terms: terms, dueDate: dueDate, validUntil: validUntil, poReference: poReference
+  };
+
+  var items = d.items, tipo = d.tipo;
+  UI.docFormOpen = false;
+  UI.docDraft = null;
+  render();
+  var newDocId = await createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing);
+  if(newDocId) openDocumentViewer(newDocId, {refocus:true});
 }
 
 function popoverForm(kind){
@@ -1521,7 +1909,6 @@ function renderComposer(){
   var pop = "";
   if(UI.composer === "menu") pop = popoverMenu();
   else if(UI.composer === "doc_choice") pop = docChoiceMenu();
-  else if(UI.composer === "doc_form") pop = docForm();
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.pendingConfirm) pop = slashConfirmBanner();
   else if(UI.slashMenuOpen) pop = slashMenu();
@@ -1814,6 +2201,94 @@ function ticketOrderRank(t){
   if(e === "entregado") return 1;
   return 2; // cerrado_pagado / cerrado_cancelado
 }
+/* ---------------- V0.5 §8: vistas operativas ----------------
+   Las tres son filtros puros sobre STATE.tickets — ningún estado nuevo,
+   ninguna tabla nueva, ningún segundo modelo de "producción". Se apoyan
+   exclusivamente en ticketEstado()/ticketIsCerrado() (fuente única de
+   verdad ya existente) y en los campos que ya existen en cada ticket. */
+
+/* Vencidos primero (fecha de atención más antigua = más vencido), luego
+   hoy; el filtro ya garantiza que nada de "después" entra aquí. Incluye
+   Entregado-sin-cerrar si todavía tiene atención pendiente (V0.5 §8.1). */
+function ticketsAtencion(){
+  var today = startOfDay(new Date());
+  return STATE.tickets.filter(function(t){
+    if(ticketIsCerrado(t)) return false;
+    if(!t.fechaAtencion) return false;
+    return startOfDay(t.fechaAtencion) <= today;
+  }).sort(function(a,b){
+    var da = startOfDay(a.fechaAtencion), db = startOfDay(b.fechaAtencion);
+    if(da - db !== 0) return da - db;
+    return new Date(b.lastActivityAt) - new Date(a.lastActivityAt);
+  });
+}
+/* Abierto (nunca entregado/cerrado) con al menos una tarea de producción
+   sin terminar (V0.5 §8.2) — reutiliza t.tareas tal cual existen hoy. */
+function ticketsProduccion(){
+  return STATE.tickets.filter(function(t){
+    if(ticketEstado(t) !== "abierto") return false;
+    return (t.tareas||[]).some(function(x){ return x.tipo === "produccion" && x.estado !== "terminado"; });
+  }).sort(function(a,b){ return new Date(b.lastActivityAt) - new Date(a.lastActivityAt); });
+}
+/* Todo ticket con cierre explícito, más reciente primero (V0.5 §8.3). */
+function ticketsCerrados(filter){
+  return STATE.tickets.filter(function(t){
+    if(!ticketIsCerrado(t)) return false;
+    if(filter === "pagados") return t.cierreTipo === "pagado";
+    if(filter === "cancelados") return t.cierreTipo === "cancelado";
+    return true;
+  }).sort(function(a,b){ return new Date(b.cerradoAt) - new Date(a.cerradoAt); });
+}
+
+function renderAtencionView(){
+  var list = ticketsAtencion();
+  var body = list.length
+    ? list.map(function(t){ return renderTicketRow(t); }).join("")
+    : '<div class="empty-list">Nada por atender ahora mismo.</div>';
+  return (
+    '<div class="home-header"><h1>Atención</h1></div>' +
+    '<div class="clientes-view"><div class="clientes-list">' + body + "</div></div>"
+  );
+}
+function renderProduccionView(){
+  var list = ticketsProduccion();
+  var body = list.length
+    ? list.map(function(t){ return renderTicketRow(t); }).join("")
+    : '<div class="empty-list">Nada en producción activa ahora mismo.</div>';
+  return (
+    '<div class="home-header"><h1>Producción</h1></div>' +
+    '<div class="clientes-view"><div class="clientes-list">' + body + "</div></div>"
+  );
+}
+var CERRADOS_FILTERS = [["todos","Todos"],["pagados","Pagados"],["cancelados","Cancelados"]];
+function renderCerradosView(){
+  var filter = UI.cerradosFilter || "todos";
+  var list = ticketsCerrados(filter);
+  var tabsHtml = CERRADOS_FILTERS.map(function(f){
+    return '<button class="ficha-tab' + (filter===f[0]?" active":"") + '" data-action="cerrados-filter" data-filter="' + f[0] + '">' + f[1] + "</button>";
+  }).join("");
+  var body = list.length
+    ? list.map(function(t){ return renderTicketRow(t); }).join("")
+    : '<div class="empty-list">Sin tickets cerrados en este filtro.</div>';
+  return (
+    '<div class="home-header"><h1>Tickets cerrados</h1></div>' +
+    '<div class="clientes-view">' +
+      '<div class="ficha-tabs">' + tabsHtml + "</div>" +
+      '<div class="clientes-list">' + body + "</div>" +
+    "</div>"
+  );
+}
+/* V0.5 §8.4: NO se calcula ninguna cifra todavía — "conocido − cobrado" no
+   es una cuenta por cobrar real (ver V0.5-HANDOFF.md). Placeholder de
+   ruteo únicamente, a propósito. */
+function renderCxcPlaceholderView(){
+  return (
+    '<div class="home-header"><h1>Cuentas por cobrar</h1></div>' +
+    '<div class="empty-state"><h1>Pendiente de definir</h1>' +
+      '<p>Todavía no existe una fórmula confiable de "cuenta por cobrar" en este CRM: el total conocido de un ticket no es lo mismo que una factura emitida, y hoy los pagos se registran por ticket, no por invoice. Esta vista se construirá cuando definamos esa relación — mientras tanto, no muestra ningún importe para no comunicar una deuda que no está verificada.</p></div>'
+  );
+}
+
 function clienteFinancials(c){
   var tickets = ticketsForCliente(c);
   var known = 0, cobrado = 0, pend = 0, activos = 0, lastTs = 0;
@@ -1825,7 +2300,11 @@ function clienteFinancials(c){
     var ts = t.lastActivityAt ? new Date(t.lastActivityAt).getTime() : 0;
     if(ts > lastTs) lastTs = ts;
   });
-  return { tickets: tickets, known: known, cobrado: cobrado, pend: pend, saldo: known - cobrado,
+  /* V0.5 §8.4/D9: ya NO se expone "saldo" (known - cobrado) — "total
+     conocido" no es una factura emitida ni una deuda; restarlo y llamarlo
+     "saldo" comunica una cuenta por cobrar que no existe todavía. Quien
+     necesite known/cobrado por separado los tiene aquí sin combinarlos. */
+  return { tickets: tickets, known: known, cobrado: cobrado, pend: pend,
     activos: activos, lastActivityAt: lastTs ? new Date(lastTs).toISOString() : null };
 }
 function clienteFichaContent(c, t, mode){
@@ -1840,7 +2319,6 @@ function clienteFichaContent(c, t, mode){
     lines.push(["Tickets relacionados", fin.tickets.map(ticketLabel).join(", ")]);
     lines.push(["Total conocido (todos sus tickets)", fmtMoney(fin.known) + (fin.pend ? " (+" + fin.pend + " sin precio)" : "")]);
     lines.push(["Cobrado (todos sus tickets)", fmtMoney(fin.cobrado)]);
-    lines.push(["Saldo", fmtMoney(fin.saldo)]);
   }
   var html = lines.map(lineRow).join("");
   if(mode === "ticket" && t){
@@ -1933,12 +2411,17 @@ function editarClienteEntryContent(entry){
   }
   if(!target) return { title: "Editar cliente", html: '<div class="ephemeral-sub">Ese cliente ya no existe.</div>' };
 
-  var fieldLabels = { nombre:"Cliente", empresa:"Empresa", telefono:"Teléfono", email:"Email", notasComerciales:"Notas comerciales", preautorizado:"Preautorizado" };
+  var fieldLabels = {
+    nombre:"Cliente", empresa:"Empresa", telefono:"Teléfono", email:"Email",
+    notasComerciales:"Notas comerciales", preautorizado:"Preautorizado",
+    taxExempt:"Tax exempt", taxExemptReason:"Motivo de exención", taxExemptRef:"Referencia de exención"
+  };
+  var boolFields = { preautorizado:1, taxExempt:1 };
   var rows2 = Object.keys(patch).map(function(f){
     var newVal = patch[f];
     var curVal = target[f];
-    var newDisplay = f === "preautorizado" ? (newVal ? "Sí" : "No") : newVal;
-    var curDisplay = f === "preautorizado" ? (curVal ? "Sí" : "No") : (curVal || "(sin definir)");
+    var newDisplay = boolFields[f] ? (newVal ? "Sí" : "No") : newVal;
+    var curDisplay = boolFields[f] ? (curVal ? "Sí" : "No") : (curVal || "(sin definir)");
     var changed = String(curVal||"") !== String(newVal);
     return '<div class="ephemeral-row"><strong>' + fieldLabels[f] + ":</strong> " +
       (changed ? escapeHtml(String(curDisplay)) + " &rarr; <strong>" + escapeHtml(String(newDisplay)) + "</strong>" : escapeHtml(String(newDisplay)) + " (sin cambio)") +
@@ -2044,13 +2527,14 @@ function pendientesLinesGlobal(){
   return [["Con \"Qué sigue\" activo", conQueSigue.slice(0,8).map(function(t){ return ticketLabel(t) + " (" + t.queSigue + ")"; }).join(" · ")]];
 }
 
+/* V0.5 §8.4/D9: "conocido − cobrado" ya no se muestra ni se llama "Saldo" —
+   son tres hechos separados, nunca restados entre sí (known ≠ facturado). */
 function dineroLinesForTicket(t){
   var totals = computeTotals(t);
   var cobrado = t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
   var lines = [["Total conocido", fmtMoney(totals.known)]];
-  if(totals.pending) lines.push(["Pendientes de precio", totals.pending + " producto(s)"]);
-  lines.push(["Cobrado", fmtMoney(cobrado)]);
-  lines.push(["Saldo", fmtMoney(totals.known - cobrado)]);
+  lines.push(["Pagos registrados", fmtMoney(cobrado)]);
+  if(totals.pending) lines.push(["Productos sin precio", totals.pending]);
   return lines;
 }
 function dineroLinesGlobal(){
@@ -2061,9 +2545,8 @@ function dineroLinesGlobal(){
     cobrado += t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
   });
   var lines = [["Total conocido (todos los tickets)", fmtMoney(known)]];
-  if(pend) lines.push(["Productos pendientes de precio", pend]);
-  lines.push(["Cobrado (todos los tickets)", fmtMoney(cobrado)]);
-  lines.push(["Saldo", fmtMoney(known - cobrado)]);
+  lines.push(["Pagos registrados (todos los tickets)", fmtMoney(cobrado)]);
+  if(pend) lines.push(["Productos sin precio", pend]);
   return lines;
 }
 
@@ -2158,14 +2641,15 @@ function mergedThreadHtml(t){
     .map(function(e){ return { ts: e.ts, html: renderEphemeralEntry(e) }; });
   var merged = permanent.concat(ephemeral);
   merged.sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); });
-  return merged.map(function(m){ return m.html; }).join("");
+  return joinWithDaySeparators(merged);
 }
 /* Mismo criterio para Inicio / Centro de consulta: solo hay mensajes
    efímeros globales (ticketId null) — no hay hilo permanente sin ticket. */
 function globalEphemeralHtml(){
   var ephemeral = UI.ephemeralLog.filter(function(e){ return !e.ticketId; })
-    .sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); });
-  return ephemeral.map(renderEphemeralEntry).join("");
+    .sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); })
+    .map(function(e){ return { ts: e.ts, html: renderEphemeralEntry(e) }; });
+  return joinWithDaySeparators(ephemeral);
 }
 
 /* ---------------- sección Clientes (vista visual completa) ----------------
@@ -2242,7 +2726,16 @@ function clienteHistoryItems(c, filter){
   var fin = clienteFinancials(c);
   var items = [];
   fin.tickets.forEach(function(t){
-    if(ticketIsCerrado(t) && (filter === "todo" || filter === "tickets")){
+    /* V0.5 §9: "Tickets" = TODOS los tickets del cliente (abiertos,
+       entregados y cerrados), no solo los cerrados — antes este filtro
+       agregaba a la lista únicamente los ya cerrados, que es el bug que se
+       reporta. "Todo" conserva su criterio original: solo agrega el ticket
+       como fila cuando ya está cerrado, porque los vivos ya se ven
+       completos en la sección "Ahora" y listarlos también aquí sería
+       duplicar sin razón. Es la única diferencia entre ambos filtros. */
+    if(filter === "tickets"){
+      items.push({ ts: t.lastActivityAt, kind: "ticket", ticket: t });
+    } else if(ticketIsCerrado(t) && filter === "todo"){
       items.push({ ts: t.lastActivityAt, kind: "ticket", ticket: t });
     }
     if(filter === "todo" || filter === "productos" || filter === "documentos" || filter === "pagos" || filter === "archivos"){
@@ -2259,12 +2752,10 @@ function clienteHistoryItems(c, filter){
 }
 function renderClienteHistoryItem(item){
   if(item.kind === "ticket"){
-    return (
-      '<button class="ticket-row cliente-history-ticket" data-action="open-ticket" data-id="' + item.ticket.id + '">' +
-        '<div class="ticket-row-top"><span class="ticket-title">' + escapeHtml(ticketLabel(item.ticket)) + "</span></div>" +
-        '<div class="ticket-meta"><span>#' + item.ticket.seq + " · " + fmtDateShort(item.ticket.lastActivityAt) + "</span></div>" +
-      "</button>"
-    );
+    /* V0.5 §9: reutiliza renderTicketRow tal cual (con su pill de estado
+       ABIERTO/ENTREGADO/CERRADO·PAGADO/CERRADO·CANCELADO) en vez de un
+       renderer reducido aparte — ver ejemplo del brief. */
+    return renderTicketRow(item.ticket);
   }
   return (
     '<div class="cliente-history-item">' +
@@ -2293,7 +2784,11 @@ function renderClienteFichaView(){
   if(c.notasComerciales) infoLines.push(["Notas comerciales", c.notasComerciales]);
   infoLines.push(["Preautorizado", c.preautorizado ? "Sí" : "No"]);
   infoLines.push(["Tickets activos", String(fin.activos)]);
-  if(fin.tickets.length) infoLines.push(["Saldo", fmtMoney(fin.saldo) + (fin.pend ? " (+" + fin.pend + " sin precio)" : "")]);
+  /* V0.5 §8.4/D9: dos hechos por separado, nunca restados como "saldo". */
+  if(fin.tickets.length){
+    infoLines.push(["Total conocido", fmtMoney(fin.known) + (fin.pend ? " (+" + fin.pend + " sin precio)" : "")]);
+    infoLines.push(["Cobrado", fmtMoney(fin.cobrado)]);
+  }
   infoLines.push(["Última actividad", fin.lastActivityAt ? fmtRelativeActivity(fin.lastActivityAt) : "Sin actividad todavía"]);
 
   var ahoraHtml = ahora.length
@@ -2302,7 +2797,7 @@ function renderClienteFichaView(){
 
   var histItems = clienteHistoryItems(c, UI.clienteHistoriaFilter || "todo");
   var histHtml = histItems.length
-    ? histItems.map(renderClienteHistoryItem).join("")
+    ? joinWithDaySeparators(histItems.map(function(it){ return { ts: it.ts, html: renderClienteHistoryItem(it) }; }))
     : '<div class="empty-list">Sin eventos históricos todavía en este filtro.</div>';
   var tabsHtml = HISTORIA_FILTERS.map(function(f){
     return '<button class="ficha-tab' + ((UI.clienteHistoriaFilter||"todo")===f[0]?" active":"") + '" data-action="cliente-historia-filter" data-filter="' + f[0] + '">' + f[1] + "</button>";
@@ -2329,6 +2824,13 @@ function renderMain(){
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
     return UI.selectedClienteId ? renderClienteFichaView() : renderClientesListView();
   }
+  /* V0.5 §8: mismo patrón — solo se activan cuando no hay un ticket abierto
+     encima (abrir un ticket desde cualquiera de estas vistas navega al
+     ticket normalmente, igual que ya pasa desde Clientes). */
+  if(UI.mainView === "atencion" && !UI.selectedTicketId) return renderAtencionView();
+  if(UI.mainView === "produccion" && !UI.selectedTicketId) return renderProduccionView();
+  if(UI.mainView === "cerrados" && !UI.selectedTicketId) return renderCerradosView();
+  if(UI.mainView === "cxc" && !UI.selectedTicketId) return renderCxcPlaceholderView();
   var t = UI.selectedTicketId ? findTicket(UI.selectedTicketId) : null;
   if(!t){
     /* Inicio / Centro de consulta: no selecciona ni modifica ningún ticket.
@@ -2380,6 +2882,7 @@ function render(){
     "</div>" +
     renderDocModal() +
     renderCierreModal() +
+    renderDocFormModal() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -2589,10 +3092,14 @@ function renderKeepingLiveInputs(){
     try{ activeSel = [active.selectionStart, active.selectionEnd]; }catch(e){ activeSel = null; }
   }
   var values = {};
+  var checks = {};
   var docPriceValues = {};
   if(appBefore){
-    appBefore.querySelectorAll("input[id], textarea[id], select[id]").forEach(function(el){ values[el.id] = el.value; });
-    appBefore.querySelectorAll("[data-doc-item-price]").forEach(function(el){ docPriceValues[el.getAttribute("data-doc-item-price")] = el.value; });
+    appBefore.querySelectorAll("input[id], textarea[id], select[id]").forEach(function(el){
+      if(el.type === "checkbox" || el.type === "radio") checks[el.id] = el.checked;
+      else values[el.id] = el.value;
+    });
+    appBefore.querySelectorAll("[data-docform-item-price]").forEach(function(el){ docPriceValues[el.getAttribute("data-docform-item-price")] = el.value; });
   }
 
   render();
@@ -2600,10 +3107,12 @@ function renderKeepingLiveInputs(){
   var appAfter = document.getElementById("app");
   if(appAfter){
     appAfter.querySelectorAll("input[id], textarea[id], select[id]").forEach(function(el){
-      if(el.id in values) el.value = values[el.id];
+      if(el.type === "checkbox" || el.type === "radio"){
+        if(el.id in checks) el.checked = checks[el.id];
+      } else if(el.id in values) el.value = values[el.id];
     });
-    appAfter.querySelectorAll("[data-doc-item-price]").forEach(function(el){
-      var idx = el.getAttribute("data-doc-item-price");
+    appAfter.querySelectorAll("[data-docform-item-price]").forEach(function(el){
+      var idx = el.getAttribute("data-docform-item-price");
       if(idx in docPriceValues) el.value = docPriceValues[idx];
     });
   }
@@ -2793,6 +3302,14 @@ async function updateClienteCore(clientId, patch, ticketIdForLog){
     if(patch.email !== undefined) dbPatch.email = patch.email;
     if(patch.notasComerciales !== undefined) dbPatch.notas_comerciales = patch.notasComerciales;
     if(patch.preautorizado !== undefined) dbPatch.preautorizado = patch.preautorizado;
+    /* V0.5 D7 — requiere clientes.tax_exempt/tax_exempt_reason/tax_exempt_ref
+       de 0006_v05_operational_commercial.sql. Antes de correr esa migración,
+       este UPDATE falla (columna inexistente) — el catch de abajo ya
+       muestra el error de Supabase tal cual, así que no hace falta un
+       mensaje especial aquí. */
+    if(patch.taxExempt !== undefined) dbPatch.tax_exempt = patch.taxExempt;
+    if(patch.taxExemptReason !== undefined) dbPatch.tax_exempt_reason = patch.taxExemptReason;
+    if(patch.taxExemptRef !== undefined) dbPatch.tax_exempt_ref = patch.taxExemptRef;
     var r1 = await sb.from("clientes").update(dbPatch).eq("id", clientId);
     if(r1.error) throw r1.error;
     if(patch.nombre !== undefined){
@@ -2901,30 +3418,60 @@ async function submitForm(kind){
 
 /* ---------------- documentos comerciales ---------------- */
 
+/* V0.5 §10/D10: el formulario de documento deja de ser un popover de 300px
+   del compositor y pasa a ser su propio modal (renderDocFormModal, más
+   abajo) — cabía un invoice simple, no cabían tax/fee/due-date/terms/PO con
+   dignidad. UI.docDraft ahora solo guarda lo ESTRUCTURAL (tipo, items,
+   exención del cliente en el momento de abrir); todo lo demás (cliente,
+   PO, fechas, tax, fee, notas) vive en el propio DOM del modal hasta que se
+   confirma, igual que ya hacía el formulario viejo con doc-cliente/
+   doc-notas — mismo patrón, contenedor distinto. */
 function openDocumentForm(tipo){
   var t = findTicket(UI.selectedTicketId);
   if(!t) return;
+  var linked = t.clienteId ? STATE.clientes.filter(function(c){ return c.id === t.clienteId; })[0] : null;
   UI.docDraft = {
     tipo: tipo,
-    items: t.productos.map(function(p){ return { desc: p.desc, cantidad: p.cantidad, precio: p.precio }; })
+    items: t.productos.map(function(p){ return { desc: p.desc, cantidad: p.cantidad, precio: p.precio }; }),
+    clientExempt: !!(linked && linked.taxExempt),
+    clientExemptReason: (linked && linked.taxExemptReason) || ""
   };
-  UI.composer = "doc_form";
+  UI.composer = null;
+  UI.docFormOpen = true;
+  render();
+}
+function closeDocFormModal(){
+  UI.docFormOpen = false;
+  UI.docDraft = null;
+  UI.pendingFocus = UI.pendingFocus || "composer";
   render();
 }
 
-/* Núcleo compartido de creación de documento — usado por el formulario
-   multi-paso (composer "doc_form") Y por los comandos de un solo paso
+/* Núcleo compartido de creación de documento — usado por el modal de
+   documento (submitDocFormCreate) Y por los comandos de un solo paso
    /factura y /cotizacion (sección 13/14), para no duplicar la lógica de
    guardado ni el evento de bitácora. Desde la sección 17 ("SNAPSHOT
-   HISTÓRICO"), aquí también se congela lo que hace falta para que el
-   documento nunca cambie después: cobrado_al_crear (para Amount Due) y
-   bill_to (nombre/empresa/teléfono/email tal como estaban en ese momento —
-   nunca una referencia en vivo a clientes ni a pagos). Devuelve el id del
+   HISTÓRICO"), extendida en V0.5 (§18), aquí se congela TODO lo que un
+   documento no debe volver a recalcular jamás: cobrado_al_crear, bill_to,
+   y ahora también pricing_snapshot completo (subtotal/tax/fee/due-date/
+   terms/PO/valid-until). `pricing` es opcional — si se omite (nunca
+   debería pasar tras V0.5, pero por robustez), el documento se crea sin
+   tax/fee, igual que un documento pre-V0.5.
+   IMPORTANTE (D2 aprobado): `total` que se guarda en documentos.total es
+   el TOTAL FINAL (subtotal + tax + fee), no el subtotal — ver comentario
+   junto a docSubtotal()/documentAmountDue() más arriba. Devuelve el id del
    documento creado (o null si falló) para que quien llama pueda abrirlo de
    inmediato (sección 20: "el usuario nunca debería tener que ir a
    buscarlo"). */
-async function createDocumentoCore(t, tipo, items, clienteNombre, notas){
-  var total = items.reduce(function(sum,it){ return sum + (it.precio==null?0:it.precio*it.cantidad); }, 0);
+async function createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing){
+  pricing = pricing || {};
+  var subtotal = items.reduce(function(sum,it){ return sum + (it.precio==null?0:it.precio*it.cantidad); }, 0);
+  var taxApplied = !!pricing.taxApplied;
+  var taxRate = pricing.taxRate != null ? Number(pricing.taxRate) : 0;
+  var taxAmount = computeTaxAmount(subtotal, taxRate, taxApplied);
+  var fee = pricing.fee || null;
+  var feeAmount = computeFeeAmount(subtotal + taxAmount, fee);
+  var total = round2(subtotal + taxAmount + feeAmount);
   var cobradoAlCrear = (t.pagos||[]).reduce(function(s,p){ return s + p.monto; }, 0);
   var linked = t.clienteId ? STATE.clientes.filter(function(c){ return c.id === t.clienteId; })[0] : null;
   var billTo = {
@@ -2933,12 +3480,22 @@ async function createDocumentoCore(t, tipo, items, clienteNombre, notas){
     telefono: (linked && linked.telefono) || null,
     email: (linked && linked.email) || null
   };
+  var pricingSnapshot = {
+    subtotal: subtotal,
+    dueDate: pricing.dueDate || null,
+    terms: pricing.terms || null,
+    validUntil: pricing.validUntil || null,
+    poReference: pricing.poReference || null,
+    tax: { applied: taxApplied, rate: taxRate, amount: taxAmount, exempt: !!pricing.taxExempt, exemptReason: pricing.taxExemptReason || null },
+    fee: (fee && fee.enabled) ? { enabled: true, type: fee.type, label: fee.label || "", value: Number(fee.value) || 0, amount: feeAmount } : { enabled: false }
+  };
   showToast("Creando " + (tipo==="invoice"?"invoice":"cotización") + "…");
   var newDocId = null;
   try{
     var ins = await sb.from("documentos").insert({
       ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
-      items: items, total: total, cobrado_al_crear: cobradoAlCrear, bill_to: billTo, autor: UI.whoami || null
+      items: items, total: total, cobrado_al_crear: cobradoAlCrear, bill_to: billTo,
+      pricing_snapshot: pricingSnapshot, autor: UI.whoami || null
     }).select().single();
     if(ins.error) throw ins.error;
     var doc = ins.data;
@@ -2946,31 +3503,9 @@ async function createDocumentoCore(t, tipo, items, clienteNombre, notas){
     var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: UI.whoami || null,
       payload: { documento_id: doc.id, tipo: tipo, numero: doc.numero, total: total, cliente_nombre: clienteNombre } });
     if(r8.error) throw r8.error;
-  }catch(e){ showToast("No se pudo crear el documento: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo crear el documento: " + (e.message || "error") + (/pricing_snapshot|column/.test(e.message||"") ? " — ¿ya corriste 0006_v05_operational_commercial.sql?" : "")); }
   await refreshFromServer({refocus:true});
   return newDocId;
-}
-
-async function createDocumento(){
-  var t = findTicket(UI.selectedTicketId);
-  if(!t || !UI.docDraft) return;
-  var clienteEl = document.getElementById("doc-cliente");
-  var notasEl = document.getElementById("doc-notas");
-  var clienteNombre = (clienteEl && clienteEl.value || "").trim();
-  var notas = (notasEl && notasEl.value || "").trim();
-  var priceInputs = document.querySelectorAll("[data-doc-item-price]");
-  priceInputs.forEach(function(inp){
-    var idx = Number(inp.getAttribute("data-doc-item-price"));
-    var raw = inp.value;
-    UI.docDraft.items[idx].precio = raw === "" ? null : parseFloat(raw);
-  });
-  var items = UI.docDraft.items;
-  var tipo = UI.docDraft.tipo;
-  UI.composer = null;
-  UI.docDraft = null;
-  render();
-  var newDocId = await createDocumentoCore(t, tipo, items, clienteNombre, notas);
-  if(newDocId) openDocumentViewer(newDocId, {refocus:true});
 }
 
 /* opts.refocus: usado al abrir automáticamente el documento recién creado
@@ -3036,6 +3571,59 @@ function documentPaymentStatus(doc){
   return "UNPAID";
 }
 
+/* ---------------- V0.5: Commercial Documents V2 — tax/fee/due-date/terms ----------------
+   IMPORTANTE sobre documentos.total (D2 aprobado): a partir de V0.5,
+   doc.total es el TOTAL FINAL del documento (subtotal + tax + fee) — NO el
+   subtotal de items. Por eso documentAmountDue()/documentPaymentStatus() de
+   arriba no necesitaron cambiar: ya restaban/comparaban "el total del
+   documento" contra lo cobrado, y eso sigue siendo exactamente correcto
+   bajo el nuevo significado. Lo que sí necesita el subtotal por separado
+   (para mostrar el desglose) usa docSubtotal() de aquí abajo, que lo lee
+   del snapshot — nunca lo deriva de doc.total ni de items en vivo. */
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+/* V0.5 §14/D1: única constante de tasa — NO es una verdad fiscal universal
+   ni se calcula por ubicación/geografía (V0.5 §24 prohíbe cálculo
+   geográfico automático en esta versión). Es solo el default que se
+   PROPONE en un documento nuevo; siempre editable o desactivable antes de
+   emitir, y un documento ya emitido queda congelado en su propio
+   pricing_snapshot sin importar si esta constante cambia después.
+   Brownsville / Cameron County: 8.25% según Texas Comptroller al momento
+   de escribir esto — dato provisto por el dueño del negocio. */
+var DEFAULT_SALES_TAX_RATE = 0.0825;
+
+/* V0.5 §13/D5: presets hardcoded, sin Settings. Elegir un preset con días
+   fijos recalcula Due Date automáticamente desde la fecha del documento;
+   "Custom" no autocalcula nada — el usuario decide Due Date y el texto de
+   Terms libremente. */
+var TERMS_PRESETS = ["Due on Receipt","Net 7","Net 15","Net 30","Custom"];
+var TERMS_NET_DAYS = { "Due on Receipt": 0, "Net 7": 7, "Net 15": 15, "Net 30": 30 };
+function dueDateFromTerms(terms, fromDate){
+  var days = TERMS_NET_DAYS[terms];
+  if(days == null) return null;
+  var d = startOfDay(fromDate || new Date()); d.setDate(d.getDate() + days);
+  return isoDate(d);
+}
+
+/* Subtotal real de un documento — snapshot congelado para documentos V0.5,
+   o doc.total para documentos anteriores (donde total YA era el subtotal,
+   porque tax/fee no existían). Nunca se deriva de items en vivo. */
+function docSubtotal(doc){
+  var ps = doc.pricingSnapshot;
+  return (ps && ps.subtotal != null) ? Number(ps.subtotal) : Number(doc.total);
+}
+function docTax(doc){ var ps = doc.pricingSnapshot; return (ps && ps.tax) ? ps.tax : null; }
+function docFee(doc){ var ps = doc.pricingSnapshot; return (ps && ps.fee && ps.fee.enabled) ? ps.fee : null; }
+
+function computeTaxAmount(subtotal, rate, applied){ return applied ? round2(subtotal * (Number(rate)||0)) : 0; }
+/* V0.5 §16: porcentaje aplicado sobre Subtotal + Tax (regla simple, sin
+   gross-up recursivo) — "base" ya debe venir como subtotal+taxAmount. */
+function computeFeeAmount(base, fee){
+  if(!fee || !fee.enabled) return 0;
+  if(fee.type === "fixed") return round2(Number(fee.value) || 0);
+  return round2(base * ((Number(fee.value) || 0) / 100));
+}
+
 /* ---------------- Rediseño de documento (sección 15) ----------------
    El documento se muestra como una "hoja" (.doc-paper) con look de papel
    fijo — SIEMPRE clara, sin importar el tema claro/oscuro de la app — para
@@ -3078,24 +3666,50 @@ function renderDocModal(){
   if(bt.telefono) billToLines.push(escapeHtml(bt.telefono));
   if(bt.email) billToLines.push(escapeHtml(bt.email));
   var billToBlock = billToLines.length
-    ? '<div class="doc-billto"><div class="doc-billto-label">Bill To</div>' + billToLines.map(function(l){ return '<div>' + l + "</div>"; }).join("") + "</div>"
+    ? '<div class="doc-col"><div class="doc-col-title">Bill To</div>' + billToLines.map(function(l){ return '<div>' + l + "</div>"; }).join("") + "</div>"
     : "";
 
-  /* Resumen financiero: SOLO el invoice tiene Amount Due — es un
-     documento de cobro deliberado (sección 5: "PRECIO ≠ DEUDA" en el
-     ticket; aquí sí puede existir un saldo, porque es exactamente para
-     eso que existe un invoice). La cotización se queda en un Total simple. */
+  /* Details (V0.5 §12): PO/Reference + Terms/Due Date (invoice) o Valid
+     Until (quote) — solo lo que el documento realmente tiene congelado en
+     su propio pricing_snapshot. Un documento pre-V0.5 (pricingSnapshot
+     null) simplemente no muestra esta columna, igual que hoy. */
+  var ps = doc.pricingSnapshot || {};
+  var detailLines = [];
+  if(ps.poReference) detailLines.push(["PO / Reference", escapeHtml(ps.poReference)]);
+  if(isInvoice){
+    if(ps.terms) detailLines.push(["Terms", escapeHtml(ps.terms)]);
+    if(ps.dueDate) detailLines.push(["Due Date", fmtDateOnlyShort(ps.dueDate)]);
+  } else if(ps.validUntil){
+    detailLines.push(["Valid Until", fmtDateOnlyShort(ps.validUntil)]);
+  }
+  var detailsBlock = detailLines.length
+    ? '<div class="doc-col"><div class="doc-col-title">Details</div>' + detailLines.map(function(l){ return '<div><span class="doc-payment-label">' + l[0] + ": </span>" + l[1] + "</div>"; }).join("") + "</div>"
+    : "";
+  var billDetailsBlock = (billToBlock || detailsBlock) ? '<div class="doc-two-col doc-two-col-top">' + billToBlock + detailsBlock + "</div>" : "";
+
+  /* Resumen financiero (V0.5 §16/D2/D8/D9): Subtotal/Tax/Fee siempre que
+     existan (un documento pre-V0.5 no tiene pricing_snapshot → tax=0/
+     fee=0, exactamente el comportamiento de antes). SOLO el invoice tiene
+     Amount Due — es un documento de cobro deliberado (sección 5: "PRECIO ≠
+     DEUDA" en el ticket; aquí sí puede existir un saldo, porque es
+     exactamente para eso que existe un invoice). La cotización se queda en
+     un Total simple, tax/fee incluidos. */
+  var subtotal = docSubtotal(doc);
+  var tax = docTax(doc);
+  var fee = docFee(doc);
+  var summaryRows = '<div class="doc-summary-row"><span>Subtotal</span><span>' + fmtMoney(subtotal) + "</span></div>";
+  if(tax && tax.applied) summaryRows += '<div class="doc-summary-row"><span>Sales Tax (' + (Number(tax.rate)*100).toFixed(2).replace(/\.?0+$/,"") + '%)</span><span>' + fmtMoney(tax.amount) + "</span></div>";
+  if(fee) summaryRows += '<div class="doc-summary-row"><span>' + escapeHtml(fee.label || "Processing fee") + "</span><span>" + fmtMoney(fee.amount) + "</span></div>";
   var summaryBlock;
   if(isInvoice){
     var due = documentAmountDue(doc);
     summaryBlock =
-      '<div class="doc-summary">' +
-        '<div class="doc-summary-row"><span>Subtotal</span><span>' + fmtMoney(doc.total) + "</span></div>" +
+      '<div class="doc-summary">' + summaryRows +
         (doc.cobradoAlCrear > 0 ? '<div class="doc-summary-row"><span>Payments received</span><span>-' + fmtMoney(doc.cobradoAlCrear) + "</span></div>" : "") +
         '<div class="doc-summary-row doc-summary-due"><span>AMOUNT DUE</span><span>' + fmtMoney(due) + "</span></div>" +
       "</div>";
   } else {
-    summaryBlock = '<div class="doc-summary"><div class="doc-summary-row doc-summary-due"><span>Total</span><span>' + fmtMoney(doc.total) + "</span></div></div>";
+    summaryBlock = '<div class="doc-summary">' + summaryRows + '<div class="doc-summary-row doc-summary-due"><span>Total</span><span>' + fmtMoney(doc.total) + "</span></div></div>";
   }
 
   /* Payment + Notes lado a lado (sección 18/19) — solo tiene sentido en un
@@ -3143,7 +3757,7 @@ function renderDocModal(){
           '<div class="doc-paper-meta">' +
             '<div><span class="field-label">Date</span>' + fmtDateShort(doc.createdAt) + "</div>" +
           "</div>" +
-          billToBlock +
+          billDetailsBlock +
           '<table class="doc-modal-table"><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>' +
             rows +
           "</tbody></table>" +
@@ -3237,6 +3851,16 @@ function pdfEscapeText(s){
 function pdfDateLong(iso){
   try{ return new Date(iso).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; }
 }
+/* Mismo motivo que fmtDateOnlyShort: Due Date/Valid Until son "YYYY-MM-DD"
+   puro, sin hora — se arma en hora local para no perder un día por
+   interpretación UTC. */
+function pdfDateOnlyShort(iso){
+  if(!iso) return "";
+  var parts = String(iso).split("-");
+  if(parts.length !== 3) return pdfDateLong(iso);
+  var d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  try{ return d.toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return iso; }
+}
 /* Misma paleta que .doc-paper en el visor HTML (--pk-ink/--pk-muted/
    --pk-faint/--pk-line/--pk-accent) — el PDF descargado y lo que se ve en
    pantalla usan literalmente los mismos números RGB. */
@@ -3312,16 +3936,38 @@ function buildDocumentPdfOps(doc){
   put(pdfDateLong(doc.createdAt), M + 40, y, 10, false, PDF_COLOR.ink);
   y -= 24;
 
-  // ---- BILL TO ----
+  // ---- BILL TO / DETAILS (V0.5 §12: dos columnas, igual que el visor HTML) ----
   var billToLines = [];
   if(btNombre) billToLines.push(btNombre);
   if(bt.empresa) billToLines.push(bt.empresa);
   if(bt.telefono) billToLines.push(bt.telefono);
   if(bt.email) billToLines.push(bt.email);
-  if(billToLines.length){
-    put("BILL TO", M, y, 9, true, PDF_COLOR.accent); y -= 15;
-    billToLines.forEach(function(l, i){ put(l, M, y, i===0?11:10, i===0, PDF_COLOR.ink); y -= (i===0?15:14); });
-    y -= 6;
+  var psPdf = doc.pricingSnapshot || {};
+  var detailPairs = [];
+  if(psPdf.poReference) detailPairs.push(["PO / Reference", psPdf.poReference]);
+  if(isInvoice){
+    if(psPdf.terms) detailPairs.push(["Terms", psPdf.terms]);
+    if(psPdf.dueDate) detailPairs.push(["Due Date", pdfDateOnlyShort(psPdf.dueDate)]);
+  } else if(psPdf.validUntil){
+    detailPairs.push(["Valid Until", pdfDateOnlyShort(psPdf.validUntil)]);
+  }
+  if(billToLines.length || detailPairs.length){
+    var bdTop = y, bdLeftX = M, bdRightX = M + 260;
+    var by = bdTop;
+    if(billToLines.length){
+      put("BILL TO", bdLeftX, by, 9, true, PDF_COLOR.accent); by -= 15;
+      billToLines.forEach(function(l, i){ put(l, bdLeftX, by, i===0?11:10, i===0, PDF_COLOR.ink); by -= (i===0?15:14); });
+    }
+    var dy = bdTop;
+    if(detailPairs.length){
+      put("DETAILS", bdRightX, dy, 9, true, PDF_COLOR.accent); dy -= 15;
+      detailPairs.forEach(function(p){
+        put(p[0] + ":", bdRightX, dy, 9.5, true, PDF_COLOR.ink);
+        put(p[1], bdRightX + 82, dy, 9.5, false, PDF_COLOR.ink);
+        dy -= 14;
+      });
+    }
+    y = Math.min(by, dy) - 6;
   } else { y -= 2; }
 
   // ---- Tabla de items ----
@@ -3342,13 +3988,27 @@ function buildDocumentPdfOps(doc){
   });
   inTable = false;
 
-  // ---- Resumen: Subtotal / Payments received / AMOUNT DUE (o Total) ----
-  ensure(isInvoice ? 92 : 46);
+  // ---- Resumen: Subtotal / Tax / Fee / Payments received / AMOUNT DUE (o Total) ----
+  var pdfSubtotal = docSubtotal(doc);
+  var pdfTax = docTax(doc);
+  var pdfFee = docFee(doc);
+  var summaryLineCount = 1 + (pdfTax && pdfTax.applied ? 1 : 0) + (pdfFee ? 1 : 0) + (isInvoice && doc.cobradoAlCrear > 0 ? 1 : 0);
+  ensure(summaryLineCount * 15 + (isInvoice ? 60 : 40));
   y -= 4;
-  if(isInvoice){
-    putRight("Subtotal", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
-    putRight(fmtMoney(doc.total), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
+  putRight("Subtotal", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
+  putRight(fmtMoney(pdfSubtotal), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
+  y -= 15;
+  if(pdfTax && pdfTax.applied){
+    putRight("Sales Tax (" + (Number(pdfTax.rate)*100).toFixed(2).replace(/\.?0+$/,"") + "%)", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
+    putRight(fmtMoney(pdfTax.amount), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
     y -= 15;
+  }
+  if(pdfFee){
+    putRight(pdfFee.label || "Processing fee", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
+    putRight(fmtMoney(pdfFee.amount), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
+    y -= 15;
+  }
+  if(isInvoice){
     if(doc.cobradoAlCrear > 0){
       putRight("Payments received", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
       putRight("-" + fmtMoney(doc.cobradoAlCrear), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
@@ -3619,7 +4279,13 @@ async function marcarEntregadoCore(t){
   try{
     var r1 = await sb.from("tickets").update({ entregado_at: now, entregado_por: UI.whoami || null }).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Marcado como entregado" } });
+    /* payload.kind (V0.5 §4): discriminador semántico agregado SOLO hacia
+       adelante — tipo sigue siendo "sistema" (sin migración de esquema),
+       pero el timeline ahora puede distinguir esta fila de una edición
+       menor sin parsear payload.text. Eventos ya guardados antes de este
+       cambio no tienen "kind" y se siguen viendo genéricos — no se
+       reclasifican retroactivamente. */
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Marcado como entregado", kind: "entrega" } });
   }catch(e){ showToast("No se pudo marcar como entregado: " + (e.message || "error")); }
   refreshFromServer();
 }
@@ -3650,8 +4316,11 @@ async function cerrarTicketCore(t, tipo, razon){
   try{
     var r1 = await sb.from("tickets").update({ cierre_tipo: tipo, cerrado_at: now, razon_cierre: razon, cerrado_por: UI.whoami || null }).eq("id", t.id);
     if(r1.error) throw r1.error;
+    /* payload.kind (V0.5 §4): ver comentario en marcarEntregadoCore — mismo
+       mecanismo, valores más específicos porque cierre tiene dos sabores
+       (pagado/cancelado) que sí importa distinguir en el timeline. */
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null,
-      payload: { text: "Ticket cerrado · " + (tipo==="pagado"?"Pagado":"Cancelado") + " — " + razon } });
+      payload: { text: "Ticket cerrado · " + (tipo==="pagado"?"Pagado":"Cancelado") + " — " + razon, kind: tipo==="pagado" ? "cierre_pagado" : "cierre_cancelado" } });
   }catch(e){ showToast("No se pudo cerrar el ticket: " + (e.message || "error")); }
   refreshFromServer({refocus:true});
 }
@@ -3661,15 +4330,33 @@ async function cerrarTicketCore(t, tipo, razon){
    misma razón por la que el visor de documentos ya es un overlay propio en
    vez de un popover del compositor. Dos pasos: elegir tipo, luego escribir
    el motivo obligatorio (sección 7.2) — nunca se guarda sin ambos. */
-function openCierreModal(){ UI.cierreModal = { step: "choice" }; render(); }
+/* V0.5 §6: UI.cierreModal ahora siempre lleva su propio ticketId explícito
+   en vez de asumir UI.selectedTicketId — así el mismo modal sirve tanto
+   para "Cerrar ticket" (desde el encabezado del ticket abierto) como para
+   "Cancelar" con la × de una fila del sidebar que no está necesariamente
+   abierta en pantalla. Sigue siendo UNA sola función de cierre
+   (cerrarTicketCore) con un solo modal — nunca una segunda ruta. */
+function openCierreModal(){ UI.cierreModal = { step: "choice", ticketId: UI.selectedTicketId }; render(); }
 function closeCierreModal(){ UI.cierreModal = null; render(); }
 function chooseCierreTipo(tipo){
-  UI.cierreModal = { step: "form", tipo: tipo };
+  UI.cierreModal = { step: "form", tipo: tipo, ticketId: UI.cierreModal && UI.cierreModal.ticketId };
+  UI.pendingFocus = { elId: "cierre-razon" };
+  render();
+}
+/* Atajo directo de "Cancelar" desde la × del sidebar (V0.5 §6): salta el
+   paso de elegir tipo (siempre es "cancelado") y va directo al motivo
+   obligatorio. Reutiliza exactamente el mismo modal/paso "form" y la misma
+   cerrarTicketCore — solo cambia el copy de advertencia (quick:true). Si el
+   ticket cancelado es el que está abierto en pantalla, no se navega a
+   ningún lado: el encabezado simplemente reflejará "Cerrado · Cancelado"
+   en cuanto refreshFromServer termine. */
+function openCancelTicketModal(ticketId){
+  UI.cierreModal = { step: "form", tipo: "cancelado", ticketId: ticketId, quick: true };
   UI.pendingFocus = { elId: "cierre-razon" };
   render();
 }
 function submitCierreForm(){
-  var t = findTicket(UI.selectedTicketId);
+  var t = UI.cierreModal ? findTicket(UI.cierreModal.ticketId) : null;
   var razonEl = document.getElementById("cierre-razon");
   var razon = (razonEl && razonEl.value || "").trim();
   if(!razon){ if(razonEl) razonEl.focus(); showToast("Escribe el motivo del cierre."); return; }
@@ -3680,7 +4367,7 @@ function submitCierreForm(){
 }
 function renderCierreModal(){
   if(!UI.cierreModal) return "";
-  var t = findTicket(UI.selectedTicketId);
+  var t = findTicket(UI.cierreModal.ticketId);
   if(!t){ UI.cierreModal = null; return ""; }
   var inner;
   if(UI.cierreModal.step === "choice"){
@@ -3696,6 +4383,15 @@ function renderCierreModal(){
         '<span class="cierre-tipo-desc">El trabajo no va a continuar.</span>' +
       "</button>" +
       '<div class="popover-actions"><button class="btn btn-ghost" data-action="cierre-cancel">Cancelar</button></div>';
+  } else if(UI.cierreModal.quick){
+    /* Copy exacto pedido en V0.5 §6 — deja explícito que NO borra nada y
+       que el historial se conserva. */
+    inner =
+      '<div class="cierre-modal-title">Cancelar Ticket #' + t.seq + "?</div>" +
+      '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
+      '<div class="ephemeral-sub">Este ticket se marcará como <strong>CERRADO · CANCELADO</strong> y desaparecerá del trabajo activo.<br>Su historial NO se eliminará.</div>' +
+      '<label class="cierre-razon-label">Razón de cancelación (obligatoria)<textarea id="cierre-razon" rows="3" placeholder="Ej. Cliente decidió cancelar el proyecto por cambio de presupuesto."></textarea></label>' +
+      '<div class="popover-actions"><button class="btn btn-ghost" data-action="cierre-cancel">Volver</button><button class="btn btn-primary" data-action="cierre-confirm">Confirmar cancelación</button></div>';
   } else {
     var tipo = UI.cierreModal.tipo;
     inner =
@@ -3792,13 +4488,41 @@ function parsePagoArg(arg){
   return { monto: parseFloat(m[1]), concepto: (m[2]||"").trim() };
 }
 
+/* V0.5 §13/D5/D8/D10: default de pricing para los comandos de un solo paso
+   (/factura, /cotizacion) — NO abren el modal (renderDocFormModal), así que
+   necesitan proponer ellos mismos algo razonable sin preguntar nada: tax
+   aplicado a la tasa default salvo que el cliente esté marcado exento
+   (D7), fee SIEMPRE apagado por default (D8: nunca se asume un método de
+   cobro), y en invoice Terms="Due on Receipt" con su Due Date ya calculado
+   (D5). Es exactamente lo mismo que el modal propondría al abrirse por
+   primera vez — mismo default, dos caminos de entrada. */
+function defaultPricingForTicket(t, tipo){
+  var linked = t.clienteId ? STATE.clientes.filter(function(c){ return c.id === t.clienteId; })[0] : null;
+  var exempt = !!(linked && linked.taxExempt);
+  var isInvoice = tipo === "invoice";
+  return {
+    taxApplied: !exempt,
+    taxRate: DEFAULT_SALES_TAX_RATE,
+    taxExempt: exempt,
+    taxExemptReason: (linked && linked.taxExemptReason) || "",
+    fee: { enabled: false, type: "percentage", label: "", value: 0 },
+    terms: isInvoice ? "Due on Receipt" : null,
+    dueDate: isInvoice ? dueDateFromTerms("Due on Receipt", new Date()) : null,
+    validUntil: null,
+    poReference: null
+  };
+}
+
 /* /factura y /cotizacion (sección 13/14): crean el documento comercial
    completo en un solo paso, reutilizando tal cual los productos y el
    cliente que ya están en el ticket — sin abrir el formulario de varios
    pasos. Todo el texto que sigue al comando (opcional) se guarda como
    notas del documento, ej. "/factura pagado por transferencia". Nunca
    inventa un precio: si algún producto todavía no tiene precio, se pide
-   resolverlo primero con /productos en vez de facturar/cotizar con huecos. */
+   resolverlo primero con /productos en vez de facturar/cotizar con huecos.
+   El total que se confirma YA incluye tax/fee del default (D2: doc.total
+   siempre es el total final), para que la confirmación no muestre un
+   número distinto del que terminará guardado. */
 function parseDocCommand(arg, ctx, tipo){
   var t = ctx.ticket;
   var tipoLabel = tipo === "invoice" ? "un invoice" : "una cotización";
@@ -3806,12 +4530,17 @@ function parseDocCommand(arg, ctx, tipo){
   var pending = t.productos.filter(function(p){ return p.precio == null; });
   if(pending.length) return { ok:false, error: "Hay " + pending.length + (pending.length===1?" producto":" productos") + " sin precio — resuélvelo con /productos antes de crear " + tipoLabel };
   var items = t.productos.map(function(p){ return { desc: p.desc, cantidad: p.cantidad, precio: p.precio }; });
-  var total = items.reduce(function(s,it){ return s + it.cantidad*it.precio; }, 0);
-  return { ok:true, data: { tipo: tipo, items: items, total: total, clienteNombre: t.cliente || "", notas: (arg||"").trim() } };
+  var subtotal = items.reduce(function(s,it){ return s + it.cantidad*it.precio; }, 0);
+  var pricing = defaultPricingForTicket(t, tipo);
+  var taxAmount = computeTaxAmount(subtotal, pricing.taxRate, pricing.taxApplied);
+  var feeAmount = computeFeeAmount(subtotal + taxAmount, pricing.fee);
+  var total = round2(subtotal + taxAmount + feeAmount);
+  return { ok:true, data: { tipo: tipo, items: items, subtotal: subtotal, total: total, pricing: pricing, clienteNombre: t.cliente || "", notas: (arg||"").trim() } };
 }
 function docConfirmSummary(data){
   return (data.clienteNombre ? escapeHtml(data.clienteNombre) + " — " : "") +
     data.items.length + (data.items.length===1?" producto":" productos") + " · " + fmtMoney(data.total) +
+    (data.pricing && data.pricing.taxApplied ? " (incl. tax)" : "") +
     (data.notas ? " · " + escapeHtml(data.notas) : "");
 }
 
@@ -3839,7 +4568,14 @@ var CLIENTE_FIELD_KEYWORDS = {
   empresa: "empresa", company: "empresa",
   nombre: "nombre", name: "nombre",
   notas: "notasComerciales", notes: "notasComerciales",
-  preautorizado: "preautorizado", preauthorized: "preautorizado"
+  preautorizado: "preautorizado", preauthorized: "preautorizado",
+  /* V0.5 D7: exención de impuesto es un atributo VIVO del cliente (no de un
+     documento) — texto libre para el motivo/referencia, sin almacenamiento
+     de certificado en esta versión (ver comentario de tax_exempt_ref en la
+     migración 0006). */
+  exento: "taxExempt", exempt: "taxExempt", taxexempt: "taxExempt",
+  exentorazon: "taxExemptReason", exemptreason: "taxExemptReason", motivoexento: "taxExemptReason",
+  exentoref: "taxExemptRef", exemptref: "taxExemptRef"
 };
 function formatPhoneDigits(digits){
   if(digits.length === 10) return digits.slice(0,3) + "-" + digits.slice(3,6) + "-" + digits.slice(6);
@@ -3862,6 +4598,9 @@ function parseEditarClienteArg(arg){
     } else if(kwField === "preautorizado"){
       var v = normalizeWord(value);
       patch.preautorizado = (v === "si" || v === "true" || v === "yes" || v === "1");
+    } else if(kwField === "taxExempt"){
+      var ve = normalizeWord(value);
+      patch.taxExempt = (ve === "si" || ve === "true" || ve === "yes" || ve === "1");
     } else if(value){
       patch[kwField] = value;
     }
@@ -4016,7 +4755,7 @@ var COMMANDS = [
     examples: ["/factura", "/factura pagado por transferencia"],
     parse: function(arg, ctx){ return parseDocCommand(arg, ctx, "invoice"); },
     run: function(data, ctx){
-      return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas).then(function(newDocId){
+      return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas, data.pricing).then(function(newDocId){
         if(newDocId) openDocumentViewer(newDocId, {refocus:true});
       });
     }
@@ -4028,7 +4767,7 @@ var COMMANDS = [
     examples: ["/cotizacion", "/cotizacion válida por 15 días"],
     parse: function(arg, ctx){ return parseDocCommand(arg, ctx, "cotizacion"); },
     run: function(data, ctx){
-      return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas).then(function(newDocId){
+      return createDocumentoCore(ctx.ticket, data.tipo, data.items, data.clienteNombre, data.notas, data.pricing).then(function(newDocId){
         if(newDocId) openDocumentViewer(newDocId, {refocus:true});
       });
     }
@@ -4156,7 +4895,7 @@ var COMMANDS = [
   {
     key: "editarcliente", aliases: ["editarcliente","clientedit"], type: "read", requiresTicket: false,
     syntax: "/editarcliente [nombre] [campo valor | datos libres]", summary: "Proponer cambios a un cliente existente (siempre pide confirmación antes de guardar)",
-    examples: ["/editarcliente Angela Top Builders 9565612970 angela@topbuilders.com", "/editarcliente telefono 9565612970"],
+    examples: ["/editarcliente Angela Top Builders 9565612970 angela@topbuilders.com", "/editarcliente telefono 9565612970", "/editarcliente Angela exento si"],
     parse: function(arg){ return arg ? { ok:true, data:{ raw: arg } } : { ok:false, showHelp:true }; },
     run: function(data, ctx){
       var parsed = parseEditarClienteArg(data.raw);
@@ -4301,6 +5040,21 @@ function wireEvents(){
   root.querySelectorAll('[data-action="go-clientes"]').forEach(function(b){
     b.addEventListener("click", function(){ goToClientes(); });
   });
+  root.querySelectorAll('[data-action="go-atencion"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToAtencion(); });
+  });
+  root.querySelectorAll('[data-action="go-produccion"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToProduccion(); });
+  });
+  root.querySelectorAll('[data-action="go-cerrados"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToCerrados(); });
+  });
+  root.querySelectorAll('[data-action="go-cxc"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToCxc(); });
+  });
+  root.querySelectorAll('[data-action="cerrados-filter"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.cerradosFilter = b.getAttribute("data-filter"); render(); });
+  });
 
   /* Menú lateral en móvil (sección 16: el sidebar ya tenía el CSS de cajón
      y UI.sidebarOpen, pero le faltaba el botón para abrirlo — sin esto era
@@ -4393,28 +5147,34 @@ function wireEvents(){
   root.querySelectorAll('[data-doc-type]').forEach(function(b){
     b.addEventListener("click", function(){ openDocumentForm(b.getAttribute("data-doc-type")); });
   });
-  var createDocBtn = root.querySelector('[data-action="create-documento"]');
-  if(createDocBtn) createDocBtn.addEventListener("click", createDocumento);
-  root.querySelectorAll('[data-doc-item-price]').forEach(function(inp){
-    inp.addEventListener("input", function(){
-      var idx = Number(inp.getAttribute("data-doc-item-price"));
-      if(UI.docDraft && UI.docDraft.items[idx]){
-        var raw = inp.value;
-        UI.docDraft.items[idx].precio = raw === "" ? null : parseFloat(raw);
-      }
-      var total = 0;
-      root.querySelectorAll('[data-doc-item-price]').forEach(function(inp2){
-        var v = inp2.value;
-        if(v !== ""){
-          var idx2 = Number(inp2.getAttribute("data-doc-item-price"));
-          var cant = UI.docDraft && UI.docDraft.items[idx2] ? UI.docDraft.items[idx2].cantidad : 1;
-          total += parseFloat(v) * cant;
-        }
+
+  /* V0.5 §10-18: modal de creación de documento (renderDocFormModal). Los
+     campos no se guardan en UI.docDraft mientras se escribe — igual que el
+     formulario viejo — así que cada input/change solo dispara un recálculo
+     visual (refreshDocFormUI), nunca un render(). El overlay cierra al
+     hacer clic fuera del modal, igual que el resto de los overlays. */
+  var docformOverlay = document.getElementById("docform-overlay");
+  if(docformOverlay){
+    docformOverlay.addEventListener("click", function(e){ if(e.target === docformOverlay) closeDocFormModal(); });
+    var closeDocformBtns = docformOverlay.querySelectorAll('[data-action="close-docform"]');
+    closeDocformBtns.forEach(function(b){ b.addEventListener("click", closeDocFormModal); });
+    var createDocformBtn = docformOverlay.querySelector('[data-action="docform-create"]');
+    if(createDocformBtn) createDocformBtn.addEventListener("click", submitDocFormCreate);
+    var termsSelEl = document.getElementById("docform-terms");
+    if(termsSelEl){
+      termsSelEl.addEventListener("change", function(){
+        var dueEl = document.getElementById("docform-duedate");
+        if(dueEl && termsSelEl.value !== "Custom") dueEl.value = dueDateFromTerms(termsSelEl.value, new Date());
+        refreshDocFormUI();
       });
-      var totalEl = document.getElementById("doc-total-preview");
-      if(totalEl) totalEl.textContent = "Total: " + fmtMoney(total);
+    }
+    docformOverlay.querySelectorAll("input, select").forEach(function(el){
+      if(el === termsSelEl) return;
+      var evt = (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "date") ? "change" : "input";
+      el.addEventListener(evt, refreshDocFormUI);
     });
-  });
+    refreshDocFormUI();
+  }
 
   var closeDocBtn = root.querySelector('[data-action="close-doc"]');
   if(closeDocBtn) closeDocBtn.addEventListener("click", closeDocumentViewer);
@@ -4437,6 +5197,11 @@ function wireEvents(){
   }
   var abrirCierreBtn = root.querySelector('[data-action="abrir-cierre"]');
   if(abrirCierreBtn) abrirCierreBtn.addEventListener("click", openCierreModal);
+  /* × de cancelar (V0.5 §6): stopPropagation para que el clic no también
+     dispare data-action="open-ticket" de la fila que lo envuelve. */
+  root.querySelectorAll('[data-action="cancel-ticket"]').forEach(function(b){
+    b.addEventListener("click", function(e){ e.stopPropagation(); openCancelTicketModal(b.getAttribute("data-id")); });
+  });
   root.querySelectorAll('[data-action="cierre-tipo"]').forEach(function(b){
     b.addEventListener("click", function(){ chooseCierreTipo(b.getAttribute("data-tipo")); });
   });
