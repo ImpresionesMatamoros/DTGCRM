@@ -796,16 +796,77 @@ function fmtTime(iso){
 function fmtDateShort(iso){
   try{ return new Date(iso).toLocaleDateString("es-MX",{day:"2-digit",month:"short"}); }catch(e){ return ""; }
 }
-/* V0.5: Due Date/Valid Until se guardan como "YYYY-MM-DD" puro (sin hora),
-   así que parsearlos con `new Date(iso)` (UTC medianoche) puede mostrar el
-   día anterior según la zona horaria del navegador. Se arma la fecha en
-   hora LOCAL a partir de sus partes en vez de dejar que Date interprete la
-   cadena como UTC. */
+
+/* ---------------- Addendum "Date Correctness": date-only ≠ timestamp ----
+   Regla central: un TIMESTAMP real (created_at, bitácora.ts, entregado_at,
+   cerrado_at) representa un instante y sí puede pasar por Date/UTC/
+   toLocaleString sin problema — `fmtDateShort` de arriba es exactamente
+   eso y NO cambia. Pero una fecha CALENDARIO (date-only: Atender,
+   Compromiso, fecha de pago, Invoice Due Date, Quote Valid Until) es
+   solo "YYYY-MM-DD" — no representa un instante, y parsearla con
+   `new Date("YYYY-MM-DD")` la interpreta como medianoche UTC. Convertida
+   de vuelta a hora local en una zona detrás de UTC (todo Norteamérica,
+   incluida Brownsville TX), eso muestra el DÍA ANTERIOR. Esta sección es
+   la única fuente de verdad para leer/escribir/formatear una fecha
+   calendario — nunca más `new Date(dateOnlyString)` ni
+   `new Date().toISOString().slice(0,10)` sueltos en otra parte del código. */
+function pad2(n){ return n < 10 ? "0" + n : String(n); }
+/* "Hoy" en partes LOCALES — nunca vía toISOString (que es UTC y puede
+   adelantar o atrasar un día según la zona horaria del dispositivo). */
+function todayLocalYYYYMMDD(){
+  var d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+}
+/* Un objeto Date (ya en hora local) -> "YYYY-MM-DD", sin pasar por UTC. */
+function dateOnlyFromDate(d){
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+}
+/* "YYYY-MM-DD" -> Date en medianoche LOCAL (para sumar/restar días con
+   setDate). Rechaza formato inválido Y fechas imposibles (ej. 2026-02-30 —
+   verificado con un round-trip: si Date "corrige" el día/mes al construir,
+   es que no era una fecha real). */
+function parseDateOnly(str){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(str||"").trim());
+  if(!m) return null;
+  var y = Number(m[1]), mo = Number(m[2]), day = Number(m[3]);
+  if(mo < 1 || mo > 12 || day < 1 || day > 31) return null;
+  var d = new Date(y, mo-1, day);
+  if(d.getFullYear() !== y || d.getMonth() !== mo-1 || d.getDate() !== day) return null;
+  return d;
+}
+/* Suma/resta días a una fecha calendario en hora local — reemplaza el
+   patrón viejo `startOfDay(x); x.setDate(...); isoDate(x)` que terminaba
+   convirtiendo a UTC al formatear. */
+function addDaysToDateOnly(str, days){
+  var d = parseDateOnly(str);
+  if(!d) return null;
+  d.setDate(d.getDate() + days);
+  return dateOnlyFromDate(d);
+}
+/* Rango humano razonable para una fecha calendario en este CRM. Existe
+   específicamente para atrapar el bug de "año 0002": algunos navegadores
+   (sobre todo iOS Safari) pueden persistir un <input type="date"> con el
+   segmento de año a medio escribir (ej. el usuario tecleó "2" y todavía no
+   "2026") como una fecha válida pero absurda. Nunca se guarda una fecha
+   fuera de este rango — vacío sigue siendo válido (campo sin definir). */
+var DATE_ONLY_MIN_YEAR = 2000, DATE_ONLY_MAX_YEAR = 2100;
+var DATE_INPUT_MIN = DATE_ONLY_MIN_YEAR + "-01-01", DATE_INPUT_MAX = DATE_ONLY_MAX_YEAR + "-12-31";
+function isSaneDateOnly(str){
+  if(!str) return true;
+  var d = parseDateOnly(str);
+  if(!d) return false;
+  var y = d.getFullYear();
+  return y >= DATE_ONLY_MIN_YEAR && y <= DATE_ONLY_MAX_YEAR;
+}
+/* V0.5: Due Date/Valid Until/Atender/Compromiso se guardan como
+   "YYYY-MM-DD" puro (sin hora), así que parsearlos con `new Date(iso)`
+   (UTC medianoche) puede mostrar el día anterior según la zona horaria del
+   navegador. Se arma la fecha en hora LOCAL a partir de sus partes en vez
+   de dejar que Date interprete la cadena como UTC. */
 function fmtDateOnlyShort(iso){
   if(!iso) return "";
-  var parts = String(iso).split("-");
-  if(parts.length !== 3) return fmtDateShort(iso);
-  var d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  var d = parseDateOnly(iso);
+  if(!d) return fmtDateShort(iso);
   try{ return d.toLocaleDateString("es-MX",{day:"2-digit",month:"short"}); }catch(e){ return iso; }
 }
 /* ---------------- V0.5 §4: limpieza del timeline ----------------
@@ -1418,11 +1479,11 @@ function renderThreadItem(ev, ticketId){
     var extra = [];
     if(ev.responsable) extra.push(escapeHtml(ev.responsable));
     if(ev.estado) extra.push(estadoLabel(ev.estado));
-    if(ev.fechaAtencion) extra.push("atender " + ev.fechaAtencion);
+    if(ev.fechaAtencion) extra.push("atender " + fmtDateOnlyShort(ev.fechaAtencion));
     if(extra.length) body += '<div class="thread-sub">' + extra.join(" · ") + "</div>";
   } else if(ev.type === "pago"){
     body = '<div class="thread-text">Pago registrado' + (ev.concepto ? " — " + escapeHtml(ev.concepto) : "") + "</div>";
-    body += '<div class="thread-sub">' + fmtMoney(ev.monto) + (ev.metodo ? " · " + escapeHtml(ev.metodo) : "") + (ev.fecha ? " · " + ev.fecha : "") + "</div>";
+    body += '<div class="thread-sub">' + fmtMoney(ev.monto) + (ev.metodo ? " · " + escapeHtml(ev.metodo) : "") + (ev.fecha ? " · " + fmtDateOnlyShort(ev.fecha) : "") + "</div>";
   } else if(ev.type === "archivo"){
     body = '<div class="thread-text">' + (ev.caption ? escapeHtml(ev.caption) : "Archivo adjunto") + "</div>";
     if(ev.storage_path){ body += '<img class="thread-img" data-storage-path="' + escapeHtml(ev.storage_path) + '" alt="' + escapeHtml(ev.filename||"adjunto") + '">'; }
@@ -1463,7 +1524,7 @@ function renderTasksPanel(t){
   var rows = t.tareas.map(function(task){
     var extraBits = [];
     if(task.responsable) extraBits.push(escapeHtml(task.responsable));
-    if(task.fechaAtencion) extraBits.push(task.fechaAtencion);
+    if(task.fechaAtencion) extraBits.push(fmtDateOnlyShort(task.fechaAtencion));
     var extra = extraBits.length ? '<span class="task-extra">' + extraBits.join(" · ") + "</span>" : "";
     if(task.tipo === "produccion"){
       var order = ["pendiente","en_proceso","terminado"];
@@ -1615,11 +1676,11 @@ function renderTicketHeader(t){
     ? '<div class="comanda-edit-inline"><input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '"></div>'
     : comandaField("Responsable", t.responsable ? '<span class="comanda-field-value">' + escapeHtml(t.responsable) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
   opRows += (editing === "atencion")
-    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-atencion" value="' + (t.fechaAtencion||"") + '"></div>'
-    : comandaField("Atender", t.fechaAtencion ? '<span class="comanda-field-value">' + fmtDateShort(t.fechaAtencion) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
+    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-atencion" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaAtencion||"") + '"></div>'
+    : comandaField("Atender", t.fechaAtencion ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaAtencion) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
   opRows += (editing === "compromiso")
-    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-compromiso" value="' + (t.fechaCompromiso||"") + '"></div>'
-    : comandaField("Compromiso", t.fechaCompromiso ? '<span class="comanda-field-value">' + fmtDateShort(t.fechaCompromiso) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
+    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-compromiso" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaCompromiso||"") + '"></div>'
+    : comandaField("Compromiso", t.fechaCompromiso ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaCompromiso) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
 
   /* 5 — COMERCIAL: SOLO hechos ya calculados en otro lado (computeTotals,
      pagos) — jamás una deuda/saldo inventada aquí ("PRECIO ≠ DEUDA"). Los
@@ -1700,7 +1761,6 @@ function renderDocFormModal(){
       }).join("") + "</div>"
     : '<div class="doc-pending-note">Este ticket todavía no tiene productos agregados.</div>';
 
-  var todayIso = isoDate(new Date());
   var datesBlock;
   if(isInvoice){
     var initialDue = dueDateFromTerms("Due on Receipt", new Date());
@@ -1709,11 +1769,11 @@ function renderDocFormModal(){
         '<label>Terms<select id="docform-terms">' +
           TERMS_PRESETS.map(function(tp){ return '<option value="' + tp + '">' + tp + "</option>"; }).join("") +
         "</select></label>" +
-        '<label>Due Date<input type="date" id="docform-duedate" value="' + initialDue + '"></label>' +
+        '<label>Due Date<input type="date" id="docform-duedate" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + initialDue + '"></label>' +
       "</div>" +
       '<div id="docform-terms-custom-wrap" hidden><label>Terms — texto libre<input type="text" id="docform-terms-custom" placeholder="Ej. 50% anticipo, resto contra entrega"></label></div>';
   } else {
-    datesBlock = '<label>Valid Until (opcional)<input type="date" id="docform-validuntil"></label>';
+    datesBlock = '<label>Valid Until (opcional)<input type="date" id="docform-validuntil" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '"></label>';
   }
 
   var exemptHint = d.clientExempt
@@ -1850,6 +1910,14 @@ async function submitDocFormCreate(){
   } else {
     validUntil = val("docform-validuntil") || null;
   }
+  /* Addendum "Date Correctness" §9: un documento con Due Date/Valid Until
+     absurdo (año "0002" por el mismo bug de <input type="date">) nunca
+     debe poder emitirse — a diferencia de un campo del encabezado, aquí no
+     hay nada que "revertir": simplemente no se crea el documento. */
+  if(!isSaneDateOnly(dueDate) || !isSaneDateOnly(validUntil)){
+    showToast("Fecha inválida en Due Date / Valid Until — revisa el año.");
+    return;
+  }
 
   var pricing = {
     taxApplied: taxApplied, taxRate: taxRatePct / 100,
@@ -1879,12 +1947,12 @@ function popoverForm(kind){
     inner =
       '<label>Descripción<input type="text" id="f-desc" placeholder="Ej. Confirmar color" autofocus></label>' +
       '<label>Responsable<input type="text" id="f-responsable" list="dtg-team-names" placeholder="opcional"></label>' +
-      '<label>Fecha de atención<input type="date" id="f-fecha"></label>';
+      '<label>Fecha de atención<input type="date" id="f-fecha" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '"></label>';
   } else if(kind === "pago"){
     inner =
       '<div class="popover-row">' +
         '<label>Monto<input type="number" id="f-monto" placeholder="0.00" min="0" step="0.01" autofocus></label>' +
-        '<label>Fecha<input type="date" id="f-fecha" value="' + new Date().toISOString().slice(0,10) + '"></label>' +
+        '<label>Fecha<input type="date" id="f-fecha" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + todayLocalYYYYMMDD() + '"></label>' +
       "</div>" +
       '<label>Método<select id="f-metodo"><option value="">Sin especificar</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Otro</option></select></label>' +
       '<label>Concepto<input type="text" id="f-concepto" placeholder="Ej. Anticipo"></label>';
@@ -2211,14 +2279,22 @@ function ticketOrderRank(t){
    hoy; el filtro ya garantiza que nada de "después" entra aquí. Incluye
    Entregado-sin-cerrar si todavía tiene atención pendiente (V0.5 §8.1). */
 function ticketsAtencion(){
+  /* Addendum "Date Correctness": t.fechaAtencion es una fecha CALENDARIO
+     ("YYYY-MM-DD"), no un timestamp. `startOfDay(stringDeFecha)` pasaba por
+     `new Date(str)` (que interpreta el string como medianoche UTC) y
+     recién ahí aplicaba setHours en hora LOCAL — en una zona detrás de UTC
+     (Brownsville TX incluida) eso corría el día un día hacia atrás, así que
+     un ticket con Atender = 4-sep podía aparecer como vencido desde el
+     3-sep. parseDateOnly nunca pasa por UTC. */
   var today = startOfDay(new Date());
   return STATE.tickets.filter(function(t){
     if(ticketIsCerrado(t)) return false;
     if(!t.fechaAtencion) return false;
-    return startOfDay(t.fechaAtencion) <= today;
+    var da = parseDateOnly(t.fechaAtencion);
+    return !!da && da <= today;
   }).sort(function(a,b){
-    var da = startOfDay(a.fechaAtencion), db = startOfDay(b.fechaAtencion);
-    if(da - db !== 0) return da - db;
+    var da = parseDateOnly(a.fechaAtencion), db = parseDateOnly(b.fechaAtencion);
+    if(da && db && da - db !== 0) return da - db;
     return new Date(b.lastActivityAt) - new Date(a.lastActivityAt);
   });
 }
@@ -2487,8 +2563,8 @@ function estadoCardLines(t){
   lines.push(["Cliente", t.cliente || "—"]);
   lines.push(["Qué sigue", t.queSigue || "—"]);
   if(t.responsable) lines.push(["Responsable", t.responsable]);
-  if(t.fechaAtencion) lines.push(["Atender", t.fechaAtencion]);
-  if(t.fechaCompromiso) lines.push(["Compromiso", t.fechaCompromiso]);
+  if(t.fechaAtencion) lines.push(["Atender", fmtDateOnlyShort(t.fechaAtencion)]);
+  if(t.fechaCompromiso) lines.push(["Compromiso", fmtDateOnlyShort(t.fechaCompromiso)]);
   if(t.productos.length){
     var totals = computeTotals(t);
     lines.push(["Total", fmtMoney(totals.known) + (totals.pending ? " (+" + totals.pending + " sin precio)" : "")]);
@@ -3384,6 +3460,7 @@ async function submitForm(kind){
     if(!tdesc){ showToast("Descripción requerida."); return; }
     var resp = (document.getElementById("f-responsable").value || "").trim();
     var fecha = document.getElementById("f-fecha").value || "";
+    if(!isSaneDateOnly(fecha)){ showToast("Fecha inválida — revisa el año e inténtalo de nuevo."); return; }
     var tipo = kind === "tarea_produccion" ? "produccion" : "normal";
     UI.composer = null; render();
     await addTareaCore(t, tipo, tdesc, resp, fecha);
@@ -3391,7 +3468,8 @@ async function submitForm(kind){
     var montoRaw = document.getElementById("f-monto").value;
     var monto = parseFloat(montoRaw);
     if(!montoRaw || isNaN(monto)){ showToast("Ingresa un monto válido."); return; }
-    var pfecha = document.getElementById("f-fecha").value || new Date().toISOString().slice(0,10);
+    var pfecha = document.getElementById("f-fecha").value || todayLocalYYYYMMDD();
+    if(!isSaneDateOnly(pfecha)){ showToast("Fecha inválida — revisa el año e inténtalo de nuevo."); return; }
     var metodo = document.getElementById("f-metodo").value || "";
     var concepto = (document.getElementById("f-concepto").value || "").trim();
     UI.composer = null; render();
@@ -3601,9 +3679,12 @@ var TERMS_NET_DAYS = { "Due on Receipt": 0, "Net 7": 7, "Net 15": 15, "Net 30": 
 function dueDateFromTerms(terms, fromDate){
   var days = TERMS_NET_DAYS[terms];
   if(days == null) return null;
-  var d = startOfDay(fromDate || new Date()); d.setDate(d.getDate() + days);
-  return isoDate(d);
+  return dateOnlyFromDate(addDays(fromDate || new Date(), days));
 }
+/* Suma días a un Date en hora LOCAL (nunca UTC) — helper genérico para
+   construir la fecha calendario de partida antes de formatearla con
+   dateOnlyFromDate. */
+function addDays(d, days){ var x = startOfDay(d); x.setDate(x.getDate() + days); return x; }
 
 /* Subtotal real de un documento — snapshot congelado para documentos V0.5,
    o doc.total para documentos anteriores (donde total YA era el subtotal,
@@ -3856,9 +3937,8 @@ function pdfDateLong(iso){
    interpretación UTC. */
 function pdfDateOnlyShort(iso){
   if(!iso) return "";
-  var parts = String(iso).split("-");
-  if(parts.length !== 3) return pdfDateLong(iso);
-  var d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  var d = parseDateOnly(iso);
+  if(!d) return pdfDateLong(iso);
   try{ return d.toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return iso; }
 }
 /* Misma paleta que .doc-paper en el visor HTML (--pk-ink/--pk-muted/
@@ -4223,6 +4303,17 @@ async function commitHeaderField(elId, value, opts){
   if(!t) return;
   var def = HEADER_FIELDS[elId];
   if(!def) return;
+  /* Addendum "Date Correctness" §9: nunca guardar una fecha calendario
+     absurda (el bug de "año 0002" — un <input type="date"> con el año a
+     medio escribir). Se corta ANTES de tocar STATE/Supabase; render()
+     reconstruye el campo desde t[def.key], que no cambió, así que el valor
+     inválido que el navegador tenía en el input simplemente desaparece. */
+  if(def.col.indexOf("fecha_")===0 && value && !isSaneDateOnly(value)){
+    showToast("Fecha inválida — revisa el año e inténtalo de nuevo.");
+    UI.headerEditField = null;
+    render();
+    return;
+  }
   if(t[def.key] === value) return;
   t[def.key] = value;
   UI.headerEditField = null;
@@ -4653,6 +4744,24 @@ var WEEKDAY_NAMES = {
   viernes:5, vie:5, friday:5, fri:5,
   sabado:6, "sábado":6, sab:6, saturday:6, sat:6
 };
+/* Addendum "Date Correctness" §5: /atender y /compromiso deben reconocer
+   también un mes por nombre ("4 septiembre 2026", "septiembre 4"), no solo
+   fechas numéricas. Claves sin acento porque se comparan contra
+   normalizeWord(), que ya los quita. */
+var MONTH_NAMES = {
+  enero:0, ene:0, january:0, jan:0,
+  febrero:1, feb:1, february:1,
+  marzo:2, mar:2, march:2,
+  abril:3, abr:3, april:3, apr:3,
+  mayo:4, may:4,
+  junio:5, jun:5, june:5,
+  julio:6, jul:6, july:6,
+  agosto:7, ago:7, august:7, aug:7,
+  septiembre:8, setiembre:8, sep:8, sept:8, september:8,
+  octubre:9, oct:9, october:9,
+  noviembre:10, nov:10, november:10,
+  diciembre:11, dic:11, december:11, dec:11
+};
 
 function parseHumanDate(raw, now){
   now = now || new Date();
@@ -4672,11 +4781,42 @@ function parseHumanDate(raw, now){
     var day = parseInt(mSlash[1],10), month = parseInt(mSlash[2],10);
     if(month < 1 || month > 12 || day < 1 || day > 31) return { status: "unrecognized" };
     var year = mSlash[3] ? (mSlash[3].length===2 ? 2000+parseInt(mSlash[3],10) : parseInt(mSlash[3],10)) : now.getFullYear();
+    /* Addendum "Date Correctness" §5/§9: nunca aceptar un año fuera de un
+       rango humano razonable (protege contra un año mal tecleado, ej. un
+       "0002" por un "2026" a medio escribir — mismo espíritu que
+       isSaneDateOnly, aplicado aquí al texto libre). */
+    if(year < DATE_ONLY_MIN_YEAR || year > DATE_ONLY_MAX_YEAR) return { status: "unrecognized" };
     var d1 = new Date(year, month-1, day);
+    if(d1.getMonth() !== month-1 || d1.getDate() !== day) return { status: "unrecognized" }; // ej. 31/02
     if(!mSlash[3] && startOfDay(d1) < startOfDay(now)){
       d1 = new Date(year+1, month-1, day); // sin año: siempre la próxima ocurrencia futura
     }
     return { status: "confident", date: d1 };
+  }
+
+  /* "<día> [de] <mes> [[de] <año>]" o "<mes> <día>[, <año>]" — con o sin
+     año explícito, con o sin los conectores "de"/",". Sin año, usa el
+     mismo criterio que mSlash: la próxima ocurrencia futura. */
+  var mDayMonth = text.match(/^(\d{1,2})\s+(?:de\s+)?([a-záéíóúñ]+)\.?(?:\s+(?:de\s+)?(\d{4}))?$/);
+  var mMonthDay = !mDayMonth && text.match(/^([a-záéíóúñ]+)\.?\s+(\d{1,2})\.?,?(?:\s+(\d{4}))?$/);
+  var mn = mDayMonth || mMonthDay;
+  if(mn){
+    var dayTok = mDayMonth ? mn[1] : mn[2];
+    var monthTok = mDayMonth ? mn[2] : mn[1];
+    var yearTok = mn[3];
+    var monthIdx = MONTH_NAMES[normalizeWord(monthTok)];
+    if(monthIdx != null){
+      var mday = parseInt(dayTok,10);
+      if(mday < 1 || mday > 31) return { status: "unrecognized" };
+      var myear = yearTok ? parseInt(yearTok,10) : now.getFullYear();
+      if(myear < DATE_ONLY_MIN_YEAR || myear > DATE_ONLY_MAX_YEAR) return { status: "unrecognized" };
+      var dm = new Date(myear, monthIdx, mday);
+      if(dm.getMonth() !== monthIdx || dm.getDate() !== mday) return { status: "unrecognized" }; // ej. 31 de febrero
+      if(!yearTok && startOfDay(dm) < startOfDay(now)){
+        dm = new Date(myear+1, monthIdx, mday);
+      }
+      return { status: "confident", date: dm };
+    }
   }
 
   var mRel = text.match(/^en\s+(\d+)\s+d[ií]as?$/) || text.match(/^in\s+(\d+)\s+days?$/);
@@ -4701,7 +4841,6 @@ function parseHumanDate(raw, now){
 
   return { status: "unrecognized" };
 }
-function isoDate(d){ return d.toISOString().slice(0,10); }
 
 /* ---------------- registro de comandos: fuente única de verdad ----------------
    Cada entrada describe un comando completo: alias ES/EN, si lee o escribe,
@@ -4784,7 +4923,7 @@ var COMMANDS = [
       if(!pg || isNaN(pg.monto)) return { ok:false, error: "Escribe un monto, ej. /pago 50" };
       return { ok:true, data: { monto: pg.monto, concepto: pg.concepto } };
     },
-    run: function(data, ctx){ return addPagoCore(ctx.ticket, data.monto, isoDate(new Date()), "", data.concepto || ""); }
+    run: function(data, ctx){ return addPagoCore(ctx.ticket, data.monto, todayLocalYYYYMMDD(), "", data.concepto || ""); }
   },
   {
     key: "tarea", aliases: ["tarea","task"], type: "write", requiresTicket: true,
@@ -4814,24 +4953,24 @@ var COMMANDS = [
   {
     key: "atender", aliases: ["atender","attention"], type: "write", requiresTicket: true,
     syntax: "/atender <fecha>", summary: "Poner la fecha de atención del ticket",
-    examples: ["/atender mañana", "/atender 15/03", "/atender en 3 días"],
+    examples: ["/atender mañana", "/atender 15/03", "/atender en 3 días", "/atender 4 septiembre 2026"],
     parse: function(arg){
       if(!arg) return { ok:false, showHelp:true };
       var r = parseHumanDate(arg);
       if(r.status !== "confident") return { ok:false, error: 'No estoy seguro de esa fecha — usa el selector "Atender" del encabezado del ticket.', focusElId: "field-fecha-atencion" };
-      return { ok:true, data: { iso: isoDate(r.date) } };
+      return { ok:true, data: { iso: dateOnlyFromDate(r.date) } };
     },
     run: function(data){ return commitHeaderField("field-fecha-atencion", data.iso, {refocus:true}); }
   },
   {
     key: "compromiso", aliases: ["compromiso","commitment"], type: "write", requiresTicket: true,
     syntax: "/compromiso <fecha>", summary: "Poner la fecha de compromiso del ticket",
-    examples: ["/compromiso 20/09/2026", "/compromiso viernes"],
+    examples: ["/compromiso 20/09/2026", "/compromiso viernes", "/compromiso 4 septiembre 2026"],
     parse: function(arg){
       if(!arg) return { ok:false, showHelp:true };
       var r = parseHumanDate(arg);
       if(r.status !== "confident") return { ok:false, error: 'No estoy seguro de esa fecha — usa el selector "Compromiso" del encabezado del ticket.', focusElId: "field-fecha-compromiso" };
-      return { ok:true, data: { iso: isoDate(r.date) } };
+      return { ok:true, data: { iso: dateOnlyFromDate(r.date) } };
     },
     run: function(data){ return commitHeaderField("field-fecha-compromiso", data.iso, {refocus:true}); }
   },
