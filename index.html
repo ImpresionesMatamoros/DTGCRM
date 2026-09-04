@@ -617,6 +617,41 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 }
 .docform-sum-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-muted); }
 .docform-sum-total{ font-size:14.5px; font-weight:700; color:var(--text); border-top:1px solid var(--border); padding-top:6px; margin-top:2px; }
+
+/* Addendum "One-Click Tax & Fees" §6-§10: Sales Tax y "+ Fee" en una sola
+   fila, como dos controles de un toque cada uno. */
+.docform-quickrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.docform-chip{
+  display:flex!important; flex-direction:row!important; align-items:center; gap:6px!important;
+  font-size:13px!important; color:var(--text-muted)!important; background:var(--surface-2);
+  border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; user-select:none;
+}
+.docform-chip input{ width:auto; }
+.docform-chip.on{ color:var(--text)!important; border-color:var(--accent,#4f7cff); background:var(--surface); }
+.docform-fee-add{ position:relative; }
+.docform-chip-btn{
+  font-size:13px; border:1px dashed var(--border); border-radius:999px; padding:6px 12px;
+  background:none; color:var(--text-muted); cursor:pointer;
+}
+.docform-chip-btn:hover{ color:var(--text); border-color:var(--text-muted); }
+.docform-fee-menu{
+  position:absolute; top:calc(100% + 4px); left:0; z-index:5; display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);
+  min-width:160px; overflow:hidden;
+}
+.docform-fee-menu button{
+  text-align:left; padding:8px 12px; font-size:12.5px; border:none; background:none; color:var(--text);
+  cursor:pointer;
+}
+.docform-fee-menu button:hover{ background:var(--surface-2); }
+.docform-fee-rows{ display:flex; flex-direction:column; gap:6px; }
+.docform-fee-row{ display:grid; grid-template-columns:1fr 60px 90px auto; gap:6px; align-items:center; }
+.docform-fee-row input, .docform-fee-row select{
+  border:1px solid var(--border); border-radius:var(--radius-s); padding:6px 8px; font-size:12.5px;
+  background:var(--surface); color:var(--text); font:inherit;
+}
+.docform-fee-row .btn-plain{ font-size:16px; line-height:1; padding:2px 6px; }
+@media (max-width:480px){ .docform-fee-row{ grid-template-columns:1fr 52px 76px auto; } }
 .docform-actions{
   display:flex; justify-content:flex-end; gap:8px; padding:14px 18px; border-top:1px solid var(--border);
   position:sticky; bottom:0; background:var(--surface);
@@ -1733,6 +1768,37 @@ function docChoiceMenu(){
   );
 }
 
+/* Addendum "One-Click Tax & Fees" §10: una fila editable por fee, con id
+   ligado al uid() propio del fee (no al índice del array) — así remover un
+   fee de en medio nunca desalinea los ids de los que quedan, y
+   renderKeepingLiveInputs() (que restaura por id) sigue funcionando
+   correctamente aunque el usuario esté editando otra fila al mismo tiempo. */
+function renderDocFormFeeRow(f){
+  return (
+    '<div class="docform-fee-row" data-fee-row="' + f.id + '">' +
+      '<input type="text" id="docform-fee-label-' + f.id + '" value="' + escapeHtml(f.label || "") + '" placeholder="Descripción del cargo">' +
+      '<select id="docform-fee-type-' + f.id + '">' +
+        '<option value="percentage"' + (f.type === "fixed" ? "" : " selected") + ">%</option>" +
+        '<option value="fixed"' + (f.type === "fixed" ? " selected" : "") + ">$</option>" +
+      "</select>" +
+      '<input type="number" id="docform-fee-value-' + f.id + '" value="' + (f.value === "" || f.value == null ? "" : f.value) + '" min="0" step="0.01" placeholder="0.00">' +
+      '<button type="button" class="btn-plain" data-action="docform-remove-fee" data-fee-id="' + f.id + '" title="Quitar">&times;</button>' +
+    "</div>"
+  );
+}
+/* Addendum §8/§9: el menú de "+ Fee" ofrece los 4 presets del negocio de un
+   toque — nunca un formulario en blanco como primer paso. */
+function renderDocFormFeeMenu(){
+  return (
+    '<div class="docform-fee-menu" id="docform-fee-menu">' +
+      '<button type="button" data-action="docform-add-fee" data-preset="paypal">PayPal (3.5%)</button>' +
+      '<button type="button" data-action="docform-add-fee" data-preset="card">Card (2.9%)</button>' +
+      '<button type="button" data-action="docform-add-fee" data-preset="rush">Rush fee ($)</button>' +
+      '<button type="button" data-action="docform-add-fee" data-preset="other">Other…</button>' +
+    "</div>"
+  );
+}
+
 /* V0.5 §10-18/D10: modal propio del formulario de documento — reemplaza el
    popover angosto. Una sola pantalla (sin wizard), con Bill To/productos/
    fechas/PO arriba, tax/fee en medio, y un resumen financiero en vivo
@@ -1797,16 +1863,20 @@ function renderDocFormModal(){
           itemsHtml +
           '<div class="docform-section-title">Impuesto y cargos</div>' +
           exemptHint +
-          '<label class="docform-check"><input type="checkbox" id="docform-tax-applied"' + (d.clientExempt?"":" checked") + '> Aplicar Sales Tax</label>' +
-          '<div id="docform-tax-rate-wrap"' + (d.clientExempt?" hidden":"") + '><label>Tasa (%)<input type="number" id="docform-tax-rate" min="0" step="0.01" value="' + (DEFAULT_SALES_TAX_RATE*100) + '"></label></div>' +
-          '<label class="docform-check"><input type="checkbox" id="docform-fee-enabled"> Agregar Processing Fee</label>' +
-          '<div id="docform-fee-detail" hidden>' +
-            '<div class="popover-row">' +
-              '<label>Concepto<input type="text" id="docform-fee-label" placeholder="Ej. Card processing fee"></label>' +
-              '<label>Tipo<select id="docform-fee-type"><option value="percentage">Percentage</option><option value="fixed">Fixed amount</option></select></label>' +
+          /* Addendum §6/§8: Tax y "+ Fee" en la MISMA fila, como dos
+             controles de un toque — no dos secciones separadas que haya
+             que abrir. La tasa se ve directamente en el chip; cambiarla es
+             la única acción "secundaria" (el campo de abajo, no obligatorio
+             de tocar). */
+          '<div class="docform-quickrow">' +
+            '<label class="docform-chip' + (d.clientExempt?"":" on") + '" id="docform-tax-chip"><input type="checkbox" id="docform-tax-applied"' + (d.clientExempt?"":" checked") + '> Sales Tax <span id="docform-tax-chip-rate">' + (DEFAULT_SALES_TAX_RATE*100) + '%</span></label>' +
+            '<div class="docform-fee-add">' +
+              '<button type="button" class="docform-chip-btn" data-action="docform-add-fee-menu">+ Fee</button>' +
+              (d.feeMenuOpen ? renderDocFormFeeMenu() : "") +
             "</div>" +
-            '<label id="docform-fee-value-label">Valor (%)<input type="number" id="docform-fee-value" min="0" step="0.01" value="0"></label>' +
           "</div>" +
+          '<div id="docform-tax-rate-wrap"' + (d.clientExempt?" hidden":"") + '><label>Tasa (%) — solo si necesitas cambiarla<input type="number" id="docform-tax-rate" min="0" step="0.01" value="' + (DEFAULT_SALES_TAX_RATE*100) + '"></label></div>' +
+          '<div class="docform-fee-rows" id="docform-fee-rows">' + d.fees.map(renderDocFormFeeRow).join("") + "</div>" +
           '<label>Notas (opcional)<input type="text" id="docform-notas" placeholder="Se muestran en el documento"></label>' +
           '<div class="docform-summary" id="docform-summary"></div>' +
         "</div>" +
@@ -1841,33 +1911,43 @@ function refreshDocFormUI(){
   var taxRatePct = taxRateEl ? (parseFloat(taxRateEl.value) || 0) : 0;
   var taxAmount = computeTaxAmount(subtotal, taxRatePct / 100, taxApplied);
 
-  var feeEnabledEl = document.getElementById("docform-fee-enabled");
-  var feeEnabled = !!(feeEnabledEl && feeEnabledEl.checked);
-  var feeTypeEl = document.getElementById("docform-fee-type");
-  var feeType = feeTypeEl ? feeTypeEl.value : "percentage";
-  var feeValueEl = document.getElementById("docform-fee-value");
-  var feeValue = feeValueEl ? (parseFloat(feeValueEl.value) || 0) : 0;
-  var feeLabelEl = document.getElementById("docform-fee-label");
-  var feeLabel = feeLabelEl ? feeLabelEl.value : "";
-  var feeAmount = computeFeeAmount(subtotal + taxAmount, { enabled: feeEnabled, type: feeType, value: feeValue });
+  /* Addendum §10/§11: cada fee vive en su propia fila (id por f.id, no por
+     índice) y se calcula independientemente sobre la misma base
+     subtotal+tax — igual criterio que createDocumentoCore, para que el
+     resumen en vivo del formulario y el snapshot que se va a congelar
+     siempre coincidan. */
+  var feeBase = subtotal + taxAmount;
+  var feesTotal = 0;
+  var feeSummaryRows = "";
+  (UI.docDraft.fees || []).forEach(function(f){
+    var labelEl = document.getElementById("docform-fee-label-" + f.id);
+    var typeEl = document.getElementById("docform-fee-type-" + f.id);
+    var valueEl = document.getElementById("docform-fee-value-" + f.id);
+    var label = labelEl ? labelEl.value : (f.label || "");
+    var type = typeEl ? typeEl.value : (f.type || "percentage");
+    var value = valueEl ? (parseFloat(valueEl.value) || 0) : (Number(f.value) || 0);
+    var amount = computeFeeAmount(feeBase, { type: type, value: value });
+    feesTotal += amount;
+    feeSummaryRows += '<div class="docform-sum-row"><span>' + escapeHtml(label || "Fee") + '</span><span>' + fmtMoney(amount) + "</span></div>";
+  });
 
-  var total = round2(subtotal + taxAmount + feeAmount);
+  var total = round2(subtotal + taxAmount + feesTotal);
 
   var sumEl = document.getElementById("docform-summary");
   if(sumEl){
     var html = '<div class="docform-sum-row"><span>Subtotal</span><span>' + fmtMoney(subtotal) + "</span></div>";
     html += '<div class="docform-sum-row"><span>Sales Tax' + (taxApplied ? " (" + taxRatePct + "%)" : " — off") + '</span><span>' + fmtMoney(taxAmount) + "</span></div>";
-    if(feeEnabled) html += '<div class="docform-sum-row"><span>' + escapeHtml(feeLabel || "Processing fee") + '</span><span>' + fmtMoney(feeAmount) + "</span></div>";
+    html += feeSummaryRows;
     html += '<div class="docform-sum-row docform-sum-total"><span>TOTAL</span><span>' + fmtMoney(total) + "</span></div>";
     if(pendingCount) html += '<div class="doc-pending-note">' + pendingCount + (pendingCount===1?" producto sin precio":" productos sin precio") + " — el total se actualizará cuando lo completes.</div>";
     sumEl.innerHTML = html;
   }
   var taxRateWrap = document.getElementById("docform-tax-rate-wrap");
   if(taxRateWrap) taxRateWrap.hidden = !taxApplied;
-  var feeDetail = document.getElementById("docform-fee-detail");
-  if(feeDetail) feeDetail.hidden = !feeEnabled;
-  var feeValueLabel = document.getElementById("docform-fee-value-label");
-  if(feeValueLabel) feeValueLabel.firstChild.textContent = feeType === "fixed" ? "Valor ($)" : "Valor (%)";
+  var taxChip = document.getElementById("docform-tax-chip");
+  if(taxChip) taxChip.classList.toggle("on", taxApplied);
+  var taxChipRate = document.getElementById("docform-tax-chip-rate");
+  if(taxChipRate) taxChipRate.textContent = taxRatePct + "%";
   var termsEl = document.getElementById("docform-terms");
   var termsCustomWrap = document.getElementById("docform-terms-custom-wrap");
   if(termsCustomWrap && termsEl) termsCustomWrap.hidden = (termsEl.value !== "Custom");
@@ -1897,10 +1977,15 @@ async function submitDocFormCreate(){
   var poReference = val("docform-po").trim() || null;
   var taxApplied = checked("docform-tax-applied");
   var taxRatePct = parseFloat(val("docform-tax-rate")) || 0;
-  var feeEnabled = checked("docform-fee-enabled");
-  var feeType = val("docform-fee-type") || "percentage";
-  var feeLabel = val("docform-fee-label").trim();
-  var feeValue = parseFloat(val("docform-fee-value")) || 0;
+  /* Addendum §10: cada fila de fee se lee por el id de su propio fee (no
+     por índice) — mismo criterio que refreshDocFormUI. */
+  var fees = (d.fees || []).map(function(f){
+    return {
+      label: val("docform-fee-label-" + f.id).trim(),
+      type: val("docform-fee-type-" + f.id) || "percentage",
+      value: parseFloat(val("docform-fee-value-" + f.id)) || 0
+    };
+  });
 
   var terms = null, dueDate = null, validUntil = null;
   if(isInvoice){
@@ -1922,7 +2007,7 @@ async function submitDocFormCreate(){
   var pricing = {
     taxApplied: taxApplied, taxRate: taxRatePct / 100,
     taxExempt: d.clientExempt, taxExemptReason: d.clientExemptReason,
-    fee: { enabled: feeEnabled, type: feeType, label: feeLabel, value: feeValue },
+    fees: fees,
     terms: terms, dueDate: dueDate, validUntil: validUntil, poReference: poReference
   };
 
@@ -3512,7 +3597,14 @@ function openDocumentForm(tipo){
     tipo: tipo,
     items: t.productos.map(function(p){ return { desc: p.desc, cantidad: p.cantidad, precio: p.precio }; }),
     clientExempt: !!(linked && linked.taxExempt),
-    clientExemptReason: (linked && linked.taxExemptReason) || ""
+    clientExemptReason: (linked && linked.taxExemptReason) || "",
+    /* Addendum §10: lista de fees agregados en este documento (cero, uno o
+       varios). Cada elemento es solo el ESQUELETO de la fila (id + preset
+       inicial) — el label/tipo/valor en vivo se leen del propio DOM al
+       recalcular/guardar, mismo criterio que ya usan los precios de
+       productos (nunca se mantiene sincronizado mientras se escribe). */
+    fees: [],
+    feeMenuOpen: false
   };
   UI.composer = null;
   UI.docFormOpen = true;
@@ -3547,9 +3639,15 @@ async function createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing
   var taxApplied = !!pricing.taxApplied;
   var taxRate = pricing.taxRate != null ? Number(pricing.taxRate) : 0;
   var taxAmount = computeTaxAmount(subtotal, taxRate, taxApplied);
-  var fee = pricing.fee || null;
-  var feeAmount = computeFeeAmount(subtotal + taxAmount, fee);
-  var total = round2(subtotal + taxAmount + feeAmount);
+  /* Addendum §10/§11: cada fee en pricing.fees se calcula sobre la MISMA
+     base (subtotal+tax), independiente de los demás — nunca uno encima de
+     otro. */
+  var feeBase = subtotal + taxAmount;
+  var fees = (pricing.fees || []).map(function(f){
+    return { label: f.label || "", type: f.type === "fixed" ? "fixed" : "percentage", value: Number(f.value) || 0, amount: computeFeeAmount(feeBase, f) };
+  });
+  var feesTotal = fees.reduce(function(s,f){ return s + f.amount; }, 0);
+  var total = round2(subtotal + taxAmount + feesTotal);
   var cobradoAlCrear = (t.pagos||[]).reduce(function(s,p){ return s + p.monto; }, 0);
   var linked = t.clienteId ? STATE.clientes.filter(function(c){ return c.id === t.clienteId; })[0] : null;
   var billTo = {
@@ -3565,7 +3663,7 @@ async function createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing
     validUntil: pricing.validUntil || null,
     poReference: pricing.poReference || null,
     tax: { applied: taxApplied, rate: taxRate, amount: taxAmount, exempt: !!pricing.taxExempt, exemptReason: pricing.taxExemptReason || null },
-    fee: (fee && fee.enabled) ? { enabled: true, type: fee.type, label: fee.label || "", value: Number(fee.value) || 0, amount: feeAmount } : { enabled: false }
+    fees: fees
   };
   showToast("Creando " + (tipo==="invoice"?"invoice":"cotización") + "…");
   var newDocId = null;
@@ -3670,6 +3768,19 @@ function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
    de escribir esto — dato provisto por el dueño del negocio. */
 var DEFAULT_SALES_TAX_RATE = 0.0825;
 
+/* Addendum "One-Click Tax & Fees" §8/§9: "+ Fee" nunca abre un formulario
+   en blanco — ofrece 4 atajos de un toque con los casos reales del
+   negocio ya precargados (PayPal/Card con su tasa típica, Rush fee como
+   monto fijo, Other totalmente en blanco para lo que no encaje). Todo
+   sigue siendo editable después de agregarlo — esto es solo el punto de
+   partida, no una categoría cerrada. */
+var FEE_PRESETS = {
+  paypal: { label: "PayPal processing fee", type: "percentage", value: 3.5 },
+  card:   { label: "Card processing fee",   type: "percentage", value: 2.9 },
+  rush:   { label: "Rush fee",              type: "fixed",      value: "" },
+  other:  { label: "",                      type: "percentage", value: "" }
+};
+
 /* V0.5 §13/D5: presets hardcoded, sin Settings. Elegir un preset con días
    fijos recalcula Due Date automáticamente desde la fecha del documento;
    "Custom" no autocalcula nada — el usuario decide Due Date y el texto de
@@ -3694,13 +3805,29 @@ function docSubtotal(doc){
   return (ps && ps.subtotal != null) ? Number(ps.subtotal) : Number(doc.total);
 }
 function docTax(doc){ var ps = doc.pricingSnapshot; return (ps && ps.tax) ? ps.tax : null; }
-function docFee(doc){ var ps = doc.pricingSnapshot; return (ps && ps.fee && ps.fee.enabled) ? ps.fee : null; }
+/* Addendum "One-Click Tax & Fees" §10: un documento puede tener cero, uno o
+   varios fees — pricing_snapshot.fees es un array, cada elemento ya trae su
+   propio amount congelado. Compatibilidad hacia atrás: un documento creado
+   ANTES de este addendum (todavía con el shape viejo, singular
+   pricing_snapshot.fee) se sigue leyendo igual — se envuelve en un array de
+   un elemento en vez de perderse. Documentos sin ningún fee -> []. */
+function docFees(doc){
+  var ps = doc.pricingSnapshot;
+  if(!ps) return [];
+  if(Array.isArray(ps.fees)) return ps.fees;
+  if(ps.fee && ps.fee.enabled) return [ps.fee];
+  return [];
+}
 
 function computeTaxAmount(subtotal, rate, applied){ return applied ? round2(subtotal * (Number(rate)||0)) : 0; }
-/* V0.5 §16: porcentaje aplicado sobre Subtotal + Tax (regla simple, sin
-   gross-up recursivo) — "base" ya debe venir como subtotal+taxAmount. */
+/* V0.5 §16, extendido por el addendum §11: cada fee porcentual se calcula
+   sobre la misma base (Subtotal + Tax) de forma INDEPENDIENTE de los demás
+   fees — nunca uno encima de otro (nada de gross-up recursivo ni fees
+   compuestos). `fee` aquí ya es "el fee que se va a aplicar" (la lista que
+   llama a este helper decide qué fees existen; no hay más un flag
+   `enabled` que revisar). */
 function computeFeeAmount(base, fee){
-  if(!fee || !fee.enabled) return 0;
+  if(!fee) return 0;
   if(fee.type === "fixed") return round2(Number(fee.value) || 0);
   return round2(base * ((Number(fee.value) || 0) / 100));
 }
@@ -3777,10 +3904,12 @@ function renderDocModal(){
      un Total simple, tax/fee incluidos. */
   var subtotal = docSubtotal(doc);
   var tax = docTax(doc);
-  var fee = docFee(doc);
+  var fees = docFees(doc);
   var summaryRows = '<div class="doc-summary-row"><span>Subtotal</span><span>' + fmtMoney(subtotal) + "</span></div>";
   if(tax && tax.applied) summaryRows += '<div class="doc-summary-row"><span>Sales Tax (' + (Number(tax.rate)*100).toFixed(2).replace(/\.?0+$/,"") + '%)</span><span>' + fmtMoney(tax.amount) + "</span></div>";
-  if(fee) summaryRows += '<div class="doc-summary-row"><span>' + escapeHtml(fee.label || "Processing fee") + "</span><span>" + fmtMoney(fee.amount) + "</span></div>";
+  fees.forEach(function(f){
+    summaryRows += '<div class="doc-summary-row"><span>' + escapeHtml(f.label || "Processing fee") + "</span><span>" + fmtMoney(f.amount) + "</span></div>";
+  });
   var summaryBlock;
   if(isInvoice){
     var due = documentAmountDue(doc);
@@ -4068,11 +4197,11 @@ function buildDocumentPdfOps(doc){
   });
   inTable = false;
 
-  // ---- Resumen: Subtotal / Tax / Fee / Payments received / AMOUNT DUE (o Total) ----
+  // ---- Resumen: Subtotal / Tax / Fees[] / Payments received / AMOUNT DUE (o Total) ----
   var pdfSubtotal = docSubtotal(doc);
   var pdfTax = docTax(doc);
-  var pdfFee = docFee(doc);
-  var summaryLineCount = 1 + (pdfTax && pdfTax.applied ? 1 : 0) + (pdfFee ? 1 : 0) + (isInvoice && doc.cobradoAlCrear > 0 ? 1 : 0);
+  var pdfFees = docFees(doc);
+  var summaryLineCount = 1 + (pdfTax && pdfTax.applied ? 1 : 0) + pdfFees.length + (isInvoice && doc.cobradoAlCrear > 0 ? 1 : 0);
   ensure(summaryLineCount * 15 + (isInvoice ? 60 : 40));
   y -= 4;
   putRight("Subtotal", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
@@ -4083,11 +4212,11 @@ function buildDocumentPdfOps(doc){
     putRight(fmtMoney(pdfTax.amount), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
     y -= 15;
   }
-  if(pdfFee){
-    putRight(pdfFee.label || "Processing fee", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
-    putRight(fmtMoney(pdfFee.amount), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
+  pdfFees.forEach(function(f){
+    putRight(f.label || "Processing fee", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
+    putRight(fmtMoney(f.amount), COL_AMT_R, y, 10, false, PDF_COLOR.ink);
     y -= 15;
-  }
+  });
   if(isInvoice){
     if(doc.cobradoAlCrear > 0){
       putRight("Payments received", COL_RATE_R, y, 10, false, PDF_COLOR.muted);
@@ -4596,7 +4725,9 @@ function defaultPricingForTicket(t, tipo){
     taxRate: DEFAULT_SALES_TAX_RATE,
     taxExempt: exempt,
     taxExemptReason: (linked && linked.taxExemptReason) || "",
-    fee: { enabled: false, type: "percentage", label: "", value: 0 },
+    /* Addendum §12: "default = ninguno" — /factura y /cotizacion nunca
+       asumen un fee por su cuenta, igual que el modal. */
+    fees: [],
     terms: isInvoice ? "Due on Receipt" : null,
     dueDate: isInvoice ? dueDateFromTerms("Due on Receipt", new Date()) : null,
     validUntil: null,
@@ -4624,8 +4755,12 @@ function parseDocCommand(arg, ctx, tipo){
   var subtotal = items.reduce(function(s,it){ return s + it.cantidad*it.precio; }, 0);
   var pricing = defaultPricingForTicket(t, tipo);
   var taxAmount = computeTaxAmount(subtotal, pricing.taxRate, pricing.taxApplied);
-  var feeAmount = computeFeeAmount(subtotal + taxAmount, pricing.fee);
-  var total = round2(subtotal + taxAmount + feeAmount);
+  /* Addendum §10/§11: mismo criterio que createDocumentoCore — cada fee de
+     pricing.fees (aquí siempre [] por D8, pero el cálculo debe seguir
+     siendo correcto si eso cambia) se computa independientemente sobre
+     subtotal+tax y se suma. */
+  var feesTotal = (pricing.fees || []).reduce(function(s,f){ return s + computeFeeAmount(subtotal + taxAmount, f); }, 0);
+  var total = round2(subtotal + taxAmount + feesTotal);
   return { ok:true, data: { tipo: tipo, items: items, subtotal: subtotal, total: total, pricing: pricing, clienteNombre: t.cliente || "", notas: (arg||"").trim() } };
 }
 function docConfirmSummary(data){
@@ -5299,6 +5434,33 @@ function wireEvents(){
     closeDocformBtns.forEach(function(b){ b.addEventListener("click", closeDocFormModal); });
     var createDocformBtn = docformOverlay.querySelector('[data-action="docform-create"]');
     if(createDocformBtn) createDocformBtn.addEventListener("click", submitDocFormCreate);
+    /* Addendum §8-§10: agregar/quitar un fee usa renderKeepingLiveInputs()
+       (no render() a secas) porque el usuario puede tener otros campos del
+       formulario a media edición (precios de items, cliente, fechas, otras
+       filas de fee) — el mismo criterio que ya usa el refresh en vivo del
+       Realtime, aplicado ahora también a esta acción del propio usuario. */
+    var addFeeMenuBtn = docformOverlay.querySelector('[data-action="docform-add-fee-menu"]');
+    if(addFeeMenuBtn){
+      addFeeMenuBtn.addEventListener("click", function(){
+        UI.docDraft.feeMenuOpen = !UI.docDraft.feeMenuOpen;
+        renderKeepingLiveInputs();
+      });
+    }
+    docformOverlay.querySelectorAll('[data-action="docform-add-fee"]').forEach(function(b){
+      b.addEventListener("click", function(){
+        var preset = FEE_PRESETS[b.getAttribute("data-preset")] || FEE_PRESETS.other;
+        UI.docDraft.fees.push({ id: uid(), label: preset.label, type: preset.type, value: preset.value });
+        UI.docDraft.feeMenuOpen = false;
+        renderKeepingLiveInputs();
+      });
+    });
+    docformOverlay.querySelectorAll('[data-action="docform-remove-fee"]').forEach(function(b){
+      b.addEventListener("click", function(){
+        var feeId = b.getAttribute("data-fee-id");
+        UI.docDraft.fees = UI.docDraft.fees.filter(function(f){ return f.id !== feeId; });
+        renderKeepingLiveInputs();
+      });
+    });
     var termsSelEl = document.getElementById("docform-terms");
     if(termsSelEl){
       termsSelEl.addEventListener("change", function(){
