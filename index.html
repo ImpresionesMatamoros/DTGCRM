@@ -1,4 +1,27 @@
+<!DOCTYPE html>
 <meta charset="utf-8">
+<!-- Addendum "Mobile/PWA UX", Ronda C §1: el archivo no tenía <!DOCTYPE>/
+     viewport/etiquetas PWA — ni una sola. Sin DOCTYPE el navegador renderiza
+     en quirks mode, donde box-sizing/vh/safe-area no son fiables; sin
+     viewport, un navegador móvil escala la página completa como si fuera
+     desktop (todo se ve diminuto y hay que hacer pinch-zoom). Esto es la
+     base de la que depende todo lo demás de esta ronda. viewport-fit=cover
+     habilita los env(safe-area-inset-*) usados más abajo (notch/home
+     indicator de iPhone). -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17161A">
+<!-- Addendum §PWA: permite "Agregar a inicio" en iOS/Android con ícono e
+     identidad propios. Deliberadamente SIN service worker (ver
+     ADDENDUM-ROUND-C-MOBILE-PWA.md §7): esta app depende de datos en vivo
+     de Supabase — cachear el shell de forma agresiva arriesga mostrar datos
+     desactualizados sin necesidad real (no hay caso de uso offline). -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Design To Go">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <title>Design To Go</title>
 <style id="dtg-style">
 :root{
@@ -40,7 +63,13 @@
   color-scheme: dark;
 }
 *,*::before,*::after{box-sizing:border-box;}
-html,body{height:100%;}
+/* Addendum §2: 100vh en iOS Safari mide la pantalla completa SIN restar la
+   barra de dirección — con el teclado o la barra visibles, cualquier cosa a
+   100vh queda tapada. 100dvh (dynamic viewport height) sí se ajusta cuando
+   esa barra aparece/desaparece. Se mantiene 100vh como fallback (Safari
+   viejo, o cualquier navegador sin soporte) — dvh solo pisa el valor cuando
+   el navegador lo entiende, así el fallback nunca es "sin altura". */
+html,body{height:100%; height:100dvh;}
 body{
   margin:0; background:var(--bg); color:var(--text); font-family:var(--font-sans);
   font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow:hidden;
@@ -51,7 +80,7 @@ button,input,select,textarea{font:inherit; color:inherit;}
 input,select,textarea{background:transparent;}
 button{cursor:pointer;}
 ::selection{background:var(--accent-soft);}
-.app{display:flex; height:100vh; width:100vw;}
+.app{display:flex; height:100vh; height:100dvh; width:100vw;}
 
 /* ---------- sidebar ---------- */
 .sidebar{
@@ -340,6 +369,14 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 @media (max-width:640px){
   .comanda-identity-btn, .comanda-cliente-plain{font-size:20px;}
   .comanda-zone-comercial{border-left:none; padding-left:0; margin-left:0; margin-top:2px; padding-top:10px; border-top:1px dashed var(--border);}
+  /* Addendum §6: la comanda ya se reacomoda sola en columnas por el
+     flex-wrap existente (OPERACIÓN/COMERCIAL) — lo que faltaba era zona de
+     toque: en escritorio .comanda-field usa un padding visual mínimo (queda
+     bien con mouse), pero en dedo real conviene más aire vertical entre
+     "Atender"/"Compromiso"/etc. sin cambiar la jerarquía tipográfica que ya
+     tiene la sección (sección "cabecera explica el presente"). */
+  .comanda-zone-fields{ row-gap:14px; column-gap:18px; }
+  .comanda-field{ padding:6px 8px; margin:-6px -8px; }
 }
 
 /* Modal de cierre: chico y centrado, se dispara desde el encabezado (no
@@ -523,11 +560,55 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
 
 @media (max-width: 880px){
-  .sidebar{position:fixed; inset:0 auto 0 0; z-index:30; transform:translateX(-100%); transition:transform .18s ease;}
+  /* Addendum §3: el cajón (drawer) del sidebar ya existía de una ronda
+     anterior — aquí solo se audita/pule: ancho completo hasta un tope
+     razonable (no 290px fijo en un teléfono angosto) y respeto del notch/
+     home-indicator con env(safe-area-inset-*) (requiere viewport-fit=cover,
+     agregado arriba en esta misma ronda). */
+  .sidebar{
+    position:fixed; inset:0 auto 0 0; z-index:30; transform:translateX(-100%); transition:transform .18s ease;
+    width:min(86vw, 340px);
+    padding-left:env(safe-area-inset-left); padding-bottom:env(safe-area-inset-bottom);
+  }
   .sidebar.open{transform:translateX(0);}
   .sidebar-toggle{display:inline-flex!important;}
   .mobile-topbar{display:flex!important;}
   .sidebar-backdrop{display:block!important;}
+  .mobile-topbar{padding-top:calc(10px + env(safe-area-inset-top)); padding-left:calc(16px + env(safe-area-inset-left)); padding-right:calc(16px + env(safe-area-inset-right));}
+
+  /* Addendum §4: cualquier input/select/textarea por debajo de 16px de
+     font-size dispara el auto-zoom de iOS Safari al enfocarlo (comportamiento
+     nativo del navegador, no un bug de la app) — el usuario "entra" a un
+     campo y la pantalla entera hace zoom in sola. Se sube a 16px SOLO en
+     este breakpoint móvil, para no tocar la densidad visual del desktop. */
+  .app input, .app select, .app textarea{ font-size:16px; }
+
+  /* Addendum §5: zonas táctiles — 44×44 es el mínimo recomendado (Apple
+     HIG/Material) para no fallar el toque en un dedo real; en desktop estos
+     mismos controles se quedan en 32px (con mouse la precisión no es un
+     problema, y agrandarlos ahí solo desperdicia espacio). */
+  .composer-plus, .composer-send, .sidebar-toggle{ width:44px; height:44px; }
+  .btn-plain{ min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; }
+  .docform-fee-row .btn-plain{ min-width:36px; min-height:36px; }
+  .btn{ min-height:42px; }
+
+  /* Addendum §5: el popover angosto de "+" (Producto/Tarea/Pago) es
+     position:absolute con ancho fijo (280px) anclado al compositor — en un
+     teléfono angosto (320-375px) eso puede salirse del borde derecho. Se
+     limita el ancho al viewport disponible sin convertirlo en un bottom-
+     sheet (eso sí se hizo para el formulario de documento, mucho más
+     grande — ver más abajo). */
+  .popover{ width:calc(100vw - 40px); max-width:340px; }
+
+  /* Addendum §8: manejo de teclado en iOS. .composer-wrap NO usa
+     position:fixed (a propósito, ya desde antes de esta ronda) — es un
+     hijo flex normal dentro de .main, que a su vez vive dentro de .app a
+     100dvh. Ese es el patrón correcto: cuando aparece el teclado nativo,
+     dvh se reduce y todo el layout flex se reacomoda solo, así que el
+     compositor nunca queda tapado detrás del teclado (el bug clásico de
+     barras con position:fixed). Lo único que faltaba era el padding del
+     home-indicator cuando el teclado está cerrado. */
+  .composer{ padding-bottom:calc(12px + env(safe-area-inset-bottom)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
 }
 .sidebar-toggle{display:none; margin-right:4px; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font-size:16px; cursor:pointer;}
 .mobile-topbar{display:none; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--surface);}
@@ -651,12 +732,36 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   background:var(--surface); color:var(--text); font:inherit;
 }
 .docform-fee-row .btn-plain{ font-size:16px; line-height:1; padding:2px 6px; }
-@media (max-width:480px){ .docform-fee-row{ grid-template-columns:1fr 52px 76px auto; } }
+/* Addendum §4: columnas un poco más anchas que antes en este breakpoint —
+   con el input a 16px (regla móvil de arriba, antes zoom-en-iOS), 52px/76px
+   quedaba justo para "$"/"999.99". */
+@media (max-width:480px){ .docform-fee-row{ grid-template-columns:1fr 58px 84px auto; } }
 .docform-actions{
   display:flex; justify-content:flex-end; gap:8px; padding:14px 18px; border-top:1px solid var(--border);
   position:sticky; bottom:0; background:var(--surface);
 }
-@media (max-width:520px){ .docform-modal{ max-width:none; } .docform-actions{ flex-direction:column-reverse; } .docform-actions .btn{ width:100%; } }
+/* Addendum §7: el formulario de documento (modal más grande y con más
+   campos de toda la app) pasa de "tarjeta centrada" a pantalla completa en
+   móvil — no hay suficiente ancho en un teléfono para un modal flotante con
+   márgenes, y un modal flotante angosto obliga a hacer scroll dentro de
+   scroll. Se mantiene la MISMA estructura (head sticky arriba, body con
+   scroll, actions sticky abajo) — solo deja de estar "flotando" sobre un
+   fondo oscuro y pasa a ocupar el viewport completo, respetando el notch/
+   home-indicator. */
+@media (max-width:640px){
+  .docform-overlay{ padding:0; align-items:stretch; }
+  .docform-modal{
+    max-width:none; width:100vw; height:100vh; height:100dvh; max-height:none;
+    border-radius:0;
+  }
+  .docform-head{ padding-top:calc(16px + env(safe-area-inset-top)); padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right)); }
+  .docform-actions{
+    flex-direction:column-reverse; padding-bottom:calc(14px + env(safe-area-inset-bottom));
+    padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right));
+  }
+  .docform-actions .btn{ width:100%; }
+  .docform-body{ padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right)); }
+}
 
 /* ---------- documento comercial: modal + "hoja" con look de papel ----------
    La barra de acciones (.doc-modal-top) respeta el tema de la app; la hoja
@@ -675,6 +780,26 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .doc-modal-back{ font-size:12.5px; color:var(--text-muted); background:none; border:none; cursor:pointer; padding:4px 0; }
 .doc-modal-back:hover{ color:var(--text); }
 .doc-modal-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+
+/* Addendum §7: mismo criterio que el formulario de documento — el visor
+   (Invoice/Cotización ya creados, con Imprimir/Descargar PDF) pasa a
+   pantalla completa en móvil. .doc-modal-top se vuelve sticky aquí (no lo
+   era en desktop, donde el modal ya es angosto y corto) para que Cerrar/
+   Imprimir/Descargar sigan alcanzables sin volver a subir todo el scroll en
+   un documento largo. */
+@media (max-width:640px){
+  .doc-modal-overlay{ padding:0; align-items:stretch; }
+  .doc-modal{
+    max-width:none; width:100vw; height:100vh; height:100dvh; max-height:none;
+    border-radius:0; padding:0; gap:0;
+  }
+  .doc-modal-top{
+    position:sticky; top:0; z-index:2; background:var(--surface);
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+    border-bottom:1px solid var(--border);
+  }
+  .doc-paper{ margin:12px 12px calc(16px + env(safe-area-inset-bottom)); }
+}
 
 .doc-paper{
   --pk-ink:#211F1A; --pk-muted:#726C5C; --pk-faint:#A39C89; --pk-line:#E4E0D4; --pk-accent:#9C1458;
