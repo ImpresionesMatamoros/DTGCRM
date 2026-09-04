@@ -124,6 +124,12 @@ button{cursor:pointer;}
 .nav-stub:hover{background:var(--surface-3); color:var(--text);}
 .nav-stub.active{background:var(--surface); color:var(--text); box-shadow:var(--shadow);}
 .nav-stub .tag{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); border:1px solid var(--border); border-radius:999px; padding:1px 6px;}
+/* Composer Intelligence §4/§5: único hint de atajo de teclado visible en
+   toda la interfaz — a propósito discreto (mismo tono que .tag "pronto"),
+   nunca compite visualmente con el texto del propio nav-stub. Se oculta en
+   el breakpoint móvil (880px, ver abajo): ahí no hay teclado físico, así
+   que el hint solo sería ruido. */
+.kbd-hint{font-size:10px; font-family:var(--font-mono); color:var(--text-faint); letter-spacing:.02em;}
 .sidebar-scroll{flex:1; overflow-y:auto; padding:6px 8px 10px;}
 .group-label{
   font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);
@@ -592,6 +598,13 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   .docform-fee-row .btn-plain{ min-width:36px; min-height:36px; }
   .btn{ min-height:42px; }
 
+  /* Composer Intelligence §15: los chips de "Usar como:" son botones nuevos
+     de esta ronda — mismo criterio de 44px que el resto de los controles
+     táctiles de Ronda C, aplicado aquí (no en la regla base) por la misma
+     razón que ya vale para .btn-plain/.composer-plus: en desktop, con
+     mouse, 32px de alto ya es cómodo y agrandarlo solo quita densidad. */
+  .smart-action-chip{ min-height:44px; padding:9px 14px; }
+
   /* Addendum §5: el popover angosto de "+" (Producto/Tarea/Pago) es
      position:absolute con ancho fijo (280px) anclado al compositor — en un
      teléfono angosto (320-375px) eso puede salirse del borde derecho. Se
@@ -609,6 +622,11 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
      barras con position:fixed). Lo único que faltaba era el padding del
      home-indicator cuando el teclado está cerrado. */
   .composer{ padding-bottom:calc(12px + env(safe-area-inset-bottom)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
+
+  /* Composer Intelligence §4/§5: el hint "⌘H"/"Ctrl+Shift+H" solo tiene
+     sentido con teclado físico — en móvil se oculta (no es información útil
+     ahí, y el nav-stub ya está apretado de espacio). */
+  .kbd-hint{ display:none; }
 }
 .sidebar-toggle{display:none; margin-right:4px; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font-size:16px; cursor:pointer;}
 .mobile-topbar{display:none; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--surface);}
@@ -898,6 +916,33 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .slash-confirm-amount{ font-family:var(--font-mono); font-weight:600; font-size:15px; color:var(--text); }
 .slash-confirm-hint{ font-size:11.5px; color:var(--text-muted); }
 .slash-error{ color:var(--danger); font-size:12px; }
+
+/* Composer Intelligence §1/§14: panel "Usar como:" — mismo anclaje/tamaño
+   que .slash-confirm (misma posición en la pila de popovers del
+   compositor, sección "renderComposer" del JS), pero con `right:20px`
+   además de `left:20px` porque sus chips necesitan poder envolver en varias
+   líneas (.slash-confirm es de ancho fijo/mínimo porque su contenido es
+   texto corto de una sola línea). */
+.smart-actions{
+  position:absolute; bottom:100%; left:20px; right:20px; margin-bottom:8px; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);
+  padding:10px 14px; z-index:20; display:flex; flex-direction:column; gap:8px;
+}
+.smart-actions-label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); font-weight:600; }
+.smart-actions-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.smart-action-chip{
+  padding:7px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface-3);
+  color:var(--text); font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap;
+}
+/* :hover es solo un extra de escritorio — el toque en móvil nunca depende
+   de él (sección 15 del addendum: "no debe depender de hover"). */
+.smart-action-chip:hover{ background:var(--surface-2); border-color:var(--accent); }
+.smart-actions-hint{ font-size:11.5px; color:var(--text-muted); }
+
+/* Resumen de /nuevo dentro de .slash-confirm-amount (sección 9: preview
+   multi-sección antes de crear nada). */
+.nuevo-confirm-row{ margin-top:4px; }
+.nuevo-confirm-row:first-child{ margin-top:0; }
 </style>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
@@ -918,6 +963,15 @@ var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
 
+/* Composer Intelligence §4/§5: un solo hint gris de atajo de teclado, junto
+   a "Inicio" en el sidebar — no una interfaz llena de atajos, solo el que
+   realmente se agregó esta ronda. El label depende de la plataforma porque
+   el atajo mismo depende de ella (Cmd+H en Mac/PWA, Ctrl+Shift+H en
+   Windows/Linux — ver el listener global de teclado y
+   NOTES-TO-ARCHITECT-COMPOSER-INTELLIGENCE.md §3). */
+var IS_MAC = /Mac|iPhone|iPad|iPod/.test((navigator.platform || navigator.userAgent || ""));
+var HOME_SHORTCUT_LABEL = IS_MAC ? "⌘H" : "Ctrl+Shift+H";
+
 var sb = null;
 var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
@@ -935,7 +989,18 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   cerradosFilter: "todos",
   /* Autocomplete predictivo de /cliente dentro del compositor (sección 1.2/6.2):
      mismo patrón de interacción que el menú de "/", pero para el argumento. */
-  cliSuggestOpen: false, cliSuggestQuery: "", cliSuggestIndex: 0 };
+  cliSuggestOpen: false, cliSuggestQuery: "", cliSuggestIndex: 0,
+  /* Composer Intelligence §1: panel de "Usar como…" sobre texto plano —
+     { text, actions } mientras está abierto, null cuando no. El texto vive
+     AQUÍ (no solo en el DOM) porque una acción puede necesitar reconstruir
+     el composer si se cancela o si la acción falla — nunca se pierde antes
+     de que una acción termine bien. */
+  /* §7-§9: /nuevo (preview antes de crear) reutiliza el MISMO mecanismo de
+     confirmación que ya usan /pago y /factura (UI.pendingConfirm +
+     runWithConfirm + slashConfirmBanner) — confirmSummary simplemente
+     devuelve un bloque más rico (Identidad/Teléfono/Producto/Pago) en vez
+     de una sola línea. No hizo falta un estado ni un overlay nuevo. */
+  smartActions: null };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 
@@ -1287,6 +1352,7 @@ function openTicketById(id){
   UI.docDraft = null;
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
+  UI.smartActions = null;
   UI.headerEditField = null;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* en móvil el sidebar es un cajón: elegir un ticket lo cierra */
@@ -1303,6 +1369,7 @@ function goHome(){
   UI.viewingDocId = null;
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
+  UI.smartActions = null;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* mismo criterio: ir a Inicio también cierra el cajón en móvil */
   saveUi();
@@ -1324,6 +1391,7 @@ function goToClientes(){
   UI.viewingDocId = null;
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
+  UI.smartActions = null;
   UI.pendingFocus = { elId: "clientes-search-input" };
   UI.sidebarOpen = false;
   saveUi();
@@ -1336,25 +1404,25 @@ function goToClientes(){
    más abajo. */
 function goToAtencion(){
   UI.selectedTicketId = null; UI.mainView = "atencion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToProduccion(){
   UI.selectedTicketId = null; UI.mainView = "produccion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToCerrados(){
   UI.selectedTicketId = null; UI.mainView = "cerrados"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToCxc(){
   UI.selectedTicketId = null; UI.mainView = "cxc"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
@@ -1376,6 +1444,7 @@ function openClienteFicha(clienteId, opts){
   UI.viewingDocId = null;
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
+  UI.smartActions = null;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false;
   saveUi();
@@ -1581,7 +1650,7 @@ function renderSidebar(){
         '<input type="text" placeholder="Buscar tickets" id="search-input" value="' + escapeHtml(UI.search) + '">' +
       "</div>" +
       '<ul class="nav-stubs">' +
-        '<button class="nav-stub' + (!UI.selectedTicketId && !onOtherView?" active":"") + '" data-action="go-home"><span>Inicio</span></button>' +
+        '<button class="nav-stub' + (!UI.selectedTicketId && !onOtherView?" active":"") + '" data-action="go-home"><span>Inicio</span><span class="kbd-hint">' + HOME_SHORTCUT_LABEL + '</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="atencion"?" active":"") + '" data-action="go-atencion"><span>Atención</span></button>' +
         '<button class="nav-stub" data-action="stub" data-name="Kanban"><span>Kanban</span><span class="tag">pronto</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="produccion"?" active":"") + '" data-action="go-produccion"><span>Producción</span></button>' +
@@ -2189,14 +2258,19 @@ function renderComposer(){
   else if(UI.composer === "doc_choice") pop = docChoiceMenu();
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.pendingConfirm) pop = slashConfirmBanner();
+  else if(UI.smartActions) pop = renderSmartActions();
   else if(UI.slashMenuOpen) pop = slashMenu();
   else if(UI.cliSuggestOpen) pop = clienteSuggestPopover();
   /* /help, /estado, /pendientes, /dinero ya NO son popovers flotantes —
      viven como mensajes efímeros dentro del hilo (ver renderEphemeralEntry),
      igual que una consola. Aquí solo quedan los overlays de "interacción"
-     momentánea: confirmación y autocomplete. */
+     momentánea: confirmación, autocomplete, y ahora las acciones sugeridas
+     sobre texto plano y el preview de /nuevo. */
   var plusBtn = hasTicket ? '<button class="composer-plus" data-action="toggle-menu" title="Agregar">+</button>' : "";
-  var placeholder = hasTicket ? "Escribe / para comandos (nota, producto, pago…)" : "Escribe / para comandos (buscar, ticket, ayuda…)";
+  /* Composer Intelligence §4: enseña los DOS prefijos de comando — "/" y
+     "-" (este último pensado para teclados móviles/mexicanos donde "/" no
+     está a la mano, sección 3). */
+  var placeholder = hasTicket ? "Escribe / o - para comandos (nota, producto, pago…)" : "Escribe / o - para comandos (buscar, nuevo, ayuda…)";
   return (
     '<div class="composer-wrap">' + pop +
       '<div class="composer">' + plusBtn +
@@ -2204,6 +2278,26 @@ function renderComposer(){
         '<button class="composer-send" id="composer-send" data-action="send-note" disabled>&#8593;</button>' +
       "</div>" +
       '<div class="producto-preview" id="producto-preview" hidden></div>' +
+    "</div>"
+  );
+}
+
+/* Composer Intelligence §1/§15: panel de "Usar como…" sobre texto plano —
+   chips grandes y cómodos para dedo (sección 15: "no depender de hover"),
+   máximo 4-6 (suggestActionsForText ya se encarga del tope). Cada chip es
+   solo etiqueta + key — el click handler en wireEvents decide a qué comando
+   real despacha; esta función nunca guarda nada. */
+function renderSmartActions(){
+  var sa = UI.smartActions;
+  if(!sa) return "";
+  var chips = sa.actions.map(function(a){
+    return '<button type="button" class="smart-action-chip" data-action="smart-action" data-key="' + a.key + '">' + escapeHtml(a.label) + "</button>";
+  }).join("");
+  return (
+    '<div class="smart-actions" id="smart-actions">' +
+      '<div class="smart-actions-label">Usar como:</div>' +
+      '<div class="smart-actions-chips">' + chips + "</div>" +
+      '<div class="smart-actions-hint">Esc para cancelar</div>' +
     "</div>"
   );
 }
@@ -3189,9 +3283,18 @@ function render(){
          dentro del hilo como una consola y se quedan ahí hasta que se
          cierran uno por uno o con /clear, sin importar lo que se escriba
          después en el compositor. */
-      var hadOverlay = !!UI.pendingConfirm;
+      var hadOverlay = !!UI.pendingConfirm || !!UI.smartActions;
       UI.pendingConfirm = null;
-      var m = v.match(/^\/([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)$/);
+      /* Seguir escribiendo después de que aparece el panel de "Usar
+         como…" lo descarta — el usuario claramente sigue redactando, no
+         decidiendo entre las opciones ya mostradas (mismo criterio que
+         pendingConfirm arriba). */
+      UI.smartActions = null;
+      /* Composer Intelligence §3: "-" abre el mismo menú que "/" — importante
+         en teclados móviles/mexicanos donde "/" no está a la mano. Se
+         detecta en vivo aquí (no solo al enviar) para que el autocomplete
+         funcione igual de bien con cualquiera de los dos. */
+      var m = v.match(/^[\/\-]([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)$/);
       var shouldOpen = !!m;
       var fragment = m ? m[1] : "";
       var menuChanged = (shouldOpen !== !!UI.slashMenuOpen || fragment !== UI.slashQuery);
@@ -3206,7 +3309,7 @@ function render(){
          comando — nunca dos sistemas de autocomplete distintos, solo el
          mismo aplicado a otro momento de la escritura. Se actualiza en cada
          tecla, sin esperar Enter. */
-      var argMatch = shouldOpen ? null : v.match(/^\/(cliente|client)\s(.*)$/i);
+      var argMatch = shouldOpen ? null : v.match(/^[\/\-](cliente|client)\s(.*)$/i);
       var shouldSuggest = !!argMatch;
       var suggestQuery = argMatch ? argMatch[2] : "";
       var suggestChanged = (shouldSuggest !== !!UI.cliSuggestOpen || suggestQuery !== UI.cliSuggestQuery);
@@ -3292,6 +3395,19 @@ function render(){
       if(UI.pendingConfirm){
         if(e.key === "Enter"){ e.preventDefault(); confirmPendingSlash(); return; }
         if(e.key === "Escape"){ e.preventDefault(); UI.pendingConfirm = null; render(); return; }
+      }
+      /* Composer Intelligence §16: Esc cierra el panel de "Usar como…" y
+         devuelve el texto EXACTO tal cual estaba — nunca navega, nunca lo
+         borra. */
+      if(UI.smartActions){
+        if(e.key === "Escape"){
+          e.preventDefault();
+          var saText = UI.smartActions.text;
+          UI.smartActions = null;
+          render();
+          restoreComposerText(saText);
+          return;
+        }
       }
       if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitNote(); }
     });
@@ -3469,15 +3585,192 @@ function showToast(msg){
 
 /* ---------------- mutations: optimistic local update, then write to Supabase, then reconcile ---------------- */
 
-async function createTicketFlow(){
+/* Composer Intelligence §11: núcleo compartido de "crear un ticket" —
+   extraído de lo que ya hacía createTicketFlow() tal cual (mismo insert,
+   mismo registro en bitácora, mismo mensaje de error), solo que ahora NO
+   abre el ticket ni refresca por sí solo — eso lo decide quien lo llama,
+   porque "+ Nuevo ticket" y /nuevo necesitan la misma creación pero un
+   orden distinto de pasos después (ver createTicketFromNuevo). initialData
+   es opcional: hoy solo se usa `cliente` (identidad inicial en texto libre,
+   D3 — /nuevo es el primer llamador que la aprovecha; "+ Nuevo ticket"
+   sigue llamando sin argumento y crea el ticket exactamente igual que
+   antes). */
+async function createTicketCore(initialData){
+  initialData = initialData || {};
   try{
-    var ins = await sb.from("tickets").insert({}).select().single();
+    var row = {};
+    if(initialData.cliente) row.cliente = initialData.cliente;
+    var ins = await sb.from("tickets").insert(row).select().single();
     if(ins.error) throw ins.error;
     var newId = ins.data.id;
     await sb.from("bitacora").insert({ ticket_id: newId, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Ticket creado" } });
-    openTicketById(newId);
-    await refreshFromServer({refocus:true});
-  }catch(e){ showToast("No se pudo crear el ticket: " + (e.message || "error")); }
+    return newId;
+  }catch(e){
+    showToast("No se pudo crear el ticket: " + (e.message || "error"));
+    return null;
+  }
+}
+
+async function createTicketFlow(){
+  var newId = await createTicketCore();
+  if(!newId) return;
+  openTicketById(newId);
+  await refreshFromServer({refocus:true});
+}
+
+/* Composer Intelligence §7-11: run() de /nuevo — crea el ticket y encadena,
+   EN ORDEN, cada sub-operación sobre el mismo core que usaría el comando
+   equivalente (createClienteCore/linkClienteToTicket vía
+   applyDetectedPhoneToTicket, addProductoCore, addPagoCore) — nunca una
+   escritura nueva/paralela. Regla explícita del addendum (§10): si el
+   ticket se crea pero una sub-operación falla, el ticket NUNCA se borra —
+   se deja abierto, y se informa exactamente cuál falló (nunca un error
+   silencioso). Cada sub-operación relee el ticket con findTicket(newId)
+   antes de usarlo porque los cores anteriores ya llamaron
+   refreshFromServer(), que reemplaza STATE por completo — reusar la
+   referencia vieja de `t` sería trabajar sobre un objeto ya reemplazado. */
+async function createTicketFromNuevo(data){
+  var newId = await createTicketCore({ cliente: data.identityTitle || "" });
+  if(!newId) return;
+  var failures = [];
+  var t;
+
+  if(data.phone){
+    t = findTicket(newId);
+    if(t){
+      var phoneOk = await applyDetectedPhoneToTicket(t, data.phone);
+      if(!phoneOk) failures.push("teléfono " + data.phone.formatted);
+    }
+  }
+
+  for(var i=0; i<data.productos.length; i++){
+    var p = data.productos[i];
+    t = findTicket(newId);
+    if(!t) break;
+    var prodOk = await addProductoCore(t, p.desc, p.cantidad, p.precio);
+    if(!prodOk) failures.push('producto "' + p.desc + '"');
+  }
+
+  for(var j=0; j<data.pagos.length; j++){
+    var pg = data.pagos[j];
+    t = findTicket(newId);
+    if(!t) break;
+    var pagoOk = await addPagoCore(t, pg.monto, todayLocalYYYYMMDD(), "", pg.concepto || "");
+    if(!pagoOk) failures.push("pago " + fmtMoney(pg.monto));
+  }
+
+  openTicketById(newId);
+  await refreshFromServer({refocus:true});
+  if(failures.length){
+    showToast("Ticket creado, pero no se pudo guardar: " + failures.join(", ") + ".");
+  }
+}
+
+/* Resumen multi-sección del banner de confirmación de /nuevo — reutiliza
+   UI.pendingConfirm/slashConfirmBanner() tal cual (mismo mecanismo que ya
+   usan /pago y /factura), solo con un confirmSummary más largo porque
+   /nuevo puede tocar varias cosas a la vez (§9: preview antes de crear,
+   nunca 4 escrituras silenciosas). */
+function nuevoConfirmSummary(data){
+  var rows = [];
+  rows.push('<div class="nuevo-confirm-row"><b>Ticket:</b> ' + escapeHtml(data.identityTitle || "(sin título)") + "</div>");
+  if(data.phone){
+    rows.push('<div class="nuevo-confirm-row"><b>Teléfono:</b> ' + escapeHtml(data.phone.formatted) + " — crea un cliente nuevo</div>");
+  }
+  if(data.productos.length){
+    var prodLines = data.productos.map(function(p){
+      return escapeHtml(p.desc) + " × " + p.cantidad + (p.precio != null ? " — " + fmtMoney(p.precio) : " — precio pendiente");
+    }).join("<br>");
+    rows.push('<div class="nuevo-confirm-row"><b>Producto' + (data.productos.length > 1 ? "s" : "") + ":</b><br>" + prodLines + "</div>");
+  }
+  if(data.pagos.length){
+    var pagoLines = data.pagos.map(function(pg){
+      return fmtMoney(pg.monto) + (pg.concepto ? " — " + escapeHtml(pg.concepto) : "");
+    }).join("<br>");
+    rows.push('<div class="nuevo-confirm-row"><b>Pago' + (data.pagos.length > 1 ? "s" : "") + ":</b><br>" + pagoLines + "</div>");
+  }
+  return rows.join("");
+}
+
+/* Composer Intelligence §1: decide qué 4-6 acciones ofrecer sobre un texto
+   plano — parser chico y determinista (nada de heurística difusa ni IA,
+   sección 17), reutilizando exactamente los mismos parsers que ya deciden
+   "cómo se ve"/"qué se guarda" en el resto de la app (parseProductoArg,
+   detectPhone) — esta función solo los usa para DECIDIR EL ORDEN de los
+   chips, nunca para guardar nada. */
+function suggestActionsForText(text, ctx){
+  var hasTicket = !!ctx.ticket;
+  var phone = detectPhone(text);
+  var actions = [];
+  if(hasTicket){
+    /* "Parece producto" = el mismo parser que usa /producto reconoce una
+       descripción Y el texto trae al menos un número (cantidad o precio) —
+       igual criterio con el que un humano distinguiría "50 playeras negras
+       12" de una nota cualquiera. Nunca un segundo criterio de qué es un
+       producto. */
+    var prodGuess = parseProductoArg(text);
+    var looksLikeProducto = !!(prodGuess.desc && /\d/.test(text));
+    if(looksLikeProducto) actions.push({ key:"producto", label:"Producto" });
+    actions.push({ key:"nota", label:"Nota" });
+    if(!looksLikeProducto) actions.push({ key:"producto", label:"Producto" });
+    if(phone) actions.push({ key:"telefono", label:"Teléfono: " + phone.formatted });
+    actions.push({ key:"cliente", label:"Cliente" });
+    actions.push({ key:"sigue", label:"Qué sigue" });
+  } else {
+    actions.push({ key:"buscar", label:"Buscar" });
+    actions.push({ key:"nuevo", label:"Nuevo ticket" });
+    actions.push({ key:"cliente", label:"Cliente" });
+  }
+  return actions.slice(0, 6);
+}
+
+/* Composer Intelligence §1: acción elegida en el panel de "Usar como…".
+   Cada rama reutiliza dispatchCommand() (mismo COMMANDS/parse/run que
+   escribir el comando a mano) salvo "telefono", que necesita decidir entre
+   editar un cliente ya vinculado o crear uno nuevo (D1) — ninguna de las
+   dos cosas es un guardado nuevo, son los mismos cores de siempre
+   (createClienteCore/linkClienteToTicket/updateClienteCore vía
+   /editarcliente). */
+function runSmartAction(key){
+  var sa = UI.smartActions;
+  if(!sa) return;
+  var text = sa.text;
+  var t = findTicket(UI.selectedTicketId);
+  UI.smartActions = null;
+  if(key === "telefono"){
+    var phone = detectPhone(text);
+    if(!phone || !t) { render(); restoreComposerText(text); return; }
+    applyDetectedPhoneToTicket(t, phone);
+    return;
+  }
+  var cmdMap = { nota:"nota", producto:"producto", cliente:"cliente", sigue:"sigue", buscar:"buscar", nuevo:"nuevo" };
+  var cmdKey = cmdMap[key];
+  if(!cmdKey){ render(); restoreComposerText(text); return; }
+  restoreComposerText("");
+  dispatchCommand("/" + cmdKey + " " + text);
+}
+
+/* D1 (decidido con el dueño del producto): un teléfono detectado sin
+   cliente vinculado en el ticket crea un cliente nuevo usando el propio
+   número como nombre provisional (editable después) — nunca queda "sin
+   dónde guardarse". Si el ticket YA tiene un cliente vinculado, en cambio,
+   se PROPONE editar ese cliente (vía /editarcliente, que ya pide
+   confirmación) en vez de crear uno nuevo — crear uno nuevo ahí sería
+   claramente el comportamiento incorrecto. Compartida entre el chip
+   "Teléfono" del panel y la confirmación de /nuevo (sección 8). */
+function applyDetectedPhoneToTicket(t, phone){
+  if(t.clienteId){
+    dispatchCommand("/editarcliente telefono " + phone.formatted);
+    /* No es un fallo — /editarcliente ya pide su propia confirmación, así
+       que "no se aplicó todavía de forma síncrona" no es un error que
+       /nuevo deba reportar (este camino, de hecho, nunca ocurre desde
+       /nuevo: un ticket recién creado nunca trae clienteId). */
+    return Promise.resolve(false);
+  }
+  return createClienteCore(phone.formatted, { telefono: phone.formatted }).then(function(c){
+    if(c) return linkClienteToTicket(t, c);
+    return false;
+  });
 }
 
 async function submitNote(){
@@ -3485,36 +3778,51 @@ async function submitNote(){
   if(!input) return;
   var text = input.value.trim();
   if(!text) return;
-  if(text.charAt(0) === "/"){
+  /* Composer Intelligence §3: "-" como primer carácter abre/ejecuta un
+     comando exactamente igual que "/" — se normaliza aquí, una sola vez,
+     antes de que nada más vea el texto (parseSlashCommand nunca se entera
+     de que existió un "-"). Nunca se interpreta "-" en cualquier otra
+     posición (sección 3: "cliente - mañana" sigue siendo texto plano). */
+  if(text.charAt(0) === "/" || text.charAt(0) === "-"){
+    var normalized = text.charAt(0) === "-" ? "/" + text.slice(1) : text;
     input.value = "";
     UI.slashMenuOpen = false;
-    dispatchCommand(text);
+    dispatchCommand(normalized);
     return;
   }
-  /* Escribir no significa guardar: solo /nota crea una nota. Texto plano
-     nunca modifica nada, ni aquí ni en ningún otro comando. */
-  var hasTicket = !!findTicket(UI.selectedTicketId);
-  if(hasTicket){
-    showToast('Escribir no guarda nada por sí solo — usa "/nota" para agregar una nota, o "/" para ver los comandos.');
-  } else {
-    showToast('Usa "/" para ver los comandos disponibles (buscar, ticket, ayuda…).');
-  }
+  /* Composer Intelligence §1: texto plano ya no se rechaza con un solo
+     toast — se ofrecen acciones sugeridas sobre ESE texto. El texto se
+     queda en el compositor (nunca se pierde) mientras el panel está
+     abierto; solo se limpia cuando una acción realmente arranca (mismo
+     criterio "optimista" que ya usa toda la app: /nota manuscrito también
+     limpia el compositor antes de que la escritura a Supabase termine). */
+  UI.smartActions = { text: text, actions: suggestActionsForText(text, { ticket: findTicket(UI.selectedTicketId) }) };
+  render();
+  restoreComposerText(text);
 }
 
 /* ---------------- mutaciones compartidas ----------------
    El botón "+" y los slash commands terminan aquí, en las mismas
    funciones — nunca hay dos caminos distintos para la misma operación. */
 
+/* Composer Intelligence: return true/false además de todo lo que ya hacía
+   (toast + optimistic update + refresh) — cambio aditivo, nadie que ya
+   llama a esta función leía su valor de retorno (era undefined siempre),
+   así que nada existente cambia de comportamiento. Lo necesita /nuevo para
+   poder reportar "qué sí se guardó y qué falló" sin inventar un segundo
+   sistema de manejo de errores. */
 async function addProductoCore(t, desc, cantidad, precio){
   t.productos.push({ id: uid(), desc: desc, cantidad: cantidad, precio: precio });
   render();
+  var ok = true;
   try{
     var r1 = await sb.from("productos").insert({ ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio });
     if(r1.error) throw r1.error;
     var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: UI.whoami || null, payload: { desc: desc, cantidad: cantidad, precio: precio } });
     if(r2.error) throw r2.error;
-  }catch(e){ showToast("No se pudo guardar el producto: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo guardar el producto: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
+  return ok;
 }
 
 /* Edición de un producto ya existente (sección 7) — misma tabla, mismo
@@ -3552,16 +3860,29 @@ async function linkClienteToTicket(t, cliente){
   t.clienteId = cliente.id;
   t.cliente = cliente.nombre;
   render();
+  var ok = true;
   try{
     var r1 = await sb.from("tickets").update({ cliente_id: cliente.id, cliente: cliente.nombre }).eq("id", t.id);
     if(r1.error) throw r1.error;
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Cliente vinculado: " + clienteLabel(cliente) } });
-  }catch(e){ showToast("No se pudo vincular el cliente: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo vincular el cliente: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
+  return ok;
 }
-async function createClienteCore(nombre){
+/* Composer Intelligence D2: segundo parámetro opcional (telefono/empresa/
+   email) — decisión delegada por el dueño del producto. Ningún llamador
+   existente pasa un segundo argumento, así que todos siguen creando un
+   cliente con solo nombre exactamente igual que antes; /nuevo es el primer
+   llamador que aprovecha `extra` para no tener que crear y luego actualizar
+   en dos escrituras separadas. */
+async function createClienteCore(nombre, extra){
+  extra = extra || {};
   try{
-    var ins = await sb.from("clientes").insert({ nombre: nombre }).select().single();
+    var insertRow = { nombre: nombre };
+    if(extra.telefono) insertRow.telefono = extra.telefono;
+    if(extra.empresa) insertRow.empresa = extra.empresa;
+    if(extra.email) insertRow.email = extra.email;
+    var ins = await sb.from("clientes").insert(insertRow).select().single();
     if(ins.error) throw ins.error;
     var c = mapClienteRow(ins.data);
     STATE.clientes.push(c);
@@ -3634,24 +3955,28 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion){
 async function addPagoCore(t, monto, fecha, metodo, concepto){
   t.pagos.push({ id: uid(), monto: monto, fecha: fecha, metodo: metodo||"", concepto: concepto||"" });
   render();
+  var ok = true;
   try{
     var r5 = await sb.from("pagos").insert({ ticket_id: t.id, monto: monto, fecha: fecha, metodo: metodo || null, concepto: concepto || null });
     if(r5.error) throw r5.error;
     var r6 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "pago", autor: UI.whoami || null, payload: { monto: monto, fecha: fecha, metodo: metodo, concepto: concepto } });
     if(r6.error) throw r6.error;
-  }catch(e){ showToast("No se pudo guardar el pago: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo guardar el pago: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
+  return ok;
 }
 
 async function addNotaCore(t, text){
   var optimistic = { id: uid(), type: "nota", ts: new Date().toISOString(), autor: UI.whoami || null, text: text };
   t.thread.push(optimistic);
   render();
+  var ok = true;
   try{
     var res = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "nota", autor: UI.whoami || null, payload: { text: text } });
     if(res.error) throw res.error;
-  }catch(e){ showToast("No se pudo guardar la nota: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo guardar la nota: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
+  return ok;
 }
 
 async function submitForm(kind){
@@ -4833,6 +5158,76 @@ function parsePagoArg(arg){
   return { monto: parseFloat(m[1]), concepto: (m[2]||"").trim() };
 }
 
+/* ---------------- /nuevo — quick capture multi-intent (Composer Intelligence §7/§8) ----------------
+   Parser determinista y chico a propósito (sección 17: nada de IA/fuzzy):
+   corta el texto en segmentos por palabra clave reservada ("producto",
+   "pago", "telefono") y delega CADA segmento al parser que ya existe para
+   ese dato — parseProductoArg/parsePagoArg tal cual, nunca una copia.
+   Primera prioridad (según lo acordado): texto inicial, teléfono
+   autodetectado, producto, pago — "nota"/"cliente"/"atender"/"compromiso"/
+   "responsable"/"quesigue" NO se reconocen todavía como palabras clave de
+   segmento (el propio pedido permite no cubrirlas todas en la primera
+   versión); si hace falta agregarlas después, es extender este mismo
+   arreglo, no un parser nuevo. */
+var NUEVO_SEGMENT_KEYWORDS = ["producto","pago","telefono"];
+function parseNuevoArg(raw){
+  raw = (raw || "").trim();
+  var kwRe = new RegExp("\\b(" + NUEVO_SEGMENT_KEYWORDS.join("|") + ")\\b", "gi");
+  var matches = [];
+  var m;
+  while((m = kwRe.exec(raw))) matches.push({ kw: m[1].toLowerCase(), index: m.index, end: m.index + m[1].length });
+
+  var identityRaw = matches.length ? raw.slice(0, matches[0].index).trim() : raw;
+  var segments = matches.map(function(mm, i){
+    var end = (i+1 < matches.length) ? matches[i+1].index : raw.length;
+    return { kw: mm.kw, text: raw.slice(mm.end, end).trim() };
+  });
+
+  /* Teléfono: autodetectado dentro del texto de identidad (el caso
+     principal, sección 8) — se RECORTA del título para que "Piñata de
+     Spiderman 9565612222" se convierta en identidad "Piñata de Spiderman" +
+     teléfono aparte, nunca en un título con el número pegado. Un segmento
+     "telefono ..." explícito, si existe, siempre gana sobre el detectado. */
+  var identityPhone = detectPhone(identityRaw);
+  var identityTitle = identityRaw;
+  if(identityPhone){
+    identityTitle = (identityRaw.slice(0, identityPhone.index) + " " + identityRaw.slice(identityPhone.end)).replace(/\s+/g, " ").trim();
+  }
+  var explicitPhoneSeg = segments.filter(function(s){ return s.kw === "telefono" && s.text; })[0];
+  var phone = null;
+  if(explicitPhoneSeg){
+    /* Mismo criterio que ya usa parseEditarClienteArg para su propia
+       palabra clave "telefono": normaliza si hay suficientes dígitos, si no
+       deja el texto tal cual (nunca inventa). */
+    var digits = explicitPhoneSeg.text.replace(/\D/g, "");
+    phone = { formatted: digits.length >= 7 ? formatPhoneDigits(digits) : explicitPhoneSeg.text, digits: digits, raw: explicitPhoneSeg.text };
+  } else if(identityPhone){
+    phone = { formatted: identityPhone.formatted, digits: identityPhone.digits, raw: identityPhone.raw };
+  }
+
+  var productos = [], errors = [];
+  segments.filter(function(s){ return s.kw === "producto"; }).forEach(function(s){
+    if(!s.text) return;
+    var p = parseProductoArg(s.text);
+    if(!p.desc) errors.push('No entendí el producto: "' + s.text + '" — ej. "producto pinata 55"');
+    else productos.push(p);
+  });
+
+  var pagos = [];
+  segments.filter(function(s){ return s.kw === "pago"; }).forEach(function(s){
+    if(!s.text) return;
+    var pg = parsePagoArg(s.text);
+    if(!pg || isNaN(pg.monto)) errors.push('No entendí el pago: "' + s.text + '" — ej. "pago 10 anticipo"');
+    else pagos.push(pg);
+  });
+
+  if(!identityTitle && !phone && !productos.length && !pagos.length){
+    errors.push('Escribe al menos un título, teléfono, producto o pago, ej. "/nuevo Piñata de Spiderman 9565612222 producto pinata 55 pago 10"');
+  }
+
+  return { identityTitle: identityTitle, phone: phone, productos: productos, pagos: pagos, errors: errors, raw: raw };
+}
+
 /* V0.5 §13/D5/D8/D10: default de pricing para los comandos de un solo paso
    (/factura, /cotizacion) — NO abren el modal (renderDocFormModal), así que
    necesitan proponer ellos mismos algo razonable sin preguntar nada: tax
@@ -4932,6 +5327,43 @@ function formatPhoneDigits(digits){
   if(digits.length === 10) return digits.slice(0,3) + "-" + digits.slice(3,6) + "-" + digits.slice(6);
   return digits;
 }
+
+/* ---------------- Composer Intelligence §2: detector central de teléfonos ----------------
+   Helper NUEVO, independiente del regex suelto que ya vivía dentro de
+   parseEditarClienteArg (más abajo) — evalué reusar uno solo para los dos,
+   pero parseEditarClienteArg acepta desde 7 dígitos (contexto donde el
+   usuario ya escribió la palabra "telefono", así que hay intención
+   explícita) mientras que este detector, pensado para adivinar sobre texto
+   libre sin esa pista, solo propone algo con 10-14 dígitos (la forma real
+   de un teléfono, sección 2 del pedido) — forzar un solo umbral hubiera
+   sido o de más falsos positivos aquí, o de regresión allá. Se documenta
+   la decisión en vez de fusionarlos a la fuerza.
+
+   Solo reconoce FORMA (dígitos + espacios/guiones/puntos/paréntesis, "+"
+   opcional al inicio) — nunca valida que el número exista. Nunca destruye
+   el texto original: solo informa dónde está el candidato (índice/fin) para
+   que quien llama decida si lo recorta del texto que va a guardar. */
+function scanPhoneCandidates(text){
+  var re = /(\+\d{1,3}[\s.-]?)?(\(\d{3}\)[\s.-]?\d{3}[\s.-]?\d{4}|\d{3}[\s.-]\d{3}[\s.-]\d{4}|\b\d{10,14}\b)/g;
+  var out = [];
+  var m;
+  while((m = re.exec(text || ""))){
+    var raw = m[0];
+    out.push({ raw: raw, digits: raw.replace(/\D/g, ""), index: m.index, end: m.index + raw.length });
+  }
+  return out;
+}
+/* Alta confianza = exactamente UN candidato de 10-14 dígitos en todo el
+   texto. Con cero, o con más de uno (ambigüedad real), no propone nada —
+   "no interpretar como teléfono cualquier número aislado" (sección 2):
+   mejor no adivinar que adivinar mal. */
+function detectPhone(text){
+  var candidates = scanPhoneCandidates(text).filter(function(c){ return c.digits.length >= 10 && c.digits.length <= 14; });
+  if(candidates.length !== 1) return null;
+  var c = candidates[0];
+  return { raw: c.raw, digits: c.digits, formatted: formatPhoneDigits(c.digits), index: c.index, end: c.end };
+}
+
 function parseEditarClienteArg(arg){
   var tokens = (arg||"").trim().split(/\s+/).filter(Boolean);
   var kwIndex = -1, kwField = null;
@@ -5322,6 +5754,41 @@ var COMMANDS = [
     }
   },
   {
+    /* Composer Intelligence §7-13: único comando "grande" de esta ronda —
+       identidad + teléfono + producto(s) + pago(s) en un solo paso, con
+       preview antes de escribir nada (confirm:true, mismo mecanismo que
+       /pago y /factura). requiresTicket:false a propósito: /nuevo es
+       precisamente cómo se arranca una operación SIN pasar primero por un
+       ticket vacío (§6). */
+    key: "nuevo", aliases: ["nuevo","new"], type: "write", requiresTicket: false, confirm: true,
+    confirmTitle: "Crear ticket", confirmSummary: nuevoConfirmSummary,
+    syntax: "/nuevo <título> [texto con un teléfono] [producto <descripción> <precio>] [pago <monto> [concepto]]",
+    summary: "Crear un ticket nuevo con identidad, teléfono, producto y pago en un solo paso (con vista previa)",
+    examples: [
+      "/nuevo Piñata de Spiderman 9565612222 producto pinata 55 pago 10",
+      "/nuevo Angela producto banner 50",
+      "/nuevo 9565612222"
+    ],
+    parse: function(arg){
+      if(!arg) return { ok:false, showHelp:true };
+      var p = parseNuevoArg(arg);
+      if(p.errors.length) return { ok:false, error: p.errors[0] };
+      return { ok:true, data: p };
+    },
+    run: function(data){ return createTicketFromNuevo(data); }
+  },
+  {
+    /* Navegación pura (§13/D-command-center) — nunca toca Supabase ni la
+       bitácora, igual criterio que Cmd+H (más abajo, en el handler global
+       de teclado): llama a goHome() directo, el mismo punto de entrada que
+       ya usa el logo/nav del sidebar. */
+    key: "inicio", aliases: ["inicio","home"], type: "read", requiresTicket: false,
+    syntax: "/inicio", summary: "Ir a Inicio",
+    examples: ["/inicio"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(){ goHome(); }
+  },
+  {
     key: "refresh", aliases: ["refresh","refrescar"], type: "read", requiresTicket: false,
     syntax: "/refresh", summary: "Releer los datos de Supabase y actualizar la vista",
     examples: ["/refresh"],
@@ -5677,6 +6144,8 @@ document.addEventListener("click", function(e){
   if(dismissBtn){ dismissEphemeral(dismissBtn.getAttribute("data-id")); return; }
   var helpFillBtn = e.target.closest && e.target.closest('[data-action="help-fill"]');
   if(helpFillBtn){ restoreComposerText(helpFillBtn.getAttribute("data-text")); return; }
+  var smartActionBtn = e.target.closest && e.target.closest('[data-action="smart-action"]');
+  if(smartActionBtn){ runSmartAction(smartActionBtn.getAttribute("data-key")); return; }
   var showProdBtn = e.target.closest && e.target.closest('[data-action="show-productos"]');
   if(showProdBtn){ pushEphemeral("productos", showProdBtn.getAttribute("data-ticket"), { filter: showProdBtn.getAttribute("data-filter") }); return; }
   var showDocsBtn = e.target.closest && e.target.closest('[data-action="show-documentos"]');
@@ -5810,7 +6279,7 @@ document.addEventListener("keydown", function(e){
   if((e.key === "j" || e.key === "k" || e.key === "J" || e.key === "K") &&
      !e.ctrlKey && !e.metaKey && !e.altKey &&
      !isTypingTarget(e.target) &&
-     !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer){
+     !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer && !UI.smartActions){
     var order = visualTicketOrder();
     if(order.length){
       var idx = order.findIndex(function(t){ return t.id === UI.selectedTicketId; });
@@ -5823,6 +6292,26 @@ document.addEventListener("keydown", function(e){
         openTicketById(order[nextIdx].id);
       }
     }
+  }
+
+  /* Composer Intelligence §5: Cmd+H (Mac/PWA) / Ctrl+Shift+H (Windows/
+     Linux) → goHome() directo, sin lógica de navegación duplicada — mismo
+     criterio exacto que J/K arriba (no dispara escribiendo en un campo, con
+     un modal/menú/popover abierto, o con el compositor vacío-pero-con-foco
+     tratado igual que cualquier otro campo). Ctrl+H solo, en Windows/Linux,
+     es "Historial" reservado por Chrome/Firefox — no se puede interceptar
+     de forma confiable, así que ahí se usa Ctrl+Shift+H en su lugar (ver
+     NOTES-TO-ARCHITECT-COMPOSER-INTELLIGENCE.md §3); Cmd+H en Mac no tiene
+     ese conflicto dentro de una PWA instalada. */
+  var isHomeShortcut =
+    (e.key === "h" || e.key === "H") &&
+    ((e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) ||
+     (e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey));
+  if(isHomeShortcut &&
+     !isTypingTarget(e.target) &&
+     !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer && !UI.smartActions){
+    e.preventDefault();
+    goHome();
   }
 });
 
