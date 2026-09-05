@@ -360,7 +360,11 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .comanda-cliente-plain:hover, .comanda-cliente-plain:active{color:var(--text);}
 .comanda-summary{font-size:13.5px; color:var(--text-muted); margin-top:2px;}
 .comanda-actions-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;}
-.btn-success{background:var(--success); color:#fff; font-weight:600; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.15);}
+/* Addendum final §28: sigue siendo la acción positiva (verde), pero ya no
+   debe ser lo más prominente de la cabecera — mismo data-action/
+   marcarEntregadoCore de siempre, solo se le baja tamaño/peso al nivel de
+   un botón secundario (criterio .btn-sm) en vez de un botón "hero". */
+.btn-success{background:var(--success); color:#fff; font-weight:600; justify-content:center; padding:5px 10px; font-size:12.5px;}
 .btn-success:hover, .btn-success:active{background:var(--success-ink);}
 .btn-cierre-secondary{
   background:transparent; border:1px solid var(--border); color:var(--text-muted); font-size:12.5px; padding:7px 12px;
@@ -546,6 +550,23 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .bugreport-severity-chip:hover{background:var(--surface-3);}
 .bugreport-severity-chip.active{border-color:var(--accent); color:var(--accent-ink); background:var(--accent-soft); font-weight:600;}
 .bugreport-attach-btn{width:100%; text-align:left; border:1px dashed var(--border); border-radius:var(--radius-s); padding:9px 10px; font-size:12.5px;}
+
+/* Addendum final §17/§19: editor compacto de "Total del pedido" — misma
+   familia visual que .cierre-modal/.bugreport-modal. */
+.total-pedido-modal{ max-width:420px; }
+.total-pedido-desired{ font-size:14px; color:var(--text); }
+.total-pedido-desired b{ font-family:var(--font-mono); }
+.total-rows{ display:flex; flex-direction:column; gap:6px; max-height:40vh; overflow-y:auto; }
+.total-row{ display:flex; align-items:center; gap:8px; }
+.total-row-desc{ flex:1; min-width:0; font-size:13px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.total-row-qty{ font-size:12px; color:var(--text-faint); font-family:var(--font-mono); flex-shrink:0; }
+.total-row-price{
+  width:96px; flex-shrink:0; border:1px solid var(--border); border-radius:var(--radius-s); padding:6px 8px;
+  background:var(--surface); color:var(--text); font-size:13px; font-family:var(--font-mono); text-align:right;
+}
+.total-pedido-summary{ font-size:12.5px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px; }
+.total-pedido-diff{ color:var(--gold); font-weight:600; }
+.total-pedido-match{ color:var(--success-ink); font-weight:600; }
 /* Vincular/crear cliente (sección 5): la decisión principal de /cliente NO
    puede leerse como texto informativo gris — necesita contraste real de
    acción, igual que cualquier otro botón primario de la app. Mismo botón,
@@ -671,14 +692,25 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
    mobile/tablet — en desktop quedan display:none siempre (la cabecera de
    escritorio no cambia en absoluto) y el @media(max-width:880px) de abajo
    es el único lugar que los enciende. */
-.comanda-header-controls{display:flex; align-items:center; gap:2px; flex-shrink:0;}
-.comanda-more-toggle, .comanda-expand-toggle{
+.comanda-header-controls{display:flex; align-items:center; gap:6px; flex-shrink:0;}
+.comanda-more-toggle{
   display:none; width:32px; height:32px; align-items:center; justify-content:center;
   border:none; background:none; color:var(--text-muted); cursor:pointer; border-radius:var(--radius-s); flex-shrink:0;
+  font-size:18px;
 }
-.comanda-more-toggle{font-size:18px;}
-.comanda-expand-toggle{font-size:13px;}
-.comanda-more-toggle:hover, .comanda-expand-toggle:hover, .comanda-more-toggle:active, .comanda-expand-toggle:active{background:var(--surface-3); color:var(--text);}
+.comanda-more-toggle:hover, .comanda-more-toggle:active{background:var(--surface-3); color:var(--text);}
+/* Addendum final §26: reemplaza el triángulo suelto por una affordance
+   explícita de texto+chevron — mismo data-action/handler de siempre, solo
+   cambia la presentación. Pastilla (no círculo) para que se lea como "más
+   opciones de texto", nunca como un ícono ambiguo. */
+.comanda-expand-toggle{
+  display:none; align-items:center; gap:4px; height:26px; padding:0 10px; flex-shrink:0;
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text-muted);
+  cursor:pointer; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap;
+}
+.comanda-expand-toggle:hover, .comanda-expand-toggle:active{background:var(--surface-3); color:var(--text);}
+.comanda-expand-chevron{font-size:10px;}
+.comanda-expand-label-short{display:none;}
 .comanda-compact-summary{display:none; font-size:12.5px; color:var(--text-muted); font-weight:600; padding:0 20px 10px;}
 .comanda-compact-sep{opacity:.5;}
 .composer{display:flex; align-items:flex-end; gap:8px; padding:12px 20px;}
@@ -783,9 +815,8 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
      siempre — mismos botones y mismo data-action de siempre, nunca una
      copia. Ninguna de estas reglas toca nada fuera de este @media, así que
      desktop queda exactamente igual que antes de esta ronda. */
-  .comanda-more-toggle, .comanda-expand-toggle{ display:inline-flex!important; width:40px; height:40px; }
-  .comanda-more-toggle{ font-size:20px; }
-  .comanda-expand-toggle{ font-size:16px; }
+  .comanda-more-toggle{ display:inline-flex!important; width:40px; height:40px; font-size:20px; }
+  .comanda-expand-toggle{ display:inline-flex!important; height:34px; font-size:13px; padding:0 12px; }
   .th-collapsed .comanda-zones{ display:none; }
   .th-collapsed .ticket-header-actions{ display:none; }
   .th-collapsed .comanda-secondary-btn{ display:none; }
@@ -795,6 +826,14 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .th-expanded .comanda-secondary-btn{ display:none; }
   .th-expanded.th-more-open .ticket-header-actions{ display:flex!important; }
   .th-expanded.th-more-open .comanda-secondary-btn{ display:inline-flex!important; }
+}
+/* Addendum final §26: en mobile MUY angosto "Ver detalles"/"Ocultar
+   detalles" puede no caber junto al resto de la barra superior — se acorta
+   a solo "Detalles", pero NUNCA vuelve a depender solo del triángulo/
+   chevron a secas. */
+@media (max-width:400px){
+  .comanda-expand-label-full{ display:none; }
+  .comanda-expand-label-short{ display:inline; }
 }
 .sidebar-toggle{display:none; margin-right:4px; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font-size:16px; cursor:pointer;}
 .mobile-topbar{display:none; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--surface);}
@@ -1129,6 +1168,11 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 /* :hover es solo un extra de escritorio — el toque en móvil nunca depende
    de él (sección 15 del addendum: "no debe depender de hover"). */
 .smart-action-chip:hover, .smart-action-chip:active{ background:var(--surface-2); border-color:var(--accent); }
+/* Addendum final §10: marca visible pero no exagerada de "esto es lo que
+   ejecutará Enter" — ni un cambio de tamaño (evita que los chips "salten"
+   al navegar) ni un color nuevo del sistema, solo el acento que ya usa el
+   resto de la app para "esto está activo/elegido". */
+.smart-action-chip.selected{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink); font-weight:700; }
 .smart-actions-hint{ font-size:11.5px; color:var(--text-muted); }
 .smart-actions-footer{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .smart-actions-cancel-btn{ font-size:12px; padding:5px 8px; }
@@ -1166,7 +1210,7 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.6.0";
+var APP_VERSION = "0.6.1";
 var APP_BUILD = "2026.09.05";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
@@ -1273,7 +1317,12 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      mismo motivo que UI.smartActions: si falla el guardado, el texto no se
      pierde. screenshotFile es el File elegido (opcional), nunca una captura
      automática (ver NOTES-TO-ARCHITECT de esta ronda, §2). */
-  bugReportOpen: false, bugReportSeverity: "molestia", bugReportSaving: false };
+  bugReportOpen: false, bugReportSeverity: "molestia", bugReportSaving: false,
+  /* Addendum final §17/§19: borrador del editor compacto de "Total del
+     pedido" — mismo criterio que UI.docDraft (vive en UI, no en el DOM,
+     para sobrevivir un render de fondo de Realtime mientras el usuario
+     todavía está ajustando precios). null = editor cerrado. */
+  totalDraft: null };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 /* Escape en el input de teléfono/email de la ficha del cliente cierra la
@@ -1663,7 +1712,16 @@ document.addEventListener("focusin", function(e){
   if(e.target && e.target.tagName === "INPUT" && e.target.type === "file"){
     filePickerOpen = true;
     clearTimeout(filePickerGuardTimer);
-    filePickerGuardTimer = setTimeout(function(){ filePickerOpen = false; }, 5000);
+    /* Addendum final §31 (bug real de QA): si el usuario CANCELA el picker,
+       "change" nunca dispara, así que este timeout de respaldo es el único
+       lugar que apaga filePickerOpen — pero antes solo hacía eso y dejaba
+       pendingVisibleRefresh(true) sin consumir para siempre si ya se había
+       armado. Debe seguir el MISMO camino central que "change": apagar la
+       bandera y, si quedó un refresh pospuesto, dispararlo ahora. */
+    filePickerGuardTimer = setTimeout(function(){
+      filePickerOpen = false;
+      if(pendingVisibleRefresh){ pendingVisibleRefresh = false; refreshFromServer({ background: true }); }
+    }, 5000);
   }
 });
 document.addEventListener("change", function(e){
@@ -1820,6 +1878,56 @@ async function rememberName(name){
   try{
     await sb.from("app_settings").update({ values: STATE.meta.teamNames }).eq("key", "team_names");
   }catch(e){ /* non-critical */ }
+}
+
+/* Addendum final §13-24: decide en qué CASO cae "Total del pedido" — nunca
+   escribe nada (eso es tarea exclusiva del `run` del comando /total y de
+   applyTotalPedidoEditor()), solo calcula qué mostrar. Reutiliza
+   round2() (el mismo que ya usa createDocumentoCore, sección "One-Click Tax
+   & Fees") para toda la aritmética — nunca comparación cruda de floats. */
+function planTotalDelPedido(t, monto){
+  var productos = t.productos || [];
+  var known = 0, pendingCount = 0;
+  productos.forEach(function(p){
+    if(p.precio == null || isNaN(p.precio)) pendingCount++;
+    else known += (p.cantidad || 1) * Number(p.precio);
+  });
+  /* §21: ya es exacto -> caso especial, sin mutación. Solo aplica si TODOS
+     los productos ya tienen precio (si hay alguno pendiente, "ya es exacto"
+     no tiene sentido: sigue faltando asignar algo). */
+  if(productos.length && pendingCount === 0 && round2(known) === round2(monto)){
+    return { case: "exact", monto: monto };
+  }
+  /* §15: sin productos todavía. */
+  if(!productos.length){
+    return { case: "zero", monto: monto };
+  }
+  /* §16: exactamente un producto con cantidad 1 -> el total ES el precio,
+     sin división de por medio. */
+  if(productos.length === 1 && Number(productos[0].cantidad || 1) === 1){
+    return { case: "single1", monto: monto, productoId: productos[0].id, desc: productos[0].desc };
+  }
+  /* §17/§19: 1 producto con cantidad>1, o 2+ productos -> editor compacto.
+     Nunca se reparte automáticamente (§19) salvo dos excepciones explícitas
+     y siempre PROPUESTAS (nunca escritas solas, sección 20/22):
+       - un único renglón (misma cantidad>1): se propone el precio unitario
+         (monto/cantidad) porque no hay ninguna otra forma de repartirlo;
+       - 2+ renglones con EXACTAMENTE uno pendiente de precio: se propone el
+         monto faltante (monto - conocido), nunca si eso diera negativo. */
+  var rows = productos.map(function(p){
+    return { id: p.id, desc: p.desc, cantidad: Number(p.cantidad || 1), precio: (p.precio == null || isNaN(p.precio)) ? null : Number(p.precio), proposed: null };
+  });
+  if(rows.length === 1){
+    rows[0].proposed = round2(monto / rows[0].cantidad);
+  } else {
+    var pendingRows = rows.filter(function(r){ return r.precio == null; });
+    if(pendingRows.length === 1){
+      var othersSum = rows.filter(function(r){ return r.precio != null; }).reduce(function(s,r){ return s + r.cantidad * r.precio; }, 0);
+      var proposed = round2(monto - othersSum);
+      if(proposed >= 0) pendingRows[0].proposed = proposed;
+    }
+  }
+  return { case: "editor", monto: monto, rows: rows, known: known, pendingCount: pendingCount };
 }
 
 function computeTotals(t){
@@ -2239,7 +2347,11 @@ function renderTicketHeader(t){
           '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
         "</div>" +
         '<button class="comanda-more-toggle" data-action="toggle-header-more" title="Más acciones" aria-label="Más acciones">&#8942;</button>' +
-        '<button class="comanda-expand-toggle" data-action="toggle-header-expanded" data-ticket="' + t.id + '" title="' + (expanded?"Colapsar":"Expandir") + '" aria-label="' + (expanded?"Colapsar":"Expandir") + '">' + (expanded?"&#9652;":"&#9662;") + "</button>" +
+        '<button class="comanda-expand-toggle" data-action="toggle-header-expanded" data-ticket="' + t.id + '" title="' + (expanded?"Ocultar detalles":"Ver detalles") + '" aria-label="' + (expanded?"Ocultar detalles":"Ver detalles") + '">' +
+          '<span class="comanda-expand-label-full">' + (expanded?"Ocultar detalles":"Ver detalles") + "</span>" +
+          '<span class="comanda-expand-label-short">Detalles</span>' +
+          '<span class="comanda-expand-chevron">' + (expanded?"&#9652;":"&#9662;") + "</span>" +
+        "</button>" +
       "</div>" +
     "</div>";
 
@@ -2311,13 +2423,13 @@ function renderTicketHeader(t){
      la cifra, no el nombre del campo. */
   var comRows = "";
   comRows += t.productos.length
-    ? comandaStat("Total conocido", '<span class="comanda-field-value known">' + fmtMoney(totals.known) + "</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"')
-    : comandaStat("Total conocido", '<span class="comanda-field-value muted">Sin productos</span>', 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"');
-  comRows += comandaStat("Cobrado", '<span class="comanda-field-value known cobrado">' + fmtMoney(cobrado) + "</span>", 'data-action="show-dinero" data-ticket="' + t.id + '"');
+    ? comandaStat("Total conocido", '<span class="comanda-field-value known">' + fmtMoney(totals.known) + " &rsaquo;</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"')
+    : comandaStat("Total conocido", '<span class="comanda-field-value muted">Sin productos &rsaquo;</span>', 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="all"');
+  comRows += comandaStat("Cobrado", '<span class="comanda-field-value known cobrado">' + fmtMoney(cobrado) + " &rsaquo;</span>", 'data-action="show-dinero" data-ticket="' + t.id + '"');
   if(totals.pending){
-    comRows += comandaStat(totals.pending===1?"Precio pendiente":"Precios pendientes", '<span class="comanda-field-value pending">' + totals.pending + "</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending"');
+    comRows += comandaStat(totals.pending===1?"Precio pendiente":"Precios pendientes", '<span class="comanda-field-value pending">' + totals.pending + " &rsaquo;</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending"');
   }
-  comRows += comandaStat("Documentos", '<span class="comanda-field-value">' + t.documentos.length + "</span>", 'data-action="show-documentos" data-ticket="' + t.id + '"');
+  comRows += comandaStat("Documentos", '<span class="comanda-field-value">' + t.documentos.length + " &rsaquo;</span>", 'data-action="show-documentos" data-ticket="' + t.id + '"');
 
   /* §23/§26: resumen comercial "extremadamente compacto" — SOLO en mobile
      colapsado (la regla CSS lo oculta en desktop y en expandido). Reutiliza
@@ -2781,12 +2893,19 @@ function renderComposer(){
 function renderSmartActions(){
   var sa = UI.smartActions;
   if(!sa) return "";
-  var chips = sa.actions.map(function(a){
-    return '<button type="button" class="smart-action-chip" data-action="smart-action" data-key="' + a.key + '">' + escapeHtml(a.label) + "</button>";
+  /* Addendum final §2/§10: Nota (índice 0 salvo que se haya navegado con
+     flechas) siempre se ve marcada como "esto es lo que ejecutará Enter" —
+     nunca solo al entrar en modo navegación, porque Enter ya ejecuta la
+     seleccionada desde el primer momento (captura continua, sección 3). En
+     touch no cambia nada: los chips siguen siendo botones normales, tocar
+     cualquiera ejecuta esa acción sin importar cuál esté "seleccionada". */
+  var chips = sa.actions.map(function(a, idx){
+    return '<button type="button" class="smart-action-chip' + (idx === sa.navIndex ? " selected" : "") + '" data-action="smart-action" data-key="' + a.key + '">' + escapeHtml(a.label) + "</button>";
   }).join("");
   /* §14: mismo motivo que slashConfirmBanner — "Esc para cancelar" no sirve
      sin teclado físico. Se agrega un botón real; el hint se queda para
-     desktop y se oculta en mobile por CSS. */
+     desktop y se oculta en mobile por CSS. Addendum final §11: no se agrega
+     ningún hint nuevo sobre Left/Right — en mobile no aplica. */
   return (
     '<div class="smart-actions" id="smart-actions">' +
       '<div class="smart-actions-label">Usar como:</div>' +
@@ -3895,11 +4014,13 @@ function render(){
     renderDocFormModal() +
     renderHelpPanel() +
     renderBugReportPanel() +
+    renderTotalPedidoModal() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
   var threadEl = document.getElementById("thread-scroll");
   if(threadEl) threadEl.scrollTop = threadEl.scrollHeight;
+  updateTotalPedidoSummary();
   var composerInput = document.getElementById("composer-input");
   if(composerInput){
     updateProductoPreview(composerInput.value);
@@ -3915,13 +4036,8 @@ function render(){
          dentro del hilo como una consola y se quedan ahí hasta que se
          cierran uno por uno o con /clear, sin importar lo que se escriba
          después en el compositor. */
-      var hadOverlay = !!UI.pendingConfirm || !!UI.smartActions;
+      var hadOverlay = !!UI.pendingConfirm;
       UI.pendingConfirm = null;
-      /* Seguir escribiendo después de que aparece el panel de "Usar
-         como…" lo descarta — el usuario claramente sigue redactando, no
-         decidiendo entre las opciones ya mostradas (mismo criterio que
-         pendingConfirm arriba). */
-      UI.smartActions = null;
       /* Composer Intelligence §3: "-" abre el mismo menú que "/" — importante
          en teclados móviles/mexicanos donde "/" no está a la mano. Se
          detecta en vivo aquí (no solo al enviar) para que el autocomplete
@@ -3974,7 +4090,33 @@ function render(){
         UI.cliSuggestQuery = suggestQuery;
         UI.cliSuggestIndex = 0;
       }
-      if(menuChanged || suggestChanged || hadOverlay){
+      /* Addendum final "Composer ultrarrápido" §1/§2/§9/§12: la Smart Palette
+         ya NO espera a Enter — se calcula en cada tecla, igual que el
+         autocomplete de comandos de arriba. Prioridad explícita: si el
+         autocomplete de comandos (shouldOpen, con o sin prefijo) o el de
+         argumento de /cliente (shouldSuggest) está activo, Smart Actions ni
+         se calcula — nunca compiten por el mismo teclado. Tampoco se
+         calcula sobre texto que empieza con "/" o "-" (esa es la vía de
+         comandos aunque todavía no matchee nada), ni sobre texto vacío. */
+      var startsAsCommand = v.charAt(0) === "/" || v.charAt(0) === "-";
+      var wantSmartActions = !!v.trim() && !shouldOpen && !shouldSuggest && !startsAsCommand;
+      var smartActionsChanged = false;
+      if(wantSmartActions){
+        var sameTextAsBefore = UI.smartActions && UI.smartActions.text === v;
+        if(!sameTextAsBefore){
+          /* Texto nuevo -> se recalculan las opciones y SIEMPRE se vuelve a
+             Nota (índice 0) como selección por defecto — cualquier edición
+             real de por sí ya "sale" de una selección de navegación vieja
+             que ya no correspondía a este texto (§9). suggestActionsForText
+             ya garantiza que Nota sea la primera opción (§2). */
+          UI.smartActions = { text: v, actions: suggestActionsForText(v, { ticket: findTicket(UI.selectedTicketId) }), navIndex: 0, navMode: false };
+          smartActionsChanged = true;
+        }
+      } else if(UI.smartActions){
+        UI.smartActions = null;
+        smartActionsChanged = true;
+      }
+      if(menuChanged || suggestChanged || smartActionsChanged || hadOverlay){
         render();
         restoreComposerText(v);
       }
@@ -4062,11 +4204,53 @@ function render(){
         if(e.key === "Enter"){ e.preventDefault(); confirmPendingSlash(); return; }
         if(e.key === "Escape"){ e.preventDefault(); UI.pendingConfirm = null; render(); return; }
       }
-      /* Composer Intelligence §16: Esc cierra el panel de "Usar como…" y
-         devuelve el texto EXACTO tal cual estaba — nunca navega, nunca lo
-         borra. */
+      /* Addendum final "Composer ultrarrápido" §3-§9: captura continua con
+         un solo Enter, y navegación ArrowLeft/ArrowRight entre Smart
+         Actions. Prioridad (§12): este bloque solo corre si ninguno de los
+         autocompletes/confirmación de arriba ya interceptó la tecla (todos
+         ellos `return` en sus propias ramas). */
       if(UI.smartActions){
-        if(e.key === "Escape"){
+        var saActions = UI.smartActions.actions;
+        var noMods = !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey;
+        /* §3: Enter sobre texto plano ejecuta DIRECTO la Smart Action
+           actualmente seleccionada — Nota por defecto (índice 0) si nunca
+           se navegó, o la que haya quedado marcada tras Right/Left. Shift+Enter
+           nunca entra aquí (sigue siendo salto de línea nativo del
+           textarea, sección 4) porque exige !e.shiftKey. */
+        if(e.key === "Enter" && !e.shiftKey){
+          e.preventDefault();
+          runSmartAction(saActions[UI.smartActions.navIndex].key);
+          return;
+        }
+        if(UI.smartActions.navMode){
+          if(e.key === "ArrowRight" && noMods){ e.preventDefault(); UI.smartActions.navIndex = (UI.smartActions.navIndex+1) % saActions.length; var sv1=composerInput.value; render(); restoreComposerText(sv1); return; }
+          if(e.key === "ArrowLeft" && noMods){ e.preventDefault(); UI.smartActions.navIndex = (UI.smartActions.navIndex-1+saActions.length) % saActions.length; var sv2=composerInput.value; render(); restoreComposerText(sv2); return; }
+          if(e.key === "Escape"){ e.preventDefault(); UI.smartActions.navMode = false; var sv3=composerInput.value; render(); restoreComposerText(sv3); return; }
+          /* §9: CUALQUIER otra cosa (letra, número, Space, Backspace,
+             Delete, paste, Shift+flecha para seleccionar, ArrowUp/Down,
+             etc.) saca del modo navegación SIN perder la tecla — nunca se
+             hace preventDefault ni return aquí, se deja caer al
+             comportamiento normal de abajo (o al del propio textarea
+             nativo). Nunca queda un modo invisible del que no se pueda
+             salir escribiendo. */
+          UI.smartActions.navMode = false;
+        } else if(e.key === "ArrowRight" && noMods){
+          /* §5/§7: ArrowRight SOLO se secuestra cuando el cursor ya está
+             EXACTAMENTE al final del texto y no hay ninguna selección —
+             fuera de ahí (a media edición, corrigiendo algo) se comporta
+             como un ArrowRight normal de textarea, nunca entra a
+             navegación. */
+          if(composerInput.selectionStart === composerInput.selectionEnd && composerInput.selectionStart === composerInput.value.length){
+            e.preventDefault();
+            UI.smartActions.navMode = true;
+            UI.smartActions.navIndex = (UI.smartActions.navIndex + 1) % saActions.length;
+            var sv4 = composerInput.value; render(); restoreComposerText(sv4);
+            return;
+          }
+        } else if(e.key === "Escape"){
+          /* Nunca se entró a modo navegación con flechas: Escape cierra el
+             panel completo y devuelve el texto EXACTO tal cual estaba
+             (comportamiento heredado de la ronda anterior). */
           e.preventDefault();
           var saText = UI.smartActions.text;
           UI.smartActions = null;
@@ -4076,6 +4260,22 @@ function render(){
         }
       }
       if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitNote(); }
+    });
+    /* §9: salir del modo navegación también al hacer clic dentro del
+       compositor o cambiar la selección con el mouse — mismo criterio que
+       "cualquier edición saca del modo navegación", solo que estos dos no
+       son eventos de teclado. No hace falta un listener de "select"
+       aparte: cambiar la posición del cursor con teclado (flechas
+       arriba/abajo, Home/End, etc.) ya sale de modo navegación en el
+       keydown de arriba porque no es ninguna de las 3 teclas que sí
+       intercepta (Right/Left/Escape). */
+    composerInput.addEventListener("click", function(){
+      if(UI.smartActions && UI.smartActions.navMode){
+        UI.smartActions.navMode = false;
+        var v = composerInput.value;
+        render();
+        restoreComposerText(v);
+      }
     });
   }
   applyFocus();
@@ -4370,6 +4570,12 @@ function suggestActionsForText(text, ctx){
   var phone = detectPhone(text);
   var actions = [];
   if(hasTicket){
+    /* Addendum final §2: Nota es SIEMPRE la primera opción — la selección
+       por defecto de Enter — para texto plano dentro de un ticket. La
+       detección de abajo puede reordenar/ofrecer opciones SECUNDARIAS,
+       pero nunca puede desplazar a Nota del primer lugar ni convertir
+       silenciosamente el texto en algo estructurado. */
+    actions.push({ key:"nota", label:"Nota" });
     /* "Parece producto" = el mismo parser que usa /producto reconoce una
        descripción Y el texto trae al menos un número (cantidad o precio) —
        igual criterio con el que un humano distinguiría "50 playeras negras
@@ -4378,21 +4584,25 @@ function suggestActionsForText(text, ctx){
     var prodGuess = parseProductoArg(text);
     var looksLikeProducto = !!(prodGuess.desc && /\d/.test(text));
     if(looksLikeProducto) actions.push({ key:"producto", label:"Producto" });
-    actions.push({ key:"nota", label:"Nota" });
-    if(!looksLikeProducto) actions.push({ key:"producto", label:"Producto" });
     if(phone) actions.push({ key:"telefono", label:"Teléfono: " + phone.formatted });
-    /* §18: "Pago / abono" — otro camino hacia /pago, cero lógica nueva de
-       negocio (mismo parsePagoArg/addPagoCore de siempre). Criterio a
-       propósito ESTRICTO (sección 17: nada de heurística difusa) y alineado
-       EXACTO con lo que parsePagoArg ya acepta como monto (sin "$" ni comas,
-       nunca una segunda noción de "qué es un monto"): el texto COMPLETO
-       tiene que ser solo dígitos con decimales opcionales — "5 playeras" o
+    /* §18/§13: "Pago / abono" y "Total del pedido" son dos interpretaciones
+       DISTINTAS de la misma cantidad pura — el sistema nunca elige por el
+       usuario, solo ofrece ambas (§23: nunca comparten semántica
+       financiera; Pago sigue siendo parsePagoArg/addPagoCore, Total del
+       pedido nunca toca pagos). Criterio a propósito ESTRICTO (sección 17:
+       nada de heurística difusa) y alineado EXACTO con lo que parsePagoArg
+       ya acepta como monto (sin "$" ni comas): el texto COMPLETO tiene que
+       ser solo dígitos con decimales opcionales — "5 playeras" o
        "producción de playeras para mañana" nunca califican, solo algo como
-       "100" o "350.50" tal cual. §21: un teléfono detectado (secuencia de
-       10 dígitos) nunca compite por esta sugerencia — mismo detectPhone()
-       de siempre, sin lógica nueva. */
+       "100" o "350.50" tal cual. §21/§24: un teléfono detectado (secuencia
+       de 10 dígitos) nunca compite por ninguna de las dos — mismo
+       detectPhone() de siempre, sin lógica nueva. */
     var looksLikeMonto = !phone && /^\d+(\.\d{1,2})?$/.test(text.trim());
-    if(looksLikeMonto) actions.push({ key:"pago", label:"Pago / abono" });
+    if(looksLikeMonto){
+      actions.push({ key:"pago", label:"Pago / abono" });
+      actions.push({ key:"total", label:"Total del pedido" });
+    }
+    if(!looksLikeProducto) actions.push({ key:"producto", label:"Producto" });
     actions.push({ key:"cliente", label:"Cliente" });
     actions.push({ key:"sigue", label:"Qué sigue" });
   } else {
@@ -4438,7 +4648,7 @@ function runSmartAction(key){
   /* §18: "Pago / abono" es otro camino más hacia el mismo /pago de siempre
      — mismo parsePagoArg, misma confirmación, mismo addPagoCore. Se agrega
      aquí al mapa (no hay lógica nueva de negocio, solo una entrada más). */
-  var cmdMap = { nota:"nota", producto:"producto", cliente:"cliente", sigue:"sigue", buscar:"buscar", nuevo:"nuevo", pago:"pago" };
+  var cmdMap = { nota:"nota", producto:"producto", cliente:"cliente", sigue:"sigue", buscar:"buscar", nuevo:"nuevo", pago:"pago", total:"total" };
   var cmdKey = cmdMap[key];
   if(!cmdKey){ render(); restoreComposerText(text); return; }
   var cmd = COMMANDS_BY_KEY[cmdKey];
@@ -6193,7 +6403,7 @@ async function submitBugReport(){
   var desc = (descEl && descEl.value || "").trim();
   if(!desc){ if(descEl) descEl.focus(); showToast("Escribe qué pasó."); return; }
   UI.bugReportSaving = true;
-  render();
+  renderKeepingLiveInputs(); // §30: mostrar "Guardando…" no debe borrar lo ya escrito
   try{
     var ins = await sb.from("app_bug_reports").insert({
       descripcion: desc, severidad: UI.bugReportSeverity, context: bugReportContext()
@@ -6217,8 +6427,104 @@ async function submitBugReport(){
     showToast("Reporte guardado. Gracias.");
   }catch(e){
     UI.bugReportSaving = false;
-    render();
+    renderKeepingLiveInputs(); // §30: si Supabase falla, la descripción debe seguir ahí para corregir/reintentar
     showToast("No se pudo guardar el reporte: " + (e.message || "error"));
+  }
+}
+
+/* ---------------- Addendum final §17/§19: editor compacto de "Total del pedido" ----------------
+   Se abre desde /total (ver COMMANDS "total" y planTotalDelPedido) SOLO
+   cuando hay más de una forma posible de repartir el monto — nunca antes.
+   Mismo patrón visual que .cierre-modal/el panel de Ayuda; el resumen en
+   vivo se actualiza leyendo el propio DOM (igual criterio que
+   updateProductoPreview/docform-summary), nunca pasa por render() en cada
+   tecla para no perder foco/cursor a media edición. Nada se escribe hasta
+   Aplicar — y solo se escribe lo que de verdad cambió (§19: nunca reparte
+   solo, el usuario decide cada renglón). */
+function closeTotalPedidoEditor(){
+  UI.totalDraft = null;
+  render();
+}
+function renderTotalPedidoModal(){
+  var d = UI.totalDraft;
+  if(!d) return "";
+  var rowsHtml = d.rows.map(function(r){
+    var val = r.precio != null ? r.precio : (r.proposed != null ? r.proposed : "");
+    return (
+      '<div class="total-row">' +
+        '<span class="total-row-desc">' + escapeHtml(r.desc) + "</span>" +
+        '<span class="total-row-qty">×' + r.cantidad + "</span>" +
+        '<input type="number" min="0" step="0.01" class="total-row-price" id="total-row-price-' + r.id + '" data-cantidad="' + r.cantidad + '" placeholder="pendiente" value="' + (val === "" ? "" : val) + '">' +
+      "</div>"
+    );
+  }).join("");
+  var pendingNote = d.pendingCount
+    ? '<div class="ephemeral-sub">Conocido ' + fmtMoney(d.known) + " · Por asignar " + d.pendingCount + (d.pendingCount === 1 ? " producto" : " productos") + "</div>"
+    : "";
+  return (
+    '<div class="cierre-modal-overlay" id="total-pedido-overlay">' +
+      '<div class="cierre-modal total-pedido-modal">' +
+        '<div class="cierre-modal-title">Total del pedido</div>' +
+        '<div class="total-pedido-desired">Total deseado <b>' + fmtMoney(d.monto) + "</b></div>" +
+        pendingNote +
+        '<div class="total-rows" id="total-rows">' + rowsHtml + "</div>" +
+        '<div class="total-pedido-summary" id="total-pedido-summary"></div>' +
+        '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="total-pedido-cancel">Cancelar</button><button type="button" class="btn btn-primary" data-action="total-pedido-apply">Aplicar</button></div>' +
+      "</div>" +
+    "</div>"
+  );
+}
+/* §18: nunca comparación cruda de floats ni fingir que cierra — se calcula
+   con round2() y se muestra la diferencia tal cual, aunque sea de un
+   centavo. Lee directo del DOM (no de UI.totalDraft) porque el usuario
+   pudo haber editado cualquier renglón. */
+function updateTotalPedidoSummary(){
+  var d = UI.totalDraft;
+  if(!d) return;
+  var el = document.getElementById("total-pedido-summary");
+  if(!el) return;
+  var actual = 0;
+  document.querySelectorAll(".total-row-price").forEach(function(inp){
+    var v = parseFloat(inp.value);
+    var qty = parseFloat(inp.getAttribute("data-cantidad")) || 1;
+    if(!isNaN(v)) actual += qty * v;
+  });
+  actual = round2(actual);
+  var diff = round2(d.monto - actual);
+  var html = "Total actual <b>" + fmtMoney(actual) + "</b>";
+  if(diff !== 0){
+    html += ' · <span class="total-pedido-diff">Diferencia ' + fmtMoney(Math.abs(diff)) + (diff > 0 ? " por asignar" : " de más") + "</span>";
+  } else {
+    html += ' · <span class="total-pedido-match">✓ Coincide con el total deseado</span>';
+  }
+  el.innerHTML = html;
+}
+/* §19/§22: solo escribe los renglones que de verdad cambiaron (nunca
+   reescribe todo el pedido) — reutiliza updateProductoCore tal cual, un
+   UPDATE por producto modificado, exactamente igual que si el usuario
+   hubiera editado ese precio a mano en /productos. Un precio inválido o
+   negativo detiene TODO el Aplicar (§22: nunca crea un precio negativo
+   solo). Dejar un campo vacío significa "sigue pendiente" — nunca se
+   fuerza un valor. */
+async function applyTotalPedidoEditor(){
+  var d = UI.totalDraft;
+  if(!d) return;
+  var t = findTicket(d.ticketId);
+  if(!t){ closeTotalPedidoEditor(); return; }
+  var writes = [];
+  for(var i=0;i<d.rows.length;i++){
+    var r = d.rows[i];
+    var inp = document.getElementById("total-row-price-" + r.id);
+    var raw = inp ? inp.value.trim() : "";
+    if(raw === "") continue; // se deja pendiente, no se toca
+    var v = parseFloat(raw);
+    if(isNaN(v) || v < 0){ showToast("Hay un precio inválido en \"" + r.desc + "\"."); return; }
+    if(r.precio !== v) writes.push({ id: r.id, precio: v });
+  }
+  UI.totalDraft = null;
+  render();
+  for(var j=0;j<writes.length;j++){
+    await updateProductoCore(t, writes[j].id, { precio: writes[j].precio });
   }
 }
 
@@ -6759,6 +7065,62 @@ var COMMANDS = [
       return { ok:true, data: { monto: pg.monto, concepto: pg.concepto } };
     },
     run: function(data, ctx){ return addPagoCore(ctx.ticket, data.monto, todayLocalYYYYMMDD(), "", data.concepto || ""); }
+  },
+  /* Addendum final "Composer ultrarrápido" §13-24: "Total del pedido".
+     PRECIO ≠ DEUDA — nunca significa saldo/balance/CxC/deuda, solo "quiero
+     que la suma comercial de los productos represente este importe".
+     Nunca crea ticket.total; los productos siguen siendo la única fuente
+     de verdad, y se escriben con los mismos addProductoCore/
+     updateProductoCore de siempre (ver planTotalDelPedido/runWithConfirm
+     más abajo). Usa la capacidad de runWithConfirm() de que `confirm` sea
+     una FUNCIÓN de (data, ctx) — ya soportada desde la ronda anterior sin
+     tocarla — para decidir POR CASO si hace falta el banner simple de
+     confirmación, abrir el editor compacto, o no hacer nada (caso exacto,
+     §21: ni UPDATE ni INSERT ni bitácora ni refresh). */
+  {
+    key: "total", aliases: ["total"], type: "write", requiresTicket: true,
+    syntax: "/total <monto>", summary: "Definir el total deseado del pedido (ajusta productos, nunca crea un saldo)",
+    examples: ["/total 350", "/total 500"],
+    parse: function(arg, ctx){
+      var raw = (arg||"").trim();
+      if(!raw || !/^\d+(\.\d{1,2})?$/.test(raw)) return { ok:false, error: "Escribe un monto, ej. /total 350" };
+      var monto = parseFloat(raw);
+      return { ok:true, data: planTotalDelPedido(ctx.ticket, monto) };
+    },
+    /* Solo los casos "sin ambigüedad" (0 productos / 1 producto qty=1) usan
+       el banner de confirmación genérico de siempre. El caso "editor"
+       nunca lo usa — abre su propio overlay con su propio Cancelar/Aplicar,
+       que YA es la confirmación (mostrar un banner encima habría sido un
+       paso de más). El caso "exact" tampoco: no hay nada que confirmar. */
+    confirm: function(data){ return data.case === "zero" || data.case === "single1"; },
+    confirmTitle: "Total del pedido",
+    confirmSummary: function(data){
+      if(data.case === "zero") return "1 × Producto/servicio · " + fmtMoney(data.monto);
+      if(data.case === "single1") return escapeHtml(data.desc) + " · " + fmtMoney(data.monto);
+      return fmtMoney(data.monto);
+    },
+    run: function(data, ctx){
+      if(data.case === "exact"){
+        /* §21: "El total ya es $X.00" y terminar — ni UPDATE, ni INSERT, ni
+           bitácora, ni refresh. Un toast basta como verificación rápida. */
+        showToast("✓ El total ya es " + fmtMoney(data.monto) + ".");
+        return;
+      }
+      if(data.case === "zero"){
+        /* §15: mismo core que /producto — nunca una segunda vía de crear
+           productos. El usuario podrá renombrar "Producto/servicio" después. */
+        return addProductoCore(ctx.ticket, "Producto/servicio", 1, data.monto);
+      }
+      if(data.case === "single1"){
+        /* §16: mismo core que editar un producto — un único UPDATE. */
+        return updateProductoCore(ctx.ticket, data.productoId, { precio: data.monto });
+      }
+      /* data.case === "editor" (§17/§19/§20/§22): abre el editor compacto,
+         nunca escribe nada todavía — eso es tarea exclusiva de
+         applyTotalPedidoEditor(), disparada por su propio botón Aplicar. */
+      UI.totalDraft = { ticketId: ctx.ticket.id, monto: data.monto, rows: data.rows, known: data.known, pendingCount: data.pendingCount };
+      render();
+    }
   },
   {
     key: "tarea", aliases: ["tarea","task"], type: "write", requiresTicket: true,
@@ -7339,11 +7701,15 @@ function wireEvents(){
   if(bugreportOverlay){
     bugreportOverlay.addEventListener("click", function(e){ if(e.target === bugreportOverlay) closeBugReport(); });
   }
+  var totalPedidoOverlay = document.getElementById("total-pedido-overlay");
+  if(totalPedidoOverlay){
+    totalPedidoOverlay.addEventListener("click", function(e){ if(e.target === totalPedidoOverlay) closeTotalPedidoEditor(); });
+  }
   var bugreportFileInput = document.getElementById("bugreport-screenshot-input");
   if(bugreportFileInput){
     bugreportFileInput.addEventListener("change", function(){
       bugReportScreenshotFile = bugreportFileInput.files && bugreportFileInput.files[0] || null;
-      render();
+      renderKeepingLiveInputs(); // §30: adjuntar la captura tampoco debe borrar la descripción ya escrita
     });
   }
 
@@ -7410,7 +7776,13 @@ document.addEventListener("click", function(e){
   var closeBugReportBtn = e.target.closest && e.target.closest('[data-action="close-bug-report"]');
   if(closeBugReportBtn){ closeBugReport(); return; }
   var bugSeverityBtn = e.target.closest && e.target.closest('[data-action="bug-severity"]');
-  if(bugSeverityBtn){ UI.bugReportSeverity = bugSeverityBtn.getAttribute("data-value"); render(); return; }
+  /* Addendum final §30 (bug real de QA): cambiar severidad disparaba
+     render(), que reconstruye el textarea de descripción desde el HTML
+     estático (sin `value`) y la borra. renderKeepingLiveInputs() restaura
+     por id todo input/textarea/select vivo — igual que ya se usa en el
+     formulario de documento — así que la descripción sobrevive sin
+     necesidad de un UI.bugReportDraft nuevo. */
+  if(bugSeverityBtn){ UI.bugReportSeverity = bugSeverityBtn.getAttribute("data-value"); renderKeepingLiveInputs(); return; }
   var bugAttachBtn = e.target.closest && e.target.closest('[data-action="bug-attach"]');
   if(bugAttachBtn){
     var bugFileInput = document.getElementById("bugreport-screenshot-input");
@@ -7419,10 +7791,25 @@ document.addEventListener("click", function(e){
   }
   var bugSubmitBtn = e.target.closest && e.target.closest('[data-action="bug-submit"]');
   if(bugSubmitBtn){ submitBugReport(); return; }
+  var totalCancelBtn = e.target.closest && e.target.closest('[data-action="total-pedido-cancel"]');
+  if(totalCancelBtn){ closeTotalPedidoEditor(); return; }
+  var totalApplyBtn = e.target.closest && e.target.closest('[data-action="total-pedido-apply"]');
+  if(totalApplyBtn){ applyTotalPedidoEditor(); return; }
   var smartActionBtn = e.target.closest && e.target.closest('[data-action="smart-action"]');
   if(smartActionBtn){ runSmartAction(smartActionBtn.getAttribute("data-key")); return; }
   var smartActionCancelBtn = e.target.closest && e.target.closest('[data-action="smart-action-cancel"]');
-  if(smartActionCancelBtn){ UI.smartActions = null; render(); return; }
+  if(smartActionCancelBtn){
+    /* Bug encontrado de paso al reescribir esta zona (mismo espíritu del
+       addendum: "nunca perder texto"): antes este botón hacía render() sin
+       restaurar el texto — como el <textarea> nunca lleva su valor en el
+       HTML (vive solo en vivo vía restoreComposerText), cancelar así
+       BORRABA lo escrito. Mismo comportamiento que ya tenía Escape. */
+    var saCancelText = UI.smartActions ? UI.smartActions.text : "";
+    UI.smartActions = null;
+    render();
+    restoreComposerText(saCancelText);
+    return;
+  }
   var slashConfirmOkBtn = e.target.closest && e.target.closest('[data-action="slash-confirm-ok"]');
   if(slashConfirmOkBtn){ confirmPendingSlash(); return; }
   var slashConfirmCancelBtn = e.target.closest && e.target.closest('[data-action="slash-confirm-cancel"]');
@@ -7527,6 +7914,15 @@ document.addEventListener("change", function(e){
   updateProductoCore(t, productoId, patch);
 });
 
+/* Addendum final §18: resumen en vivo del editor de "Total del pedido" —
+   se recalcula con cada tecla en cualquier renglón, sin pasar por render()
+   (mismo criterio que updateProductoPreview/docform-summary: no perder el
+   foco/cursor del campo que se está editando). Delegado a nivel documento
+   por el mismo motivo que la edición de productos de arriba. */
+document.addEventListener("input", function(e){
+  if(e.target && e.target.classList && e.target.classList.contains("total-row-price")) updateTotalPedidoSummary();
+});
+
 /* true si el evento viene de algo donde escribir es normal (campo de texto,
    select, contenteditable) — ahí J/K deben comportarse como letras, nunca
    como navegación. Caso especial: el compositor VACÍO es el estado de
@@ -7551,6 +7947,7 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.headerEditField){ closeHeaderEdit(); return; }
   if(e.key === "Escape" && UI.bugReportOpen){ closeBugReport(); return; }
   if(e.key === "Escape" && UI.helpPanelOpen){ closeHelpPanel(); return; }
+  if(e.key === "Escape" && UI.totalDraft){ closeTotalPedidoEditor(); return; }
 
   /* Navegación J/K entre tickets, respetando el mismo orden visual que ve
      el usuario en el sidebar (visualTicketOrder — pinneados, luego
