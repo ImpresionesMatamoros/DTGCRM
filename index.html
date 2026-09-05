@@ -107,9 +107,10 @@ button{cursor:pointer;}
 .btn-primary{background:var(--accent); color:#fff; justify-content:center;}
 .btn-primary:hover{background:var(--accent-ink);}
 .btn-ghost{background:transparent; border-color:var(--border); color:var(--text);}
+.btn-sm{padding:5px 10px; font-size:12.5px;}
 .btn-ghost:hover{background:var(--surface-3);}
 .btn-plain{background:transparent; border:none; color:var(--text-muted); padding:6px 8px;}
-.btn-plain:hover{color:var(--text); background:var(--surface-3); border-radius:var(--radius-s);}
+.btn-plain:hover, .btn-plain:active{color:var(--text); background:var(--surface-3); border-radius:var(--radius-s);}
 .search-wrap{position:relative;}
 .search-wrap input{
   width:100%; padding:8px 10px 8px 30px; border:1px solid var(--border); border-radius:var(--radius-s);
@@ -140,7 +141,7 @@ button{cursor:pointer;}
   display:flex; flex-direction:column; gap:3px; width:100%; text-align:left; border:none; background:none;
   padding:8px 8px; border-radius:var(--radius-s); position:relative;
 }
-.ticket-row:hover{background:var(--surface-3);}
+.ticket-row:hover, .ticket-row:active{background:var(--surface-3);}
 /* V0.5 §7: acento del ticket activo reforzado con un borde izquierdo fino
    vía box-shadow inset (no cambia el padding/ancho de la fila, así que no
    hay salto de layout al activarse/desactivarse). */
@@ -187,6 +188,8 @@ button{cursor:pointer;}
 .clientes-search-wrap input{width:100%;}
 .clientes-list{display:flex; flex-direction:column; gap:1px;}
 .cliente-row-empresa{color:var(--text-muted); font-weight:500;}
+.cliente-row-with-avatar{flex-direction:row!important; align-items:center; gap:10px;}
+.cliente-row-body{display:flex; flex-direction:column; gap:3px; min-width:0; flex:1;}
 /* Identidad de cliente en el encabezado del ticket (secciones 1.8/1.9/5.1):
    el color y la forma distinguen "vinculado a una entidad real" de
    "todavía solo texto libre" sin usar una alerta — un poka-yoke visual,
@@ -200,7 +203,7 @@ button{cursor:pointer;}
   background:var(--accent-soft); color:var(--accent-ink); cursor:pointer;
   text-decoration:none; border:1px solid transparent;
 }
-.cliente-chip-linked:hover{ text-decoration:underline; border-color:var(--accent-ink); }
+.cliente-chip-linked:hover, .cliente-chip-linked:active{ text-decoration:underline; border-color:var(--accent-ink); }
 .cliente-chip-empresa{font-weight:500; opacity:.85;}
 .cliente-chip-chevron{opacity:.7;}
 .cliente-chip-provisional{
@@ -210,6 +213,27 @@ button{cursor:pointer;}
 .ficha-header{border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:2px;}
 .ficha-name{font-size:19px; margin:0 0 8px; color:var(--text);}
 .ficha-empresa{color:var(--text-muted); font-weight:500; font-size:15px;}
+/* Logotipo del cliente (§13-19): avatar grande junto al nombre, acciones
+   Agregar/Cambiar/Eliminar debajo — flujo corto a propósito (sección 13). */
+.ficha-identity-row{display:flex; align-items:center; gap:14px; margin-bottom:10px;}
+.ficha-identity-main{display:flex; flex-direction:column; gap:6px; min-width:0;}
+.ficha-identity-main .ficha-name{margin:0;}
+.ficha-logo-actions{display:flex; gap:6px; flex-wrap:wrap;}
+/* Teléfono/email (§31-33): el valor mismo es la acción (tel:/mailto:), el
+   ✎ es una intención completamente distinta — nunca el mismo texto sirve
+   para las dos cosas (sección 32, literal). */
+.cliente-contact-row{display:flex; align-items:center; gap:6px;}
+.cliente-contact-link{color:var(--accent-ink); text-decoration:none;}
+.cliente-contact-link:hover, .cliente-contact-link:active{text-decoration:underline;}
+.cliente-contact-edit{
+  border:none; background:none; color:var(--text-faint); cursor:pointer; font-size:13px;
+  padding:4px 6px; border-radius:var(--radius-s); line-height:1; display:inline-flex; align-items:center; justify-content:center;
+}
+.cliente-contact-edit:hover, .cliente-contact-edit:active{color:var(--text); background:var(--surface-3);}
+.cliente-contact-input{
+  border:1px solid var(--accent); border-radius:var(--radius-s); padding:4px 8px; font-size:13px;
+  background:var(--surface); color:var(--text); font:inherit; flex:1; max-width:240px;
+}
 .ficha-section-title{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:600; margin-bottom:6px;}
 .ficha-section{display:flex; flex-direction:column; gap:2px;}
 .ficha-tabs{display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;}
@@ -217,7 +241,7 @@ button{cursor:pointer;}
   background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:4px 12px;
   font-size:12.5px; color:var(--text-muted);
 }
-.ficha-tab:hover{background:var(--surface-3); color:var(--text);}
+.ficha-tab:hover, .ficha-tab:active{background:var(--surface-3); color:var(--text);}
 .ficha-tab.active{background:var(--accent); border-color:var(--accent); color:#fff;}
 .ficha-history-list{display:flex; flex-direction:column; gap:8px;}
 .cliente-history-item{border:1px solid var(--border); border-radius:var(--radius-m); padding:8px 10px; background:var(--surface);}
@@ -226,7 +250,7 @@ button{cursor:pointer;}
   background:none; border:none; color:var(--cyan); font-size:11px; font-weight:600; padding:0 0 4px;
   cursor:pointer;
 }
-.history-ticket-pill:hover{text-decoration:underline;}
+.history-ticket-pill:hover, .history-ticket-pill:active{text-decoration:underline;}
 /* Lenguaje de color por tipo de dato dentro de una misma línea (sección 4):
    cantidad/descripción/precio son datos distintos y se ven distintos —
    nunca toda la línea del mismo color — con subrayado/cursor como
@@ -235,7 +259,7 @@ button{cursor:pointer;}
   background:none; border:none; padding:0; font:inherit; color:inherit; text-align:left;
   display:block; width:100%; cursor:pointer;
 }
-button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-ink);}
+button.hist-producto-line:hover, button.hist-producto-line:active{text-decoration:underline; color:var(--accent-ink);}
 .hist-cantidad{color:var(--cyan); font-weight:600;}
 .hist-desc{color:var(--text);}
 .hist-precio{color:var(--gold); font-weight:600;}
@@ -293,7 +317,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   background:none; border:none; padding:4px 2px; margin:-4px 0; font:inherit; color:inherit; cursor:pointer;
   border-bottom:1px dashed var(--text-faint); min-height:28px;
 }
-.totals-link:hover{border-bottom-color:var(--accent);}
+.totals-link:hover, .totals-link:active{border-bottom-color:var(--accent);}
 .totals-link.pending{color:var(--gold); border-bottom-color:var(--gold);}
 
 /* ---------- Comanda del ticket (sección 3/4/5) ----------
@@ -317,18 +341,21 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 /* .comanda-cliente-btn: SOLO cuando hay un cliente real vinculado (distinto
    de .comanda-cliente-plain) — algo se apoya en esta distinción para saber
    si el ticket ya tiene una entidad de cliente real, no solo texto libre. */
-.comanda-cliente-btn{color:var(--text);}
-.comanda-cliente-btn:hover{color:var(--accent-ink);}
+.comanda-cliente-btn{color:var(--text);align-items:center;}
+.comanda-cliente-btn .client-avatar{flex-shrink:0;}
+.comanda-cliente-name{display:inline-flex;align-items:baseline;}
+.comanda-cliente-btn:hover, .comanda-cliente-btn:active{color:var(--accent-ink);}
 .comanda-cliente-chevron{font-size:16px; color:var(--text-faint); font-weight:500;}
 .comanda-cliente-plain{color:var(--text-muted); font-style:italic; font-size:21px;}
+.comanda-cliente-plain:hover, .comanda-cliente-plain:active{color:var(--text);}
 .comanda-summary{font-size:13.5px; color:var(--text-muted); margin-top:2px;}
 .comanda-actions-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;}
 .btn-success{background:var(--success); color:#fff; font-weight:600; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.15);}
-.btn-success:hover{background:var(--success-ink);}
+.btn-success:hover, .btn-success:active{background:var(--success-ink);}
 .btn-cierre-secondary{
   background:transparent; border:1px solid var(--border); color:var(--text-muted); font-size:12.5px; padding:7px 12px;
 }
-.btn-cierre-secondary:hover{background:var(--surface-3); color:var(--text);}
+.btn-cierre-secondary:hover, .btn-cierre-secondary:active{background:var(--surface-3); color:var(--text);}
 .comanda-entregado-note{font-size:12px; color:var(--text-muted);}
 .comanda-entregado-note button{background:none; border:none; padding:0; color:var(--text-faint); text-decoration:underline; cursor:pointer; font:inherit;}
 .comanda-cerrado-note{
@@ -356,7 +383,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   display:flex; flex-direction:column; gap:2px; font-size:13px;
   background:none; border:none; padding:3px 6px; margin:-3px -6px; text-align:left; cursor:pointer; color:var(--text); border-radius:var(--radius-s);
 }
-.comanda-field:hover{background:var(--surface-3);}
+.comanda-field:hover, .comanda-field:active{background:var(--surface-3);}
 .comanda-field-label{color:var(--text-faint); font-size:11px;}
 .comanda-field-value{font-weight:600; color:var(--text); font-size:14.5px;}
 .comanda-field-value.muted{color:var(--text-faint); font-weight:500; font-style:italic;}
@@ -464,7 +491,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
    misma lógica (cliente-link/cliente-create) — solo cambia el peso visual. */
 .cliente-cta{border-color:var(--accent-soft); background:var(--accent-soft);}
 .cliente-cta .desc{color:var(--accent-ink); font-weight:700;}
-.cliente-cta:hover{background:var(--accent); border-color:var(--accent);}
+.cliente-cta:hover, .cliente-cta:active{background:var(--accent); border-color:var(--accent);}
 .cliente-cta:hover .desc{color:#fff;}
 .help-example-btn{font-family:var(--font-mono); color:var(--text-muted);}
 
@@ -528,7 +555,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:8px 8px; border:none;
   background:none; border-radius:var(--radius-s); font-size:13px;
 }
-.popover-menu-item:hover{background:var(--surface-3);}
+.popover-menu-item:hover, .popover-menu-item:active{background:var(--surface-3);}
 .popover-title{font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); padding:2px 6px 8px; font-weight:600;}
 .popover-form{display:flex; flex-direction:column; gap:8px;}
 .popover-form label{font-size:11.5px; color:var(--text-muted); display:flex; flex-direction:column; gap:3px;}
@@ -540,12 +567,65 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 .popover-actions{display:flex; justify-content:flex-end; gap:6px; margin-top:2px;}
 .radio-row{display:flex; gap:12px; font-size:12.5px; color:var(--text); align-items:center;}
 .radio-row label{display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--text);}
+
+/* ---------- fotos múltiples: mismo .popover de siempre en desktop, pantalla
+   casi completa en móvil (ver el bloque @media 640px más abajo) — misma
+   estructura HTML en los dos casos, nunca dos sistemas de upload. ---------- */
+.photo-batch-popover{ display:flex; flex-direction:column; gap:8px; width:320px; }
+.photo-batch-count{ font-size:12px; color:var(--text-muted); }
+.photo-batch-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(64px, 1fr)); gap:6px;
+  max-height:200px; overflow-y:auto; padding:2px;
+}
+.photo-batch-thumb{ position:relative; aspect-ratio:1/1; border-radius:var(--radius-s); overflow:hidden; background:var(--surface-2); }
+.photo-batch-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.photo-batch-remove{
+  position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; border:none;
+  background:rgba(0,0,0,.6); color:#fff; font-size:14px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.photo-batch-remove:hover{ background:rgba(0,0,0,.8); }
+.photo-batch-hint{ font-size:11.5px; color:var(--text-faint); }
+.photo-batch-progress-label{ font-size:13px; color:var(--text); font-weight:600; }
+.photo-batch-progress-bar{ height:6px; border-radius:999px; background:var(--surface-2); overflow:hidden; }
+.photo-batch-progress-fill{ height:100%; background:var(--accent); transition:width .15s ease; }
+.photo-batch-result-line{ font-size:13px; color:var(--text); font-weight:600; }
+.photo-batch-result-fail{ font-size:12.5px; color:var(--danger); }
+
+/* ---------- avatar de cliente: logo o iniciales (§16-19) ----------
+   object-fit:contain a propósito (§45): nunca deforma un logo horizontal
+   ni uno vertical para "llenar" el círculo a la fuerza — puede quedar aire
+   dentro del contenedor circular, y eso es preferible a estirar la imagen. */
+.client-avatar{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:32px; height:32px; border-radius:50%; overflow:hidden;
+  background:var(--surface-3); font-size:12px; font-weight:700; color:var(--text-muted);
+  letter-spacing:.02em;
+}
+.client-avatar img{ width:100%; height:100%; object-fit:contain; }
+.client-avatar-sm{ width:22px; height:22px; font-size:9.5px; }
+.client-avatar-lg{ width:56px; height:56px; font-size:19px; }
+
+/* Cabecera móvil colapsable §21-28: estos tres elementos SOLO existen para
+   mobile/tablet — en desktop quedan display:none siempre (la cabecera de
+   escritorio no cambia en absoluto) y el @media(max-width:880px) de abajo
+   es el único lugar que los enciende. */
+.comanda-header-controls{display:flex; align-items:center; gap:2px; flex-shrink:0;}
+.comanda-more-toggle, .comanda-expand-toggle{
+  display:none; width:32px; height:32px; align-items:center; justify-content:center;
+  border:none; background:none; color:var(--text-muted); cursor:pointer; border-radius:var(--radius-s); flex-shrink:0;
+}
+.comanda-more-toggle{font-size:18px;}
+.comanda-expand-toggle{font-size:13px;}
+.comanda-more-toggle:hover, .comanda-expand-toggle:hover, .comanda-more-toggle:active, .comanda-expand-toggle:active{background:var(--surface-3); color:var(--text);}
+.comanda-compact-summary{display:none; font-size:12.5px; color:var(--text-muted); font-weight:600; padding:0 20px 10px;}
+.comanda-compact-sep{opacity:.5;}
 .composer{display:flex; align-items:flex-end; gap:8px; padding:12px 20px;}
 .composer-plus{
   width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--surface);
   display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; color:var(--text-muted);
 }
-.composer-plus:hover{background:var(--surface-3); color:var(--text);}
+.composer-plus:hover, .composer-plus:active{background:var(--surface-3); color:var(--text);}
 .composer textarea{
   flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius-l); padding:9px 14px;
   font-size:13.5px; max-height:120px; background:var(--bg);
@@ -555,7 +635,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   display:flex; align-items:center; justify-content:center;
 }
 .composer-send:disabled{opacity:.35; cursor:default;}
-.composer-send:not(:disabled):hover{background:var(--accent-ink);}
+.composer-send:not(:disabled):hover, .composer-send:not(:disabled):active{background:var(--accent-ink);}
 
 .toast{
   position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg);
@@ -597,6 +677,9 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   .btn-plain{ min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; }
   .docform-fee-row .btn-plain{ min-width:36px; min-height:36px; }
   .btn{ min-height:42px; }
+  /* Affordances §41: el ✎ de teléfono/email es chico a propósito (discreto,
+     sección 30), pero su zona de toque debe seguir siendo cómoda. */
+  .cliente-contact-edit{ min-width:36px; min-height:36px; }
 
   /* Composer Intelligence §15: los chips de "Usar como:" son botones nuevos
      de esta ronda — mismo criterio de 44px que el resto de los controles
@@ -627,6 +710,30 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
      sentido con teclado físico — en móvil se oculta (no es información útil
      ahí, y el nav-stub ya está apretado de espacio). */
   .kbd-hint{ display:none; }
+
+  /* Cabecera móvil colapsable §21-28/§39: SIGUE siendo renderTicketHeader(t)
+     — nada de esto agrega una segunda función ni una segunda mutación, solo
+     decide qué se ve. Colapsado (default, §22) = SOLO folio/estado/cliente/
+     resumen de trabajo/acción primaria/resumen comercial compacto/control
+     de expandir; todo lo demás (Operación, Comercial completo, Documentos/
+     Fijar/Cerrar ticket) queda oculto. Expandido (§26) muestra Operación y
+     Comercial completos; Documentos/Fijar/Cerrar ticket (acciones
+     secundarias, §39) se agrupan detrás de "•••" en vez de mostrarse
+     siempre — mismos botones y mismo data-action de siempre, nunca una
+     copia. Ninguna de estas reglas toca nada fuera de este @media, así que
+     desktop queda exactamente igual que antes de esta ronda. */
+  .comanda-more-toggle, .comanda-expand-toggle{ display:inline-flex!important; width:40px; height:40px; }
+  .comanda-more-toggle{ font-size:20px; }
+  .comanda-expand-toggle{ font-size:16px; }
+  .th-collapsed .comanda-zones{ display:none; }
+  .th-collapsed .ticket-header-actions{ display:none; }
+  .th-collapsed .comanda-secondary-btn{ display:none; }
+  .th-collapsed .comanda-more-toggle{ display:none!important; }
+  .th-collapsed .comanda-compact-summary{ display:block!important; }
+  .th-expanded .ticket-header-actions{ display:none; }
+  .th-expanded .comanda-secondary-btn{ display:none; }
+  .th-expanded.th-more-open .ticket-header-actions{ display:flex!important; }
+  .th-expanded.th-more-open .comanda-secondary-btn{ display:inline-flex!important; }
 }
 .sidebar-toggle{display:none; margin-right:4px; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font-size:16px; cursor:pointer;}
 .mobile-topbar{display:none; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--surface);}
@@ -649,7 +756,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
   padding:10px 14px; margin-top:2px; cursor:pointer; transition:border-color .12s ease, box-shadow .12s ease;
 }
-.doc-card:hover{ border-color:var(--accent); box-shadow:var(--shadow); }
+.doc-card:hover, .doc-card:active{ border-color:var(--accent); box-shadow:var(--shadow); }
 .doc-card-title{ font-weight:600; font-size:13.5px; color:var(--text); }
 .doc-card-cliente{ font-size:12.5px; color:var(--text-muted); }
 .doc-card-total{ font-family:var(--font-mono); font-weight:600; font-size:14.5px; color:var(--text); margin-top:2px; }
@@ -779,6 +886,24 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
   }
   .docform-actions .btn{ width:100%; }
   .docform-body{ padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right)); }
+}
+
+/* Ajuste explícito del dueño del producto: en desktop el flujo de fotos se
+   queda como el popover compacto de siempre; en móvil/PWA pasa a pantalla
+   casi completa — mismo breakpoint y mismo criterio que ya usa el modal de
+   documento arriba (10-15 miniaturas + nota + progreso + reintentos no
+   caben cómodas en un popover angosto con scroll interno). Es EL MISMO
+   elemento (.photo-batch-popover, misma función renderPhotoBatchPopover(),
+   mismo estado UI.photoBatch) — nunca dos sistemas de upload, solo cambia
+   la presentación vía CSS, igual que el modal de documento. */
+@media (max-width:640px){
+  .photo-batch-popover{
+    position:fixed; inset:0; width:100vw; max-width:none; height:100vh; height:100dvh;
+    margin:0; border-radius:0; z-index:60;
+    padding:calc(16px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
+  }
+  .photo-batch-grid{ flex:1 1 auto; overflow-y:auto; max-height:none; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); }
+  .photo-batch-popover .popover-form{ flex-shrink:0; }
 }
 
 /* ---------- documento comercial: modal + "hoja" con look de papel ----------
@@ -936,7 +1061,7 @@ button.hist-producto-line:hover{text-decoration:underline; color:var(--accent-in
 }
 /* :hover es solo un extra de escritorio — el toque en móvil nunca depende
    de él (sección 15 del addendum: "no debe depender de hover"). */
-.smart-action-chip:hover{ background:var(--surface-2); border-color:var(--accent); }
+.smart-action-chip:hover, .smart-action-chip:active{ background:var(--surface-2); border-color:var(--accent); }
 .smart-actions-hint{ font-size:11.5px; color:var(--text-muted); }
 
 /* Resumen de /nuevo dentro de .slash-confirm-amount (sección 9: preview
@@ -962,6 +1087,24 @@ document.documentElement.setAttribute("data-theme", "dark");
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
+/* Ronda "Fotos múltiples/Logo/Cabecera móvil/Affordances" §1-3: tope fijo y
+   chico a propósito — nunca se arranca una carga silenciosa por encima de
+   este número (se avisa ANTES de construir la selección, ver
+   buildPhotoBatchFromFiles). */
+var MAX_PHOTOS_PER_BATCH = 15;
+/* Ajuste explícito del dueño del producto: no asumir que la memoria de un
+   iPhone da igual que la de escritorio solo porque el canvas técnicamente
+   soporte fotos de 48MP decodificadas — más conservador en el breakpoint
+   móvil (mismo 880px que ya gobierna el resto de la app responsive) que en
+   escritorio. Se evalúa en el momento de arrancar el lote (photoBatchConcurrency()),
+   nunca se cachea, por si cambia el viewport entre selección y subida. */
+var PHOTO_BATCH_CONCURRENCY_MOBILE = 2;
+var PHOTO_BATCH_CONCURRENCY_DESKTOP = 3;
+function photoBatchConcurrency(){
+  return (window.matchMedia && window.matchMedia("(max-width: 880px)").matches)
+    ? PHOTO_BATCH_CONCURRENCY_MOBILE
+    : PHOTO_BATCH_CONCURRENCY_DESKTOP;
+}
 
 /* Composer Intelligence §4/§5: un solo hint gris de atajo de teclado, junto
    a "Inicio" en el sidebar — no una interfaz llena de atajos, solo el que
@@ -978,6 +1121,11 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   docDraft: null, docFormOpen: false, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
   pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
   clienteEditDraft: null, docsListOpen: false, cierreModal: null, headerEditField: null,
+  /* Affordances §31-33: cuál campo de contacto (telefono|email) de la ficha
+     del cliente está en modo edición ahora mismo — null en el resto de los
+     casos, donde el valor es tel:/mailto: y el ✎ es la única forma de
+     entrar aquí. */
+  clienteFichaEditField: null,
   /* Sección Clientes (vista visual persistente, no efímera): mainView es
      null cuando estamos en un ticket o en Inicio, y "clientes" cuando se ve
      la lista o la ficha completa de un cliente. clienteReturnTicketId solo
@@ -1000,9 +1148,36 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      runWithConfirm + slashConfirmBanner) — confirmSummary simplemente
      devuelve un bloque más rico (Identidad/Teléfono/Producto/Pago) en vez
      de una sola línea. No hizo falta un estado ni un overlay nuevo. */
-  smartActions: null };
+  smartActions: null,
+  /* Fotos múltiples §1-11: null hasta que se elige al menos un archivo.
+     items: [{id, file, previewUrl, name}] — cada uno removible antes de
+     subir (§11). caption: nota de lote opcional, se copia igual a cada foto
+     al subir (§10, nunca una entidad de "lote" en la base — sección 9).
+     uploading/progress: mientras corre la cola (§4/§6). result: solo se
+     llena cuando hubo al menos una falla (§7) — si todo salió bien, el
+     popover se cierra solo (mismo criterio que ya tenía la subida de una
+     sola foto) y no hace falta guardar nada aquí. */
+  photoBatch: null,
+  /* Cabecera móvil colapsable §21-28: UI state, nunca en Supabase, nunca
+     Settings. Un objeto simple {ticketId: true/false} porque el pedido dice
+     "puede mantenerse por ticket" y es lo más simple que cumple eso sin
+     inventar persistencia — colapsado es el default en móvil (§28: el
+     thread es el protagonista) y se pierde al recargar la página, que es
+     exactamente "UI state de sesión", no una preferencia guardada. */
+  ticketHeaderExpanded: {},
+  /* Menú "•••" de acciones secundarias de la cabecera móvil (§39) — mismo
+     patrón de popover que ya usa toda la app (abrir/cerrar por estado UI,
+     cerrar con clic afuera), nunca un componente nuevo de menú. */
+  headerMoreOpen: false };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
+/* Escape en el input de teléfono/email de la ficha del cliente cierra la
+   edición SIN guardar — pero remover el input del DOM (render() dentro de
+   closeClienteFichaEdit) puede disparar su blur nativo antes de que el
+   nodo termine de desmontarse. Esta bandera evita que ese blur "fantasma"
+   guarde el valor de todos modos; vive fuera de UI a propósito, porque es
+   un detalle de una sola interacción de teclado, no estado de la vista. */
+var suppressClienteContactBlur = false;
 
 function uid(){ return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function escapeHtml(s){
@@ -1199,6 +1374,11 @@ function mapClienteRow(row){
        la migración 0006 no se ha corrido — el `|| false`/`|| ""` cubre ese
        caso sin romper el arranque de la app. */
     taxExempt: !!row.tax_exempt, taxExemptReason: row.tax_exempt_reason || "", taxExemptRef: row.tax_exempt_ref || "",
+    /* Logo del cliente: mismo criterio tolerante que tax_exempt arriba —
+       row.logo_storage_path es undefined (nunca un error) si la migración
+       0007 todavía no se corrió, y `|| null` lo deja exactamente como "sin
+       logo todavía" — clientAvatar() ya sabe mostrar iniciales en ese caso. */
+    logoStoragePath: row.logo_storage_path || null,
     createdAt: row.created_at
   };
 }
@@ -1353,6 +1533,8 @@ function openTicketById(id){
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
   UI.smartActions = null;
+  resetPhotoBatch();
+  UI.headerMoreOpen = false;
   UI.headerEditField = null;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* en móvil el sidebar es un cajón: elegir un ticket lo cierra */
@@ -1370,6 +1552,8 @@ function goHome(){
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
   UI.smartActions = null;
+  resetPhotoBatch();
+  UI.headerMoreOpen = false;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* mismo criterio: ir a Inicio también cierra el cajón en móvil */
   saveUi();
@@ -1392,6 +1576,8 @@ function goToClientes(){
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
   UI.smartActions = null;
+  resetPhotoBatch();
+  UI.headerMoreOpen = false;
   UI.pendingFocus = { elId: "clientes-search-input" };
   UI.sidebarOpen = false;
   saveUi();
@@ -1404,25 +1590,25 @@ function goToClientes(){
    más abajo. */
 function goToAtencion(){
   UI.selectedTicketId = null; UI.mainView = "atencion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToProduccion(){
   UI.selectedTicketId = null; UI.mainView = "produccion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToCerrados(){
   UI.selectedTicketId = null; UI.mainView = "cerrados"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToCxc(){
   UI.selectedTicketId = null; UI.mainView = "cxc"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
-  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
@@ -1445,6 +1631,8 @@ function openClienteFicha(clienteId, opts){
   UI.slashMenuOpen = false;
   UI.pendingConfirm = null;
   UI.smartActions = null;
+  resetPhotoBatch();
+  UI.headerMoreOpen = false;
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false;
   saveUi();
@@ -1836,17 +2024,35 @@ function renderTicketHeader(t){
   var estado = ticketEstado(t);
   var editing = UI.headerEditField;
 
+  /* Cabecera móvil colapsable §21-28/§39: SIGUE SIENDO la misma función,
+     una sola vez — mobile solo reorganiza vía CSS/estado UI, nunca
+     duplica la mutación de datos. `expanded` decide qué zonas se ven en
+     mobile (en desktop las reglas de abajo no aplican: fuera del
+     @media(max-width:880px) todo se muestra siempre, igual que antes de
+     esta ronda). `moreOpen` es el "•••" de acciones secundarias
+     (Documentos/Fijar/Cerrar ticket) — independiente del expandido: solo
+     tiene sentido (y solo es visible) una vez expandido, porque colapsado
+     ya las oculta todas por completo (§22: nada de eso se muestra "de
+     forma permanente" en compacto). */
+  var expanded = !!UI.ticketHeaderExpanded[t.id];
+  var moreOpen = !!UI.headerMoreOpen;
+
   /* 3.1 — barra superior chica: folio+fecha+pastilla de estado a la
-     izquierda, Documentos/Fijar a la derecha (el "•••" de la sección 3.1
-     no agrega nada más que "deshacer entrega", que ya vive junto al botón
-     de entrega — no se construye un menú aparte solo para eso). */
+     izquierda, Documentos/Fijar a la derecha en desktop; en mobile esas
+     dos vuelven acciones secundarias detrás de "•••" (mismos botones,
+     mismo data-action — solo CSS decide si se ven). El control de
+     expandir/colapsar (˅/˄) es nuevo en esta ronda y solo se ve en mobile. */
   var topBar =
     '<div class="ticket-header-top">' +
       '<div class="comanda-meta"><span class="ticket-id">#' + t.seq + " · creado " + fmtDateShort(t.createdAt) + '</span>' +
         '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span></div>" +
-      '<div class="ticket-header-actions">' +
-        '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">&#128196; Documentos · ' + t.documentos.length + "</button>" +
-        '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
+      '<div class="comanda-header-controls">' +
+        '<div class="ticket-header-actions">' +
+          '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">&#128196; Documentos · ' + t.documentos.length + "</button>" +
+          '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + (t.pinned?"&#9733; Fijado":"&#9734; Fijar") + "</button>" +
+        "</div>" +
+        '<button class="comanda-more-toggle" data-action="toggle-header-more" title="Más acciones" aria-label="Más acciones">&#8942;</button>' +
+        '<button class="comanda-expand-toggle" data-action="toggle-header-expanded" data-ticket="' + t.id + '" title="' + (expanded?"Colapsar":"Expandir") + '" aria-label="' + (expanded?"Colapsar":"Expandir") + '">' + (expanded?"&#9652;":"&#9662;") + "</button>" +
       "</div>" +
     "</div>";
 
@@ -1858,7 +2064,8 @@ function renderTicketHeader(t){
     var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
     identityMain = c
       ? '<button class="comanda-identity-btn comanda-cliente-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '" data-ticket="' + t.id + '">' +
-          escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") +
+          clientAvatar(c, {size:"sm"}) +
+          '<span class="comanda-cliente-name">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</span>" +
           ' <span class="comanda-cliente-chevron">&rsaquo;</span>' +
         "</button>"
       : "";
@@ -1886,7 +2093,7 @@ function renderTicketHeader(t){
       actionsRow += '<span class="comanda-entregado-note">Entregado ' + fmtDateShort(t.entregadoAt) + (t.entregadoPor ? " · " + escapeHtml(t.entregadoPor) : "") +
         ' · <button data-action="deshacer-entrega" data-ticket="' + t.id + '">deshacer</button></span>';
     }
-    actionsRow += '<button class="btn btn-cierre-secondary" data-action="abrir-cierre">Cerrar ticket &#9662;</button>';
+    actionsRow += '<button class="btn btn-cierre-secondary comanda-secondary-btn" data-action="abrir-cierre">Cerrar ticket &#9662;</button>';
     actionsRow += "</div>";
   } else {
     actionsRow = '<div class="comanda-cerrado-note"><b>' + ticketEstadoLabel(estado) + "</b> · " + fmtDateShort(t.cerradoAt) +
@@ -1925,11 +2132,24 @@ function renderTicketHeader(t){
   }
   comRows += comandaStat("Documentos", '<span class="comanda-field-value">' + t.documentos.length + "</span>", 'data-action="show-documentos" data-ticket="' + t.id + '"');
 
+  /* §23/§26: resumen comercial "extremadamente compacto" — SOLO en mobile
+     colapsado (la regla CSS lo oculta en desktop y en expandido). Reutiliza
+     los mismos `totals`/`cobrado` ya calculados arriba — nunca un segundo
+     cálculo comercial. Sin "Documentos" aquí a propósito: ya está cubierto
+     por el badge de la barra superior una vez expandido, y en compacto no
+     hace falta duplicarlo. */
+  var compactSummary =
+    '<div class="comanda-compact-summary">' +
+      (t.productos.length ? fmtMoney(totals.known) : "Sin productos") +
+      ' <span class="comanda-compact-sep">·</span> Cobrado ' + fmtMoney(cobrado) +
+    "</div>";
+
   return (
-    '<div class="ticket-header">' +
+    '<div class="ticket-header ' + (expanded ? "th-expanded" : "th-collapsed") + (moreOpen ? " th-more-open" : "") + '">' +
       topBar +
       identity +
       actionsRow +
+      compactSummary +
       '<div class="comanda-zones">' +
         '<div class="comanda-zone"><div class="comanda-zone-title">Operación</div><div class="comanda-zone-fields">' + opRows + "</div></div>" +
         '<div class="comanda-zone comanda-zone-comercial"><div class="comanda-zone-title">Comercial</div><div class="comanda-zone-fields">' + comRows + "</div></div>" +
@@ -2213,7 +2433,89 @@ async function submitDocFormCreate(){
   if(newDocId) openDocumentViewer(newDocId, {refocus:true});
 }
 
+/* Fotos múltiples §1-11: el mismo overlay .popover de siempre (nunca uno
+   nuevo), con 4 fases según UI.photoBatch — selector vacío, revisión con
+   miniaturas antes de subir, progreso, y resultado solo si hubo alguna
+   falla (si todo salió bien, el popover se cierra solo — mismo criterio
+   que ya tenía la subida de una sola foto, sección "no molestar cuando no
+   hay nada que decidir"). */
+function renderPhotoBatchPopover(){
+  var pb = UI.photoBatch;
+
+  if(pb && pb.uploading){
+    var total = pb.progress.total || 1;
+    var pct = Math.round((pb.progress.done / total) * 100);
+    return (
+      '<div class="popover photo-batch-popover" id="composer-popover">' +
+        '<div class="popover-title">Subiendo fotografías</div>' +
+        '<div class="photo-batch-progress-label">' + pb.progress.done + " de " + pb.progress.total + "</div>" +
+        '<div class="photo-batch-progress-bar"><div class="photo-batch-progress-fill" style="width:' + pct + '%"></div></div>' +
+      "</div>"
+    );
+  }
+
+  /* Fase de resultado: solo aparece cuando YA se intentó subir al menos una
+     vez (pb.totalOriginal) y todavía quedan fotos sin subir (pb.items =
+     únicamente las fallidas, listas para Reintentar — sección 7: una foto
+     fallida nunca borra ni cancela las que sí se subieron). */
+  if(pb && pb.totalOriginal && pb.items.length){
+    return (
+      '<div class="popover photo-batch-popover" id="composer-popover">' +
+        '<div class="popover-title">Resultado del lote</div>' +
+        '<div class="photo-batch-result-line">' + pb.succeededSoFar + " de " + pb.totalOriginal + " fotografías subidas</div>" +
+        '<div class="photo-batch-result-fail">' + pb.items.length + (pb.items.length === 1 ? " no pudo subirse" : " no pudieron subirse") + "</div>" +
+        '<div class="popover-actions">' +
+          '<button class="btn btn-ghost" data-action="discard-photo-batch">Descartar</button>' +
+          '<button class="btn btn-primary" data-action="submit-form" data-kind="archivo">Reintentar</button>' +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  if(!pb || !pb.items.length){
+    return (
+      '<div class="popover photo-batch-popover" id="composer-popover">' +
+        '<div class="popover-title">Adjuntar fotografías</div>' +
+        '<div class="popover-form">' +
+          '<label>Fotografías<input type="file" id="f-photos" accept="image/*" multiple></label>' +
+          '<div class="photo-batch-hint">Hasta ' + MAX_PHOTOS_PER_BATCH + " a la vez.</div>" +
+          '<div class="popover-actions"><button class="btn btn-ghost" data-action="cancel-form">Cancelar</button></div>' +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  /* Fase de revisión: miniaturas livianas (URL.createObjectURL — nunca se
+     decodifica la imagen completa solo para previsualizar, sección 8 del
+     análisis) con "×" individual para quitar sin reabrir el selector
+     (§11), nota de lote opcional (§10) y el botón de subir con el conteo
+     real en su propia etiqueta. */
+  var thumbs = pb.items.map(function(it){
+    return (
+      '<div class="photo-batch-thumb">' +
+        '<img src="' + it.previewUrl + '" alt="">' +
+        '<button type="button" class="photo-batch-remove" data-action="remove-photo-item" data-id="' + it.id + '" aria-label="Quitar esta fotografía">&times;</button>' +
+      "</div>"
+    );
+  }).join("");
+  return (
+    '<div class="popover photo-batch-popover" id="composer-popover">' +
+      '<div class="popover-title">Adjuntar fotografías</div>' +
+      '<div class="photo-batch-count">' + pb.items.length + (pb.items.length === 1 ? " fotografía seleccionada" : " fotografías seleccionadas") + "</div>" +
+      '<div class="photo-batch-grid">' + thumbs + "</div>" +
+      '<div class="popover-form">' +
+        '<label>Nota del lote (opcional)<input type="text" id="f-photo-caption" placeholder="Ej. Fotos del montaje terminado" value="' + escapeHtml(pb.caption || "") + '"></label>' +
+        '<div class="popover-actions">' +
+          '<button class="btn btn-ghost" data-action="cancel-form">Cancelar</button>' +
+          '<button class="btn btn-primary" data-action="submit-form" data-kind="archivo">Subir ' + pb.items.length + (pb.items.length === 1 ? " fotografía" : " fotografías") + "</button>" +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
 function popoverForm(kind){
+  if(kind === "archivo") return renderPhotoBatchPopover();
   var inner = "";
   if(kind === "producto"){
     inner =
@@ -2235,12 +2537,8 @@ function popoverForm(kind){
       "</div>" +
       '<label>Método<select id="f-metodo"><option value="">Sin especificar</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Otro</option></select></label>' +
       '<label>Concepto<input type="text" id="f-concepto" placeholder="Ej. Anticipo"></label>';
-  } else if(kind === "archivo"){
-    inner =
-      '<label>Imagen<input type="file" id="f-file" accept="image/*"></label>' +
-      '<label>Nota (opcional)<input type="text" id="f-caption" placeholder="Contexto de la foto"></label>';
   }
-  var title = {producto:"Nuevo producto", tarea:"Nueva tarea", tarea_produccion:"Nueva tarea de producción", pago:"Nuevo pago", archivo:"Adjuntar foto / archivo"}[kind];
+  var title = {producto:"Nuevo producto", tarea:"Nueva tarea", tarea_produccion:"Nueva tarea de producción", pago:"Nuevo pago"}[kind];
   return (
     '<div class="popover" id="composer-popover">' +
       '<div class="popover-title">' + title + "</div>" +
@@ -2482,6 +2780,84 @@ function documentosEntryContent(entry){
    aparece aquí sale de STATE.clientes en vivo, igual que el resto de los
    mensajes efímeros. */
 function clienteLabel(c){ return c.nombre + (c.empresa ? " · " + c.empresa : ""); }
+
+/* Regla de iniciales (§17) — determinista y simple a propósito, nunca
+   intenta resolver casos lingüísticos perfectos:
+     2+ palabras → primera letra de las dos primeras palabras
+     1 palabra   → sus primeras dos letras (una sola si la palabra mide 1)
+   "Top Builder" → TB · "Angela Martinez" → AM · "Design To Go" → DT
+   (toma las dos PRIMERAS palabras, no busca cuál es "más relevante" — la
+   predictibilidad importa más que el resultado perfecto en cada caso). */
+function initialsForName(name){
+  var words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if(!words.length) return "?";
+  if(words.length === 1){
+    return words[0].slice(0, 2).toUpperCase() || "?";
+  }
+  return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+}
+
+/* §18: un solo lugar decide "logo o iniciales" — cualquier vista futura
+   (incluida la futura vista de Tickets, sección 48) reutiliza esto en vez
+   de reimplementar el criterio. El logo se resuelve vía el MISMO
+   data-storage-path + hydrateImages() que ya usan las fotos del ticket —
+   cero plumbing nuevo. opts.size agrega un modificador de tamaño opcional
+   ("sm" | "lg"); sin opts.size queda en el tamaño base (lista/comanda). */
+function clientAvatar(cliente, opts){
+  opts = opts || {};
+  var sizeClass = opts.size ? " client-avatar-" + opts.size : "";
+  if(cliente && cliente.logoStoragePath){
+    return '<span class="client-avatar' + sizeClass + '"><img data-storage-path="' + escapeHtml(cliente.logoStoragePath) + '" alt=""></span>';
+  }
+  var initials = initialsForName(cliente ? cliente.nombre : "");
+  return '<span class="client-avatar client-avatar-initials' + sizeClass + '">' + escapeHtml(initials) + "</span>";
+}
+
+/* Affordances §31-33: teléfono/email en la ficha del cliente — el valor
+   MISMO es tel:/mailto: (tocar el número llama, tocar el correo abre el
+   cliente de correo), y el ✎ es una acción completamente aparte que abre
+   edición en línea. Nunca el mismo texto hace las dos cosas (sección 32,
+   literal: "no hacer que tocar el mismo texto algunas veces edite y otras
+   llame"). */
+function clienteContactLine(c, field, value){
+  var label = field === "telefono" ? "Teléfono" : "Email";
+  if(UI.clienteFichaEditField === field){
+    return (
+      '<div class="ephemeral-row cliente-contact-row">' +
+        "<strong>" + label + ":</strong> " +
+        '<input type="text" class="cliente-contact-input" id="cliente-ficha-field-' + field + '" value="' + escapeHtml(value) + '" data-client-id="' + c.id + '" data-field="' + field + '">' +
+      "</div>"
+    );
+  }
+  var href = field === "telefono" ? ("tel:" + value.replace(/[^\d+]/g, "")) : ("mailto:" + value);
+  return (
+    '<div class="ephemeral-row cliente-contact-row">' +
+      "<strong>" + label + ":</strong> " +
+      '<a class="cliente-contact-link" href="' + escapeHtml(href) + '">' + escapeHtml(value) + "</a>" +
+      '<button type="button" class="cliente-contact-edit" data-action="cliente-contact-edit" data-field="' + field + '" aria-label="Editar ' + label.toLowerCase() + '">&#9998;</button>' +
+    "</div>"
+  );
+}
+function openClienteFichaEdit(field){
+  UI.clienteFichaEditField = field;
+  UI.pendingFocus = { elId: "cliente-ficha-field-" + field };
+  render();
+}
+function closeClienteFichaEdit(){
+  if(UI.clienteFichaEditField){ UI.clienteFichaEditField = null; render(); }
+}
+/* Guardado directo, sin banner de confirmación — a diferencia de
+   /editarcliente (que sí necesita confirmar porque interpreta texto libre
+   potencialmente ambiguo), aquí el usuario ya está editando un campo
+   específico y visible mediante un input dedicado: no hay nada que
+   confirmar que la propia edición no muestre ya. Mismo criterio que
+   commitHeaderField para los campos del ticket. */
+async function commitClienteFichaField(clienteId, field, value){
+  UI.clienteFichaEditField = null;
+  var patch = {};
+  patch[field] = (value || "").trim();
+  await updateClienteCore(clienteId, patch);
+}
 
 /* Única función de ranking/orden de clientes (sección 1.2): la usan por
    igual la sección Clientes, /cliente y cualquier otro selector de
@@ -3056,12 +3432,15 @@ function renderClienteRow(c){
   if(fin.tickets.length) meta.push(fin.tickets.length + (fin.tickets.length===1?" ticket":" tickets"));
   if(fin.lastActivityAt) meta.push(fmtRelativeActivity(fin.lastActivityAt));
   return (
-    '<button class="ticket-row cliente-row' + (active?" active":"") + '" data-action="open-cliente-ficha" data-client-id="' + c.id + '">' +
-      '<div class="ticket-row-top">' +
-        '<span class="ticket-title">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-row-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</span>" +
-        (c.preautorizado ? '<span class="pill pill-accent" title="Preautorizado">Preautorizado</span>' : "") +
+    '<button class="ticket-row cliente-row cliente-row-with-avatar' + (active?" active":"") + '" data-action="open-cliente-ficha" data-client-id="' + c.id + '">' +
+      clientAvatar(c, {size:"sm"}) +
+      '<div class="cliente-row-body">' +
+        '<div class="ticket-row-top">' +
+          '<span class="ticket-title">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-row-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</span>" +
+          (c.preautorizado ? '<span class="pill pill-accent" title="Preautorizado">Preautorizado</span>' : "") +
+        "</div>" +
+        (meta.length ? '<div class="ticket-meta"><span>' + meta.join(" · ") + "</span></div>" : "") +
       "</div>" +
-      (meta.length ? '<div class="ticket-meta"><span>' + meta.join(" · ") + "</span></div>" : "") +
     "</button>"
   );
 }
@@ -3158,9 +3537,14 @@ function renderClienteFichaView(){
   var breadcrumb = UI.clienteReturnTicketId
     ? '<button class="btn-plain" data-action="open-ticket" data-id="' + UI.clienteReturnTicketId + '">&larr; Volver al Ticket #' + (findTicket(UI.clienteReturnTicketId) ? findTicket(UI.clienteReturnTicketId).seq : "") + "</button>"
     : '<button class="btn-plain" data-action="go-clientes">&larr; Clientes</button>';
+  /* Affordances §31-33: teléfono/email salen de infoLines genérico — tienen
+     su propio renderer (clienteContactLine) con tel:/mailto: + edición
+     separada, nunca texto plano muerto. El resto de infoLines sigue exactamente
+     igual (lineRow, sin cambios). */
+  var contactHtml = "";
+  if(c.telefono) contactHtml += clienteContactLine(c, "telefono", c.telefono);
+  if(c.email) contactHtml += clienteContactLine(c, "email", c.email);
   var infoLines = [];
-  if(c.telefono) infoLines.push(["Teléfono", c.telefono]);
-  if(c.email) infoLines.push(["Email", c.email]);
   if(c.notasComerciales) infoLines.push(["Notas comerciales", c.notasComerciales]);
   infoLines.push(["Preautorizado", c.preautorizado ? "Sí" : "No"]);
   infoLines.push(["Tickets activos", String(fin.activos)]);
@@ -3183,11 +3567,30 @@ function renderClienteFichaView(){
     return '<button class="ficha-tab' + ((UI.clienteHistoriaFilter||"todo")===f[0]?" active":"") + '" data-action="cliente-historia-filter" data-filter="' + f[0] + '">' + f[1] + "</button>";
   }).join("");
 
+  /* Logotipo (§13-16): un input de archivo escondido, compartido por
+     "Agregar"/"Cambiar" (ambos solo lo abren — uploadClienteLogo decide qué
+     hacer con el resultado, sección 14: el logo pertenece al CLIENTE, nunca
+     al ticket, así que no hay nada de esto en renderTicketHeader). */
+  var logoActionsHtml = c.logoStoragePath
+    ? '<button type="button" class="btn btn-ghost btn-sm" data-action="cliente-logo-pick" data-client-id="' + c.id + '">Cambiar</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-action="cliente-logo-remove" data-client-id="' + c.id + '">Eliminar</button>'
+    : '<button type="button" class="btn btn-ghost btn-sm" data-action="cliente-logo-pick" data-client-id="' + c.id + '">Agregar logotipo</button>';
+  var logoHtml =
+    '<div class="ficha-identity-row">' +
+      clientAvatar(c, {size:"lg"}) +
+      '<div class="ficha-identity-main">' +
+        '<h1 class="ficha-name">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="ficha-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</h1>" +
+        '<div class="ficha-logo-actions">' + logoActionsHtml + "</div>" +
+      "</div>" +
+    "</div>" +
+    '<input type="file" id="cliente-logo-input" accept="image/*" data-client-id="' + c.id + '" hidden>';
+
   return (
     '<div class="home-header">' + breadcrumb + "</div>" +
     '<div class="clientes-view ficha-view">' +
       '<div class="ficha-header">' +
-        '<h1 class="ficha-name">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="ficha-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</h1>" +
+        logoHtml +
+        contactHtml +
         infoLines.map(lineRow).join("") +
       "</div>" +
       '<div class="ficha-section"><div class="ficha-section-title">Ahora</div>' + ahoraHtml + "</div>" +
@@ -3773,6 +4176,24 @@ function applyDetectedPhoneToTicket(t, phone){
   });
 }
 
+/* Punto único para cerrar el overlay del compositor ("+"/popover), usado
+   por el botón "+", "Cancelar" y el clic afuera — antes los tres tocaban
+   UI.composer directo. Ahora, si hay una selección de fotos en curso,
+   también libera sus miniaturas (resetPhotoBatch) para no dejar fugas de
+   memoria; y si el lote SE ESTÁ subiendo en este momento, se niega a cerrar
+   (nunca se abandona una subida en curso solo por un clic afuera). Devuelve
+   true si cerró de verdad, false si se negó — quien llama decide si hace
+   falta re-renderizar. */
+function closeComposerOverlay(){
+  if(UI.photoBatch){
+    if(UI.photoBatch.uploading) return false;
+    resetPhotoBatch();
+  }
+  UI.composer = null;
+  UI.docDraft = null;
+  return true;
+}
+
 async function submitNote(){
   var input = document.getElementById("composer-input");
   if(!input) return;
@@ -3917,6 +4338,11 @@ async function updateClienteCore(clientId, patch, ticketIdForLog){
     if(patch.taxExempt !== undefined) dbPatch.tax_exempt = patch.taxExempt;
     if(patch.taxExemptReason !== undefined) dbPatch.tax_exempt_reason = patch.taxExemptReason;
     if(patch.taxExemptRef !== undefined) dbPatch.tax_exempt_ref = patch.taxExemptRef;
+    /* Logo (0007_v05_client_logo.sql) — mismo criterio "falla con el error
+       de Supabase tal cual hasta que se corra la migración". `!== undefined`
+       (no `if(patch.logoStoragePath)`) a propósito: `null` es un valor válido
+       aquí (quitar el logo), distinto de "no tocar este campo". */
+    if(patch.logoStoragePath !== undefined) dbPatch.logo_storage_path = patch.logoStoragePath;
     var r1 = await sb.from("clientes").update(dbPatch).eq("id", clientId);
     if(r1.error) throw r1.error;
     if(patch.nombre !== undefined){
@@ -4010,22 +4436,182 @@ async function submitForm(kind){
     UI.composer = null; render();
     await addPagoCore(t, monto, pfecha, metodo, concepto);
   } else if(kind === "archivo"){
-    var fileInput = document.getElementById("f-file");
-    var caption = (document.getElementById("f-caption").value || "").trim();
-    var file = fileInput.files && fileInput.files[0];
-    if(!file){ showToast("Selecciona una imagen."); return; }
-    UI.composer = null; render();
-    showToast("Subiendo foto…");
-    try{
-      var blob = await resizeImageToBlob(file, 1280, 0.8);
-      var ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
-      var path = t.id + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + "." + ext;
-      var up = await sb.storage.from(FILES_BUCKET).upload(path, blob, { contentType: "image/jpeg" });
-      if(up.error) throw up.error;
-      var r7 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: UI.whoami || null, payload: { storage_path: path, filename: file.name, caption: caption } });
-      if(r7.error) throw r7.error;
-    }catch(e){ showToast("No se pudo subir la foto: " + (e.message || "error")); }
-    refreshFromServer({refocus:true});
+    /* Fotos múltiples §1-11: una sola foto es simplemente un lote de 1 —
+       nunca dos caminos de subida distintos (principio "redundancia en los
+       caminos, no en la lógica"). Todo lo demás vive en
+       startPhotoBatchUpload/uploadOnePhoto, más abajo. */
+    await startPhotoBatchUpload();
+  }
+}
+
+/* ---------------- fotos múltiples: cola, subida, resultado (Ronda "Fotos/Logo/Cabecera/Affordances" §1-11) ---------------- */
+
+/* Cola genérica con concurrencia limitada — a propósito NO específica de
+   fotos (nombre y firma genéricos) por si otra ronda futura necesita el
+   mismo patrón para otro tipo de lote. worker(item, idx) debe devolver una
+   promesa; onProgress(done, total) se llama después de CADA item, en el
+   orden en que van terminando (no en el orden en que arrancaron). */
+function runQueueWithConcurrency(items, worker, concurrency, onProgress){
+  return new Promise(function(resolve){
+    if(!items.length){ resolve([]); return; }
+    var results = new Array(items.length);
+    var next = 0, done = 0;
+    function pump(){
+      if(next >= items.length) return;
+      var idx = next++;
+      Promise.resolve(worker(items[idx], idx)).then(function(r){
+        results[idx] = r;
+        done++;
+        if(onProgress) onProgress(done, items.length);
+        if(done >= items.length) resolve(results);
+        else pump();
+      });
+    }
+    var starters = Math.min(concurrency, items.length);
+    for(var i=0; i<starters; i++) pump();
+  });
+}
+
+/* Una sola foto, de principio a fin — EXACTAMENTE el mismo mecanismo que ya
+   existía para la subida individual (mismo resize 1280/0.8 JPEG sección 5,
+   mismo patrón de storage path, misma fila de bitácora tipo "archivo" con
+   storage_path/filename/caption — sección 9: cada foto sigue siendo
+   completamente individual). Nunca lanza — atrapa su propio error y lo
+   devuelve, para que la cola pueda seguir con las demás fotos del lote
+   (sección 7: una foto fallida no cancela ni borra las que sí subieron). */
+async function uploadOnePhoto(t, file, caption, uploadBatchId){
+  try{
+    var blob = await resizeImageToBlob(file, 1280, 0.8);
+    var ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
+    var path = t.id + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + "." + ext;
+    var up = await sb.storage.from(FILES_BUCKET).upload(path, blob, { contentType: "image/jpeg" });
+    if(up.error) throw up.error;
+    /* upload_batch_id: dato plano dentro del jsonb existente, sin migración
+       — opcional a propósito (fotos históricas y la subida de una sola foto
+       de antes de esta ronda nunca lo tuvieron, y no se les inventa uno).
+       Nunca se usa todavía para agrupar visualmente nada en el thread — es
+       solo la base para una futura vista de galería (sección 12/47). */
+    var payload = { storage_path: path, filename: file.name, caption: caption || "" };
+    if(uploadBatchId) payload.upload_batch_id = uploadBatchId;
+    var r = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: UI.whoami || null, payload: payload });
+    if(r.error) throw r.error;
+    return { ok: true };
+  }catch(e){
+    return { ok: false, error: e.message || "error" };
+  }
+}
+
+/* Libera las miniaturas (URL.createObjectURL nunca decodifica el archivo
+   completo, pero sí reserva memoria mientras el object URL vive — hay que
+   soltarla explícitamente) y limpia el estado. Se llama al cancelar, al
+   cerrar el popover desde cualquier lado, y al terminar un lote sin
+   ninguna falla. */
+function resetPhotoBatch(){
+  var pb = UI.photoBatch;
+  if(pb && pb.items){
+    pb.items.forEach(function(item){ try{ URL.revokeObjectURL(item.previewUrl); }catch(e){} });
+  }
+  UI.photoBatch = null;
+}
+
+/* Construye la selección a partir del FileList real del <input multiple> —
+   sección 3: si excede el máximo, NO arranca nada (ni siquiera arma la
+   selección), solo avisa con un mensaje claro y deja el selector listo para
+   volver a intentar. Las miniaturas usan URL.createObjectURL — liviano,
+   nunca decodifica la imagen completa solo para previsualizar (ver el
+   riesgo de memoria en iOS señalado en el análisis de esta ronda). */
+function buildPhotoBatchFromFileList(fileList){
+  var files = Array.prototype.slice.call(fileList || []);
+  if(!files.length) return;
+  if(files.length > MAX_PHOTOS_PER_BATCH){
+    showToast("Seleccionaste " + files.length + " fotografías. Puedes subir un máximo de " + MAX_PHOTOS_PER_BATCH + " por lote.");
+    var input = document.getElementById("f-photos");
+    if(input) input.value = "";
+    return;
+  }
+  var items = files.map(function(file){
+    return { id: uid(), file: file, previewUrl: URL.createObjectURL(file), name: file.name };
+  });
+  UI.photoBatch = { items: items, caption: "", uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0 };
+  render();
+}
+
+/* Quitar una foto de la selección ANTES de subir (sección 11) — nunca
+   obliga a reabrir el selector completo. Si se queda sin ninguna, vuelve a
+   la fase de selector vacío. */
+function removePhotoBatchItem(id){
+  var pb = UI.photoBatch;
+  if(!pb) return;
+  var idx = -1;
+  for(var i=0;i<pb.items.length;i++){ if(pb.items[i].id === id){ idx = i; break; } }
+  if(idx === -1) return;
+  try{ URL.revokeObjectURL(pb.items[idx].previewUrl); }catch(e){}
+  pb.items.splice(idx, 1);
+  if(!pb.items.length) UI.photoBatch = null;
+  render();
+}
+
+function discardPhotoBatch(){
+  resetPhotoBatch();
+  UI.composer = null;
+  render();
+}
+
+/* Arranca (o reintenta) la subida. En el primer intento fija totalOriginal/
+   caption y toma TODOS los items; en un reintento, pb.items YA solo trae
+   las fotos que fallaron la vuelta anterior (sección 7) y pb.totalOriginal
+   ya existe, así que no se reinicia nada — es literalmente la misma
+   función. Un solo refreshFromServer al final del lote completo (sección
+   8), nunca uno por foto. Si algo falla a medio camino, el ticket sigue
+   abierto con lo que sí se guardó — nunca se deshace nada (sección 10, ya
+   garantizado porque cada foto es su propia fila independiente). */
+async function startPhotoBatchUpload(){
+  var pb = UI.photoBatch;
+  if(!pb || !pb.items.length || pb.uploading) return;
+  var t = findTicket(UI.selectedTicketId);
+  if(!t){ showToast("Selecciona un ticket primero."); return; }
+  if(!pb.totalOriginal){
+    var capInput = document.getElementById("f-photo-caption");
+    pb.caption = capInput ? capInput.value.trim() : (pb.caption || "");
+    pb.totalOriginal = pb.items.length;
+    pb.succeededSoFar = 0;
+    /* Ajuste explícito del dueño del producto: un identificador simple por
+       lote, guardado dentro del payload jsonb de CADA foto — no requiere
+       SQL nuevo (bitacora.payload ya es jsonb libre). Sirve solo como dato
+       para agrupar/hacer galería MÁS ADELANTE; esta ronda no cambia en nada
+       cómo se ve el thread hoy. Un solo id por lote, generado una vez (no
+       se regenera en un reintento — las fotos que faltan siguen siendo del
+       MISMO lote original). */
+    pb.uploadBatchId = uid();
+  }
+  var attempted = pb.items.slice();
+  pb.uploading = true;
+  pb.progress = { done: 0, total: attempted.length };
+  render();
+  var results = await runQueueWithConcurrency(attempted, function(item){
+    return uploadOnePhoto(t, item.file, pb.caption, pb.uploadBatchId);
+  }, photoBatchConcurrency(), function(done, total){
+    pb.progress = { done: done, total: total };
+    render();
+  });
+  var failed = [];
+  var okCount = 0;
+  attempted.forEach(function(item, i){
+    if(results[i] && results[i].ok){ okCount++; try{ URL.revokeObjectURL(item.previewUrl); }catch(e){} }
+    else failed.push(item);
+  });
+  pb.succeededSoFar += okCount;
+  pb.items = failed;
+  pb.uploading = false;
+  await refreshFromServer({refocus:true});
+  if(!failed.length){
+    var totalDone = pb.totalOriginal;
+    resetPhotoBatch();
+    UI.composer = null;
+    render();
+    showToast(totalDone + (totalDone === 1 ? " fotografía subida" : " fotografías subidas"));
+  } else {
+    render();
   }
 }
 
@@ -4822,6 +5408,91 @@ function resizeImageToBlob(file, maxDim, quality){
     };
     reader.readAsDataURL(file);
   });
+}
+
+/* Hallazgo técnico de esta ronda (sección 45 del pedido): resizeImageToBlob
+   de arriba fuerza salida JPEG, que no tiene canal alfa — si se reutilizara
+   tal cual para el logo, un PNG transparente saldría con fondo negro sólido
+   (comportamiento estándar de canvas.toBlob al serializar sin alfa). Esta
+   variante es EXCLUSIVA del logo: mismo decodificado por canvas, misma
+   lógica de escalado, pero salida PNG (sin pérdida, conserva transparencia)
+   — las fotos de ticket siguen exactamente igual con la función de arriba,
+   sin tocar (sección 5 del pedido original). Los logos son gráficos
+   pequeños (no fotos de cámara), así que el peso extra de PNG es aceptable. */
+function resizeImageToBlobPreservingAlpha(file, maxDim){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = function(){
+      var img = new Image();
+      img.onerror = reject;
+      img.onload = function(){
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width*scale);
+        canvas.height = Math.round(img.height*scale);
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob){ blob ? resolve(blob) : reject(new Error("No se pudo procesar la imagen")); }, "image/png");
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Logo del cliente (§13-16) — orden explícito pedido por el dueño del
+   producto, sin excepciones:
+     1) subir el archivo nuevo a Storage
+     2) confirmar que la subida fue exitosa
+     3) recién ahí actualizar clientes.logo_storage_path
+     4) solo DESPUÉS intentar borrar el archivo viejo (best-effort)
+   Nunca al revés — si algo falla en 1-3, el cliente conserva exactamente el
+   logo (o las iniciales) que ya tenía; el borrado del paso 4 nunca bloquea
+   ni revierte una operación que ya tuvo éxito, y si falla, el único costo
+   es un archivo huérfano en Storage. */
+async function uploadClienteLogo(cliente, file){
+  var previousPath = cliente.logoStoragePath;
+  var blob;
+  try{
+    blob = await resizeImageToBlobPreservingAlpha(file, 512);
+  }catch(e){
+    showToast("No se pudo procesar la imagen: " + (e.message || "error"));
+    return false;
+  }
+  var path = "clientes/" + cliente.id + "/logo_" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".png";
+  try{
+    var up = await sb.storage.from(FILES_BUCKET).upload(path, blob, { contentType: "image/png" });
+    if(up.error) throw up.error;
+  }catch(e){
+    showToast("No se pudo subir el logotipo: " + (e.message || "error"));
+    return false;
+  }
+  var ok = await updateClienteCore(cliente.id, { logoStoragePath: path });
+  if(!ok){
+    /* El archivo nuevo ya quedó en Storage pero el cliente no llegó a
+       apuntarlo (updateClienteCore ya mostró su propio error) — no lo
+       borramos: mejor un huérfano que arriesgar perder la única referencia
+       si el usuario reintenta y esa segunda vez sí funciona. */
+    return false;
+  }
+  if(previousPath && previousPath !== path){
+    try{ await sb.storage.from(FILES_BUCKET).remove([previousPath]); }catch(e){ /* best-effort, nunca bloquea */ }
+  }
+  return true;
+}
+
+/* Quitar el logo: limpia el campo PRIMERO — updateClienteCore ya actualiza
+   STATE y hace render() de forma optimista antes de tocar la red, así que
+   el avatar vuelve a iniciales de inmediato (§16) — y solo después intenta
+   borrar el objeto de Storage, también best-effort. */
+async function removeClienteLogo(cliente){
+  var previousPath = cliente.logoStoragePath;
+  if(!previousPath) return true;
+  var ok = await updateClienteCore(cliente.id, { logoStoragePath: null });
+  if(!ok) return false;
+  try{ await sb.storage.from(FILES_BUCKET).remove([previousPath]); }catch(e){ /* best-effort */ }
+  return true;
 }
 
 async function toggleTaskEstado(ticketId, taskId){
@@ -5940,6 +6611,21 @@ function wireEvents(){
     b.addEventListener("click", function(){ togglePin(b.getAttribute("data-id")); });
   });
 
+  /* Cabecera móvil colapsable §21-28: UI state puro, nunca Supabase — un
+     toggle simple y un render(), igual que cualquier otro estado de UI de
+     esta app. */
+  root.querySelectorAll('[data-action="toggle-header-expanded"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-ticket");
+      UI.ticketHeaderExpanded[id] = !UI.ticketHeaderExpanded[id];
+      if(!UI.ticketHeaderExpanded[id]) UI.headerMoreOpen = false;
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="toggle-header-more"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.headerMoreOpen = !UI.headerMoreOpen; render(); });
+  });
+
   var searchInput = document.getElementById("search-input");
   if(searchInput){
     searchInput.addEventListener("input", function(){
@@ -5994,17 +6680,78 @@ function wireEvents(){
   var plusBtn = root.querySelector('[data-action="toggle-menu"]');
   if(plusBtn){
     plusBtn.addEventListener("click", function(){
-      UI.composer = UI.composer ? null : "menu";
-      render();
+      if(UI.composer){ if(closeComposerOverlay()) render(); }
+      else { UI.composer = "menu"; render(); }
     });
   }
   root.querySelectorAll('[data-open-form]').forEach(function(b){
     b.addEventListener("click", function(){ UI.composer = b.getAttribute("data-open-form"); render(); });
   });
   var cancelBtn = root.querySelector('[data-action="cancel-form"]');
-  if(cancelBtn) cancelBtn.addEventListener("click", function(){ UI.composer = null; UI.docDraft = null; render(); });
+  if(cancelBtn) cancelBtn.addEventListener("click", function(){ if(closeComposerOverlay()) render(); });
   var submitBtn = root.querySelector('[data-action="submit-form"]');
   if(submitBtn) submitBtn.addEventListener("click", function(){ submitForm(submitBtn.getAttribute("data-kind")); });
+  var discardBatchBtn = root.querySelector('[data-action="discard-photo-batch"]');
+  if(discardBatchBtn) discardBatchBtn.addEventListener("click", discardPhotoBatch);
+  var photosInput = root.querySelector("#f-photos");
+  if(photosInput){
+    photosInput.addEventListener("change", function(){
+      buildPhotoBatchFromFileList(photosInput.files);
+    });
+  }
+  root.querySelectorAll('[data-action="remove-photo-item"]').forEach(function(b){
+    b.addEventListener("click", function(){ removePhotoBatchItem(b.getAttribute("data-id")); });
+  });
+
+  /* Logotipo del cliente (§13-16) — el input real vive escondido; ambos
+     botones (Agregar/Cambiar) solo lo abren, uploadClienteLogo() decide qué
+     hacer con el archivo elegido (orden de subir-antes-de-borrar ya
+     garantizado ahí, no aquí). */
+  root.querySelectorAll('[data-action="cliente-logo-pick"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var input = document.getElementById("cliente-logo-input");
+      if(input) input.click();
+    });
+  });
+  var logoInput = document.getElementById("cliente-logo-input");
+  if(logoInput){
+    logoInput.addEventListener("change", function(){
+      var file = logoInput.files && logoInput.files[0];
+      var clientId = logoInput.getAttribute("data-client-id");
+      logoInput.value = "";
+      if(!file || !clientId) return;
+      var c = STATE.clientes.filter(function(x){ return x.id === clientId; })[0];
+      if(!c) return;
+      showToast("Subiendo logotipo…");
+      uploadClienteLogo(c, file).then(function(ok){ if(ok) showToast("Logotipo actualizado."); });
+    });
+  }
+  root.querySelectorAll('[data-action="cliente-logo-remove"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var c = STATE.clientes.filter(function(x){ return x.id === b.getAttribute("data-client-id"); })[0];
+      if(!c) return;
+      removeClienteLogo(c).then(function(ok){ if(ok) showToast("Logotipo eliminado — vuelve a iniciales."); });
+    });
+  });
+
+  /* Teléfono/email de la ficha del cliente (§31-33): ✎ abre edición,
+     Enter/blur guarda, Escape cancela sin guardar (con la bandera de arriba
+     para que un blur disparado por quitar el nodo del DOM no guarde de
+     todos modos). */
+  root.querySelectorAll('[data-action="cliente-contact-edit"]').forEach(function(b){
+    b.addEventListener("click", function(){ openClienteFichaEdit(b.getAttribute("data-field")); });
+  });
+  root.querySelectorAll(".cliente-contact-input").forEach(function(inp){
+    inp.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); inp.blur(); }
+      else if(e.key === "Escape"){ e.preventDefault(); suppressClienteContactBlur = true; closeClienteFichaEdit(); }
+    });
+    inp.addEventListener("blur", function(){
+      if(suppressClienteContactBlur){ suppressClienteContactBlur = false; return; }
+      commitClienteFichaField(inp.getAttribute("data-client-id"), inp.getAttribute("data-field"), inp.value);
+    });
+  });
+
   var sendBtn = document.getElementById("composer-send");
   if(sendBtn) sendBtn.addEventListener("click", submitNote);
 
@@ -6212,7 +6959,7 @@ document.addEventListener("click", function(e){
     var plus = document.querySelector('[data-action="toggle-menu"]');
     var clickedInsidePop = pop && pop.contains(e.target);
     var clickedPlus = plus && (e.target === plus || plus.contains(e.target));
-    if(!clickedInsidePop && !clickedPlus){ UI.composer = null; render(); }
+    if(!clickedInsidePop && !clickedPlus){ if(closeComposerOverlay()) render(); }
   }
 }, true);
 
