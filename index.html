@@ -37,6 +37,16 @@
   --font-sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   color-scheme: light;
+  /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §12: fuente única de las
+     safe-areas de iOS (notch/Dynamic Island/Home Indicator) — antes cada
+     selector escribía su propio env(safe-area-inset-*) suelto, lo que hacía
+     fácil que un overlay nuevo (como el panel de Ayuda o el reporte de bug
+     de esta ronda) se olvidara de aplicarlas. Todo lo demás en este archivo
+     que usaba env(...) directo ahora usa estas variables — mismo valor
+     resultante, un solo lugar para revisar. viewport-fit=cover (ya en el
+     <meta> de arriba) es lo que hace que env() no sea siempre 0. */
+  --safe-top:env(safe-area-inset-top); --safe-right:env(safe-area-inset-right);
+  --safe-bottom:env(safe-area-inset-bottom); --safe-left:env(safe-area-inset-left);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -414,13 +424,20 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 
 /* Modal de cierre: chico y centrado, se dispara desde el encabezado (no
    desde el compositor de abajo) — mismo criterio que el visor de doc. */
+/* §12: esta clase ahora la comparten tres overlays (cierre de ticket, panel
+   de Ayuda, reportar un problema) — antes tenía padding:16px fijo, sin
+   safe-area, así que en un iPhone con notch el modal podía quedar pegado al
+   borde real de la pantalla. calc() con las variables --safe-* de :root
+   asegura los 16px mínimos de siempre MÁS lo que el sistema reserve. */
 .cierre-modal-overlay{
   position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center;
-  padding:16px; z-index:60;
+  padding:calc(16px + var(--safe-top)) calc(16px + var(--safe-right)) calc(16px + var(--safe-bottom)) calc(16px + var(--safe-left));
+  z-index:60;
 }
 .cierre-modal{
   background:var(--surface); border-radius:var(--radius-l); box-shadow:var(--shadow); padding:18px;
   width:100%; max-width:380px; display:flex; flex-direction:column; gap:10px;
+  max-height:calc(100vh - 32px - var(--safe-top) - var(--safe-bottom)); overflow-y:auto;
 }
 .cierre-modal-title{font-size:15px; font-weight:700; color:var(--text);}
 .cierre-modal-sub{font-size:12px; color:var(--text-faint); margin-top:-6px;}
@@ -485,6 +502,50 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .help-cmd-btn:hover, .help-example-btn:hover{background:var(--surface-3); border-color:var(--accent);}
 .help-cmd-btn code{font-family:var(--font-mono); color:var(--accent); flex-shrink:0;}
 .help-cmd-btn .desc{color:var(--text-muted);}
+
+/* Ronda "Fluidez, Confiabilidad, Realtime y QA" §1: panel global "?" —
+   reutiliza .cierre-modal/.cierre-modal-title/.popover-actions tal cual
+   (misma familia visual), esto solo agrega lo específico del panel:
+   la lista de accesos (Comandos/Atajos/Actualizar/Reportar) y el pie
+   "Design To Go CRM · Versión · Build". */
+.help-panel{ max-width:340px; }
+.help-panel-item{
+  display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left; box-sizing:border-box;
+  border:none; border-radius:var(--radius-s); background:transparent; color:var(--text);
+  padding:11px 8px; font-size:13.5px; min-height:40px; cursor:pointer;
+}
+.help-panel-item:hover, .help-panel-item:active{background:var(--surface-2);}
+.help-panel-refresh-icon{color:var(--text-faint); font-size:15px;}
+.help-panel-sep{height:1px; background:var(--border); margin:2px 0;}
+.help-panel-about{padding:2px 8px;}
+.help-panel-about-name{font-size:12.5px; font-weight:700; color:var(--text-muted);}
+.help-panel-about-meta{font-size:11.5px; color:var(--text-faint); margin-top:1px; font-family:var(--font-mono);}
+.help-panel-back{align-self:flex-start; font-size:12.5px; padding:4px 6px; margin:-4px 0 -2px -6px;}
+.help-panel-list{max-height:50vh; overflow-y:auto; margin:0 -4px;}
+.help-shortcut-row{
+  display:flex; align-items:center; gap:10px; padding:7px 4px; font-size:12.5px; color:var(--text-muted);
+  border-bottom:1px solid var(--border);
+}
+.help-shortcut-row:last-child{border-bottom:none;}
+.help-shortcut-row code{font-family:var(--font-mono); color:var(--accent); flex-shrink:0; min-width:64px;}
+/* Botón "?" discreto al pie del sidebar/drawer (mismo elemento en desktop y
+   mobile, ver renderSidebar()) — vive junto al selector "Trabajando como",
+   así que se ancla a la derecha sin empujar el input. */
+.help-panel-open-btn{
+  flex-shrink:0; font-weight:700; font-size:13px; border:1px solid var(--border); border-radius:50%;
+  width:26px; height:26px; min-width:0; padding:0; display:inline-flex; align-items:center; justify-content:center;
+}
+
+/* §3: Reportar un problema — mismo overlay/tarjeta que el panel de Ayuda. */
+.bugreport-modal{ max-width:380px; }
+.bugreport-severity-row{display:flex; flex-wrap:wrap; gap:6px;}
+.bugreport-severity-chip{
+  border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-muted);
+  padding:7px 12px; font-size:12.5px; cursor:pointer;
+}
+.bugreport-severity-chip:hover{background:var(--surface-3);}
+.bugreport-severity-chip.active{border-color:var(--accent); color:var(--accent-ink); background:var(--accent-soft); font-weight:600;}
+.bugreport-attach-btn{width:100%; text-align:left; border:1px dashed var(--border); border-radius:var(--radius-s); padding:9px 10px; font-size:12.5px;}
 /* Vincular/crear cliente (sección 5): la decisión principal de /cliente NO
    puede leerse como texto informativo gris — necesita contraste real de
    acción, igual que cualquier otro botón primario de la app. Mismo botón,
@@ -654,13 +715,13 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .sidebar{
     position:fixed; inset:0 auto 0 0; z-index:30; transform:translateX(-100%); transition:transform .18s ease;
     width:min(86vw, 340px);
-    padding-left:env(safe-area-inset-left); padding-bottom:env(safe-area-inset-bottom);
+    padding-left:var(--safe-left); padding-bottom:var(--safe-bottom);
   }
   .sidebar.open{transform:translateX(0);}
   .sidebar-toggle{display:inline-flex!important;}
   .mobile-topbar{display:flex!important;}
   .sidebar-backdrop{display:block!important;}
-  .mobile-topbar{padding-top:calc(10px + env(safe-area-inset-top)); padding-left:calc(16px + env(safe-area-inset-left)); padding-right:calc(16px + env(safe-area-inset-right));}
+  .mobile-topbar{padding-top:calc(10px + var(--safe-top)); padding-left:calc(16px + var(--safe-left)); padding-right:calc(16px + var(--safe-right));}
 
   /* Addendum §4: cualquier input/select/textarea por debajo de 16px de
      font-size dispara el auto-zoom de iOS Safari al enfocarlo (comportamiento
@@ -704,7 +765,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
      compositor nunca queda tapado detrás del teclado (el bug clásico de
      barras con position:fixed). Lo único que faltaba era el padding del
      home-indicator cuando el teclado está cerrado. */
-  .composer{ padding-bottom:calc(12px + env(safe-area-inset-bottom)); padding-left:calc(20px + env(safe-area-inset-left)); padding-right:calc(20px + env(safe-area-inset-right)); }
+  .composer{ padding-bottom:calc(12px + var(--safe-bottom)); padding-left:calc(20px + var(--safe-left)); padding-right:calc(20px + var(--safe-right)); }
 
   /* Composer Intelligence §4/§5: el hint "⌘H"/"Ctrl+Shift+H" solo tiene
      sentido con teclado físico — en móvil se oculta (no es información útil
@@ -747,6 +808,12 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   width:6px; height:6px; border-radius:50%; background:var(--gold); display:inline-block; margin-left:6px;
   animation:pulse 1s ease-in-out infinite;
 }
+/* §9/§10: sin esto, la regla de arriba (display:inline-block, especificidad
+   de una sola clase) le gana a la regla nativa del navegador para
+   [hidden] (que es de hoja de estilo de usuario, siempre pierde contra
+   cualquier regla de autor) — el punto se quedaría visible SIEMPRE, sin
+   importar el atributo hidden que setSyncIndicator() prende/apaga. */
+.syncing-dot[hidden]{display:none;}
 @keyframes pulse{ 0%,100%{opacity:.3;} 50%{opacity:1;} }
 @media (prefers-reduced-motion: reduce){ .syncing-dot{animation:none;} }
 
@@ -879,13 +946,13 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
     max-width:none; width:100vw; height:100vh; height:100dvh; max-height:none;
     border-radius:0;
   }
-  .docform-head{ padding-top:calc(16px + env(safe-area-inset-top)); padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right)); }
+  .docform-head{ padding-top:calc(16px + var(--safe-top)); padding-left:calc(18px + var(--safe-left)); padding-right:calc(18px + var(--safe-right)); }
   .docform-actions{
-    flex-direction:column-reverse; padding-bottom:calc(14px + env(safe-area-inset-bottom));
-    padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right));
+    flex-direction:column-reverse; padding-bottom:calc(14px + var(--safe-bottom));
+    padding-left:calc(18px + var(--safe-left)); padding-right:calc(18px + var(--safe-right));
   }
   .docform-actions .btn{ width:100%; }
-  .docform-body{ padding-left:calc(18px + env(safe-area-inset-left)); padding-right:calc(18px + env(safe-area-inset-right)); }
+  .docform-body{ padding-left:calc(18px + var(--safe-left)); padding-right:calc(18px + var(--safe-right)); }
 }
 
 /* Ajuste explícito del dueño del producto: en desktop el flujo de fotos se
@@ -900,7 +967,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .photo-batch-popover{
     position:fixed; inset:0; width:100vw; max-width:none; height:100vh; height:100dvh;
     margin:0; border-radius:0; z-index:60;
-    padding:calc(16px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
+    padding:calc(16px + var(--safe-top)) calc(18px + var(--safe-right)) calc(16px + var(--safe-bottom)) calc(18px + var(--safe-left));
   }
   .photo-batch-grid{ flex:1 1 auto; overflow-y:auto; max-height:none; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); }
   .photo-batch-popover .popover-form{ flex-shrink:0; }
@@ -938,10 +1005,10 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   }
   .doc-modal-top{
     position:sticky; top:0; z-index:2; background:var(--surface);
-    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+    padding:calc(12px + var(--safe-top)) calc(16px + var(--safe-right)) 10px calc(16px + var(--safe-left));
     border-bottom:1px solid var(--border);
   }
-  .doc-paper{ margin:12px 12px calc(16px + env(safe-area-inset-bottom)); }
+  .doc-paper{ margin:12px 12px calc(16px + var(--safe-bottom)); }
 }
 
 .doc-paper{
@@ -1063,6 +1130,15 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
    de él (sección 15 del addendum: "no debe depender de hover"). */
 .smart-action-chip:hover, .smart-action-chip:active{ background:var(--surface-2); border-color:var(--accent); }
 .smart-actions-hint{ font-size:11.5px; color:var(--text-muted); }
+.smart-actions-footer{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.smart-actions-cancel-btn{ font-size:12px; padding:5px 8px; }
+/* §14: en mobile no hay teclado físico, así que "Enter para confirmar · Esc
+   para cancelar" no es una instrucción usable — los botones táctiles de
+   arriba (ya en el HTML en ambos anchos) pasan a ser lo único que se ve. En
+   desktop el hint se queda exactamente igual que siempre. */
+@media (max-width: 880px){
+  .slash-confirm-hint, .smart-actions-hint{ display:none; }
+}
 
 /* Resumen de /nuevo dentro de .slash-confirm-amount (sección 9: preview
    multi-sección antes de crear nada). */
@@ -1084,6 +1160,14 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 document.documentElement.setAttribute("data-theme", "dark");
 
 /* ---------------- config ---------------- */
+/* Ronda "Fluidez, Confiabilidad, Realtime y QA" §2: fuente única de verdad
+   — no existía nada equivalente antes de esta ronda (se auditó primero).
+   Alimenta el panel de Ayuda y el contexto automático de "Reportar un
+   problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
+   lado. Súbanla a mano en cada ronda futura (no hay build step que la
+   genere sola — este archivo se sirve tal cual, sin bundler). */
+var APP_VERSION = "0.6.0";
+var APP_BUILD = "2026.09.05";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -1105,6 +1189,10 @@ function photoBatchConcurrency(){
     ? PHOTO_BATCH_CONCURRENCY_MOBILE
     : PHOTO_BATCH_CONCURRENCY_DESKTOP;
 }
+/* Mismo breakpoint 880px de siempre — no uno nuevo. */
+function isMobileViewport(){
+  return !!(window.matchMedia && window.matchMedia("(max-width: 880px)").matches);
+}
 
 /* Composer Intelligence §4/§5: un solo hint gris de atajo de teclado, junto
    a "Inicio" en el sidebar — no una interfaz llena de atajos, solo el que
@@ -1119,6 +1207,13 @@ var sb = null;
 var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
   docDraft: null, docFormOpen: false, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
+  /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §15: true cuando el menú
+     de "/" está abierto por una coincidencia SIN prefijo ("prod" en vez de
+     "/prod") — mismo menú, mismo UI.slashQuery, pero Enter debe comportarse
+     como si el menú no existiera (nunca autoejecutar un comando que el
+     usuario no empezó con "/" o "-"). Tab/click sí completan igual en
+     ambos casos. */
+  slashBarePrefix: false,
   pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
   clienteEditDraft: null, docsListOpen: false, cierreModal: null, headerEditField: null,
   /* Affordances §31-33: cuál campo de contacto (telefono|email) de la ficha
@@ -1168,7 +1263,17 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* Menú "•••" de acciones secundarias de la cabecera móvil (§39) — mismo
      patrón de popover que ya usa toda la app (abrir/cerrar por estado UI,
      cerrar con clic afuera), nunca un componente nuevo de menú. */
-  headerMoreOpen: false };
+  headerMoreOpen: false,
+  /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §1: panel global "?" — un
+     solo overlay, mismo patrón visual que cierre-modal/docform-modal.
+     "comandos" | "atajos" | null decide qué sub-vista se ve dentro del
+     panel (nunca tres overlays separados). */
+  helpPanelOpen: false, helpPanelTab: null,
+  /* §3: borrador del reporte de bug — vive aquí (no solo en el DOM) por el
+     mismo motivo que UI.smartActions: si falla el guardado, el texto no se
+     pierde. screenshotFile es el File elegido (opcional), nunca una captura
+     automática (ver NOTES-TO-ARCHITECT de esta ronda, §2). */
+  bugReportOpen: false, bugReportSeverity: "molestia", bugReportSaving: false };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 /* Escape en el input de teléfono/email de la ficha del cliente cierra la
@@ -1178,6 +1283,13 @@ var signedUrlCache = {};
    guarde el valor de todos modos; vive fuera de UI a propósito, porque es
    un detalle de una sola interacción de teclado, no estado de la vista. */
 var suppressClienteContactBlur = false;
+/* §3: el File del screenshot opcional del reporte de bug vive fuera de UI
+   (un File no sobrevive bien a JSON/estado serializable, y
+   renderKeepingLiveInputs() solo restaura value de input/textarea/select,
+   nunca la selección de un <input type=file>) — mismo criterio de "detalle
+   de una sola interacción" que suppressClienteContactBlur arriba. Se limpia
+   al cerrar o enviar el reporte. */
+var bugReportScreenshotFile = null;
 
 function uid(){ return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function escapeHtml(s){
@@ -1473,6 +1585,16 @@ var refreshPending = null; // null | { background: boolean }
    esté a medio escribir — ver renderKeepingLiveInputs(). Si mientras tanto
    llega también una llamada "de primera mano" (sin background), esa gana:
    el render final se comporta como uno normal. */
+/* §9/§10: prende/apaga #syncing-dot directamente (sin render()) — mismo
+   criterio que updateProductoPreview(): una actualización visual mínima no
+   tiene por qué reconstruir el DOM completo. Buscarlo con getElementById en
+   cada llamada (nunca cachear la referencia) porque render() sí lo
+   reconstruye desde cero cada vez que corre — cachear el nodo viejo lo
+   dejaría apuntando a un elemento ya fuera del documento. */
+function setSyncIndicator(show){
+  var dot = document.getElementById("syncing-dot");
+  if(dot) dot.hidden = !show;
+}
 async function refreshFromServer(opts){
   opts = opts || {};
   if(opts.refocus) UI.pendingFocus = UI.pendingFocus || "composer";
@@ -1484,6 +1606,7 @@ async function refreshFromServer(opts){
   refreshInFlight = (async function(){
     var background = !!opts.background;
     for(;;){
+      setSyncIndicator(true);
       try{
         var fresh = await fetchAllState();
         STATE = fresh;
@@ -1497,6 +1620,7 @@ async function refreshFromServer(opts){
       refreshPending = null;
     }
     refreshInFlight = null;
+    setSyncIndicator(false);
   })();
   return refreshInFlight;
 }
@@ -1510,6 +1634,54 @@ function subscribeRealtime(){
   });
   channel.subscribe();
 }
+
+/* Ronda "Fluidez, Confiabilidad, Realtime y QA" §7/§8: la app vuelve a
+   primer plano (PWA reabierta, pestaña que recupera foco, celular que se
+   desbloquea) o recupera conexión — en ambos casos se sincroniza por el
+   MISMO camino central (refreshFromServer({background:true}), el que ya usa
+   scheduleRefresh()/Realtime), nunca un fetch paralelo ni
+   window.location.reload(). background:true es lo que hace que
+   renderKeepingLiveInputs() proteja el compositor/edición en curso — igual
+   que cualquier otro refresh de fondo.
+
+   El riesgo específico de iOS: abrir la cámara o el selector de fotos desde
+   <input type=file> dispara un visibilitychange (la app "se oculta" y luego
+   "vuelve a ser visible" al cerrar el picker) — sin este guard, volver de
+   elegir una foto dispararía un refresh justo cuando el usuario está a la
+   mitad de esa selección. filePickerOpen es una bandera simple (no una
+   máquina de estados): se prende en cuanto CUALQUIER <input type=file> de
+   la app recibe foco (fotos de ticket, logo de cliente, captura del reporte
+   de bug — un solo listener delegado cubre los tres sin tocarlos uno por
+   uno) y se apaga en su "change" (o, como respaldo, sola a los pocos
+   segundos si el usuario cancela el picker sin elegir nada). Si el usuario
+   vuelve a la app mientras la bandera sigue prendida, el refresh se pospone
+   una sola vez y se dispara en cuanto la bandera se apaga. */
+var filePickerOpen = false;
+var pendingVisibleRefresh = false;
+var filePickerGuardTimer = null;
+document.addEventListener("focusin", function(e){
+  if(e.target && e.target.tagName === "INPUT" && e.target.type === "file"){
+    filePickerOpen = true;
+    clearTimeout(filePickerGuardTimer);
+    filePickerGuardTimer = setTimeout(function(){ filePickerOpen = false; }, 5000);
+  }
+});
+document.addEventListener("change", function(e){
+  if(!(e.target && e.target.tagName === "INPUT" && e.target.type === "file")) return;
+  filePickerOpen = false;
+  clearTimeout(filePickerGuardTimer);
+  if(pendingVisibleRefresh){ pendingVisibleRefresh = false; refreshFromServer({ background: true }); }
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState !== "visible") return;
+  if(!sb) return; /* aún no terminó boot() */
+  if(filePickerOpen){ pendingVisibleRefresh = true; return; }
+  refreshFromServer({ background: true });
+});
+window.addEventListener("online", function(){
+  if(!sb) return;
+  refreshFromServer({ background: true });
+});
 
 /* ---------------- helpers over STATE ---------------- */
 
@@ -1852,6 +2024,21 @@ function renderSidebar(){
     '<div class="whoami-bar">' +
       "<span>Trabajando como</span>" +
       '<input type="text" list="dtg-team-names" id="whoami-input" placeholder="tu nombre" value="' + escapeHtml(UI.whoami||"") + '">' +
+      /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §9/§10: punto único y
+         discreto de "se está sincronizando" — reutiliza el CSS .syncing-dot
+         que ya existía en el archivo (nunca se había conectado a nada real).
+         Vive siempre en el DOM, oculto por defecto (atributo "hidden"); lo
+         prende/apaga directamente setSyncIndicator() sin pasar por render()
+         completo, igual que ya hace updateProductoPreview() — así un
+         refresh de fondo no reconstruye toda la UI solo para mostrar un
+         puntito. Nunca es una pantalla de carga completa. */
+      '<span class="syncing-dot" id="syncing-dot" hidden title="Sincronizando…"></span>' +
+      /* §1: "?" discreto en la parte baja del sidebar — el mismo
+         renderSidebar() sirve tanto al sidebar fijo de desktop como al
+         cajón/drawer de mobile (misma función, mismo estado), así que un
+         solo botón aquí ya cumple "ambos deben abrir el mismo panel" sin
+         código aparte para mobile. */
+      '<button type="button" class="btn-plain help-panel-open-btn" data-action="open-help-panel" title="Ayuda" aria-label="Ayuda">?</button>' +
     "</div>"
   );
 }
@@ -2567,8 +2754,14 @@ function renderComposer(){
   var plusBtn = hasTicket ? '<button class="composer-plus" data-action="toggle-menu" title="Agregar">+</button>' : "";
   /* Composer Intelligence §4: enseña los DOS prefijos de comando — "/" y
      "-" (este último pensado para teclados móviles/mexicanos donde "/" no
-     está a la mano, sección 3). */
-  var placeholder = hasTicket ? "Escribe / o - para comandos (nota, producto, pago…)" : "Escribe / o - para comandos (buscar, nuevo, ayuda…)";
+     está a la mano, sección 3).
+     Ronda "Fluidez…" §13: en mobile el placeholder descriptivo no cabe en
+     una sola línea en un iPhone chico y se corta feo — ahí se usa EXACTO
+     "Escribe / o - para comandos", sin ejemplos. Desktop conserva el más
+     descriptivo de siempre (con ejemplos), sin cambios. */
+  var placeholder = isMobileViewport()
+    ? "Escribe / o - para comandos"
+    : (hasTicket ? "Escribe / o - para comandos (nota, producto, pago…)" : "Escribe / o - para comandos (buscar, nuevo, ayuda…)");
   return (
     '<div class="composer-wrap">' + pop +
       '<div class="composer">' + plusBtn +
@@ -2591,11 +2784,17 @@ function renderSmartActions(){
   var chips = sa.actions.map(function(a){
     return '<button type="button" class="smart-action-chip" data-action="smart-action" data-key="' + a.key + '">' + escapeHtml(a.label) + "</button>";
   }).join("");
+  /* §14: mismo motivo que slashConfirmBanner — "Esc para cancelar" no sirve
+     sin teclado físico. Se agrega un botón real; el hint se queda para
+     desktop y se oculta en mobile por CSS. */
   return (
     '<div class="smart-actions" id="smart-actions">' +
       '<div class="smart-actions-label">Usar como:</div>' +
       '<div class="smart-actions-chips">' + chips + "</div>" +
-      '<div class="smart-actions-hint">Esc para cancelar</div>' +
+      '<div class="smart-actions-footer">' +
+        '<div class="smart-actions-hint">Esc para cancelar</div>' +
+        '<button type="button" class="btn-plain smart-actions-cancel-btn" data-action="smart-action-cancel">Cancelar</button>' +
+      "</div>" +
     "</div>"
   );
 }
@@ -2609,7 +2808,13 @@ function renderSmartActions(){
 function updateProductoPreview(rawValue){
   var el = document.getElementById("producto-preview");
   if(!el) return;
-  var m = rawValue.match(/^\/(producto|product)(\s+(.*))?$/i);
+  /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §16: bug real encontrado
+     en la auditoría de paridad "/"-"-" — esta vista previa solo reconocía
+     "/producto", nunca "-producto", así que escribir con el prefijo "-"
+     (el pensado para teclados móviles/mexicanos, sección 3) se quedaba sin
+     el preview de precio en vivo aunque el comando sí se ejecutara igual al
+     enviarlo. Mismo [\/\-] que ya usa el resto del compositor. */
+  var m = rawValue.match(/^[\/\-](producto|product)(\s+(.*))?$/i);
   if(!m || !(m[3] || "").trim()){ el.hidden = true; el.innerHTML = ""; return; }
   var p = parseProductoArg(m[3]);
   if(!p.desc){ el.hidden = true; el.innerHTML = ""; return; }
@@ -2631,19 +2836,28 @@ function updateProductoPreview(rawValue){
 function visibleCommands(hasTicket){
   return COMMANDS.filter(function(c){ return hasTicket || !c.requiresTicket; });
 }
-function filterCommands(hasTicket, fragment){
+/* Extraído de filterCommands() (§15) para poder reutilizar SOLO el match de
+   alias-por-prefijo, sin el fallback de buscar en la descripción — eso es
+   lo que necesita el autocomplete sin prefijo ("prod" sin "/"): un texto
+   suelto que además matcheara por descripción sería demasiado impreciso
+   para secuestrar silenciosamente lo que el usuario está escribiendo. */
+function filterCommandsByAliasPrefix(hasTicket, fragment){
   var pool = visibleCommands(hasTicket);
   fragment = (fragment || "").toLowerCase();
   if(!fragment) return pool;
-  var byAlias = pool.filter(function(c){
+  return pool.filter(function(c){
     return c.aliases.some(function(a){ return a.toLowerCase().indexOf(fragment) === 0; });
   });
-  if(byAlias.length) return byAlias;
+}
+function filterCommands(hasTicket, fragment){
+  var byAlias = filterCommandsByAliasPrefix(hasTicket, fragment);
+  fragment = (fragment || "").toLowerCase();
+  if(!fragment || byAlias.length) return byAlias;
   // Sin coincidencia de alias: solo buscamos también en la descripción si el
   // fragmento ya es específico — con 1-2 letras casi cualquier texto libre
   // "matchea" algo, y eso deja de ser un filtro útil.
   if(fragment.length < 3) return [];
-  return pool.filter(function(c){ return c.summary.toLowerCase().indexOf(fragment) !== -1; });
+  return visibleCommands(hasTicket).filter(function(c){ return c.summary.toLowerCase().indexOf(fragment) !== -1; });
 }
 
 function slashMenu(){
@@ -3220,15 +3434,28 @@ function helpEntryContent(entry){
   return { title: title, html: html };
 }
 
+/* Ronda "Fluidez, Confiabilidad, Realtime y QA" §14: este banner (/pago,
+   /factura, /cotizacion, /nuevo) SOLO tenía el texto "Enter para confirmar ·
+   Esc para cancelar" — bug real confirmado en la auditoría: sin teclado
+   físico (cualquier iPhone/iPad normal) no había forma de confirmar estos
+   comandos, ni siquiera tocando el botón de enviar (▲), porque submitNote()
+   nunca revisa UI.pendingConfirm. Se agregan botones táctiles reales que
+   llaman a los mismos confirmPendingSlash()/cancelar de siempre — el hint de
+   teclado se queda para quien sí tiene uno (desktop), y se oculta en mobile
+   por CSS (los botones son ahí la instrucción principal). El label del
+   botón de confirmar reutiliza cmd.confirmTitle tal cual ya existe
+   ("Registrar pago", "Crear invoice"…) — no se inventa un campo nuevo. */
 function slashConfirmBanner(){
   var c = UI.pendingConfirm;
   var cmd = c && COMMANDS_BY_KEY[c.key];
   if(!cmd) return "";
+  var confirmLabel = cmd.confirmTitle || cmd.summary || "Confirmar";
   return (
     '<div class="slash-confirm" id="slash-confirm">' +
       '<div class="slash-confirm-title">' + escapeHtml(cmd.confirmTitle || cmd.summary) + "</div>" +
       '<div class="slash-confirm-amount">' + cmd.confirmSummary(c.data) + "</div>" +
       '<div class="slash-confirm-hint">Enter para confirmar · Esc para cancelar</div>' +
+      '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="slash-confirm-cancel">Cancelar</button><button type="button" class="btn btn-primary" data-action="slash-confirm-ok">' + escapeHtml(confirmLabel) + "</button></div>" +
     "</div>"
   );
 }
@@ -3666,6 +3893,8 @@ function render(){
     renderDocModal() +
     renderCierreModal() +
     renderDocFormModal() +
+    renderHelpPanel() +
+    renderBugReportPanel() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -3700,10 +3929,34 @@ function render(){
       var m = v.match(/^[\/\-]([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]*)$/);
       var shouldOpen = !!m;
       var fragment = m ? m[1] : "";
-      var menuChanged = (shouldOpen !== !!UI.slashMenuOpen || fragment !== UI.slashQuery);
+      var barePrefix = false;
+      /* §15: predicción SIN escribir "/" o "-" primero — "prod" debe sugerir
+         "/producto" igual que "/prod" ya lo hace. Guardas explícitas para
+         nunca secuestrar una nota normal:
+           1) la única forma en que esto se activa es si el compositor
+              ENTERO es una sola palabra sin espacios (ver \s abajo) — en
+              cuanto hay un espacio ("producción de playeras…") esta rama ni
+              se evalúa, es una nota como cualquier otra;
+           2) mínimo 3 letras (mismo umbral que ya usa filterCommands() para
+              su propio fallback de texto libre);
+           3) solo cuenta si matchea por PREFIJO DE ALIAS real del registro
+              COMMANDS (filterCommandsByAliasPrefix) — nunca por texto de la
+              descripción, eso sería demasiado impreciso para algo sin "/".
+         Enter nunca autoejecuta este caso (ver el manejo de Enter más abajo,
+         UI.slashBarePrefix) — solo Tab o tocar la sugerencia completan. */
+      if(!shouldOpen && v.length >= 3 && !/\s/.test(v)){
+        var hasTicketBare = !!findTicket(UI.selectedTicketId);
+        if(filterCommandsByAliasPrefix(hasTicketBare, v).length){
+          shouldOpen = true;
+          fragment = v;
+          barePrefix = true;
+        }
+      }
+      var menuChanged = (shouldOpen !== !!UI.slashMenuOpen || fragment !== UI.slashQuery || barePrefix !== UI.slashBarePrefix);
       if(menuChanged){
         UI.slashMenuOpen = shouldOpen;
         UI.slashQuery = fragment;
+        UI.slashBarePrefix = barePrefix;
         UI.slashActiveIndex = 0;
       }
       /* Autocomplete predictivo del ARGUMENTO de /cliente (secciones 1.2/6.2):
@@ -3734,31 +3987,41 @@ function render(){
         if(e.key === "ArrowDown"){ e.preventDefault(); if(list.length) UI.slashActiveIndex = (UI.slashActiveIndex+1) % list.length; var v1=composerInput.value; render(); restoreComposerText(v1); scrollActiveMenuItemIntoView("slash-menu"); return; }
         if(e.key === "ArrowUp"){ e.preventDefault(); if(list.length) UI.slashActiveIndex = (UI.slashActiveIndex-1+list.length) % list.length; var v2=composerInput.value; render(); restoreComposerText(v2); scrollActiveMenuItemIntoView("slash-menu"); return; }
         if(e.key === "Enter"){
-          e.preventDefault();
-          UI.slashMenuOpen = false;
-          if(!list.length){
-            /* Sin coincidencias en el autocomplete: no nos quedamos callados
-               — se envía tal cual para que el despachador avise con el
-               mensaje de "comando no reconocido", igual que si no hubiera
-               menú de por medio. */
-            submitNote();
+          /* §15: si esta sugerencia apareció SIN que el usuario escribiera
+             "/" o "-" (UI.slashBarePrefix), Enter nunca autoejecuta nada —
+             eso es justo la regla "nunca secuestrar texto normal". Se cierra
+             el menú y se deja caer al Enter normal de más abajo, que envía
+             el texto tal cual (misma ruta que si este menú no existiera). */
+          if(UI.slashBarePrefix){
+            UI.slashMenuOpen = false;
+            UI.slashBarePrefix = false;
+          } else {
+            e.preventDefault();
+            UI.slashMenuOpen = false;
+            if(!list.length){
+              /* Sin coincidencias en el autocomplete: no nos quedamos callados
+                 — se envía tal cual para que el despachador avise con el
+                 mensaje de "comando no reconocido", igual que si no hubiera
+                 menú de por medio. */
+              submitNote();
+              return;
+            }
+            /* Si ya se escribió el nombre completo de un comando (sin espacio
+               final), Enter lo ejecuta directo en vez de solo autocompletarlo
+               — evita que comandos sin argumento (/estado, /help…) necesiten
+               dos Enter seguidos para hacer algo. */
+            var typed = composerInput.value.trim().slice(1).toLowerCase();
+            if(typed && ALIAS_INDEX[typed]){
+              var full = composerInput.value.trim();
+              composerInput.value = "";
+              dispatchCommand(full);
+            } else {
+              pickSlashCommand(list[UI.slashActiveIndex].aliases[0]);
+            }
             return;
           }
-          /* Si ya se escribió el nombre completo de un comando (sin espacio
-             final), Enter lo ejecuta directo en vez de solo autocompletarlo
-             — evita que comandos sin argumento (/estado, /help…) necesiten
-             dos Enter seguidos para hacer algo. */
-          var typed = composerInput.value.trim().slice(1).toLowerCase();
-          if(typed && ALIAS_INDEX[typed]){
-            var full = composerInput.value.trim();
-            composerInput.value = "";
-            dispatchCommand(full);
-          } else {
-            pickSlashCommand(list[UI.slashActiveIndex].aliases[0]);
-          }
-          return;
         }
-        if(e.key === "Escape"){ e.preventDefault(); UI.slashMenuOpen = false; var v3=composerInput.value; render(); restoreComposerText(v3); return; }
+        if(e.key === "Escape"){ e.preventDefault(); UI.slashMenuOpen = false; UI.slashBarePrefix = false; var v3=composerInput.value; render(); restoreComposerText(v3); return; }
         if(e.key === "Tab"){
           /* Dentro del autocomplete de "/", Tab completa el comando
              seleccionado sin ejecutarlo (a diferencia de Enter) — igual que
@@ -3956,6 +4219,7 @@ function scrollActiveMenuItemIntoView(containerId){
 
 function pickSlashCommand(cmd){
   UI.slashMenuOpen = false;
+  UI.slashBarePrefix = false;
   render();
   restoreComposerText("/" + cmd + " ");
 }
@@ -4117,6 +4381,18 @@ function suggestActionsForText(text, ctx){
     actions.push({ key:"nota", label:"Nota" });
     if(!looksLikeProducto) actions.push({ key:"producto", label:"Producto" });
     if(phone) actions.push({ key:"telefono", label:"Teléfono: " + phone.formatted });
+    /* §18: "Pago / abono" — otro camino hacia /pago, cero lógica nueva de
+       negocio (mismo parsePagoArg/addPagoCore de siempre). Criterio a
+       propósito ESTRICTO (sección 17: nada de heurística difusa) y alineado
+       EXACTO con lo que parsePagoArg ya acepta como monto (sin "$" ni comas,
+       nunca una segunda noción de "qué es un monto"): el texto COMPLETO
+       tiene que ser solo dígitos con decimales opcionales — "5 playeras" o
+       "producción de playeras para mañana" nunca califican, solo algo como
+       "100" o "350.50" tal cual. §21: un teléfono detectado (secuencia de
+       10 dígitos) nunca compite por esta sugerencia — mismo detectPhone()
+       de siempre, sin lógica nueva. */
+    var looksLikeMonto = !phone && /^\d+(\.\d{1,2})?$/.test(text.trim());
+    if(looksLikeMonto) actions.push({ key:"pago", label:"Pago / abono" });
     actions.push({ key:"cliente", label:"Cliente" });
     actions.push({ key:"sigue", label:"Qué sigue" });
   } else {
@@ -4134,6 +4410,19 @@ function suggestActionsForText(text, ctx){
    dos cosas es un guardado nuevo, son los mismos cores de siempre
    (createClienteCore/linkClienteToTicket/updateClienteCore vía
    /editarcliente). */
+/* Ronda "Fluidez, Confiabilidad, Realtime y QA" §20: bug real de la
+   auditoría — antes esta función limpiaba el compositor con
+   restoreComposerText("") y despachaba el comando ANTES de saber si
+   cmd.parse() lo iba a aceptar. Si la interpretación elegida fallaba
+   validación (ej. tocar "Producto" sobre un texto sin descripción real), el
+   texto ya estaba perdido para cuando aparecía el error. Ahora se llama
+   primero al MISMO cmd.parse() real (el que dispatchCommand() llamaría de
+   todos modos un instante después) en modo "solo verificar", exactamente
+   con el mismo (arg, ctx) que recibiría al ejecutarse — y el compositor
+   solo se limpia cuando esa verificación ya dice que sí va a funcionar. El
+   comportamiento optimista de siempre (limpiar antes de que termine el
+   guardado en Supabase) se queda igual, porque esa parte nunca fue el
+   problema. */
 function runSmartAction(key){
   var sa = UI.smartActions;
   if(!sa) return;
@@ -4146,9 +4435,22 @@ function runSmartAction(key){
     applyDetectedPhoneToTicket(t, phone);
     return;
   }
-  var cmdMap = { nota:"nota", producto:"producto", cliente:"cliente", sigue:"sigue", buscar:"buscar", nuevo:"nuevo" };
+  /* §18: "Pago / abono" es otro camino más hacia el mismo /pago de siempre
+     — mismo parsePagoArg, misma confirmación, mismo addPagoCore. Se agrega
+     aquí al mapa (no hay lógica nueva de negocio, solo una entrada más). */
+  var cmdMap = { nota:"nota", producto:"producto", cliente:"cliente", sigue:"sigue", buscar:"buscar", nuevo:"nuevo", pago:"pago" };
   var cmdKey = cmdMap[key];
   if(!cmdKey){ render(); restoreComposerText(text); return; }
+  var cmd = COMMANDS_BY_KEY[cmdKey];
+  var ctx = { ticket: t };
+  if(cmd.requiresTicket && !t){ render(); restoreComposerText(text); showToast("Selecciona un ticket primero."); return; }
+  var peek = cmd.parse(text, ctx);
+  if(!peek.ok){
+    render();
+    restoreComposerText(text);
+    if(peek.error) showToast(peek.error);
+    return;
+  }
   restoreComposerText("");
   dispatchCommand("/" + cmdKey + " " + text);
 }
@@ -4482,7 +4784,17 @@ function runQueueWithConcurrency(items, worker, concurrency, onProgress){
 async function uploadOnePhoto(t, file, caption, uploadBatchId){
   try{
     var blob = await resizeImageToBlob(file, 1280, 0.8);
-    var ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
+    /* §23: bug real de la auditoría — resizeImageToBlob() SIEMPRE produce
+       JPEG (y se sube con contentType: image/jpeg, línea de abajo), pero la
+       extensión del PATH se derivaba del nombre original del archivo, así
+       que una foto .png/.heic quedaba guardada como "....png"/"....heic"
+       con contenido JPEG real adentro. Se fija en "jpg" — el nombre
+       original se sigue guardando tal cual en payload.filename, así que no
+       se pierde ese dato, y las fotos históricas NO se tocan (esto solo
+       afecta subidas nuevas a partir de esta ronda). No aplica al logo del
+       cliente (uploadClienteLogo, que sigue siendo PNG a propósito por la
+       transparencia — ver ronda anterior). */
+    var ext = "jpg";
     var path = t.id + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + "." + ext;
     var up = await sb.storage.from(FILES_BUCKET).upload(path, blob, { contentType: "image/jpeg" });
     if(up.error) throw up.error;
@@ -5750,6 +6062,166 @@ function renderCierreModal(){
   );
 }
 
+/* ---------------- Ronda "Fluidez, Confiabilidad, Realtime y QA" §1: panel global "?" ----------------
+   Un punto de ayuda/diagnóstico discreto, NO Settings — mismo overlay
+   centrado que ya usa cierre-modal (nunca un componente de modal nuevo).
+   Un solo openHelpPanel() para desktop (parte baja del sidebar) y mobile
+   (drawer) — mismo botón, mismo panel, nunca dos implementaciones. */
+function openHelpPanel(){ UI.helpPanelOpen = true; UI.helpPanelTab = null; render(); }
+function closeHelpPanel(){ UI.helpPanelOpen = false; UI.helpPanelTab = null; render(); }
+function openHelpPanelTab(tab){ UI.helpPanelTab = tab; render(); }
+
+var KEYBOARD_SHORTCUTS = [
+  ["J / K", "Ticket anterior / siguiente (fuera de un campo de texto)"],
+  [HOME_SHORTCUT_LABEL, "Ir a Inicio"],
+  ["/ o -", "Abrir comandos en el compositor"],
+  ["Tab", "Autocompletar el comando seleccionado, sin ejecutarlo"],
+  ["Enter", "Confirmar / enviar"],
+  ["Esc", "Cancelar lo que esté abierto en el compositor"]
+];
+
+function renderHelpPanel(){
+  if(!UI.helpPanelOpen) return "";
+  var hasTicket = !!findTicket(UI.selectedTicketId);
+  var inner;
+  if(UI.helpPanelTab === "comandos"){
+    inner =
+      '<button type="button" class="btn-plain help-panel-back" data-action="help-panel-back">&larr; Atrás</button>' +
+      '<div class="cierre-modal-title">Comandos</div>' +
+      '<div class="help-panel-list">' +
+        visibleCommands(hasTicket).map(function(c){
+          return '<button class="help-cmd-btn" data-action="help-fill" data-text="/' + c.aliases[0] + ' "><code>/' + c.aliases[0] + "</code><span class=\"desc\">" + escapeHtml(c.summary) + "</span></button>";
+        }).join("") +
+      "</div>" +
+      '<div class="ephemeral-sub">Toca un comando para escribirlo en el compositor.</div>';
+  } else if(UI.helpPanelTab === "atajos"){
+    inner =
+      '<button type="button" class="btn-plain help-panel-back" data-action="help-panel-back">&larr; Atrás</button>' +
+      '<div class="cierre-modal-title">Atajos de teclado</div>' +
+      '<div class="help-panel-list">' +
+        KEYBOARD_SHORTCUTS.map(function(row){
+          return '<div class="help-shortcut-row"><code>' + escapeHtml(row[0]) + "</code><span>" + escapeHtml(row[1]) + "</span></div>";
+        }).join("") +
+      "</div>" +
+      '<div class="ephemeral-sub">Los atajos con teclado siguen funcionando igual con teclado físico en mobile/PWA; en pantalla táctil, todo tiene su botón equivalente.</div>';
+  } else {
+    inner =
+      '<div class="cierre-modal-title">Ayuda</div>' +
+      '<button type="button" class="help-panel-item" data-action="help-panel-tab" data-tab="comandos">Comandos</button>' +
+      '<button type="button" class="help-panel-item" data-action="help-panel-tab" data-tab="atajos">Atajos de teclado</button>' +
+      '<button type="button" class="help-panel-item" data-action="help-panel-refresh">Actualizar datos <span class="help-panel-refresh-icon">&#8635;</span></button>' +
+      '<button type="button" class="help-panel-item" data-action="open-bug-report">Reportar un problema</button>' +
+      '<div class="help-panel-sep"></div>' +
+      '<div class="help-panel-about">' +
+        '<div class="help-panel-about-name">Design To Go CRM</div>' +
+        '<div class="help-panel-about-meta">Versión ' + escapeHtml(APP_VERSION) + " · Build " + escapeHtml(APP_BUILD) + "</div>" +
+      "</div>" +
+      '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="close-help-panel">Cerrar</button></div>';
+  }
+  return (
+    '<div class="cierre-modal-overlay" id="help-panel-overlay">' +
+      '<div class="cierre-modal help-panel">' + inner + "</div>" +
+    "</div>"
+  );
+}
+
+/* ---------------- §3: Reportar un problema ----------------
+   Extremadamente simple a propósito: descripción + severidad + captura
+   OPCIONAL (adjuntar una imagen ya tomada por el usuario — nunca una
+   captura automática del DOM, eso pediría una librería nueva que está
+   fuera de alcance de esta ronda; ver NOTES-TO-ARCHITECT). El contexto
+   técnico (versión/build/vista/ticket/viewport/user agent/standalone/
+   usuario) se arma solo, nunca lo escribe Martín a mano. */
+function openBugReport(){
+  UI.helpPanelOpen = false; UI.helpPanelTab = null;
+  UI.bugReportOpen = true; UI.bugReportSeverity = "molestia"; UI.bugReportSaving = false;
+  bugReportScreenshotFile = null;
+  UI.pendingFocus = { elId: "bugreport-desc" };
+  render();
+}
+function closeBugReport(){
+  if(UI.bugReportSaving) return;
+  UI.bugReportOpen = false;
+  bugReportScreenshotFile = null;
+  render();
+}
+var BUG_SEVERITIES = [
+  ["molestia", "Molestia"],
+  ["bloqueo", "No me deja continuar"],
+  ["visual", "Algo se ve mal"]
+];
+function bugReportContext(){
+  var t = findTicket(UI.selectedTicketId);
+  return {
+    app_version: APP_VERSION, app_build: APP_BUILD,
+    timestamp: new Date().toISOString(),
+    view: UI.mainView || (t ? "ticket" : "home"),
+    ticket_id: t ? t.id : null, ticket_seq: t ? t.seq : null,
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    user_agent: navigator.userAgent || "",
+    standalone: !!(window.navigator.standalone || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)),
+    whoami: UI.whoami || null
+  };
+}
+function renderBugReportPanel(){
+  if(!UI.bugReportOpen) return "";
+  var chips = BUG_SEVERITIES.map(function(s){
+    return '<button type="button" class="bugreport-severity-chip' + (UI.bugReportSeverity===s[0]?" active":"") + '" data-action="bug-severity" data-value="' + s[0] + '">' + s[1] + "</button>";
+  }).join("");
+  var fileLabel = bugReportScreenshotFile ? escapeHtml(bugReportScreenshotFile.name) : "Adjuntar captura (opcional)";
+  return (
+    '<div class="cierre-modal-overlay" id="bugreport-overlay">' +
+      '<div class="cierre-modal bugreport-modal">' +
+        '<div class="cierre-modal-title">Reportar un problema</div>' +
+        '<label class="cierre-razon-label">¿Qué pasó?<textarea id="bugreport-desc" rows="4" placeholder="Cuéntanos qué hiciste, qué esperabas, y qué pasó en su lugar."></textarea></label>' +
+        '<div class="bugreport-severity-row">' + chips + "</div>" +
+        '<button type="button" class="btn btn-ghost bugreport-attach-btn" data-action="bug-attach">&#128206; ' + fileLabel + "</button>" +
+        '<input type="file" id="bugreport-screenshot-input" accept="image/*" hidden>' +
+        '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="close-bug-report"' + (UI.bugReportSaving?" disabled":"") + '>Cancelar</button><button type="button" class="btn btn-primary" data-action="bug-submit"' + (UI.bugReportSaving?" disabled":"") + ">" + (UI.bugReportSaving?"Guardando…":"Guardar reporte") + "</button></div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+/* Nunca perder la descripción por una falla de Storage (§3): el texto se
+   guarda SIEMPRE primero; la captura es un adjunto best-effort aparte. Si
+   la migración 0008 todavía no se corrió, el INSERT falla con el error de
+   Supabase tal cual (mismo criterio que el resto de las migraciones
+   pendientes de esta app) y se avisa — nunca se pierde el texto ya escrito,
+   porque UI.bugReportOpen se queda true hasta que sí se guarda. */
+async function submitBugReport(){
+  var descEl = document.getElementById("bugreport-desc");
+  var desc = (descEl && descEl.value || "").trim();
+  if(!desc){ if(descEl) descEl.focus(); showToast("Escribe qué pasó."); return; }
+  UI.bugReportSaving = true;
+  render();
+  try{
+    var ins = await sb.from("app_bug_reports").insert({
+      descripcion: desc, severidad: UI.bugReportSeverity, context: bugReportContext()
+    }).select().single();
+    if(ins.error) throw ins.error;
+    var bugId = ins.data.id;
+    if(bugReportScreenshotFile){
+      try{
+        var path = "app-bugs/" + bugId + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
+        var blob = await resizeImageToBlob(bugReportScreenshotFile, 1280, 0.8);
+        var up = await sb.storage.from(FILES_BUCKET).upload(path, blob, { contentType: "image/jpeg" });
+        if(!up.error){
+          await sb.from("app_bug_reports").update({ screenshot_storage_path: path }).eq("id", bugId);
+        }
+      }catch(e){ /* best-effort: el reporte de texto ya se guardó, la captura nunca lo bloquea */ }
+    }
+    UI.bugReportOpen = false;
+    bugReportScreenshotFile = null;
+    UI.bugReportSaving = false;
+    render();
+    showToast("Reporte guardado. Gracias.");
+  }catch(e){
+    UI.bugReportSaving = false;
+    render();
+    showToast("No se pudo guardar el reporte: " + (e.message || "error"));
+  }
+}
+
 /* ---------------- slash commands: parsing y ejecución ----------------
    Sintaxis pequeña y predecible a propósito — no lenguaje natural. Las
    tres rutas (botón +, /comando, escribir el comando completo) llaman
@@ -6492,7 +6964,11 @@ async function dispatchCommand(raw){
   var hasTicket = !!t;
 
   if(aliasKey === "help" || aliasKey === "ayuda"){
-    pushEphemeral("help", hasTicket ? t.id : null, { query: parsed.arg.replace(/^\//, "").trim() });
+    /* §16 (paridad "/"-"-"): "/help -nota" tiene que encontrar /nota igual
+       que "/help /nota" — antes solo se quitaba un "/" inicial del
+       argumento, así que "-nota" se buscaba tal cual (con el guion incluido)
+       y nunca hacía match ni por key ni por alias. */
+    pushEphemeral("help", hasTicket ? t.id : null, { query: parsed.arg.replace(/^[\/\-]/, "").trim() });
     return;
   }
   if(!aliasKey){
@@ -6855,6 +7331,21 @@ function wireEvents(){
   if(cierreOverlay){
     cierreOverlay.addEventListener("click", function(e){ if(e.target === cierreOverlay) closeCierreModal(); });
   }
+  var helpPanelOverlay = document.getElementById("help-panel-overlay");
+  if(helpPanelOverlay){
+    helpPanelOverlay.addEventListener("click", function(e){ if(e.target === helpPanelOverlay) closeHelpPanel(); });
+  }
+  var bugreportOverlay = document.getElementById("bugreport-overlay");
+  if(bugreportOverlay){
+    bugreportOverlay.addEventListener("click", function(e){ if(e.target === bugreportOverlay) closeBugReport(); });
+  }
+  var bugreportFileInput = document.getElementById("bugreport-screenshot-input");
+  if(bugreportFileInput){
+    bugreportFileInput.addEventListener("change", function(){
+      bugReportScreenshotFile = bugreportFileInput.files && bugreportFileInput.files[0] || null;
+      render();
+    });
+  }
 
   root.querySelectorAll('[data-slash-cmd]').forEach(function(b){
     b.addEventListener("click", function(){ pickSlashCommand(b.getAttribute("data-slash-cmd")); });
@@ -6890,9 +7381,52 @@ document.addEventListener("click", function(e){
   var dismissBtn = e.target.closest && e.target.closest('[data-action="dismiss-ephemeral"]');
   if(dismissBtn){ dismissEphemeral(dismissBtn.getAttribute("data-id")); return; }
   var helpFillBtn = e.target.closest && e.target.closest('[data-action="help-fill"]');
-  if(helpFillBtn){ restoreComposerText(helpFillBtn.getAttribute("data-text")); return; }
+  if(helpFillBtn){
+    /* Este botón vive en dos lugares: la vista efímera de /help (de
+       siempre) y el panel global "?" nuevo (§1). Si vino del panel nuevo,
+       cerrarlo es parte de "elegir un comando" — nunca deja el overlay
+       abierto tapando el compositor que se acaba de llenar. */
+    if(UI.helpPanelOpen){ UI.helpPanelOpen = false; UI.helpPanelTab = null; }
+    restoreComposerText(helpFillBtn.getAttribute("data-text"));
+    return;
+  }
+  var openHelpPanelBtn = e.target.closest && e.target.closest('[data-action="open-help-panel"]');
+  if(openHelpPanelBtn){ openHelpPanel(); return; }
+  var closeHelpPanelBtn = e.target.closest && e.target.closest('[data-action="close-help-panel"]');
+  if(closeHelpPanelBtn){ closeHelpPanel(); return; }
+  var helpPanelTabBtn = e.target.closest && e.target.closest('[data-action="help-panel-tab"]');
+  if(helpPanelTabBtn){ openHelpPanelTab(helpPanelTabBtn.getAttribute("data-tab")); return; }
+  var helpPanelBackBtn = e.target.closest && e.target.closest('[data-action="help-panel-back"]');
+  if(helpPanelBackBtn){ openHelpPanelTab(null); return; }
+  var helpPanelRefreshBtn = e.target.closest && e.target.closest('[data-action="help-panel-refresh"]');
+  if(helpPanelRefreshBtn){
+    closeHelpPanel();
+    showToast("Actualizando…");
+    refreshFromServer({ background: true });
+    return;
+  }
+  var openBugReportBtn = e.target.closest && e.target.closest('[data-action="open-bug-report"]');
+  if(openBugReportBtn){ openBugReport(); return; }
+  var closeBugReportBtn = e.target.closest && e.target.closest('[data-action="close-bug-report"]');
+  if(closeBugReportBtn){ closeBugReport(); return; }
+  var bugSeverityBtn = e.target.closest && e.target.closest('[data-action="bug-severity"]');
+  if(bugSeverityBtn){ UI.bugReportSeverity = bugSeverityBtn.getAttribute("data-value"); render(); return; }
+  var bugAttachBtn = e.target.closest && e.target.closest('[data-action="bug-attach"]');
+  if(bugAttachBtn){
+    var bugFileInput = document.getElementById("bugreport-screenshot-input");
+    if(bugFileInput) bugFileInput.click();
+    return;
+  }
+  var bugSubmitBtn = e.target.closest && e.target.closest('[data-action="bug-submit"]');
+  if(bugSubmitBtn){ submitBugReport(); return; }
   var smartActionBtn = e.target.closest && e.target.closest('[data-action="smart-action"]');
   if(smartActionBtn){ runSmartAction(smartActionBtn.getAttribute("data-key")); return; }
+  var smartActionCancelBtn = e.target.closest && e.target.closest('[data-action="smart-action-cancel"]');
+  if(smartActionCancelBtn){ UI.smartActions = null; render(); return; }
+  var slashConfirmOkBtn = e.target.closest && e.target.closest('[data-action="slash-confirm-ok"]');
+  if(slashConfirmOkBtn){ confirmPendingSlash(); return; }
+  var slashConfirmCancelBtn = e.target.closest && e.target.closest('[data-action="slash-confirm-cancel"]');
+  if(slashConfirmCancelBtn){ UI.pendingConfirm = null; render(); return; }
   var showProdBtn = e.target.closest && e.target.closest('[data-action="show-productos"]');
   if(showProdBtn){ pushEphemeral("productos", showProdBtn.getAttribute("data-ticket"), { filter: showProdBtn.getAttribute("data-filter") }); return; }
   var showDocsBtn = e.target.closest && e.target.closest('[data-action="show-documentos"]');
@@ -7015,6 +7549,8 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.viewingDocId){ closeDocumentViewer(); return; }
   if(e.key === "Escape" && UI.cierreModal){ closeCierreModal(); return; }
   if(e.key === "Escape" && UI.headerEditField){ closeHeaderEdit(); return; }
+  if(e.key === "Escape" && UI.bugReportOpen){ closeBugReport(); return; }
+  if(e.key === "Escape" && UI.helpPanelOpen){ closeHelpPanel(); return; }
 
   /* Navegación J/K entre tickets, respetando el mismo orden visual que ve
      el usuario en el sidebar (visualTicketOrder — pinneados, luego
