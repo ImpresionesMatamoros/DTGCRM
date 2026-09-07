@@ -163,6 +163,13 @@ button{cursor:pointer;}
 .btn-ghost{background:transparent; border-color:var(--border); color:var(--text);}
 .btn-sm{padding:5px 10px; font-size:12.5px;}
 .btn-ghost:hover{background:var(--surface-3);}
+/* Parte P (eliminar fotos ya guardadas): única acción realmente destructiva
+   de cara al usuario en esta ronda — mismo tratamiento visual que el resto
+   de "peligro" en la app (--danger/--danger-soft, ya usados en status
+   Cerrado·Cancelado y en el marcador Urgente), nunca un rojo inventado
+   aparte. */
+.btn-danger{background:var(--danger); color:#fff; justify-content:center;}
+.btn-danger:hover{background:var(--danger); opacity:.88;}
 .btn-plain{background:transparent; border:none; color:var(--text-muted); padding:6px 8px;}
 .btn-plain:hover, .btn-plain:active{color:var(--text); background:var(--surface-3); border-radius:var(--radius-s);}
 .search-wrap{position:relative;}
@@ -1026,7 +1033,17 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   padding:9px 16px; border-radius:999px; font-size:12.5px; box-shadow:var(--shadow); z-index:50; opacity:0;
   pointer-events:none; transition:opacity .18s ease, transform .18s ease;
 }
-.toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(-4px); pointer-events:auto;}
+/* Parte U §131: toast con acciones (Abrir/Copiar tras crear un ticket) —
+   mismo pill de siempre, solo que este además puede tener botones reales
+   (pointer-events:auto de arriba los habilita mientras está visible). */
+.toast-with-actions{display:flex; align-items:center; gap:10px; padding-right:8px;}
+/* rgba gris neutro (no blanco/negro fijo): el pill del toast invierte
+   --text/--bg respecto al tema (queda oscuro en modo claro, claro en modo
+   oscuro — ver .toast de arriba), así que un overlay gris a medias es lo
+   único que se ve bien encima de los dos sin duplicar esta regla por tema. */
+.toast-action-btn{background:rgba(127,127,127,.35); color:inherit; border:none; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:600; cursor:pointer;}
+.toast-action-btn:hover{background:rgba(127,127,127,.5);}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
 
 /* ---------- sección Tickets — explorador general (Bug B) ----------
@@ -1265,6 +1282,10 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-list-table thead th{
   text-align:left; padding:8px 10px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
   color:var(--text-faint); border-bottom:1px solid var(--border); white-space:nowrap;
+  /* §45: "sticky header si es sencillo" — .tickets-list-wrap ya es su propio
+     contenedor de scroll (overflow-x:auto fuerza overflow-y:auto por
+     spec), así que top:0 aquí basta, sin JS ni wrapper nuevo. */
+  position:sticky; top:0; z-index:1; background:var(--surface);
 }
 .tickets-list-row{border-bottom:1px solid var(--border); cursor:pointer;}
 .tickets-list-row:hover, .tickets-list-row:focus-visible{background:var(--surface-2); outline:none;}
@@ -1278,6 +1299,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-details thead th{
   text-align:left; padding:8px 10px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
   color:var(--text-faint); border-bottom:1px solid var(--border); white-space:nowrap;
+  position:sticky; top:0; z-index:1; background:var(--surface);
 }
 /* §27-30: la FILA ya no es clicable (ni cursor:pointer ni hover de fila) —
    cada celda es su propia affordance, ver .tickets-details-cell-btn. */
@@ -1287,6 +1309,11 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   background:none; border:none; font-family:var(--font-mono); font-weight:700; color:var(--accent-ink);
   cursor:pointer; padding:5px 6px;
 }
+/* Parte S §122: icono de Copiar junto al folio en Lista/Detalles — discreto,
+   nunca compite visualmente con "#1488 ↗" (la affordance real de abrir). */
+.tickets-folio-cell{display:inline-flex; align-items:center; gap:2px;}
+.tickets-copy-icon-btn{font-size:12px; padding:4px 5px; opacity:.55;}
+.tickets-copy-icon-btn:hover{opacity:1; background:var(--surface-3);}
 /* Celda-botón genérica de Detalles (§27-41): ocupa toda la celda, se ve
    tocable (hover/focus) pero sin gritar "botón" — el contenido real
    (pill de estado, texto, marcadores) se ve exactamente igual que antes,
@@ -1981,8 +2008,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.9.0";
-var APP_BUILD = "2026.09.07.3";
+var APP_VERSION = "0.10.0";
+var APP_BUILD = "2026.09.07.4";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2163,6 +2190,19 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      ticket_id como única fuente de datos (ver ticketGalleryPhotos) — nunca
      un índice de imágenes paralelo al de Biblioteca. */
   ticketGallery: null,
+  /* Parte P (eliminar fotos ya guardadas): { photoId, ticketId } | null —
+     confirmación explícita ANTES de ocultar una foto ya subida (§90: "no es
+     instantáneo"). Se abre por encima de la Galería o del visor de
+     Biblioteca (cualquiera que esté abierto en ese momento), nunca
+     reemplaza a ninguno de los dos — es otra capa más en el mismo patrón de
+     "overlay sobre overlay" que ya usa markerPicker/cellEditor. */
+  deletePhotoConfirm: null,
+  /* Parte T §127: true cuando un deep link (?t=UUID) no resolvió a ningún
+     ticket visible para esta persona (no existe, se eliminó, o RLS no le
+     dio acceso) — nunca se distingue cuál de los tres casos fue, para no
+     revelar más de lo que ya revela un 404 cualquiera. Se limpia sola al
+     navegar a cualquier lado (ver goHome/goToTickets/openTicketById). */
+  deepLinkNotFound: false,
   /* Ronda "Refinamiento operativo" §13-16: panel de contacto rápido de la
      cabecera del ticket — { clienteId, ticketId } | null. Estado efímero de
      una sola interacción (igual que cierreModal/helpPanelOpen), nunca
@@ -2435,6 +2475,13 @@ async function startAppForSession(session){
   await refreshFromServer();
   rememberName(currentActorName());
   subscribeRealtime();
+  /* §125: este es el ÚNICO punto que corren TANTO boot() con una sesión ya
+     guardada COMO submitLogin() justo después de autenticar — así que
+     resolver el deep link aquí, después de que STATE.tickets ya tiene
+     datos, cubre los dos caminos con una sola llamada (nunca se necesita
+     "recordar" el ?t= por separado durante el login: la URL nunca se tocó
+     mientras tanto). */
+  resolveDeepLinkIfNeeded();
 }
 
 /* Traduce los errores más comunes de sb.auth.signInWithPassword a algo que
@@ -2591,7 +2638,13 @@ async function fetchAllState(){
   });
   bitacoraRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
-    var ev = Object.assign({ id: row.id, type: row.tipo, ts: row.ts, autor: row.autor }, row.payload || {});
+    /* deleted_at/deleted_by (Parte P, migración 0012): columnas reales de la
+       fila, no del jsonb — se leen tolerantes (|| null / || "") igual que
+       cualquier columna de una migración opcional en este archivo, así que
+       si 0012 todavía no se corrió el frontend simplemente nunca ve fotos
+       "eliminadas" (ninguna fila las trae) y el botón de eliminar, si se
+       llega a usar, fallará al hacer el UPDATE — nunca rompe el arranque. */
+    var ev = Object.assign({ id: row.id, type: row.tipo, ts: row.ts, autor: row.autor, deleted_at: row.deleted_at || null, deleted_by: row.deleted_by || "" }, row.payload || {});
     t.thread.push(ev);
   });
   /* §84: un solo fetch central para TODOS los tickets (nunca un fetch por
@@ -2686,6 +2739,50 @@ async function refreshFromServer(opts){
 var realtimeTimer = null;
 function scheduleRefresh(){ clearTimeout(realtimeTimer); realtimeTimer = setTimeout(function(){ refreshFromServer({ background: true }); }, 300); }
 var realtimeChannel = null;
+
+/* ================= Parte T — Deep Links (?t=<uuid>) =================
+   §124: se resuelve UNA sola vez por sesión de página (nunca en cada
+   refreshFromServer(), que corre constantemente) — deepLinkResolved es el
+   guard. §125: se llama desde startAppForSession(), el ÚNICO punto que ya
+   corren tanto boot() con sesión guardada COMO submitLogin() con sesión
+   recién creada, así que "el link sobrevive el login" no necesita ninguna
+   lógica extra: la URL nunca se toca durante el login, y este resolver
+   corre exactamente igual sea cual sea el camino que llegó a tener sesión. */
+var deepLinkResolved = false;
+function resolveDeepLinkIfNeeded(){
+  if(deepLinkResolved) return;
+  deepLinkResolved = true;
+  var wantId;
+  try{ wantId = new URLSearchParams(window.location.search).get("t"); }catch(e){ wantId = null; }
+  if(!wantId) return;
+  /* §126: el link solo EXPRESA qué ticket se quiere abrir — el permiso real
+     ya lo decidió RLS al construir STATE.tickets (fetchAllState). Si
+     wantId no aparece ahí (no existe, se eliminó, o esta persona no tiene
+     acceso), nunca se revela nada distinto de "no se pudo abrir". */
+  var t = findTicket(wantId);
+  if(t){
+    openTicketById(t.id);
+  } else {
+    UI.deepLinkNotFound = true;
+    render();
+  }
+}
+/* §128: mantiene la URL sincronizada con qué ticket está abierto usando
+   replaceState (nunca pushState) — abrir/cerrar tickets es navegación
+   DENTRO de la misma pantalla de esta SPA, no un historial de páginas
+   distintas; con pushState el botón Atrás del navegador tendría que
+   recorrer cada ticket que se abrió en la sesión antes de salir de la app,
+   que es justo el "comportamiento extraño" que el addendum pide evitar.
+   Refresh/abrir-en-pestaña-nueva SÍ deben conservar el ticket actual, y
+   replaceState ya lo garantiza porque la URL de la barra queda correcta en
+   todo momento. */
+function syncDeepLinkUrl(ticketOrNull){
+  try{
+    var base = window.location.origin + window.location.pathname;
+    var next = ticketOrNull ? (base + "?t=" + encodeURIComponent(ticketOrNull.id)) : base;
+    if(next !== window.location.href) window.history.replaceState(null, "", next);
+  }catch(e){ /* algunos contextos (file://, ciertos WebViews) pueden negar History API — nunca bloquea la navegación real de la app por esto */ }
+}
 /* Identity Foundation §9 (auto-audit "no duplicar listeners"): antes esta
    función solo se llamaba una vez por carga de página, así que nunca
    importó que no se desuscribiera de nada. Ahora signOut()/una nueva
@@ -2775,7 +2872,7 @@ function openTicketById(id){
   UI.selectedTicketId = id;
   UI.mainView = null;
   UI.selectedClienteId = null;
-  UI.clienteReturnTicketId = null;
+  UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null;
   UI.docDraft = null;
   UI.slashMenuOpen = false;
@@ -2795,7 +2892,7 @@ function goHome(){
   UI.selectedTicketId = null;
   UI.mainView = null;
   UI.selectedClienteId = null;
-  UI.clienteReturnTicketId = null;
+  UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null;
   UI.docDraft = null;
   UI.viewingDocId = null;
@@ -2819,7 +2916,7 @@ function goToClientes(){
   UI.selectedTicketId = null;
   UI.mainView = "clientes";
   UI.selectedClienteId = null;
-  UI.clienteReturnTicketId = null;
+  UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null;
   UI.docDraft = null;
   UI.viewingDocId = null;
@@ -2839,25 +2936,25 @@ function goToClientes(){
    sobre STATE.tickets, ver ticketsAtencion/ticketsProduccion/ticketsCerrados
    más abajo. */
 function goToAtencion(){
-  UI.selectedTicketId = null; UI.mainView = "atencion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.selectedTicketId = null; UI.mainView = "atencion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToProduccion(){
-  UI.selectedTicketId = null; UI.mainView = "produccion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.selectedTicketId = null; UI.mainView = "produccion"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToCerrados(){
-  UI.selectedTicketId = null; UI.mainView = "cerrados"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.selectedTicketId = null; UI.mainView = "cerrados"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
 function goToCxc(){
-  UI.selectedTicketId = null; UI.mainView = "cxc"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.selectedTicketId = null; UI.mainView = "cxc"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
@@ -2871,7 +2968,7 @@ function goToCxc(){
    regresar"). Solo /clear-equivalente sería resetearlo a mano, y no hay tal
    comando — es intencional: es más útil recordar que olvidar. */
 function goToTickets(){
-  UI.selectedTicketId = null; UI.mainView = "tickets"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.selectedTicketId = null; UI.mainView = "tickets"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
   UI.pendingFocus = { elId: "tickets-explorer-search" };
   UI.sidebarOpen = false;
@@ -2879,7 +2976,7 @@ function goToTickets(){
 }
 /* Biblioteca: mismo criterio — no se resetea UI.biblioteca al entrar. */
 function goToBiblioteca(){
-  UI.selectedTicketId = null; UI.mainView = "biblioteca"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.selectedTicketId = null; UI.mainView = "biblioteca"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
   UI.bibliotecaViewer = null;
   UI.pendingFocus = { elId: "biblioteca-search" };
@@ -3631,11 +3728,17 @@ function renderTicketHeader(t){
         ' · <button data-action="deshacer-entrega" data-ticket="' + t.id + '">deshacer</button></span>';
     }
     actionsRow += '<button class="btn btn-cierre-secondary comanda-secondary-btn" data-action="abrir-cierre">Cerrar ticket &#9662;</button>';
+    /* Parte S §122: "Copiar" visible en la cabecera del ticket completo —
+       mismo botón/core sin importar el estado (ver también la rama
+       "cerrado" abajo), nunca oculto detrás de un menú extra cuando ya cabe
+       directo en la barra de acciones. */
+    actionsRow += '<button class="btn btn-ghost comanda-secondary-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket">Copiar</button>';
     actionsRow += "</div>";
   } else {
     actionsRow = '<div class="comanda-cerrado-note"><b>' + ticketEstadoLabel(estado) + "</b> · " + fmtDateShort(t.cerradoAt) +
       (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") +
-      (t.razonCierre ? '<div>' + escapeHtml(t.razonCierre) + "</div>" : "") + "</div>";
+      (t.razonCierre ? '<div>' + escapeHtml(t.razonCierre) + "</div>" : "") + "</div>" +
+      '<div class="comanda-actions-row"><button class="btn btn-ghost comanda-secondary-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket">Copiar</button></div>';
   }
 
   /* 4 — OPERACIÓN: clic para actuar, no inputs siempre visibles. Cada fila,
@@ -4662,6 +4765,94 @@ function ticketEstadoLabel(estado){
   return { abierto: "Abierto", entregado: "Entregado", cerrado_pagado: "Cerrado · Pagado", cerrado_cancelado: "Cerrado · Cancelado" }[estado] || "Abierto";
 }
 function ticketIsCerrado(t){ return !!t.cierreTipo; }
+
+/* ================= Parte S — botón COPIAR =================
+   NO WhatsApp API/integración de ningún tipo (§112-113): esto solo arma un
+   texto y lo manda al portapapeles — a dónde lo pega la persona después es
+   decisión suya. Una sola función central (§120) para las 3 superficies
+   (ticket completo, ⋯ de Miniaturas, Detalles); determinista, sin IA/
+   heurística difusa (§117), reutilizando SIEMPRE los mismos helpers que ya
+   usa el resto de la app (ticketEstado/ticketEstadoLabel, fmtDateOnlyShort,
+   activeMarkers/markerIcon/markerLabel) — nunca una segunda máquina de
+   estados ni un segundo formateador de fecha solo para este texto. */
+function ticketTrabajoResumen(t){
+  var productos = t.productos || [];
+  if(!productos.length) return "";
+  /* §117: resumen breve y determinista, no las 40 líneas del detalle
+     completo — "12 playeras negras" (cantidad>1 se antepone al texto tal
+     cual ya lo escribió quien creó el producto, sección "no reinventa el
+     desc") o "Invitaciones XV" cuando la cantidad es 1 (anteponerla ahí
+     sería ruido: "1 Invitaciones XV" no dice nada que "Invitaciones XV" no
+     diga ya). Varios productos se unen con " + ", igual que el ejemplo del
+     addendum ("12 playeras + 2 banners"). */
+  return productos.map(function(p){
+    var cant = p.cantidad || 1;
+    return (cant > 1 ? (cant + " " + p.desc) : p.desc);
+  }).join(" + ");
+}
+/* §123/§129: única fuente del link — nadie más en el código arma "?t=" a
+   mano. Usa el UUID estable del ticket (nunca el folio visible, §123) y
+   SOLO origin+pathname del propio index.html (§130: jamás un token/JWT/
+   parámetro de sesión, que ni siquiera viven en la URL de este SPA). */
+function ticketDeepLink(t){
+  var base = window.location.origin + window.location.pathname;
+  return base + "?t=" + encodeURIComponent(t.id);
+}
+function buildTicketCopyText(t){
+  var lines = ["🟣 DTG · Ticket #" + t.seq];
+  if(t.cliente) lines.push("Cliente: " + t.cliente);
+  var trabajo = ticketTrabajoResumen(t);
+  if(trabajo) lines.push("Trabajo: " + trabajo);
+  /* §118: "Abierto" es el default silencioso en TODA la app (el pill de
+     estado ya se oculta cuando estado==="abierto" en Miniaturas/Iconos/
+     Lista/cabecera — buscar `estado!=="abierto"` en este mismo archivo) —
+     el texto copiado sigue exactamente ese mismo criterio ya establecido,
+     nunca uno nuevo solo para Copiar. */
+  var estado = ticketEstado(t);
+  if(estado !== "abierto") lines.push("Estado: " + ticketEstadoLabel(estado));
+  if(t.queSigue) lines.push("Qué sigue: " + t.queSigue);
+  if(t.responsable) lines.push("Responsable: " + t.responsable);
+  if(t.fechaCompromiso) lines.push("Compromiso: " + fmtDateOnlyShort(t.fechaCompromiso));
+  /* §119: marcadores activos importantes — con el set actual (6 tipos
+     posibles) mostrar todos los activos nunca vuelve ilegible el mensaje;
+     nunca se oculta uno crítico por recortar la lista. */
+  activeMarkers(t).forEach(function(m){
+    lines.push(markerIcon(m.type) + " " + markerLabel(m.type));
+  });
+  lines.push("Abrir ticket:");
+  lines.push(ticketDeepLink(t));
+  return lines.join("\n");
+}
+/* §121: clipboard con fallback razonable — algunos contextos (http sin TLS,
+   ciertos navegadores embebidos) no exponen navigator.clipboard o lo
+   rechazan; el fallback de textarea+execCommand cubre esos casos sin pedirle
+   nada nuevo al usuario. Siempre termina en el mismo toast discreto, nunca
+   un modal. */
+function copyTicketSummary(t){
+  var text = buildTicketCopyText(t);
+  function ok(){ showToast("✓ Copiado"); }
+  function fail(){ showToast("No se pudo copiar. Selecciona y copia manualmente."); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok, function(){
+      if(!copyTicketSummaryFallback(text)) fail(); else ok();
+    });
+  } else {
+    if(copyTicketSummaryFallback(text)) ok(); else fail();
+  }
+}
+function copyTicketSummaryFallback(text){
+  try{
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    var success = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return success;
+  }catch(e){ return false; }
+}
 /* Rango de orden para el sidebar (sección 6: "entregado se mueve debajo de
    los activos") — solo reordena, nunca oculta: abiertos primero, entregados
    sin cerrar después, cerrados al final de su mismo grupo de fecha. */
@@ -4833,7 +5024,10 @@ function ticketsExplorerSortCompare(sort){
 function ticketThumbPhotoPath(t){
   var thread = t.thread || [];
   for(var i = thread.length - 1; i >= 0; i--){
-    if(thread[i].type === "archivo" && thread[i].storage_path) return thread[i].storage_path;
+    /* Parte P §95: una foto eliminada nunca vuelve a aparecer como
+       thumbnail — si era la última, el thumbnail cae a la anterior activa
+       (o a ninguna, si no queda otra), nunca revive la eliminada. */
+    if(thread[i].type === "archivo" && thread[i].storage_path && !thread[i].deleted_at) return thread[i].storage_path;
   }
   return null;
 }
@@ -4848,7 +5042,7 @@ function ticketThumbPhotoPath(t){
    una vez por tarjeta. */
 function ticketPhotoCount(t){
   var n = 0;
-  (t.thread || []).forEach(function(ev){ if(ev.type === "archivo" && ev.storage_path) n++; });
+  (t.thread || []).forEach(function(ev){ if(ev.type === "archivo" && ev.storage_path && !ev.deleted_at) n++; });
   return n;
 }
 
@@ -5225,6 +5419,10 @@ function renderTicketsThumbActions(t, estado){
    openCierreModalForTicket) — el ⋯ es solo otro lugar donde aparecen. */
 function renderTicketsThumbMoreMenu(t, estado){
   var items = [];
+  /* Parte S §122: Copiar vive AQUÍ (dentro del ⋯) en Miniaturas para no
+     saturar la franja de acciones — mismo core copyTicketSummary() que la
+     cabecera del ticket completo y Detalles, nunca una segunda lógica. */
+  items.push('<button type="button" class="help-cmd-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '"><span class="desc">Copiar</span></button>');
   items.push('<button type="button" class="help-cmd-btn" data-action="tickets-thumb-marcar" data-id="' + t.id + '"><span class="desc">Marcar como&hellip;</span></button>');
   items.push('<button type="button" class="help-cmd-btn" data-action="tickets-thumb-pin" data-id="' + t.id + '"><span class="desc">' + (t.pinned ? "Desfijar" : "Fijar") + "</span></button>");
   if(estado === "abierto"){
@@ -5296,7 +5494,10 @@ function renderTicketsListRow(t){
   var v = ticketOperationalCellValues(t);
   var avatarHtml = v.c ? clientAvatar(v.c, {size:"sm", degrade:"reduced"}) : '<span class="client-avatar client-avatar-initials client-avatar-sm">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
   var cells = [
-    '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + "</button>",
+    '<span class="tickets-folio-cell">' +
+      '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + "</button>" +
+      '<button type="button" class="btn-plain tickets-copy-icon-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen" aria-label="Copiar resumen">&#128203;</button>' +
+    "</span>",
     '<span class="tickets-list-cliente-cell">' + avatarHtml + v.clienteHtml + "</span>",
     v.trabajoHtml, v.estadoHtml, v.queSigueHtml, v.responsableHtml, v.atenderHtml, v.compromisoHtml,
     v.totalConocidoHtml, v.cobradoHtml, v.marcadoresHtml, v.ultimaActividadHtml
@@ -5333,7 +5534,10 @@ function detailsInlineCell(t, field, valueHtml){
 function renderTicketsDetailsRow(t){
   var v = ticketOperationalCellValues(t);
   var cells = [
-    '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + " &#8599;</button>",
+    '<span class="tickets-folio-cell">' +
+      '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + " &#8599;</button>" +
+      '<button type="button" class="btn-plain tickets-copy-icon-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen" aria-label="Copiar resumen">&#128203;</button>' +
+    "</span>",
     detailsModalCell(v.clienteHtml, "cliente", t.id),
     detailsModalCell(v.trabajoHtml, "trabajo", t.id),
     detailsModalCell(v.estadoHtml, "estado", t.id),
@@ -5409,9 +5613,14 @@ function bibliotecaAllPhotos(){
   var out = [];
   STATE.tickets.forEach(function(t){
     (t.thread || []).forEach(function(ev){
-      if(ev.type === "archivo" && ev.storage_path){
+      /* Parte P §95: una foto eliminada (deleted_at != null) nunca aparece
+         en Biblioteca, en la Galería del ticket ni como thumbnail — este es
+         el ÚNICO punto que decide "activa vs eliminada" para TODAS esas
+         superficies (redundancia en los caminos, no en la lógica: ninguna
+         otra función vuelve a filtrar esto por su cuenta). */
+      if(ev.type === "archivo" && ev.storage_path && !ev.deleted_at){
         out.push({
-          ticketId: t.id, ticketSeq: t.seq, clienteId: t.clienteId, clienteNombre: t.cliente || "",
+          id: ev.id, ticketId: t.id, ticketSeq: t.seq, clienteId: t.clienteId, clienteNombre: t.cliente || "",
           storagePath: ev.storage_path, filename: ev.filename || "", caption: ev.caption || "",
           autor: ev.autor || "", ts: ev.ts
         });
@@ -5526,6 +5735,7 @@ function renderBibliotecaToolbar(count){
 function renderBibliotecaPhotoTile(p){
   return (
     '<button type="button" class="biblioteca-tile" data-action="biblioteca-open-photo" ' +
+      'data-photo-id="' + escapeHtml(p.id||"") + '" ' +
       'data-ticket-id="' + p.ticketId + '" data-storage-path="' + escapeHtml(p.storagePath) + '" ' +
       'data-cliente-id="' + (p.clienteId||"") + '" data-ts="' + escapeHtml(p.ts||"") + '" ' +
       'data-autor="' + escapeHtml(p.autor||"") + '" data-caption="' + escapeHtml(p.caption||"") + '" ' +
@@ -5622,6 +5832,7 @@ function renderBibliotecaViewer(){
         '<div class="popover-actions">' +
           (t ? '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' : "") +
           (c ? '<button type="button" class="btn btn-ghost" data-action="open-cliente-ficha" data-client-id="' + c.id + '">Abrir cliente</button>' : "") +
+          (v.id ? '<button type="button" class="btn btn-ghost" data-action="delete-photo-open" data-photo-id="' + escapeHtml(v.id) + '" data-ticket-id="' + escapeHtml(v.ticketId||"") + '">Eliminar</button>' : "") +
         "</div>" +
       "</div>" +
     "</div>"
@@ -5705,11 +5916,113 @@ function renderTicketGalleryOverlay(){
         (photos.length > 1 ? '<div class="ticket-gallery-thumbs">' + thumbsHtml + "</div>" : "") +
         '<div class="popover-actions">' +
           '<button type="button" class="btn btn-ghost" data-action="ticket-gallery-add">+ Agregar imágenes</button>' +
+          '<button type="button" class="btn btn-ghost" data-action="delete-photo-open" data-photo-id="' + escapeHtml(p.id||"") + '" data-ticket-id="' + g.ticketId + '">Eliminar</button>' +
           (t ? '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' : "") +
         "</div>" +
       "</div>" +
     "</div>"
   );
+}
+
+/* ================= Parte P: eliminar una fotografía YA GUARDADA =================
+   Disponible desde la Galería del ticket y desde el visor de Biblioteca
+   (§89) — ambos ya muestran una sola foto identificada por su id de
+   bitácora, así que basta un único botón "Eliminar" en cada uno que abra
+   ESTA misma confirmación (§120: una sola función central, varias
+   entradas). */
+function openDeletePhotoConfirm(photoId, ticketId){
+  UI.deletePhotoConfirm = { photoId: photoId, ticketId: ticketId };
+  render();
+}
+function closeDeletePhotoConfirm(){ UI.deletePhotoConfirm = null; render(); }
+
+function renderDeletePhotoConfirmOverlay(){
+  var dc = UI.deletePhotoConfirm;
+  if(!dc) return "";
+  return (
+    '<div class="cierre-modal-overlay" id="delete-photo-confirm-overlay">' +
+      '<div class="cierre-modal">' +
+        '<div class="cierre-modal-title">Eliminar imagen</div>' +
+        '<div class="ephemeral-sub">Esta imagen dejará de aparecer en el ticket y en Biblioteca.</div>' +
+        '<div class="popover-actions">' +
+          '<button type="button" class="btn btn-ghost" data-action="delete-photo-cancel">Cancelar</button>' +
+          '<button type="button" class="btn btn-danger" data-action="delete-photo-confirm">Eliminar</button>' +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* Tombstone sobre la MISMA fila de bitácora que ya representa la foto —
+   EXACTAMENTE el mismo patrón que resolveMarkerCore() con resolved_at/
+   resolved_by (0009/§20-21 de esa ronda): la fila nunca se borra, solo se
+   llenan deleted_at/deleted_by (migración 0012), que es lo único que
+   bibliotecaAllPhotos()/ticketThumbPhotoPath()/ticketPhotoCount() revisan
+   para dejar de tratarla como activa. Optimista primero (se siente
+   instantáneo), con reversión explícita si la escritura en DB falla (§93
+   aplicado también al camino de error: nunca se "borra" algo local que la
+   base de datos no confirmó). */
+async function deleteTicketPhotoCore(photoId, ticketId){
+  var t = findTicket(ticketId);
+  if(!t) return;
+  var ev = (t.thread || []).filter(function(x){ return x.id === photoId && x.type === "archivo"; })[0];
+  if(!ev || ev.deleted_at) return;
+  var storagePath = ev.storage_path;
+  var nowIso = new Date().toISOString();
+  var who = currentActorName() || "";
+  ev.deleted_at = nowIso; ev.deleted_by = who;
+  render();
+  try{
+    var res = await sb.from("bitacora").update({ deleted_at: nowIso, deleted_by: who || null }).eq("id", photoId);
+    if(res.error) throw res.error;
+  }catch(e){
+    ev.deleted_at = null; ev.deleted_by = "";
+    render();
+    showToast("No se pudo eliminar la imagen: " + (e.message || "error"));
+    return;
+  }
+  /* §93-94: Storage se limpia DESPUÉS de que la DB ya confirmó el borrado
+     lógico, y solo si ninguna otra fila ACTIVA (de cualquier ticket) sigue
+     apuntando al mismo storage_path — con el patrón de path actual
+     (ticketId/timestamp_random.ext) nunca debería estar compartido, pero es
+     una verificación gratis sobre STATE ya en memoria, cero queries nuevas.
+     Si Storage falla, la foto se queda eliminada de todas formas (mejor un
+     objeto huérfano en Storage que revivir la foto como si nunca se
+     hubiera eliminado). */
+  var stillReferenced = STATE.tickets.some(function(other){
+    return (other.thread || []).some(function(x){
+      return x.type === "archivo" && x.storage_path === storagePath && !x.deleted_at && x.id !== photoId;
+    });
+  });
+  if(!stillReferenced && storagePath){
+    try{ await sb.storage.from(FILES_BUCKET).remove([storagePath]); }catch(e){ /* best-effort, nunca bloquea */ }
+  }
+  /* §95: la historia SÍ puede indicar que la imagen fue eliminada (nunca se
+     finge que no existió) — mismo patrón "sistema" que cualquier otra
+     acción de esta app. */
+  try{
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: who || null, payload: { text: "Imagen eliminada" + (who ? " por " + who : "") } });
+  }catch(e){ /* la foto ya quedó eliminada; una nota de historial que falle no debe revertir nada */ }
+  refreshFromServer({ refocus: false });
+}
+
+/* Punto único que llaman AMBOS botones "Eliminar" (Galería y Biblioteca) —
+   decide qué overlay degradar limpiamente después de borrar (§136: nunca
+   deja un viewer roto apuntando a una foto que ya no está activa). */
+async function confirmDeletePhoto(){
+  var dc = UI.deletePhotoConfirm;
+  if(!dc) return;
+  UI.deletePhotoConfirm = null;
+  var wasGalleryTicketId = UI.ticketGallery ? UI.ticketGallery.ticketId : null;
+  var wasBibliotecaViewer = !!(UI.bibliotecaViewer && UI.bibliotecaViewer.kind !== "logo" && UI.bibliotecaViewer.id === dc.photoId);
+  await deleteTicketPhotoCore(dc.photoId, dc.ticketId);
+  if(wasBibliotecaViewer) UI.bibliotecaViewer = null;
+  if(UI.ticketGallery && UI.ticketGallery.ticketId === wasGalleryTicketId){
+    var remaining = ticketGalleryPhotos(wasGalleryTicketId);
+    if(!remaining.length) UI.ticketGallery = null;
+    else if(UI.ticketGallery.index >= remaining.length) UI.ticketGallery.index = remaining.length - 1;
+  }
+  render();
 }
 
 function clienteFinancials(c){
@@ -6304,6 +6617,19 @@ function renderMain(){
   if(UI.mainView === "tickets" && !UI.selectedTicketId) return renderTicketsExplorerView();
   if(UI.mainView === "biblioteca" && !UI.selectedTicketId) return renderBibliotecaView();
   var t = UI.selectedTicketId ? findTicket(UI.selectedTicketId) : null;
+  /* §127: un deep link (?t=UUID) que no resolvió a ningún ticket visible —
+     copy exacto pedido por el addendum, nunca una pantalla en blanco ni un
+     error técnico. Tiene prioridad sobre el "Centro de consulta" genérico
+     de abajo porque es más específico sobre lo que la persona esperaba
+     encontrar al abrir ese link. */
+  if(UI.deepLinkNotFound){
+    return (
+      '<div class="empty-state">' +
+        "<h1>No se pudo abrir este ticket.</h1>" +
+        '<button class="btn btn-primary" data-action="go-tickets">Ir a Tickets</button>' +
+      "</div>"
+    );
+  }
   if(!t){
     /* Inicio / Centro de consulta: no selecciona ni modifica ningún ticket.
        Sin nada efímero todavía, es la bienvenida de siempre; en cuanto se
@@ -6411,9 +6737,17 @@ function render(){
     renderMarkerPickerOverlay() +
     renderTicketsThumbPhotoOverlay() +
     renderTicketGalleryOverlay() +
+    renderDeletePhotoConfirmOverlay() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
+  /* §128: un solo punto sincroniza la URL con "qué ticket está abierto
+     ahora" — se apoya en que TODA navegación de la app ya termina en
+     render(), así que ninguna función de navegación (goHome/goToTickets/
+     openTicketById/etc., presentes o futuras) necesita acordarse de tocar
+     la URL por su cuenta. syncDeepLinkUrl() ya es un no-op barato cuando la
+     URL no cambió, así que llamarlo en cada render() no tiene costo real. */
+  syncDeepLinkUrl(findTicket(UI.selectedTicketId));
   var threadEl = document.getElementById("thread-scroll");
   if(threadEl) threadEl.scrollTop = threadEl.scrollHeight;
   updateTotalPedidoSummary();
@@ -6684,6 +7018,17 @@ function render(){
           return;
         }
       }
+      /* §82-86: Ctrl+V → Enter. Solo se intercepta Enter aquí cuando el
+         contexto activo es INEQUÍVOCAMENTE el lote de fotos en fase de
+         revisión/reintento (hay items y no se está subiendo ya) — se
+         coloca DESPUÉS de todos los bloques de arriba (autocomplete,
+         confirmación, Smart Actions) para no robarles Enter, y llama a
+         EXACTAMENTE la misma función que el botón "Subir fotografías"
+         (submitForm("archivo") → startPhotoBatchUpload()), nunca un
+         segundo camino de subida. */
+      if(UI.composer === "archivo" && UI.photoBatch && !UI.photoBatch.uploading && UI.photoBatch.items && UI.photoBatch.items.length){
+        if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitForm("archivo"); return; }
+      }
       if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitNote(); }
     });
     /* §9: salir del modo navegación también al hacer clic dentro del
@@ -6712,6 +7057,18 @@ function render(){
        addImagesToPhotoBatch ya sabe agregar en vez de reemplazar cuando
        UI.photoBatch existe y todavía no se ha empezado a subir. */
     photoCaptionInput.addEventListener("paste", handleComposerPasteEvent);
+    /* §82-84: Enter dentro de "Nota del lote" sube el lote — es un
+       <input type="text"> de una sola línea (nunca multiline), así que no
+       existe un caso de "Shift+Enter = salto de línea" que preservar aquí;
+       Enter = submit ya es el comportamiento completo que pide el
+       addendum. Misma llamada exacta que el botón, nunca un tercer camino. */
+    photoCaptionInput.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" || e.shiftKey) return;
+      var pb = UI.photoBatch;
+      if(!pb || pb.uploading || !pb.items || !pb.items.length) return;
+      e.preventDefault();
+      submitForm("archivo");
+    });
   }
   applyFocus();
 }
@@ -6896,9 +7253,24 @@ function showToast(msg){
   var el = document.getElementById("toast");
   if(!el) return;
   el.textContent = msg;
-  el.classList.add("show");
+  el.className = "toast show";
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 3200);
+}
+/* Parte U §131-132: toast con botones reales — reutiliza el MISMO elemento
+   #toast (nunca un segundo componente/modal solo para esto). Los botones
+   llevan los MISMOS data-action ya wireados globalmente (open-ticket,
+   copy-ticket-summary), así que no hace falta agregar ningún listener
+   nuevo: el delegado de document ya los reconoce sin importar cuándo se
+   insertaron en el DOM. Vive más tiempo que un toast normal (6.5s en vez
+   de 3.2s) — tiene botones que tocar, no solo texto que leer. */
+function showActionToast(msg, actionsHtml){
+  var el = document.getElementById("toast");
+  if(!el) return;
+  el.innerHTML = '<span>' + escapeHtml(msg) + "</span>" + (actionsHtml || "");
+  el.className = "toast show toast-with-actions";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 6500);
 }
 
 /* ---------------- mutations: optimistic local update, then write to Supabase, then reconcile ---------------- */
@@ -6929,11 +7301,27 @@ async function createTicketCore(initialData){
   }
 }
 
+/* Parte U §131-132: un solo helper para el toast "✓ Ticket #N creado
+   [Abrir][Copiar]" — los 3 caminos de creación (+ Nuevo ticket, /nuevo,
+   Quick Create de Tickets) lo llaman igual, después de su propio
+   refreshFromServer(). Los botones reusan open-ticket/copy-ticket-summary,
+   los MISMOS data-action ya wireados globalmente — nunca una lógica nueva
+   solo para el toast. */
+function showTicketCreatedToast(ticketId){
+  var t = findTicket(ticketId);
+  if(!t) return;
+  var actionsHtml =
+    '<button type="button" class="toast-action-btn" data-action="open-ticket" data-id="' + t.id + '">Abrir</button>' +
+    '<button type="button" class="toast-action-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '">Copiar</button>';
+  showActionToast("✓ Ticket #" + t.seq + " creado", actionsHtml);
+}
+
 async function createTicketFlow(){
   var newId = await createTicketCore();
   if(!newId) return;
   openTicketById(newId);
   await refreshFromServer({refocus:true});
+  showTicketCreatedToast(newId);
 }
 
 /* Composer Intelligence §7-11: run() de /nuevo — crea el ticket y encadena,
@@ -6979,8 +7367,13 @@ async function createTicketFromNuevo(data){
 
   openTicketById(newId);
   await refreshFromServer({refocus:true});
+  /* Si algo falló, ESE mensaje es más importante que el genérico de éxito —
+     nunca se pisan entre sí (mostrar los dos en fila solo confundiría sobre
+     qué sí se guardó). */
   if(failures.length){
     showToast("Ticket creado, pero no se pudo guardar: " + failures.join(", ") + ".");
+  } else {
+    showTicketCreatedToast(newId);
   }
 }
 
@@ -7032,8 +7425,12 @@ async function submitTicketQuickCreate(fields){
   UI.ticketsExplorer.quickCreateOpen = false;
   openTicketById(newId);
   await refreshFromServer({refocus:true});
+  /* §132: disponible para Copiar de inmediato, sin recargar manualmente —
+     showTicketCreatedToast() ya relee el ticket fresco de STATE. */
   if(failures.length){
     showToast("Ticket creado, pero no se pudo guardar: " + failures.join(", ") + ".");
+  } else {
+    showTicketCreatedToast(newId);
   }
 }
 
@@ -7852,12 +8249,27 @@ function addImagesToPhotoBatch(files, opts){
     return;
   }
   if(mergingExisting){
+    /* Ronda "Identity Foundation…Flujo Visual" §82-84: un segundo Ctrl+V
+       mientras el usuario ya había escrito algo en "Nota del lote" no debe
+       perder esa escritura solo porque este render() reconstruye el DOM —
+       se captura el valor vivo del campo justo antes de re-renderizar,
+       mismo espíritu que renderKeepingLiveInputs() usa para Realtime, solo
+       que aquí basta con este único campo conocido. */
+    var liveCaptionEl = document.getElementById("f-photo-caption");
+    if(liveCaptionEl) pb.caption = liveCaptionEl.value;
     pb.items = pb.items.concat(newItems);
   } else {
     var composerInputEl = document.getElementById("composer-input");
     var draftText = composerInputEl ? composerInputEl.value.trim() : "";
     UI.composer = "archivo";
     UI.photoBatch = { items: newItems, caption: draftText, uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0 };
+    /* §82: tras pegar la primera imagen del lote, el foco pasa a "Nota del
+       lote" — así Ctrl+V, Ctrl+V, Ctrl+V, Enter funciona de corrido sin
+       tocar el mouse. userInitiated:true porque un paste con teclado físico
+       (Ctrl+V) es en sí mismo un gesto explícito del usuario — no aplica la
+       supresión de autofocus mobile (que de cualquier forma es un escenario
+       remoto: pegar con Ctrl+V requiere teclado físico). */
+    UI.pendingFocus = { elId: "f-photo-caption", userInitiated: true };
   }
   render();
   if(!opts.silent) showToast(newItems.length === 1 ? "Imagen agregada." : newItems.length + " imágenes agregadas.");
@@ -10849,7 +11261,8 @@ function wireEvents(){
   root.querySelectorAll('[data-action="biblioteca-open-photo"]').forEach(function(b){
     b.addEventListener("click", function(){
       UI.bibliotecaViewer = {
-        kind: "photo", ticketId: b.getAttribute("data-ticket-id"), storagePath: b.getAttribute("data-storage-path"),
+        kind: "photo", id: b.getAttribute("data-photo-id") || null,
+        ticketId: b.getAttribute("data-ticket-id"), storagePath: b.getAttribute("data-storage-path"),
         clienteId: b.getAttribute("data-cliente-id") || null, ts: b.getAttribute("data-ts") || null,
         autor: b.getAttribute("data-autor") || "", caption: b.getAttribute("data-caption") || "",
         filename: b.getAttribute("data-filename") || ""
@@ -11167,6 +11580,10 @@ function wireEvents(){
   if(cierreOverlay){
     cierreOverlay.addEventListener("click", function(e){ if(e.target === cierreOverlay) closeCierreModal(); });
   }
+  var deletePhotoOverlay = document.getElementById("delete-photo-confirm-overlay");
+  if(deletePhotoOverlay){
+    deletePhotoOverlay.addEventListener("click", function(e){ if(e.target === deletePhotoOverlay) closeDeletePhotoConfirm(); });
+  }
   var helpPanelOverlay = document.getElementById("help-panel-overlay");
   if(helpPanelOverlay){
     helpPanelOverlay.addEventListener("click", function(e){ if(e.target === helpPanelOverlay) closeHelpPanel(); });
@@ -11479,6 +11896,18 @@ document.addEventListener("click", function(e){
     render();
     return;
   }
+  /* Parte S §120/§122: UN solo handler para las 3 superficies (cabecera del
+     ticket completo, ⋯ de Miniaturas, Detalles) — todas comparten el mismo
+     data-action y el mismo data-ticket. Cerrar thumbMoreTicketId es un
+     no-op inofensivo cuando el clic vino de la cabecera/Detalles (esa
+     variable ya está en null en esos contextos). */
+  var copyTicketBtn = e.target.closest && e.target.closest('[data-action="copy-ticket-summary"]');
+  if(copyTicketBtn){
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    var ticketToCopy = findTicket(copyTicketBtn.getAttribute("data-ticket"));
+    if(ticketToCopy) copyTicketSummary(ticketToCopy);
+    return;
+  }
   /* §53: menú "⋯" — mismo alternar abierto/cerrado que el resto de la app. */
   var thumbMoreBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-more"]');
   if(thumbMoreBtn){
@@ -11528,6 +11957,17 @@ document.addEventListener("click", function(e){
   }
   var galleryAddBtn = e.target.closest && e.target.closest('[data-action="ticket-gallery-add"]');
   if(galleryAddBtn){ ticketGalleryAddImages(); return; }
+  /* Parte P: "Eliminar" desde la Galería o desde el visor de Biblioteca —
+     mismo botón/data-action en ambos, un solo handler. */
+  var deletePhotoOpenBtn = e.target.closest && e.target.closest('[data-action="delete-photo-open"]');
+  if(deletePhotoOpenBtn){
+    openDeletePhotoConfirm(deletePhotoOpenBtn.getAttribute("data-photo-id"), deletePhotoOpenBtn.getAttribute("data-ticket-id"));
+    return;
+  }
+  var deletePhotoCancelBtn = e.target.closest && e.target.closest('[data-action="delete-photo-cancel"]');
+  if(deletePhotoCancelBtn){ closeDeletePhotoConfirm(); return; }
+  var deletePhotoConfirmBtn = e.target.closest && e.target.closest('[data-action="delete-photo-confirm"]');
+  if(deletePhotoConfirmBtn){ confirmDeletePhoto(); return; }
   var historiaFilterBtn = e.target.closest && e.target.closest('[data-action="cliente-historia-filter"]');
   if(historiaFilterBtn){
     UI.clienteHistoriaFilter = historiaFilterBtn.getAttribute("data-filter");
@@ -11595,7 +12035,8 @@ document.addEventListener("click", function(e){
      tarjeta por debajo en silencio, dejándola deseleccionada para cuando
      la persona por fin cierre ese overlay. */
   var hasLayeredOverlay = !!(UI.ticketGallery || UI.cellEditor || UI.markerPicker ||
-    (UI.photoBatch && UI.photoBatch.ticketId) || UI.contactPanel || UI.viewingDocId || UI.cierreModal);
+    (UI.photoBatch && UI.photoBatch.ticketId) || UI.contactPanel || UI.viewingDocId || UI.cierreModal ||
+    UI.deletePhotoConfirm || UI.bibliotecaViewer);
   if(UI.mainView === "tickets" && !UI.selectedTicketId && (UI.ticketsView || "thumbnails") === "thumbnails" &&
      (UI.ticketsExplorer.selectedCardId || UI.ticketsExplorer.thumbMoreTicketId) &&
      !hasLayeredOverlay &&
@@ -11664,6 +12105,11 @@ function isTypingTarget(el){
 }
 
 document.addEventListener("keydown", function(e){
+  /* Parte P: la confirmación de eliminar es la capa MÁS alta posible (puede
+     abrirse encima de Galería o de Biblioteca) — Escape debe cerrarla a
+     ELLA primero, nunca saltarse un paso y cerrar el viewer de abajo de un
+     solo Escape. */
+  if(e.key === "Escape" && UI.deletePhotoConfirm){ closeDeletePhotoConfirm(); return; }
   if(e.key === "Escape" && UI.viewingDocId){ closeDocumentViewer(); return; }
   if(e.key === "Escape" && UI.cierreModal){ closeCierreModal(); return; }
   if(e.key === "Escape" && UI.headerEditField){ closeHeaderEdit(); return; }
@@ -11685,11 +12131,32 @@ document.addEventListener("keydown", function(e){
      encima siempre gana), izquierda/derecha navegan. Nunca intercepta si el
      foco está en un campo de texto real (no debería haber ninguno dentro de
      la galería, pero es el mismo guard que ya usa el resto del contrato). */
-  if(UI.ticketGallery){
+  if(UI.ticketGallery && !UI.deletePhotoConfirm){
     if(e.key === "Escape"){ closeTicketGallery(); return; }
     if(!isTypingTarget(e.target)){
       if(e.key === "ArrowLeft"){ e.preventDefault(); ticketGalleryStep(-1); return; }
       if(e.key === "ArrowRight"){ e.preventDefault(); ticketGalleryStep(1); return; }
+      /* §96/§143: Delete/Backspace sobre la foto actualmente abierta en la
+         Galería ABRE la confirmación — nunca elimina directo. Ya se
+         verificó arriba que UI.deletePhotoConfirm intercepta Escape antes
+         que cualquier otra cosa, así que esto nunca puede "apilarse" dos
+         veces. */
+      if(e.key === "Delete" || e.key === "Backspace"){
+        var gp = ticketGalleryPhotos(UI.ticketGallery.ticketId);
+        var gcur = gp[UI.ticketGallery.index];
+        if(gcur){ e.preventDefault(); openDeletePhotoConfirm(gcur.id, UI.ticketGallery.ticketId); return; }
+      }
+    }
+  }
+  /* Mismo contrato de Delete/Backspace, ahora para una foto individual
+     abierta en el visor de Biblioteca (§89: la nueva capacidad también
+     vive ahí "si resulta coherente" — el mismo atajo de teclado que ya
+     tiene la Galería es exactamente esa coherencia). */
+  if(UI.bibliotecaViewer && !UI.deletePhotoConfirm && UI.bibliotecaViewer.kind === "photo" && UI.bibliotecaViewer.id && !isTypingTarget(e.target)){
+    if(e.key === "Delete" || e.key === "Backspace"){
+      e.preventDefault();
+      openDeletePhotoConfirm(UI.bibliotecaViewer.id, UI.bibliotecaViewer.ticketId);
+      return;
     }
   }
   /* §58: Escape también deselecciona una tarjeta de Miniaturas (y cierra su
