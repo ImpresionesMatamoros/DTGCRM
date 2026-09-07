@@ -295,6 +295,14 @@ button{cursor:pointer;}
   display:flex; flex-direction:column; gap:2px;
 }
 .sidebar-account-menu-email{font-size:11.5px; color:var(--text-faint); padding:4px 8px 6px; border-bottom:1px dashed var(--border); margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+/* Cuenta — "Editar nombre": mismo menú de 220px, solo cambia el contenido. */
+.account-name-edit-label{display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:var(--text-muted); padding:4px 6px 2px;}
+.account-name-input{
+  font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--border); border-radius:var(--radius-s);
+  background:var(--surface); color:var(--text); width:100%;
+}
+.account-name-input:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+.account-name-edit-actions{display:flex; gap:6px; padding:6px 6px 2px; justify-content:flex-end;}
 
 /* ---------- Identity Foundation: pantalla de login / cuenta inactiva ----------
    Reemplaza TODO #app (nunca un overlay encima del CRM — ver el gate en
@@ -2008,8 +2016,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.10.0";
-var APP_BUILD = "2026.09.07.4";
+var APP_VERSION = "0.10.1";
+var APP_BUILD = "2026.09.07.5";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2067,6 +2075,12 @@ var CURRENT_PROFILE = null;
 var AUTH_ERROR = "";
 var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, accountMenuOpen: false,
+  /* Cuenta — "Editar nombre": true mientras el menú de cuenta muestra el
+     campo de edición de display_name en vez de "Cerrar sesión". Vive
+     anidado dentro del mismo menú (nunca un overlay aparte) porque es una
+     sola acción de una sola línea — el mismo criterio de "no un modal para
+     algo de un campo" que ya rige clienteFichaEditField. */
+  editingDisplayName: false,
   docDraft: null, docFormOpen: false, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
   /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §15: true cuando el menú
      de "/" está abierto por una coincidencia SIN prefijo ("prod" en vez de
@@ -2508,6 +2522,41 @@ async function submitLogin(email, password){
     AUTH_ERROR = friendlyAuthError(e);
     UI.pendingFocus = { elId: "login-email-input" };
     render();
+  }
+}
+
+/* Cierra el modo "Editar nombre" del menú de cuenta sin guardar nada. */
+function closeEditName(){
+  UI.editingDisplayName = false;
+  render();
+}
+
+/* Guarda profiles.display_name de la PROPIA sesión (RLS: profiles_update_own
+   exige id = auth.uid(), así que esto nunca puede tocar la fila de otra
+   persona). Optimista: actualiza CURRENT_PROFILE y cierra el editor de
+   inmediato (currentActorName() ya lo usa en todas partes — avatar, roster,
+   futuras notas), y si el UPDATE real falla se revierte y se avisa por
+   toast, mismo patrón que el resto de mutaciones optimistas de la app. No
+   reescribe autoría histórica: las notas/tickets ya guardados conservan el
+   nombre que se usó en su momento (mismo criterio documentado en
+   ADDENDUM-ROUND-K, "no reescribir historia retroactivamente"). */
+async function saveDisplayName(){
+  var el = document.getElementById("account-name-input");
+  var name = el ? el.value.trim() : "";
+  if(!name){ showToast("Escribe un nombre."); return; }
+  if(!CURRENT_PROFILE){ return; }
+  var prev = CURRENT_PROFILE.display_name;
+  if(name === prev){ closeEditName(); return; }
+  CURRENT_PROFILE.display_name = name;
+  UI.editingDisplayName = false;
+  render();
+  try{
+    var res = await sb.from("profiles").update({ display_name: name }).eq("id", CURRENT_PROFILE.id);
+    if(res.error) throw res.error;
+  }catch(e){
+    CURRENT_PROFILE.display_name = prev;
+    render();
+    showToast("No se pudo guardar el nombre: " + (e.message || "error de red"));
   }
 }
 
@@ -3355,9 +3404,32 @@ function renderSidebar(){
 }
 function renderAccountMenu(){
   var email = (AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.email) || "";
+  /* "Editar nombre": corrige profiles.display_name (el nombre que se ve en
+     autoría de notas, roster de equipo, iniciales del avatar) sin salir de
+     la app — antes esto solo se podía hacer con un UPDATE manual en el SQL
+     Editor de Supabase. Reutiliza la policy profiles_update_own que ya
+     existe desde 0010_v05_identity_foundation.sql ("cada quien edita
+     únicamente su propia fila") — nunca permite editar el nombre de otra
+     persona ni necesita una policy/migración nueva. */
+  if(UI.editingDisplayName){
+    return (
+      '<div class="sidebar-account-menu">' +
+        (email ? '<div class="sidebar-account-menu-email">' + escapeHtml(email) + "</div>" : "") +
+        '<label class="account-name-edit-label">' +
+          "<span>Tu nombre</span>" +
+          '<input type="text" id="account-name-input" class="account-name-input" value="' + escapeHtml(currentActorName()) + '" maxlength="60">' +
+        "</label>" +
+        '<div class="account-name-edit-actions">' +
+          '<button type="button" class="btn btn-sm btn-ghost" data-action="edit-name-cancel">Cancelar</button>' +
+          '<button type="button" class="btn btn-sm btn-primary" data-action="edit-name-save">Guardar</button>' +
+        "</div>" +
+      "</div>"
+    );
+  }
   return (
     '<div class="sidebar-account-menu">' +
       (email ? '<div class="sidebar-account-menu-email">' + escapeHtml(email) + "</div>" : "") +
+      '<button type="button" class="help-cmd-btn" data-action="edit-name-open"><span class="desc">Editar nombre</span></button>' +
       '<button type="button" class="help-cmd-btn" data-action="logout"><span class="desc">Cerrar sesión</span></button>' +
     "</div>"
   );
@@ -7049,6 +7121,17 @@ function render(){
     });
     /* §53-61: pegar una imagen directamente en el compositor. */
     composerInput.addEventListener("paste", handleComposerPasteEvent);
+  }
+  var accountNameInput = document.getElementById("account-name-input");
+  if(accountNameInput){
+    /* Mismo patrón que photoCaptionInput debajo: <input> de una sola línea,
+       Enter = Guardar (Escape ya lo resuelve el keydown global de arriba,
+       igual que el resto de los overlays chicos de esta app). */
+    accountNameInput.addEventListener("keydown", function(e){
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      saveDisplayName();
+    });
   }
   var photoCaptionInput = document.getElementById("f-photo-caption");
   if(photoCaptionInput){
@@ -11671,8 +11754,14 @@ document.addEventListener("click", function(e){
   if(acctToggleBtn){ UI.accountMenuOpen = !UI.accountMenuOpen; render(); return; }
   var logoutBtn = e.target.closest && e.target.closest('[data-action="logout"]');
   if(logoutBtn){ UI.accountMenuOpen = false; signOut(); return; }
+  var editNameOpenBtn = e.target.closest && e.target.closest('[data-action="edit-name-open"]');
+  if(editNameOpenBtn){ UI.editingDisplayName = true; UI.pendingFocus = { elId: "account-name-input", userInitiated: true }; render(); return; }
+  var editNameCancelBtn = e.target.closest && e.target.closest('[data-action="edit-name-cancel"]');
+  if(editNameCancelBtn){ closeEditName(); return; }
+  var editNameSaveBtn = e.target.closest && e.target.closest('[data-action="edit-name-save"]');
+  if(editNameSaveBtn){ saveDisplayName(); return; }
   if(UI.accountMenuOpen && !(e.target.closest && e.target.closest(".sidebar-account-wrap"))){
-    UI.accountMenuOpen = false; render();
+    UI.accountMenuOpen = false; UI.editingDisplayName = false; render();
   }
   var prodBtn = e.target.closest && e.target.closest("[data-toggle-task]");
   if(prodBtn){ toggleTaskEstado(prodBtn.getAttribute("data-ticket"), prodBtn.getAttribute("data-toggle-task")); return; }
@@ -12121,6 +12210,7 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return; }
   if(e.key === "Escape" && UI.ticketsExplorer.quickCreateOpen){ UI.ticketsExplorer.quickCreateOpen = false; render(); return; }
   if(e.key === "Escape" && UI.cellEditor){ closeCellEditor(); return; }
+  if(e.key === "Escape" && UI.editingDisplayName){ closeEditName(); return; }
   if(e.key === "Escape" && UI.accountMenuOpen){ UI.accountMenuOpen = false; render(); return; }
   /* §51-52: overlay standalone de foto de Miniaturas — mismo criterio que
      el botón de cerrar (nunca a medio subir). */
