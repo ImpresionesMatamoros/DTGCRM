@@ -262,14 +262,70 @@ button{cursor:pointer;}
 .pill-neutral{background:var(--surface-3); color:var(--text-muted);}
 .pill-accent{background:var(--accent-soft); color:var(--accent-ink);}
 .empty-list{color:var(--text-faint); font-size:12.5px; padding:16px 10px; text-align:center;}
-.whoami-bar{
-  border-top:1px solid var(--border); padding:10px 14px; display:flex; align-items:center; gap:8px;
-  font-size:12.5px; color:var(--text-muted);
+/* Identity Foundation §6: reemplaza la vieja .whoami-bar (un input de texto
+   libre permanente) por un affordance discreto — botón compacto de cuenta +
+   menú corto. flex-shrink:0 porque, igual que antes, en desktop es un pie
+   fijo del sidebar; en móvil (ver @media 880px) el propio .sidebar pasa a
+   ser una sola superficie con scroll y esto simplemente fluye al final. */
+.sidebar-account-bar{
+  border-top:1px solid var(--border); padding:8px 10px; display:flex; align-items:center; gap:6px;
+  flex-shrink:0;
 }
-.whoami-bar input{
-  flex:1; min-width:0; border:1px solid var(--border); border-radius:var(--radius-s); padding:5px 8px;
-  background:var(--surface); color:var(--text); font-size:12.5px;
+.sidebar-account-wrap{position:relative; flex:1; min-width:0;}
+.sidebar-account-btn{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:none;
+  border-radius:var(--radius-s); padding:5px 6px; font:inherit; color:var(--text);
 }
+.sidebar-account-btn:hover, .sidebar-account-btn:focus-visible{background:var(--surface-3);}
+.sidebar-account-avatar{
+  width:22px; height:22px; border-radius:999px; background:var(--accent-soft); color:var(--accent-ink);
+  display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700; flex-shrink:0;
+}
+.sidebar-account-name{font-size:12.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.sidebar-account-menu{
+  position:absolute; bottom:100%; left:0; margin-bottom:6px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-m); box-shadow:var(--shadow); padding:6px; width:220px; z-index:5;
+  display:flex; flex-direction:column; gap:2px;
+}
+.sidebar-account-menu-email{font-size:11.5px; color:var(--text-faint); padding:4px 8px 6px; border-bottom:1px dashed var(--border); margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+/* ---------- Identity Foundation: pantalla de login / cuenta inactiva ----------
+   Reemplaza TODO #app (nunca un overlay encima del CRM — ver el gate en
+   render()), así que respeta el safe-area completo como cualquier otra
+   pantalla raíz de la app (mismo criterio que .sidebar/.main). */
+.login-screen{
+  /* Mismo patrón que .app (línea ~132): #app en sí no tiene altura propia,
+     así que height:100% aquí colapsaría a 0 — hay que fijar el viewport
+     explícitamente, igual que hace el árbol completo del CRM. */
+  width:100vw; height:100vh; height:100dvh; display:flex; align-items:center; justify-content:center;
+  padding:calc(24px + var(--safe-top)) calc(20px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(20px + var(--safe-left));
+  background:var(--bg); box-sizing:border-box;
+}
+.login-loading{color:var(--text-muted); font-size:13px;}
+.login-card{
+  width:100%; max-width:340px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-m); box-shadow:var(--shadow); padding:26px 24px; display:flex; flex-direction:column; gap:14px;
+}
+.login-brand{font-size:18px; font-weight:700; color:var(--text);}
+.login-tagline{font-size:12.5px; color:var(--text-muted); margin-top:-10px;}
+.login-error{
+  font-size:12.5px; color:var(--danger); background:var(--danger-soft); border-radius:var(--radius-s);
+  padding:8px 10px;
+}
+.login-inactive-msg{font-size:13.5px; color:var(--text-muted); line-height:1.5;}
+.login-form{display:flex; flex-direction:column; gap:12px;}
+.login-field{display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:var(--text-muted);}
+.login-field input{
+  font:inherit; font-size:16px; padding:9px 10px; border:1px solid var(--border); border-radius:var(--radius-s);
+  background:var(--surface); color:var(--text); width:100%;
+}
+.login-field input:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+.login-submit-btn{
+  margin-top:2px; background:var(--accent); color:#fff; border:none; border-radius:var(--radius-s);
+  padding:10px 14px; font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+}
+.login-submit-btn:disabled{opacity:.6; cursor:default;}
+.login-submit-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
 /* ---------- sección Clientes ---------- */
 .clientes-view{padding:14px 22px 22px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px;}
@@ -1033,6 +1089,57 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   padding:5px 8px; font-size:12px; max-width:160px;
 }
 .tickets-toolbar-count{font-size:11.5px; color:var(--text-faint);}
+
+/* ---- Tickets Workbench §18: botón "+" (Quick Create) — hermano del botón
+   de Filtros, mismo tamaño/forma que un ícono circular de acento para que se
+   note que es la acción PRIMARIA de la barra (crear), distinta del tono
+   neutro/gris de "Filtros" (buscar/angostar). ---- */
+.tickets-toolbar-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+.tickets-quickcreate-toggle{
+  display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px;
+  border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:999px; flex-shrink:0;
+}
+.tickets-quickcreate-toggle:hover{background:var(--accent-ink); border-color:var(--accent-ink);}
+.tickets-quickcreate-toggle.active{background:var(--accent-ink); border-color:var(--accent-ink);}
+.tickets-quickcreate-panel{
+  display:flex; flex-direction:column; gap:10px; border:1px solid var(--border); border-radius:var(--radius-m);
+  background:var(--surface-2); padding:12px; margin-top:2px;
+}
+.tickets-quickcreate-head{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--text);}
+.tickets-quickcreate-fields{display:grid; grid-template-columns:1fr 1fr; gap:8px 10px;}
+.tickets-quickcreate-field{display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--text-muted); font-weight:600;}
+.tickets-quickcreate-field input, .tickets-quickcreate-field select{
+  border:1px solid var(--border); border-radius:var(--radius-s); padding:6px 8px; background:var(--surface); color:var(--text); font-size:13px;
+}
+.tickets-quickcreate-actions{display:flex; align-items:center; justify-content:flex-end; gap:8px;}
+
+/* ---- §19: Filtros — segundo nivel "Más filtros" + resumen de chips ---- */
+.tickets-more-filters-toggle{
+  align-self:flex-start; display:inline-flex; align-items:center; gap:5px; background:none; border:none;
+  color:var(--accent-ink); font-size:12px; font-weight:600; padding:2px 0;
+}
+.tickets-more-filters-toggle:hover{text-decoration:underline;}
+.tickets-more-filters-caret{font-size:9px;}
+.tickets-active-filters{display:flex; align-items:center; gap:5px; flex-wrap:wrap;}
+.tickets-active-filter-chip{
+  display:inline-flex; align-items:center; gap:4px; border:1px solid var(--accent); background:var(--accent-soft);
+  color:var(--accent-ink); border-radius:999px; padding:3px 8px; font-size:11px; font-weight:600; white-space:nowrap;
+}
+.tickets-active-filter-chip:hover{background:var(--accent); color:#fff;}
+.tickets-active-filters-clear{background:none; border:none; color:var(--text-faint); font-size:11px; text-decoration:underline; padding:2px 4px;}
+.tickets-active-filters-clear:hover{color:var(--text);}
+
+/* ---- Buscar: × pegada al campo (nunca la × grande que cierra todo el
+   panel) — reutilizable por cualquier .search-wrap que la necesite, aunque
+   esta ronda solo la agrega al buscador de Tickets. */
+.search-clear-btn{
+  position:absolute; right:5px; top:50%; transform:translateY(-50%); background:none; border:none;
+  color:var(--text-faint); width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+  border-radius:999px; font-size:15px; line-height:1; padding:0;
+}
+.search-clear-btn:hover{background:var(--surface-3); color:var(--text);}
+.tickets-options-panel-head .tickets-search-wrap input{padding-right:26px;}
+
 .tickets-explorer-scroll{flex:1; min-height:0; overflow-y:auto; padding:16px 22px; padding-bottom:calc(16px + var(--safe-bottom));}
 .tickets-empty{padding:40px 10px;}
 
@@ -1040,9 +1147,21 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-grid-thumb{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;}
 .tickets-thumb-card{
   display:flex; flex-direction:column; text-align:left; border:1px solid var(--border); border-radius:var(--radius-m);
-  background:var(--surface); overflow:hidden; padding:0; position:relative;
+  background:var(--surface); padding:0; position:relative;
+  /* Tickets Workbench §20 (bug reportado): overflow:hidden AQUÍ es lo que
+     recortaba el menú "⋯" (position:absolute, ver .tickets-thumb-more-menu)
+     contra los bordes de la tarjeta. El recorte de esquinas redondeadas que
+     esto daba "gratis" para la foto se mueve a .tickets-thumb-media/
+     .tickets-thumb-body (cada una con SU PROPIO overflow:hidden + el radio
+     que le toca), que es lo único que en realidad necesita recortarse. */
+  overflow:visible;
 }
 .tickets-thumb-card:hover{box-shadow:var(--shadow); border-color:var(--text-faint);}
+/* El menú "⋯" de una tarjeta seleccionada debe verse POR ENCIMA de las
+   tarjetas vecinas (§20: "nunca detrás de otra tarjeta") — sin esto, una
+   tarjeta de una fila más abajo en el grid puede pintarse encima del menú
+   que sobresale hacia arriba desde la tarjeta seleccionada. */
+.tickets-thumb-card.tickets-thumb-selected{ z-index:3; }
 /* Spotlight (§ identidad): un aro sutil con el color del cliente — nunca
    compite con los marcadores operativos, que siguen viviendo encima en
    .tickets-thumb-markers con su propio fondo opaco. */
@@ -1057,19 +1176,32 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
    ticket abierto ahora mismo". */
 .tickets-thumb-card.tickets-thumb-selected{border-color:var(--accent); border-width:2px;}
 .tickets-thumb-card.tickets-thumb-selected .tickets-thumb-body{background:var(--accent-soft);}
-.tickets-thumb-select{
-  display:flex; flex-direction:column; width:100%; text-align:left; border:none; background:none; padding:0; margin:0;
-  cursor:pointer; font:inherit; color:inherit;
+/* §22: contenedor NO interactivo (antes era un solo <button> — ver el
+   comentario grande arriba de renderTicketsThumbCard sobre por qué se
+   partió en dos botones hermanos). */
+.tickets-thumb-select-group{display:flex; flex-direction:column; width:100%;}
+.tickets-thumb-media-btn, .tickets-thumb-body-btn{
+  width:100%; text-align:left; border:none; background:none; padding:0; margin:0;
+  cursor:pointer; font:inherit; color:inherit; display:block;
 }
-.tickets-thumb-select:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+.tickets-thumb-media-btn:focus-visible, .tickets-thumb-body-btn:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
 .tickets-thumb-check{
   position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:999px;
   background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
   font-size:12px; font-weight:700; line-height:1; box-shadow:var(--shadow); z-index:2;
 }
+/* §22: mismo hueco visual que .tickets-thumb-check (se turnan, nunca
+   coinciden — ver renderTicketsThumbCard) pero discreto/neutro, nunca del
+   color de acento: es solo información ("hay más de una foto"), no un
+   estado de selección. */
+.tickets-thumb-photocount{
+  position:absolute; top:6px; left:6px; min-width:18px; height:18px; padding:0 4px; border-radius:999px;
+  background:rgba(0,0,0,.55); color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:10.5px; font-weight:700; line-height:1; z-index:2;
+}
 .tickets-thumb-media{
   position:relative; aspect-ratio:4/3; background:var(--surface-2); display:flex; align-items:center; justify-content:center;
-  overflow:hidden;
+  overflow:hidden; border-radius:var(--radius-m) var(--radius-m) 0 0;
 }
 .tickets-thumb-photo{width:100%; height:100%; object-fit:cover; display:block;}
 .tickets-thumb-media-fallback .client-avatar{width:52px; height:52px; font-size:18px;}
@@ -1080,7 +1212,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 }
 .tickets-thumb-markers .ticket-marker-icon{color:#fff;}
 .tickets-thumb-markers .ticket-marker-icon:hover, .tickets-thumb-markers .ticket-marker-icon:focus-visible{background:rgba(255,255,255,.25);}
-.tickets-thumb-body{display:flex; flex-direction:column; gap:2px; padding:8px 10px 10px;}
+.tickets-thumb-body{display:flex; flex-direction:column; gap:2px; padding:8px 10px 10px; border-radius:0 0 var(--radius-m) var(--radius-m); overflow:hidden;}
 .tickets-thumb-cliente{font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .tickets-thumb-meta-row{display:flex; align-items:center; justify-content:space-between; gap:6px;}
 .tickets-thumb-folio{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint);}
@@ -1093,6 +1225,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
    ~44px vía padding, no íconos gigantes (§66). */
 .tickets-thumb-actions{
   display:flex; gap:4px; padding:8px; border-top:1px solid var(--border); background:var(--surface-2); flex-wrap:wrap;
+  border-radius:0 0 var(--radius-m) var(--radius-m);
 }
 .tickets-thumb-actions .btn{flex:1 1 auto; min-width:0; padding:10px 4px; font-size:11.5px; white-space:nowrap;}
 .tickets-thumb-more-wrap{position:relative; flex:0 0 auto;}
@@ -1200,6 +1333,34 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 }
 .biblioteca-viewer-media img{max-width:100%; max-height:50vh; object-fit:contain; display:block;}
 
+/* ---- Tickets Workbench §22-24: Galería del ticket — mismo cascarón que
+   .biblioteca-viewer-modal (cierre-modal-overlay/cierre-modal), un poco más
+   ancha para dar lugar a la tira de miniaturas. ---- */
+.ticket-gallery-modal{max-width:560px; position:relative;}
+.ticket-gallery-close{position:absolute; top:8px; right:8px; font-size:20px; line-height:1; z-index:2;}
+.ticket-gallery-media{
+  position:relative; width:100%; border-radius:var(--radius-m); overflow:hidden; background:var(--surface-2);
+  display:flex; align-items:center; justify-content:center; max-height:52vh;
+}
+.ticket-gallery-media img{max-width:100%; max-height:52vh; object-fit:contain; display:block;}
+.ticket-gallery-nav-btn{
+  position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:999px;
+  background:rgba(0,0,0,.45); color:#fff; border:none; display:flex; align-items:center; justify-content:center;
+  font-size:20px; line-height:1; z-index:1;
+}
+.ticket-gallery-nav-btn:hover{background:rgba(0,0,0,.65);}
+.ticket-gallery-prev{left:8px;}
+.ticket-gallery-next{right:8px;}
+.ticket-gallery-counter{align-self:center; font-size:11.5px; color:var(--text-faint);}
+.ticket-gallery-thumbs{display:flex; gap:6px; overflow-x:auto; padding-bottom:2px;}
+.ticket-gallery-thumb{
+  flex-shrink:0; width:46px; height:46px; border-radius:var(--radius-s); overflow:hidden; padding:0;
+  border:2px solid transparent; background:var(--surface-2); cursor:pointer;
+}
+.ticket-gallery-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+.ticket-gallery-thumb.active{border-color:var(--accent);}
+.ticket-gallery-thumb:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+
 @media (max-width: 880px){
   /* Addendum §3: el cajón (drawer) del sidebar ya existía de una ronda
      anterior — aquí solo se audita/pule: ancho completo hasta un tope
@@ -1218,6 +1379,25 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
     padding-top:var(--safe-top); padding-left:var(--safe-left); padding-bottom:var(--safe-bottom);
   }
   .sidebar.open{transform:translateX(0);}
+
+  /* Identity Foundation §10: en desktop .sidebar es un panel fijo cuya
+     única zona con scroll propio es .sidebar-scroll (la lista de tickets)
+     — .sidebar-top (buscador+nav) y .sidebar-account-bar (footer de
+     cuenta) se quedan fijos arriba/abajo, que es justo lo que se quiere en
+     una pantalla grande. En móvil, el mismo layout de 3 zonas independientes
+     dejaba la lista de tickets en una franja angosta con su propio scroll
+     "atrapado" en medio de dos barras fijas — reportado como un cajón que
+     se siente roto/entrecortado. Aquí (y SOLO aquí, dentro de este
+     breakpoint) se aplana a UNA sola superficie de scroll: .sidebar-scroll
+     deja de crear su propio contenedor de scroll (flex:none + overflow:
+     visible, para que crezca a su contenido real en vez de recortarse a
+     flex:1) y es .sidebar mismo el que se vuelve scrolleable — buscador,
+     lista completa de tickets y barra de cuenta pasan a ser un solo
+     recorrido vertical continuo, exactamente "una sola mano, un solo
+     scroll". El desktop (fuera de este @media) no se toca. */
+  .sidebar{ overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .sidebar-scroll{ flex:none; overflow:visible; }
+
   .sidebar-toggle{display:inline-flex!important;}
   .mobile-topbar{display:flex!important;}
   .sidebar-backdrop{display:block!important;}
@@ -1238,6 +1418,8 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
      mismos controles se quedan en 32px (con mouse la precisión no es un
      problema, y agrandarlos ahí solo desperdicia espacio). */
   .composer-plus, .composer-send, .sidebar-toggle{ width:44px; height:44px; }
+  .ticket-gallery-nav-btn{ width:44px; height:44px; }
+  .ticket-gallery-thumb{ width:52px; height:52px; }
   .btn-plain{ min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; }
   .docform-fee-row .btn-plain{ min-width:36px; min-height:36px; }
   .btn{ min-height:42px; }
@@ -1307,6 +1489,12 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .tickets-search-wrap{ min-width:0; flex-basis:100%; max-width:none; }
   .tickets-filter-selects{ width:100%; }
   .tickets-filter-select{ flex:1; min-width:100px; max-width:none; }
+  /* §18: Quick Create — un teléfono angosto no tiene espacio para 2
+     columnas de campo, se apilan; los botones de acción ocupan todo el
+     ancho para que "Crear" tenga una zona de toque cómoda. */
+  .tickets-quickcreate-fields{ grid-template-columns:1fr; }
+  .tickets-quickcreate-actions{ flex-direction:column-reverse; align-items:stretch; }
+  .tickets-quickcreate-actions .btn{ width:100%; justify-content:center; }
   /* Vista Lista (§24-26): en mobile se queda como la MISMA tabla con scroll
      horizontal que ya usa Detalles (.tickets-list-wrap{overflow-x:auto}
      arriba, sin @media aparte) — es la opción más simple consistente con el
@@ -1343,56 +1531,68 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .tickets-details-row td .comanda-edit-inline input,
   .tickets-details-row td .comanda-edit-inline select{ width:100%; }
 }
-/* ---------------- Ronda "Refinamiento operativo" §2: tipografía móvil ----------------
+/* ---------------- Tipografía móvil ----------------
    Bloque único y auditable de overrides SOLO dentro de @media(max-width:880px)
    — la densidad de desktop no cambia ni un punto (mismas reglas base de
-   siempre). Sube ~1-1.5px donde el texto móvil rondaba 10-13.5px, priorizando
-   exactamente lo pedido: thread/notas, filas, nombres de cliente, descripción
-   de productos, navegación, botones, tarjetas de Tickets, metadata, valores
-   de Detalles, labels operacionales, Biblioteca y paneles emergentes.
-   Deliberadamente NO toca Iconos (tickets-icon-*): §23/§89 piden mantenerla
-   la vista más densa a propósito — subirle tipografía la desarmaría. Los
-   inputs/select/textarea (16px, zoom-prevention iOS) tampoco se tocan aquí:
-   esa regla ya vive arriba, sin cambios. */
+   siempre). Nace en la ronda "Refinamiento operativo" §2 (subió ~1-1.5px
+   donde el texto móvil rondaba 10-13.5px) y esta ronda (Identity Foundation +
+   Mobile UX §12) lo vuelve a subir ~1-1.5px más — comparable a la comodidad
+   de lectura de ChatGPT móvil (~16px en el texto principal) sin llegar a un
+   zoom global ni a un uniforme 18px en todo — cada elemento sube desde SU
+   propio tamaño anterior, preservando la jerarquía relativa entre thread
+   principal/metadata/labels que ya existía. Es el MISMO bloque de siempre
+   (nunca uno paralelo) — así una futura ronda solo tiene un lugar que leer
+   para saber "qué tan grande es el texto en móvil".
+   Deliberadamente NO toca Iconos (tickets-icon-*): §23/§89 (ronda anterior)
+   y esta ronda otra vez piden mantenerla la vista más densa a propósito —
+   subirle tipografía la desarmaría. Los inputs/select/textarea (16px,
+   zoom-prevention iOS) tampoco se tocan aquí ni bajan de 16px: esa regla ya
+   vive arriba, sin cambios. */
 @media (max-width: 880px){
-  /* Thread / notas */
-  .thread-text{ font-size:14.5px; }
-  .thread-sub{ font-size:13px; }
-  .thread-meta{ font-size:12.5px; }
+  /* Thread / notas — el texto que más se LEE de corrido en toda la app. */
+  .thread-text{ font-size:16px; }
+  .thread-sub{ font-size:14px; }
+  .thread-meta{ font-size:13.5px; }
   /* Filas de ticket (sidebar) + metadata */
-  .ticket-title{ font-size:14.5px; }
-  .ticket-row-product{ font-size:12.5px; }
-  .ticket-meta{ font-size:12.5px; }
-  .comanda-meta{ font-size:12.5px; }
-  .comanda-summary{ font-size:14.5px; }
+  .ticket-title{ font-size:16px; }
+  .ticket-row-product{ font-size:13.5px; }
+  .ticket-meta{ font-size:13.5px; }
+  .comanda-meta{ font-size:13.5px; }
+  .comanda-summary{ font-size:16px; }
   /* Navegación */
-  .nav-stub{ font-size:14px; }
+  .nav-stub{ font-size:15px; }
   /* Botones */
-  .btn{ font-size:14.5px; }
-  .btn-sm{ font-size:13.5px; }
+  .btn{ font-size:15.5px; }
+  .btn-sm{ font-size:14.5px; }
   /* Tarjetas de Tickets — Miniaturas y Lista (Iconos se deja intacta) */
-  .tickets-thumb-cliente{ font-size:14px; }
-  .tickets-thumb-work{ font-size:12.5px; }
-  .tickets-thumb-folio{ font-size:11.5px; }
-  .tickets-thumb-activity{ font-size:11px; }
-  .tickets-list-row td{ font-size:13.5px; }
-  /* Valores de Detalles (ya en modo tarjeta arriba) */
-  .tickets-details-row td{ font-size:13.5px; }
-  .tickets-details-row td::before{ font-size:11.5px; }
+  .tickets-thumb-cliente{ font-size:15.5px; }
+  .tickets-thumb-work{ font-size:13.5px; }
+  .tickets-thumb-folio{ font-size:12.5px; }
+  .tickets-thumb-activity{ font-size:12px; }
+  .tickets-list-row td{ font-size:14.5px; }
+  /* Valores de Detalles (ya en modo tarjeta arriba) — hoja operativa que se
+     edita celda por celda, se lee tanto como el thread. */
+  .tickets-details-row td{ font-size:15px; }
+  .tickets-details-row td::before{ font-size:12.5px; }
   /* Labels operacionales de la cabecera del ticket */
-  .comanda-field-label{ font-size:12px; }
-  .comanda-field-value{ font-size:15.5px; }
+  .comanda-field-label{ font-size:13px; }
+  .comanda-field-value{ font-size:16.5px; }
   /* Biblioteca */
-  .biblioteca-tile-logo-label{ font-size:11px; }
+  .biblioteca-tile-logo-label{ font-size:12px; }
   /* Paneles emergentes: cierre, ayuda, contacto, smart actions, /comandos */
-  .cierre-modal-sub{ font-size:13px; }
-  .cierre-tipo-desc{ font-size:13px; }
-  .cierre-razon-label{ font-size:13px; }
-  .popover-title{ font-size:12.5px; }
-  .popover-form label{ font-size:12.5px; }
-  .slash-menu-item span.desc{ font-size:13px; }
-  .smart-actions-label{ font-size:12.5px; }
-  .help-cmd-btn .desc{ font-size:13.5px; }
+  .cierre-modal-sub{ font-size:14px; }
+  .cierre-tipo-desc{ font-size:14px; }
+  .cierre-razon-label{ font-size:14px; }
+  .popover-title{ font-size:13.5px; }
+  .popover-form label{ font-size:13.5px; }
+  .slash-menu-item span.desc{ font-size:14px; }
+  .smart-actions-label{ font-size:13.5px; }
+  .help-cmd-btn .desc{ font-size:14.5px; }
+  /* Identity Foundation §12: mismo criterio aplicado a las superficies
+     nuevas de esta ronda — cuenta/login se leen tan seguido como el resto. */
+  .sidebar-account-name{ font-size:13.5px; }
+  .login-tagline{ font-size:13.5px; }
+  .login-error, .login-inactive-msg{ font-size:14px; }
 }
 /* Addendum final §26: en mobile MUY angosto "Ver detalles"/"Ocultar
    detalles" puede no caber junto al resto de la barra superior — se acorta
@@ -1781,8 +1981,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.8.1";
-var APP_BUILD = "2026.09.07.2";
+var APP_VERSION = "0.9.0";
+var APP_BUILD = "2026.09.07.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -1819,8 +2019,27 @@ var IS_MAC = /Mac|iPhone|iPad|iPod/.test((navigator.platform || navigator.userAg
 var HOME_SHORTCUT_LABEL = IS_MAC ? "⌘H" : "Ctrl+Shift+H";
 
 var sb = null;
+/* Identity Foundation: identidad vive AFUERA de UI/STATE a propósito — no es
+   ni estado de interfaz efímero (UI) ni dato comercial (STATE), es la
+   sesión misma. AUTH_STATUS gobierna qué se renderiza en la raíz de render()
+   antes que nada más (ver función render()):
+     "loading"     — todavía verificando si hay sesión guardada (splash breve)
+     "signed_out"  — sin sesión válida -> pantalla de login, CRM nunca detrás
+     "signing_in"  — login enviado, esperando respuesta de Supabase
+     "inactive"    — sesión válida pero profiles.active=false o sin perfil
+                      todavía (el trigger de 0010 debería crearlo solo; si no
+                      existe, algo falta del lado de Supabase, no del código)
+     "signed_in"   — CRM normal
+   AUTH_SESSION es el objeto de sesión de Supabase (o null); CURRENT_PROFILE
+   es la fila de `profiles` de esa sesión (o null). Nada fuera de
+   currentActor()/currentActorId()/currentActorName() (arriba) debe leer
+   estas dos variables directamente. */
+var AUTH_STATUS = "loading";
+var AUTH_SESSION = null;
+var CURRENT_PROFILE = null;
+var AUTH_ERROR = "";
 var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
-var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, whoami: "",
+var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, accountMenuOpen: false,
   docDraft: null, docFormOpen: false, viewingDocId: null, slashMenuOpen: false, slashQuery: "", slashActiveIndex: 0,
   /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §15: true cuando el menú
      de "/" está abierto por una coincidencia SIN prefijo ("prod" en vez de
@@ -1926,9 +2145,24 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* selectedCardId (§42-61): tarjeta seleccionada en Miniaturas para
      acciones rápidas — SEPARADA a propósito de UI.selectedTicketId (ese es
      "qué ticket completo está abierto"). Nunca deben confundirse (§86-87). */
-  ticketsExplorer: { search:"", estado:"todos", marker:null, clienteId:null, responsable:"", fecha:"todas", sort:"actividad", optionsOpen:false, selectedCardId:null, thumbMoreTicketId:null, scrollTop:0 },
+  /* Tickets Workbench (Identity Foundation + Mobile UX §18-21): quickCreateOpen
+     es el panel del botón "+" (nunca comparte estado con optionsOpen — son
+     dos popovers hermanos del mismo toolbar, mutuamente excluyentes por
+     convención de UX pero cada uno con su propio bool, nunca una sola bandera
+     "cuál panel" que obligaría a inventar un tercer valor cada vez que se
+     agregue un panel más). moreFiltersOpen es el segundo nivel ("Más filtros >")
+     DENTRO del panel de Filtros — Marcador/Cliente/Responsable/Fecha, colapsado
+     por default para que el panel de filtros nazca corto (§19). */
+  ticketsExplorer: { search:"", estado:"todos", marker:null, clienteId:null, responsable:"", fecha:"todas", sort:"actividad", optionsOpen:false, moreFiltersOpen:false, quickCreateOpen:false, selectedCardId:null, thumbMoreTicketId:null, scrollTop:0 },
   biblioteca: { search:"", clienteId:null, fecha:"todas", subidoPor:"", soloLogos:false, scrollTop:0 },
   bibliotecaViewer: null,
+  /* Tickets Workbench §22-24: galería de fotos de UN ticket, abierta al
+     tocar la foto de una tarjeta de Miniaturas ya seleccionada — { ticketId,
+     index } | null. Efímero, nunca persistido (mismo criterio que
+     bibliotecaViewer/cierreModal). Reusa bibliotecaAllPhotos() filtrado por
+     ticket_id como única fuente de datos (ver ticketGalleryPhotos) — nunca
+     un índice de imágenes paralelo al de Biblioteca. */
+  ticketGallery: null,
   /* Ronda "Refinamiento operativo" §13-16: panel de contacto rápido de la
      cabecera del ticket — { clienteId, ticketId } | null. Estado efímero de
      una sola interacción (igual que cierreModal/helpPanelOpen), nunca
@@ -1939,6 +2173,15 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* §42/§49: editor central por celda (Cliente/Trabajo/Estado/Cobrado) —
      ver openCellEditor/renderCellEditorOverlay. Efímero, nunca persistido. */
   cellEditor: null };
+/* Identity Foundation §9: snapshot del UI "recién arrancado" — signOut()
+   lo usa para regresar a este estado exacto en vez de re-listar a mano
+   cada campo (sería el segundo lugar que hay que recordar mantener en
+   sync con la lista de arriba cada vez que se agregue un campo nuevo a
+   UI). Todo lo que vive en UI es dato plano serializable (null/bool/
+   string/number/objeto/arreglo, nunca funciones), así que JSON round-trip
+   es una copia profunda correcta. Se toma AQUÍ, antes de que boot() o
+   cualquier interacción alcance a mutar UI. */
+var UI_INITIAL_SNAPSHOT = JSON.stringify(UI);
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 /* Escape en el input de teléfono/email de la ficha del cliente cierra la
@@ -2111,27 +2354,132 @@ function loadUi(){
       UI.ticketsView = validViews[parsed.ticketsView] ? parsed.ticketsView : "thumbnails";
     }
   }catch(e){}
-  try{ UI.whoami = localStorage.getItem("dtg_whoami") || ""; }catch(e){ UI.whoami = ""; }
 }
 function saveUi(){
   try{ localStorage.setItem("dtg_ui", JSON.stringify({selectedTicketId:UI.selectedTicketId, search:UI.search,
     mainView:UI.mainView, selectedClienteId:UI.selectedClienteId, clienteReturnTicketId:UI.clienteReturnTicketId,
     ticketsView:UI.ticketsView})); }catch(e){}
 }
-function saveWhoami(v){
-  UI.whoami = v;
-  try{ localStorage.setItem("dtg_whoami", v); }catch(e){}
-  rememberName(v);
+/* ---------------- Identity Foundation: currentActor() ----------------
+   Punto ÚNICO de identidad de la app — nada más debe leer AUTH_SESSION/
+   CURRENT_PROFILE directamente fuera de aquí (addendum §4: "no quiero en
+   futuras rondas volver a ver lógica nueva preguntando directamente por
+   UI.whoami" — el reemplazo es esta capa, no otro campo suelto). Antes de
+   esta ronda cada mutación escribía `autor: UI.whoami` (un nombre tecleado
+   a mano, sin relación con ninguna cuenta real); ahora currentActorId()
+   trae la identidad ESTABLE (auth.uid(), vía Supabase Auth real) y
+   currentActorName() el snapshot LEGIBLE (profiles.display_name) — mismo
+   criterio que documenta 0010_v05_identity_foundation.sql §5 del addendum
+   ("identidad estable + snapshot legible", nunca reescribir lo ya
+   guardado). Sin sesión o sin perfil todavía cargado, ambas devuelven algo
+   seguro (null / "") en vez de lanzar — ninguna mutación debe romperse por
+   una carrera de timing entre boot() y el primer render con datos reales. */
+function currentActorId(){
+  return (AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.id) || null;
+}
+function currentActorName(){
+  if(CURRENT_PROFILE && CURRENT_PROFILE.display_name) return CURRENT_PROFILE.display_name;
+  if(AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.email) return AUTH_SESSION.user.email;
+  return "";
+}
+function currentActor(){
+  return { id: currentActorId(), name: currentActorName() };
 }
 
 /* ---------------- Supabase: session, fetch, realtime ---------------- */
 
+/* Identity Foundation §7/§9: ya NO crea sesiones anónimas — solo mira si
+   Supabase ya tiene una sesión guardada (login persistente entre
+   recargas/PWA). Sin sesión, boot() deja AUTH_STATUS="signed_out" y
+   renderLoginScreen() toma el control total de la pantalla (ver el nuevo
+   gate al inicio de render()) hasta que submitLogin() tenga éxito. */
 async function ensureSession(){
   var got = await sb.auth.getSession();
-  if(got.data && got.data.session) return got.data.session;
-  var signed = await sb.auth.signInAnonymously();
-  if(signed.error) throw signed.error;
-  return signed.data.session;
+  return (got.data && got.data.session) || null;
+}
+
+/* profiles es la única fuente de "quién es" además de auth.users — sin
+   fila (o con active=false) la sesión es válida pero la persona no puede
+   operar todavía (ver AUTH_STATUS="inactive"/renderInactiveScreen()). Un
+   error de red aquí no debe tumbar toda la app con FATAL_ERROR por una
+   tabla que es autodescriptiva — se trata como "sin perfil todavía" y la
+   persona puede reintentar cerrando/abriendo sesión. */
+async function fetchCurrentProfile(userId){
+  try{
+    var res = await sb.from("profiles").select("*").eq("id", userId).maybeSingle();
+    if(res.error) throw res.error;
+    return res.data || null;
+  }catch(e){
+    return null;
+  }
+}
+
+/* Punto único que arranca "el resto de la app" una vez que hay una sesión
+   válida — antes esta secuencia (ensureSession + refreshFromServer +
+   subscribeRealtime) vivía inline dentro de boot(); ahora boot() (sesión
+   ya guardada) y submitLogin() (login recién enviado) comparten esta
+   misma función en vez de duplicarla. Pinta la pantalla de "signed_in"
+   (o "inactive") de inmediato y solo DESPUÉS trae los datos — así la
+   persona ve el CRM (vacío un instante) en vez de una pantalla en blanco
+   mientras refreshFromServer() todavía viaja. */
+async function startAppForSession(session){
+  AUTH_SESSION = session;
+  CURRENT_PROFILE = await fetchCurrentProfile(session.user.id);
+  if(!CURRENT_PROFILE || !CURRENT_PROFILE.active){
+    AUTH_STATUS = "inactive";
+    render();
+    return;
+  }
+  AUTH_STATUS = "signed_in";
+  render();
+  await refreshFromServer();
+  rememberName(currentActorName());
+  subscribeRealtime();
+}
+
+/* Traduce los errores más comunes de sb.auth.signInWithPassword a algo que
+   se pueda leer sin conocer la jerga de Supabase — no es un catálogo
+   exhaustivo, cae a e.message si no reconoce el caso. */
+function friendlyAuthError(e){
+  var msg = (e && e.message) || "";
+  if(/invalid login credentials/i.test(msg)) return "Correo o contraseña incorrectos.";
+  if(/email not confirmed/i.test(msg)) return "Esta cuenta todavía no confirma su correo.";
+  if(/network/i.test(msg) || !msg) return "No se pudo conectar. Revisa tu conexión a internet.";
+  return msg;
+}
+
+async function submitLogin(email, password){
+  AUTH_STATUS = "signing_in";
+  AUTH_ERROR = "";
+  render();
+  try{
+    var res = await sb.auth.signInWithPassword({ email: email, password: password });
+    if(res.error) throw res.error;
+    await startAppForSession(res.data.session);
+  }catch(e){
+    AUTH_STATUS = "signed_out";
+    AUTH_ERROR = friendlyAuthError(e);
+    UI.pendingFocus = { elId: "login-email-input" };
+    render();
+  }
+}
+
+/* Cierra sesión y regresa a la pantalla de login. También reinicia
+   UI/STATE a su forma "recién arrancado" (§9: identidad es de la PERSONA,
+   no del dispositivo) — sin esto, en un dispositivo compartido la
+   siguiente persona que inicia sesión vería, por un instante, el ticket o
+   la vista que dejó abierta la anterior. */
+async function signOut(){
+  if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
+  try{ await sb.auth.signOut(); }catch(e){}
+  AUTH_SESSION = null;
+  CURRENT_PROFILE = null;
+  AUTH_STATUS = "signed_out";
+  AUTH_ERROR = "";
+  STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
+  UI = JSON.parse(UI_INITIAL_SNAPSHOT);
+  UI.pendingFocus = { elId: "login-email-input" };
+  render();
 }
 
 /* La tabla clientes es opcional hasta que se aplique la migración 0005 —
@@ -2337,12 +2685,21 @@ async function refreshFromServer(opts){
 
 var realtimeTimer = null;
 function scheduleRefresh(){ clearTimeout(realtimeTimer); realtimeTimer = setTimeout(function(){ refreshFromServer({ background: true }); }, 300); }
+var realtimeChannel = null;
+/* Identity Foundation §9 (auto-audit "no duplicar listeners"): antes esta
+   función solo se llamaba una vez por carga de página, así que nunca
+   importó que no se desuscribiera de nada. Ahora signOut()/una nueva
+   sesión en el mismo tab (dispositivo compartido) puede volver a llamarla
+   — sin quitar el canal anterior quedarían dos suscripciones activas
+   disparando scheduleRefresh() por duplicado en cada cambio. */
 function subscribeRealtime(){
+  if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
   var channel = sb.channel("dtg-changes");
   ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes","ticket_markers"].forEach(function(table){
     channel.on("postgres_changes", { event: "*", schema: "public", table: table }, scheduleRefresh);
   });
   channel.subscribe();
+  realtimeChannel = channel;
 }
 
 /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §7/§8: la app vuelve a
@@ -2868,9 +3225,19 @@ function renderSidebar(){
       "</ul>" +
     "</div>" +
     '<div class="sidebar-scroll" id="sidebar-scroll">' + renderSidebarList() + "</div>" +
-    '<div class="whoami-bar">' +
-      "<span>Trabajando como</span>" +
-      '<input type="text" list="dtg-team-names" id="whoami-input" placeholder="tu nombre" value="' + escapeHtml(UI.whoami||"") + '">' +
+    /* Identity Foundation §6: la barra "Trabajando como [______]" (un nombre
+       tecleado a mano) desaparece — la identidad ya viene de la sesión real
+       (currentActor()). Lo que queda es un affordance discreto: iniciales +
+       nombre, que abre un menú corto con "Cerrar sesión" — nunca vuelve a
+       ser un input permanente. */
+    '<div class="sidebar-account-bar">' +
+      '<div class="sidebar-account-wrap">' +
+        '<button type="button" class="sidebar-account-btn" data-action="toggle-account-menu" aria-haspopup="true" aria-expanded="' + (UI.accountMenuOpen?"true":"false") + '">' +
+          '<span class="sidebar-account-avatar" aria-hidden="true">' + escapeHtml(initialsForName(currentActorName()||"?")) + "</span>" +
+          '<span class="sidebar-account-name">' + escapeHtml(currentActorName()||"Cuenta") + "</span>" +
+        "</button>" +
+        (UI.accountMenuOpen ? renderAccountMenu() : "") +
+      "</div>" +
       /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §9/§10: punto único y
          discreto de "se está sincronizando" — reutiliza el CSS .syncing-dot
          que ya existía en el archivo (nunca se había conectado a nada real).
@@ -2886,6 +3253,73 @@ function renderSidebar(){
          solo botón aquí ya cumple "ambos deben abrir el mismo panel" sin
          código aparte para mobile. */
       '<button type="button" class="btn-plain help-panel-open-btn" data-action="open-help-panel" title="Ayuda" aria-label="Ayuda">?</button>' +
+    "</div>"
+  );
+}
+function renderAccountMenu(){
+  var email = (AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.email) || "";
+  return (
+    '<div class="sidebar-account-menu">' +
+      (email ? '<div class="sidebar-account-menu-email">' + escapeHtml(email) + "</div>" : "") +
+      '<button type="button" class="help-cmd-btn" data-action="logout"><span class="desc">Cerrar sesión</span></button>' +
+    "</div>"
+  );
+}
+
+/* Identity Foundation §1/§7: pantalla de login — reemplaza TODO el CRM
+   (nunca un overlay encima) mientras AUTH_STATUS es "signed_out" o
+   "signing_in" (ver el gate en render()). Autofocus del campo de correo:
+   decisión deliberada distinta al resto de Mobile Reading Mode — un login
+   es una pantalla de UNA sola acción posible tanto en desktop como en
+   mobile (no "abrir para leer/navegar" como Tickets/Detalles/etc.), así
+   que aquí SÍ se pide foco vía UI.pendingFocus={elId:"login-email-input"}
+   (sin userInitiated:true) — applyFocus() ya suprime esto solo en viewport
+   móvil (mismo criterio que cualquier otro elId de navegación), que es
+   exactamente lo correcto: en mobile el teclado tampoco debe saltar solo
+   al cargar la pantalla, la persona toca el campo cuando está lista. */
+function renderLoginScreen(){
+  var submitting = AUTH_STATUS === "signing_in";
+  return (
+    '<div class="login-screen">' +
+      '<div class="login-card">' +
+        '<div class="login-brand">' + escapeHtml(DTG_IDENTITY.name) + '</div>' +
+        '<div class="login-tagline">' + escapeHtml(DTG_IDENTITY.tagline) + '</div>' +
+        (AUTH_ERROR ? '<div class="login-error" role="alert">' + escapeHtml(AUTH_ERROR) + "</div>" : "") +
+        '<form class="login-form" id="login-form">' +
+          '<label class="login-field">' +
+            '<span>Correo</span>' +
+            '<input type="email" id="login-email-input" name="email" autocomplete="username" required' + (submitting?" disabled":"") + '>' +
+          "</label>" +
+          '<label class="login-field">' +
+            '<span>Contraseña</span>' +
+            '<input type="password" id="login-password-input" name="password" autocomplete="current-password" required' + (submitting?" disabled":"") + '>' +
+          "</label>" +
+          '<button type="submit" class="login-submit-btn"' + (submitting?" disabled":"") + '>' + (submitting?"Entrando…":"Entrar") + "</button>" +
+        "</form>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* Sesión válida (auth.uid() real) pero sin fila activa en `profiles` — el
+   trigger de 0010_v05_identity_foundation.sql debería haber creado la fila
+   sola al crear la cuenta en Supabase Auth; si esto se ve, o la cuenta se
+   desactivó a propósito (active=false) o la migración/trigger todavía no
+   corrió. Nunca muestra el CRM detrás — misma regla que la pantalla de
+   login. Único botón: cerrar sesión (no hay nada más que hacer desde aquí,
+   activar la cuenta es un paso de Supabase, no de la app). */
+function renderInactiveScreen(){
+  var email = (AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.email) || "";
+  return (
+    '<div class="login-screen">' +
+      '<div class="login-card">' +
+        '<div class="login-brand">' + escapeHtml(DTG_IDENTITY.name) + '</div>' +
+        '<div class="login-inactive-msg">' +
+          "Tu cuenta" + (email ? " (" + escapeHtml(email) + ")" : "") + " todavía no está activa en este CRM. " +
+          "Pídele a un administrador que active tu perfil." +
+        "</div>" +
+        '<button type="button" class="login-submit-btn" data-action="logout">Cerrar sesión</button>' +
+      "</div>" +
     "</div>"
   );
 }
@@ -4403,6 +4837,20 @@ function ticketThumbPhotoPath(t){
   }
   return null;
 }
+/* Tickets Workbench §22 (badge opcional): cuenta de fotos del ticket para
+   el numerito discreto sobre la miniatura de una tarjeta con más de una
+   foto. Cuenta SOBRE t.thread (ya en memoria, mismo criterio que
+   ticketThumbPhotoPath de arriba) en vez de bibliotecaAllPhotos()+filter —
+   esa función escanea TODOS los tickets; llamarla una vez por tarjeta en la
+   grilla sería exactamente el patrón "por-tarjeta" que la auditoría de esta
+   ronda pide evitar (§98). bibliotecaAllPhotos() se sigue usando tal cual
+   para la Galería en sí (ticketGalleryPhotos), que solo corre UNA vez, no
+   una vez por tarjeta. */
+function ticketPhotoCount(t){
+  var n = 0;
+  (t.thread || []).forEach(function(ev){ if(ev.type === "archivo" && ev.storage_path) n++; });
+  return n;
+}
 
 /* Búsqueda determinista (folio, cliente, empresa, teléfono tolerante a
    formato, producto/trabajo, responsable, texto de notas ya en bitácora) —
@@ -4510,17 +4958,72 @@ function ticketsExplorerResponsableOptions(){
   return out;
 }
 
+/* Tickets Workbench (Identity Foundation + Mobile UX §18-21) — Quick Create,
+   campo Qué sigue: versión mínima del mismo catálogo STATE.meta.queSigueOptions
+   que ya usa renderQueSigueSelect() en la cabecera del ticket. Deliberadamente
+   SIN la opción "+ Nueva opción…" (CAMBIO A LA PROPUESTA ORIGINAL, ver reporte
+   final): agregar una categoría nueva al catálogo global es una decisión que
+   vale la pena tomarse con el ticket ya abierto (cabecera/Detalles), no a
+   media pantalla de creación rápida — Quick Create sigue pudiendo dejarlo en
+   "—" y resolverlo ahí en 2 segundos apenas se abre el ticket recién creado. */
+function renderQuickCreateQueSigueSelect(){
+  var opts = STATE.meta.queSigueOptions || [];
+  var html = '<select id="quickcreate-quesigue">';
+  html += '<option value="">—</option>';
+  opts.forEach(function(o){ html += '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + "</option>"; });
+  html += "</select>";
+  return html;
+}
+/* §18: panel del botón "+" — Cliente/Teléfono/Trabajo/Qué sigue, todos
+   opcionales, "Crear vacío" siempre disponible. Nunca autofocus al abrir
+   (Mobile Reading Mode): render() no fija UI.pendingFocus al abrir este
+   panel, así que el primer campo solo se enfoca si la persona lo toca. */
+function renderTicketsQuickCreatePanel(){
+  return (
+    '<div class="tickets-quickcreate-panel" id="tickets-quickcreate-panel">' +
+      '<div class="tickets-quickcreate-head">' +
+        '<span>Ticket nuevo</span>' +
+        '<button type="button" class="btn-plain" data-action="tickets-quickcreate-toggle" aria-label="Cerrar">&times;</button>' +
+      "</div>" +
+      '<div class="tickets-quickcreate-fields">' +
+        '<label class="tickets-quickcreate-field"><span>Cliente</span><input type="text" id="quickcreate-cliente" placeholder="Nombre o empresa"></label>' +
+        '<label class="tickets-quickcreate-field"><span>Teléfono</span><input type="tel" id="quickcreate-telefono" placeholder="956 561 2970"></label>' +
+        '<label class="tickets-quickcreate-field"><span>Trabajo</span><input type="text" id="quickcreate-trabajo" placeholder="Qué se va a hacer"></label>' +
+        '<label class="tickets-quickcreate-field"><span>Qué sigue</span>' + renderQuickCreateQueSigueSelect() + "</label>" +
+      "</div>" +
+      '<div class="tickets-quickcreate-actions">' +
+        '<button type="button" class="btn btn-ghost" data-action="new-ticket" title="Crear el ticket sin llenar nada">Crear vacío</button>' +
+        '<button type="button" class="btn btn-primary" data-action="tickets-quickcreate-submit">Crear</button>' +
+      "</div>" +
+    "</div>"
+  );
+}
+
 function renderTicketsToolbar(list){
   var ui = UI.ticketsExplorer;
   var viewBtns = TICKETS_VIEW_OPTIONS.map(function(v){
     return '<button type="button" class="tickets-view-btn' + (UI.ticketsView===v[0]?" active":"") + '" data-action="tickets-view-pick" data-view="' + v[0] + '" aria-pressed="' + (UI.ticketsView===v[0]?"true":"false") + '">' + v[1] + "</button>";
   }).join("");
+  /* §18: botón "+" — panel hermano de Filtros (ver wireEvents: se cierran
+     mutuamente, cada uno con su propio bool en UI.ticketsExplorer). */
+  var quickCreateBtn =
+    '<button type="button" class="tickets-quickcreate-toggle' + (ui.quickCreateOpen?" active":"") + '" data-action="tickets-quickcreate-toggle" aria-expanded="' + (ui.quickCreateOpen?"true":"false") + '" aria-controls="tickets-quickcreate-panel" title="Ticket nuevo" aria-label="Crear ticket nuevo">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+    "</button>";
   var estadoChips = TICKET_ESTADO_FILTERS.map(function(f){
     return '<button type="button" class="tickets-filter-chip' + (ui.estado===f[0]?" active":"") + '" data-action="tickets-filter-estado" data-value="' + f[0] + '">' + f[1] + "</button>";
   }).join("");
-  var markerChips = MARKER_TYPES.concat([MARKER_META.ordenar]).map(function(m){
-    return '<button type="button" class="tickets-filter-chip tickets-filter-marker' + (ui.marker===m.type?" active":"") + '" data-action="tickets-filter-marker" data-value="' + m.type + '" title="Filtrar: ' + escapeHtml(markerLabel(m.type)) + '" aria-label="Filtrar por ' + escapeHtml(markerLabel(m.type)) + '" aria-pressed="' + (ui.marker===m.type?"true":"false") + '">' + markerIcon(m.type) + "</button>";
-  }).join("");
+  /* §19: Marcador pasa de fila permanente de chips-emoji a UN <select> — el
+     mismo registro (MARKER_TYPES + Ordenar) y el mismo dato filtrado
+     (UI.ticketsExplorer.marker), solo cambia CÓMO se elige, nunca una
+     segunda fuente de "qué marcadores existen". Vive en el segundo nivel
+     ("Más filtros"), no permanente como antes. */
+  var markerOpts = MARKER_TYPES.concat([MARKER_META.ordenar]);
+  var markerSelect =
+    '<select class="tickets-filter-select" data-action="tickets-filter-marker-select" aria-label="Filtrar por marcador">' +
+      '<option value="">Marcador: todos</option>' +
+      markerOpts.map(function(m){ return '<option value="' + m.type + '"' + (ui.marker===m.type?" selected":"") + '>' + markerIcon(m.type) + " " + escapeHtml(markerLabel(m.type)) + "</option>"; }).join("") +
+    "</select>";
   var clienteOpts = ticketsExplorerClienteOptions();
   var clienteSelect = clienteOpts.length ? (
     '<select class="tickets-filter-select" data-action="tickets-filter-cliente" aria-label="Filtrar por cliente">' +
@@ -4543,14 +5046,11 @@ function renderTicketsToolbar(list){
     '<select class="tickets-filter-select" data-action="tickets-sort-pick" aria-label="Ordenar por">' +
       TICKETS_SORT_OPTIONS.map(function(s){ return '<option value="' + s[0] + '"' + ((ui.sort||"actividad")===s[0]?" selected":"") + '>' + s[1] + "</option>"; }).join("") +
     "</select>";
-  /* §17-21: toolbar reducida a título (ya lo pone renderTicketsExplorerView)
-     + los 4 botones de vista (protagonistas) + UN botón discreto de opciones
-     — nunca diez chips permanentes. El ícono es de sliders/filtro (tres
-     barras con controles), a propósito distinto de un engrane para que no se
-     confunda con "Configuración" global de la app. El badge numérico es el
-     "indicador de filtro activo" que debe verse aun con el panel cerrado —
-     nunca cuenta "sort" (ordenar no angosta la lista, ver
-     ticketsExplorerActiveFilterCount). */
+  /* Tickets Workbench §19: Filtros vuelve a un botón modesto (nunca gana
+     peso visual solo por existir el "+" al lado) — el ícono de
+     sliders/filtro se mantiene, distinto de un engrane. El badge sigue
+     siendo el indicador de filtro activo visible con el panel cerrado
+     (nunca cuenta "sort", ver ticketsExplorerActiveFilterCount). */
   var filterCount = ticketsExplorerActiveFilterCount();
   var optionsIcon =
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
@@ -4563,6 +5063,41 @@ function renderTicketsToolbar(list){
       optionsIcon +
       '<span class="tickets-options-label">Filtros' + (filterCount ? " · " + filterCount : "") + "</span>" +
     "</button>";
+  /* §19: nivel 2, "Más filtros >" — Marcador/Cliente/Responsable/Fecha,
+     colapsado por default. Cuenta PROPIA (nunca reusa filterCount, que
+     también incluye Buscar/Estado — este badge solo describe lo que ESTE
+     botón esconde). */
+  var moreCount = (ui.marker?1:0) + (ui.clienteId?1:0) + (ui.responsable?1:0) + (ui.fecha!=="todas"?1:0);
+  var moreFiltersBtn =
+    '<button type="button" class="tickets-more-filters-toggle" data-action="tickets-more-filters-toggle" aria-expanded="' + (ui.moreFiltersOpen?"true":"false") + '" aria-controls="tickets-more-filters">' +
+      (ui.moreFiltersOpen ? "Menos filtros" : "Más filtros") + (moreCount ? " · " + moreCount : "") +
+      '<span class="tickets-more-filters-caret" aria-hidden="true">' + (ui.moreFiltersOpen ? "&#9650;" : "&#9660;") + "</span>" +
+    "</button>";
+  /* Resumen compacto de los filtros del nivel 2 — visible AUN con "Más
+     filtros" colapsado (§19: "los filtros activos se muestran como un
+     resumen de chips compacto"), cada chip se puede quitar por separado sin
+     tener que abrir el nivel 2 primero. */
+  var summaryChips = [];
+  if(ui.marker){
+    summaryChips.push({ field:"marker", label: markerIcon(ui.marker) + " " + markerLabel(ui.marker) });
+  }
+  if(ui.clienteId){
+    var co = clienteOpts.filter(function(o){ return o.id===ui.clienteId; })[0];
+    summaryChips.push({ field:"clienteId", label: "Cliente: " + (co?co.label:"?") });
+  }
+  if(ui.responsable) summaryChips.push({ field:"responsable", label:"Responsable: " + ui.responsable });
+  if(ui.fecha && ui.fecha !== "todas"){
+    var ff = TICKETS_FECHA_FILTERS.filter(function(f){ return f[0]===ui.fecha; })[0];
+    summaryChips.push({ field:"fecha", label: ff ? ff[1] : ui.fecha });
+  }
+  var summaryHtml = summaryChips.length ? (
+    '<div class="tickets-active-filters">' +
+      summaryChips.map(function(c){
+        return '<button type="button" class="tickets-active-filter-chip" data-action="tickets-summary-clear" data-field="' + c.field + '">' + escapeHtml(c.label) + ' <span aria-hidden="true">&times;</span></button>';
+      }).join("") +
+      '<button type="button" class="tickets-active-filters-clear" data-action="tickets-filters-clear-all">Limpiar</button>' +
+    "</div>"
+  ) : "";
   var panelHtml = "";
   if(ui.optionsOpen){
     panelHtml =
@@ -4571,21 +5106,28 @@ function renderTicketsToolbar(list){
           '<div class="search-wrap tickets-search-wrap">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
             '<input type="text" id="tickets-explorer-search" placeholder="Folio, cliente, empresa, teléfono, producto…" value="' + escapeHtml(ui.search||"") + '">' +
+            /* §19: la × de Buscar vive PEGADA al campo (nunca la × grande que
+               cierra todo el panel, que sigue siendo un botón aparte). */
+            (ui.search ? '<button type="button" class="search-clear-btn" data-action="tickets-search-clear" aria-label="Borrar búsqueda">&times;</button>' : "") +
           "</div>" +
           '<button type="button" class="btn-plain tickets-options-close" data-action="tickets-options-toggle" aria-label="Cerrar filtros">&times;</button>' +
         "</div>" +
         '<label class="tickets-options-label-row">Ordenar por' + sortSelect + "</label>" +
-        '<div class="tickets-filter-chips">' + estadoChips + '<span class="tickets-filter-sep" aria-hidden="true"></span>' + markerChips + "</div>" +
-        '<div class="tickets-filter-selects">' + clienteSelect + respSelect + fechaSelect + "</div>" +
+        '<div class="tickets-filter-chips">' + estadoChips + "</div>" +
+        summaryHtml +
+        moreFiltersBtn +
+        (ui.moreFiltersOpen ? '<div class="tickets-filter-selects" id="tickets-more-filters">' + markerSelect + clienteSelect + respSelect + fechaSelect + "</div>" : "") +
         '<div class="tickets-toolbar-count">' + list.length + (list.length===1?" ticket":" tickets") + "</div>" +
       "</div>";
   }
+  var quickCreatePanelHtml = ui.quickCreateOpen ? renderTicketsQuickCreatePanel() : "";
   return (
     '<div class="tickets-toolbar">' +
       '<div class="tickets-toolbar-row tickets-toolbar-top">' +
         '<div class="tickets-view-switch" role="tablist" aria-label="Vista de tickets">' + viewBtns + "</div>" +
-        optionsBtn +
+        '<div class="tickets-toolbar-actions">' + quickCreateBtn + optionsBtn + "</div>" +
       "</div>" +
+      quickCreatePanelHtml +
       panelHtml +
     "</div>"
   );
@@ -4598,10 +5140,19 @@ function renderTicketsToolbar(list){
    fácil y sin confirmación visual entre el primer y segundo tap; un botón
    [Abrir] explícito es inequívoco y le da al usuario el resto de acciones
    (Editar/📷/⋯) sin un gesto distinto para cada una (CAMBIO A LA PROPUESTA
-   ORIGINAL — documentado en el reporte final). El botón de selección
-   ("tickets-thumb-select") es el ÚNICO elemento interactivo mientras la
-   tarjeta no está seleccionada; la franja de acciones son botones HERMANOS
-   (nunca anidados) que solo existen cuando sí lo está. */
+   ORIGINAL — documentado en el reporte final).
+   §22 (esta ronda): sobre una tarjeta YA SELECCIONADA, tocar la FOTO abre
+   la galería del ticket en vez de deseleccionar — la foto y el resto de la
+   tarjeta (nombre/folio/trabajo/actividad) dejan de ser el MISMO botón para
+   que eso sea posible sin anidar un <button> dentro de otro (HTML inválido,
+   ver auditoría §102 de la ronda anterior): ahora son dos botones HERMANOS
+   dentro de un contenedor no-interactivo. Mientras la tarjeta NO está
+   seleccionada, ambos hacen exactamente lo mismo (seleccionar) — la foto
+   solo cambia de rol una vez que ya hay selección, y solo si en efecto hay
+   al menos una foto que mostrar (una tarjeta sin fotos no tiene galería que
+   abrir, así que su "foto" — el avatar/ícono de respaldo — se sigue
+   comportando como selección/deselección, igual que el resto de la
+   tarjeta). */
 function renderTicketsThumbCard(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
   var photoPath = ticketThumbPhotoPath(t);
@@ -4615,12 +5166,21 @@ function renderTicketsThumbCard(t){
     (identityStyle && identityStyle.style === "spotlight" ? " cid-theme-" + identityStyle.theme + " tickets-card-spotlight" : "") +
     (isSelected ? " tickets-thumb-selected" : "");
   var markersHtml = renderSidebarMarkerIcons(t);
-  var selectBtn =
-    '<button type="button" class="tickets-thumb-select" data-action="tickets-thumb-select" data-id="' + t.id + '" aria-pressed="' + (isSelected?"true":"false") + '">' +
+  var mediaIsGallery = isSelected && !!photoPath;
+  /* Badge opcional (§22): solo con más de 1 foto, y nunca junto a la marca
+     de selección (✓) — ambas viven en la misma esquina superior-izquierda,
+     así que se turnan en vez de superponerse. */
+  var photoCount = photoPath ? ticketPhotoCount(t) : 0;
+  var mediaBtn =
+    '<button type="button" class="tickets-thumb-media-btn" data-action="' + (mediaIsGallery ? "tickets-thumb-gallery" : "tickets-thumb-select") + '" data-id="' + t.id + '"' +
+      (mediaIsGallery ? ' aria-label="Ver fotos del ticket"' : ' aria-pressed="' + (isSelected?"true":"false") + '"') + '>' +
       '<div class="tickets-thumb-media' + (photoPath?"":" tickets-thumb-media-fallback") + '">' + mediaHtml +
-        (isSelected ? '<span class="tickets-thumb-check" aria-hidden="true">&#10003;</span>' : "") +
+        (isSelected ? '<span class="tickets-thumb-check" aria-hidden="true">&#10003;</span>' : (photoCount > 1 ? '<span class="tickets-thumb-photocount" aria-hidden="true">' + photoCount + "</span>" : "")) +
         (markersHtml ? '<span class="tickets-thumb-markers">' + markersHtml + "</span>" : "") +
       "</div>" +
+    "</button>";
+  var bodyBtn =
+    '<button type="button" class="tickets-thumb-body-btn" data-action="tickets-thumb-select" data-id="' + t.id + '" aria-pressed="' + (isSelected?"true":"false") + '">' +
       '<div class="tickets-thumb-body">' +
         '<div class="tickets-thumb-cliente' + (c?clienteIdentityClasses(c,"compact"):"") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
         '<div class="tickets-thumb-meta-row"><span class="tickets-thumb-folio">#' + t.seq + "</span>" + (estado!=="abierto" ? '<span class="pill status-pill status-'+estado+'">'+ticketEstadoLabel(estado)+"</span>" : "") + "</div>" +
@@ -4628,6 +5188,7 @@ function renderTicketsThumbCard(t){
         '<div class="tickets-thumb-activity">' + fmtRelativeActivity(t.lastActivityAt) + "</div>" +
       "</div>" +
     "</button>";
+  var selectBtn = '<div class="tickets-thumb-select-group">' + mediaBtn + bodyBtn + "</div>";
   return '<div class="' + cardClass + '" data-id="' + t.id + '">' + selectBtn + (isSelected ? renderTicketsThumbActions(t, estado) : "") + "</div>";
 }
 /* §46-49: franja de acciones de la tarjeta seleccionada. [Abrir] ->
@@ -5061,6 +5622,90 @@ function renderBibliotecaViewer(){
         '<div class="popover-actions">' +
           (t ? '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' : "") +
           (c ? '<button type="button" class="btn btn-ghost" data-action="open-cliente-ficha" data-client-id="' + c.id + '">Abrir cliente</button>' : "") +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* ================= Tickets Workbench §22-24: Galería del ticket =================
+   Tocar la FOTO de una tarjeta de Miniaturas ya seleccionada abre esta
+   galería con TODAS las fotos de ese ticket — reusa bibliotecaAllPhotos()
+   (el mismo índice que arma la sección Biblioteca a partir de la bitácora,
+   nunca un segundo modelo de imágenes ni una segunda copia en Storage) y
+   solo lo filtra por ticket_id. Como Biblioteca ya ordena "más nueva
+   primero", la galería nace mostrando la foto más reciente. */
+function ticketGalleryPhotos(ticketId){
+  return bibliotecaAllPhotos().filter(function(p){ return p.ticketId === ticketId; });
+}
+function openTicketGallery(ticketId, startIndex){
+  var photos = ticketGalleryPhotos(ticketId);
+  if(!photos.length) return;
+  var idx = startIndex || 0;
+  if(idx < 0 || idx >= photos.length) idx = 0;
+  UI.ticketGallery = { ticketId: ticketId, index: idx };
+  /* §22: nunca autofocus al abrir — es una acción explícita de la persona
+     (tocó la foto), pero abrir una galería no es un campo de texto, así
+     que no hay nada que enfocar de todas formas; se deja pendingFocus tal
+     cual estaba (ninguno) por si algo más lo dejó pendiente. */
+  render();
+}
+function closeTicketGallery(){ UI.ticketGallery = null; render(); }
+function ticketGalleryStep(delta){
+  var g = UI.ticketGallery;
+  if(!g) return;
+  var photos = ticketGalleryPhotos(g.ticketId);
+  if(!photos.length){ closeTicketGallery(); return; }
+  g.index = (g.index + delta + photos.length) % photos.length;
+  render();
+}
+/* §22: "+ Agregar imágenes" reutiliza EXACTAMENTE el mismo picker directo
+   que "📷 Imagen" en la franja de acciones (openTicketsThumbPhoto) — nunca
+   un tercer selector de archivos. Se cierra la galería primero: el popover
+   de fotos ya usa el mismo patrón visual de overlay (cierre-modal-overlay)
+   y dos overlays de pantalla completa apilados solo estorbarían; la tarjeta
+   sigue seleccionada (§ selección sobrevive) así que reabrir la galería
+   después de subir es un toque, no una búsqueda. */
+function ticketGalleryAddImages(){
+  var g = UI.ticketGallery;
+  if(!g) return;
+  var ticketId = g.ticketId;
+  closeTicketGallery();
+  openTicketsThumbPhoto(ticketId);
+}
+function renderTicketGalleryOverlay(){
+  var g = UI.ticketGallery;
+  if(!g) return "";
+  var photos = ticketGalleryPhotos(g.ticketId);
+  if(!photos.length){ return ""; }
+  var idx = Math.max(0, Math.min(g.index, photos.length - 1));
+  var p = photos[idx];
+  var t = findTicket(g.ticketId);
+  var c = p.clienteId ? findCliente(p.clienteId) : null;
+  var when = p.ts ? fmtDateShort(p.ts) : "";
+  var titleLine = c ? clienteLabel(c) : (p.clienteNombre || (t && t.cliente) || "Sin cliente vinculado");
+  var thumbsHtml = photos.map(function(ph, i){
+    return '<button type="button" class="ticket-gallery-thumb' + (i===idx?" active":"") + '" data-action="ticket-gallery-thumb" data-index="' + i + '" aria-label="Imagen ' + (i+1) + ' de ' + photos.length + '" aria-current="' + (i===idx?"true":"false") + '">' +
+      '<img data-storage-path="' + escapeHtml(ph.storagePath) + '" alt="">' +
+    "</button>";
+  }).join("");
+  return (
+    '<div class="cierre-modal-overlay ticket-gallery-overlay" id="ticket-gallery-overlay">' +
+      '<div class="cierre-modal ticket-gallery-modal">' +
+        '<button type="button" class="btn-plain ticket-gallery-close" data-action="ticket-gallery-close" aria-label="Cerrar">&times;</button>' +
+        '<div class="ticket-gallery-media">' +
+          (photos.length > 1 ? '<button type="button" class="ticket-gallery-nav-btn ticket-gallery-prev" data-action="ticket-gallery-prev" aria-label="Imagen anterior">&#8249;</button>' : "") +
+          '<img data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
+          (photos.length > 1 ? '<button type="button" class="ticket-gallery-nav-btn ticket-gallery-next" data-action="ticket-gallery-next" aria-label="Imagen siguiente">&#8250;</button>' : "") +
+        "</div>" +
+        (photos.length > 1 ? '<div class="ticket-gallery-counter">' + (idx+1) + " de " + photos.length + "</div>" : "") +
+        '<div class="cierre-modal-title">' + escapeHtml(titleLine) + "</div>" +
+        (t ? '<div class="cierre-modal-sub">Ticket #' + t.seq + (p.caption ? " · " + escapeHtml(p.caption) : "") + "</div>" : "") +
+        '<div class="cierre-modal-sub">' + (p.autor ? "Subida por " + escapeHtml(p.autor) : "") + (when ? " · " + escapeHtml(when) : "") + "</div>" +
+        (photos.length > 1 ? '<div class="ticket-gallery-thumbs">' + thumbsHtml + "</div>" : "") +
+        '<div class="popover-actions">' +
+          '<button type="button" class="btn btn-ghost" data-action="ticket-gallery-add">+ Agregar imágenes</button>' +
+          (t ? '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' : "") +
         "</div>" +
       "</div>" +
     "</div>"
@@ -5720,6 +6365,29 @@ function render(){
     app.innerHTML = '<div class="app"><div class="empty-state" style="width:100%;"><h1>No se pudo conectar</h1><p>' + escapeHtml(FATAL_ERROR) + "</p></div></div>";
     return;
   }
+  /* Identity Foundation §1/§9: gate de autenticación — el CRM nunca vive
+     "detrás" de la pantalla de login (nunca se renderiza aunque sea oculto
+     por CSS). Mismo patrón que el early-return de FATAL_ERROR de arriba:
+     una sola raíz decide qué se ve, nunca un overlay superpuesto sobre el
+     árbol completo de la app. wireEvents()/applyFocus() se llaman igual en
+     cualquier rama (login/inactive/signed_in) — todos sus lookups del DOM
+     ya son defensivos (if(el)), así que reusar la misma función en vez de
+     tener una versión aparte para el login es seguro y evita duplicar el
+     mecanismo de foco. */
+  if(AUTH_STATUS === "loading"){
+    app.innerHTML = '<div class="login-screen"><div class="login-loading" aria-live="polite">Cargando…</div></div>';
+    return;
+  }
+  if(AUTH_STATUS === "signed_out" || AUTH_STATUS === "signing_in"){
+    app.innerHTML = renderLoginScreen();
+    wireEvents(); /* wireEvents() ya termina llamando a applyFocus() */
+    return;
+  }
+  if(AUTH_STATUS === "inactive"){
+    app.innerHTML = renderInactiveScreen();
+    wireEvents();
+    return;
+  }
   var teamOptions = STATE.meta.teamNames.map(function(n){ return '<option value="' + escapeHtml(n) + '">'; }).join("");
   app.innerHTML =
     '<datalist id="dtg-team-names">' + teamOptions + "</datalist>" +
@@ -5742,6 +6410,7 @@ function render(){
     renderCellEditorOverlay() +
     renderMarkerPickerOverlay() +
     renderTicketsThumbPhotoOverlay() +
+    renderTicketGalleryOverlay() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -6252,7 +6921,7 @@ async function createTicketCore(initialData){
     var ins = await sb.from("tickets").insert(row).select().single();
     if(ins.error) throw ins.error;
     var newId = ins.data.id;
-    await sb.from("bitacora").insert({ ticket_id: newId, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Ticket creado" } });
+    await sb.from("bitacora").insert({ ticket_id: newId, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Ticket creado" } });
     return newId;
   }catch(e){
     showToast("No se pudo crear el ticket: " + (e.message || "error"));
@@ -6308,6 +6977,59 @@ async function createTicketFromNuevo(data){
     if(!pagoOk) failures.push("pago " + fmtMoney(pg.monto));
   }
 
+  openTicketById(newId);
+  await refreshFromServer({refocus:true});
+  if(failures.length){
+    showToast("Ticket creado, pero no se pudo guardar: " + failures.join(", ") + ".");
+  }
+}
+
+/* Tickets Workbench §18-21: Quick Create — el "+" del toolbar de Tickets.
+   Reusa LITERALMENTE los mismos cores que ya usa /nuevo (createTicketCore/
+   applyDetectedPhoneToTicket/addProductoCore/updateQueSigueCore) en vez de
+   abrir una segunda ruta de creación — la única diferencia con /nuevo es la
+   FORMA de capturar los datos (campos explícitos de un formulario en vez de
+   una sola línea de texto libre que hay que parsear). "Trabajo" se guarda
+   como UN producto con cantidad 1 y precio pendiente (null) — exactamente lo
+   mismo que "/nuevo Piñata de Spiderman" sin la palabra "producto" jamás
+   podría expresar por sí solo, pero es el mismo shape de fila que ya usa
+   addProductoCore en cualquier otro lugar de la app (nunca un campo
+   "trabajo" nuevo en la tabla). El teléfono se valida con el MISMO
+   detectPhone() que usa /nuevo sobre texto libre — nunca una segunda regla
+   de qué es un teléfono válido. */
+async function submitTicketQuickCreate(fields){
+  var cliente = (fields.cliente || "").trim();
+  var telefono = (fields.telefono || "").trim();
+  var trabajo = (fields.trabajo || "").trim();
+  var quesigue = (fields.quesigue || "").trim();
+  var newId = await createTicketCore({ cliente: cliente });
+  if(!newId) return;
+  var failures = [];
+  var t;
+  if(telefono){
+    var phone = detectPhone(telefono);
+    if(phone){
+      t = findTicket(newId);
+      if(t){
+        var phoneOk = await applyDetectedPhoneToTicket(t, phone);
+        if(!phoneOk) failures.push("teléfono " + phone.formatted);
+      }
+    } else {
+      failures.push('teléfono "' + telefono + '" (no se reconoció como número válido)');
+    }
+  }
+  if(trabajo){
+    t = findTicket(newId);
+    if(t){
+      var prodOk = await addProductoCore(t, trabajo, 1, null);
+      if(!prodOk) failures.push('trabajo "' + trabajo + '"');
+    }
+  }
+  if(quesigue){
+    t = findTicket(newId);
+    if(t) await updateQueSigueCore(t, quesigue);
+  }
+  UI.ticketsExplorer.quickCreateOpen = false;
   openTicketById(newId);
   await refreshFromServer({refocus:true});
   if(failures.length){
@@ -6533,7 +7255,7 @@ async function addProductoCore(t, desc, cantidad, precio){
   try{
     var r1 = await sb.from("productos").insert({ ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio });
     if(r1.error) throw r1.error;
-    var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: UI.whoami || null, payload: { desc: desc, cantidad: cantidad, precio: precio } });
+    var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: currentActorName() || null, payload: { desc: desc, cantidad: cantidad, precio: precio } });
     if(r2.error) throw r2.error;
   }catch(e){ showToast("No se pudo guardar el producto: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
@@ -6559,7 +7281,7 @@ async function updateProductoCore(t, productoId, patch){
     if("precio" in patch) dbPatch.precio = patch.precio;
     var r1 = await sb.from("productos").update(dbPatch).eq("id", productoId);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Producto editado: " + prod.desc + " — " + (prod.precio==null ? "precio pendiente" : prod.cantidad + " × " + fmtMoney(prod.precio)) } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Producto editado: " + prod.desc + " — " + (prod.precio==null ? "precio pendiente" : prod.cantidad + " × " + fmtMoney(prod.precio)) } });
   }catch(e){ showToast("No se pudo actualizar el producto: " + (e.message || "error")); }
   refreshFromServer();
 }
@@ -6579,7 +7301,7 @@ async function linkClienteToTicket(t, cliente){
   try{
     var r1 = await sb.from("tickets").update({ cliente_id: cliente.id, cliente: cliente.nombre }).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Cliente vinculado: " + clienteLabel(cliente) } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Cliente vinculado: " + clienteLabel(cliente) } });
   }catch(e){ showToast("No se pudo vincular el cliente: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
   return ok;
@@ -6655,7 +7377,7 @@ async function updateClienteCore(clientId, patch, ticketIdForLog){
       }
     }
     if(ticketIdForLog){
-      await sb.from("bitacora").insert({ ticket_id: ticketIdForLog, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Cliente editado: " + Object.keys(patch).join(", ") } });
+      await sb.from("bitacora").insert({ ticket_id: ticketIdForLog, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Cliente editado: " + Object.keys(patch).join(", ") } });
     }
   }catch(e){
     showToast("No se pudo actualizar el cliente: " + (e.message || "error"));
@@ -6673,7 +7395,7 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion){
   try{
     var r3 = await sb.from("tareas").insert({ ticket_id: t.id, descripcion: desc, tipo: tipo, responsable: responsable || null, fecha_atencion: fechaAtencion || null, estado: "pendiente" });
     if(r3.error) throw r3.error;
-    var r4 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: kind, autor: UI.whoami || null, payload: { desc: desc, responsable: responsable, fechaAtencion: fechaAtencion, estado: tipo==="produccion" ? "pendiente" : null } });
+    var r4 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: kind, autor: currentActorName() || null, payload: { desc: desc, responsable: responsable, fechaAtencion: fechaAtencion, estado: tipo==="produccion" ? "pendiente" : null } });
     if(r4.error) throw r4.error;
   }catch(e){ showToast("No se pudo guardar la tarea: " + (e.message || "error")); }
   refreshFromServer({refocus:true});
@@ -6686,7 +7408,7 @@ async function addPagoCore(t, monto, fecha, metodo, concepto){
   try{
     var r5 = await sb.from("pagos").insert({ ticket_id: t.id, monto: monto, fecha: fecha, metodo: metodo || null, concepto: concepto || null });
     if(r5.error) throw r5.error;
-    var r6 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "pago", autor: UI.whoami || null, payload: { monto: monto, fecha: fecha, metodo: metodo, concepto: concepto } });
+    var r6 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "pago", autor: currentActorName() || null, payload: { monto: monto, fecha: fecha, metodo: metodo, concepto: concepto } });
     if(r6.error) throw r6.error;
   }catch(e){ showToast("No se pudo guardar el pago: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
@@ -6699,7 +7421,7 @@ async function addPagoCore(t, monto, fecha, metodo, concepto){
    bitácora, se crea además el marcador elegido — mismo core que "Ordenar"
    usa para su propio caso (nota + pin), nunca una segunda ruta de guardado. */
 async function addNotaCore(t, text, markerType){
-  var optimistic = { id: uid(), type: "nota", ts: new Date().toISOString(), autor: UI.whoami || null, text: text };
+  var optimistic = { id: uid(), type: "nota", ts: new Date().toISOString(), autor: currentActorName() || null, text: text };
   t.thread.push(optimistic);
   render();
   var ok = true;
@@ -6709,7 +7431,7 @@ async function addNotaCore(t, text, markerType){
        la fila de bitácora para poder enlazar el marcador (§36/§83, "Ordenar"
        o el elegido a mano vía "[!]") a la nota que lo originó — sin esto no
        hay forma de tener esa referencia sin un segundo roundtrip. */
-    var res = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "nota", autor: UI.whoami || null, payload: { text: text } }).select().single();
+    var res = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "nota", autor: currentActorName() || null, payload: { text: text } }).select().single();
     if(res.error) throw res.error;
     savedId = res.data ? res.data.id : null;
   }catch(e){ showToast("No se pudo guardar la nota: " + (e.message || "error")); ok = false; }
@@ -6737,14 +7459,14 @@ async function addNotaCore(t, text, markerType){
 async function createMarkerCore(t, type, text, sourceBitacoraId){
   var optimistic = {
     id: uid(), type: type, text: text || "", sourceBitacoraId: sourceBitacoraId || null,
-    createdAt: new Date().toISOString(), createdBy: UI.whoami || "", resolvedAt: null, resolvedBy: ""
+    createdAt: new Date().toISOString(), createdBy: currentActorName() || "", resolvedAt: null, resolvedBy: ""
   };
   t.markers.push(optimistic);
   render();
   try{
     var res = await sb.from("ticket_markers").insert({
       ticket_id: t.id, type: type, text: text || null,
-      source_bitacora_id: sourceBitacoraId || null, created_by: UI.whoami || null
+      source_bitacora_id: sourceBitacoraId || null, created_by: currentActorName() || null
     });
     if(res.error) throw res.error;
     /* Bitácora (§21): "❗ Urgente activado · Martín" — reutiliza el mismo
@@ -6752,7 +7474,7 @@ async function createMarkerCore(t, type, text, sourceBitacoraId){
        inventar un render nuevo. El evento nunca se reescribe después (la
        resolución agrega SU PROPIA línea, ver resolveMarkerCore). */
     await sb.from("bitacora").insert({
-      ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null,
+      ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null,
       payload: { text: markerIcon(type) + " " + markerLabel(type) + " activado" + (text ? ": " + text : "") }
     });
   }catch(e){ showToast("No se pudo guardar el marcador: " + (e.message || "error")); }
@@ -6767,13 +7489,13 @@ async function resolveMarkerCore(t, markerId){
   if(!m || m.resolvedAt) return;
   var label = markerLabel(m.type), icon = markerIcon(m.type);
   var nowIso = new Date().toISOString();
-  m.resolvedAt = nowIso; m.resolvedBy = UI.whoami || "";
+  m.resolvedAt = nowIso; m.resolvedBy = currentActorName() || "";
   render();
   try{
-    var res = await sb.from("ticket_markers").update({ resolved_at: nowIso, resolved_by: UI.whoami || null }).eq("id", markerId);
+    var res = await sb.from("ticket_markers").update({ resolved_at: nowIso, resolved_by: currentActorName() || null }).eq("id", markerId);
     if(res.error) throw res.error;
     await sb.from("bitacora").insert({
-      ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null,
+      ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null,
       payload: { text: "✓ " + icon + " " + label + " resuelto" }
     });
   }catch(e){ showToast("No se pudo resolver el marcador: " + (e.message || "error")); }
@@ -6991,7 +7713,7 @@ async function uploadOnePhoto(t, file, caption, uploadBatchId){
        solo la base para una futura vista de galería (sección 12/47). */
     var payload = { storage_path: path, filename: file.name, caption: caption || "" };
     if(uploadBatchId) payload.upload_batch_id = uploadBatchId;
-    var r = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: UI.whoami || null, payload: payload });
+    var r = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: currentActorName() || null, payload: payload });
     if(r.error) throw r.error;
     return { ok: true };
   }catch(e){
@@ -7012,20 +7734,45 @@ function resetPhotoBatch(){
   UI.photoBatch = null;
 }
 
-/* §51-52: botón "📷" de Miniaturas — MISMO pipeline de fotos múltiples que
-   el compositor (mismo UI.photoBatch, mismo renderPhotoBatchPopover, mismo
-   startPhotoBatchUpload/uploadOnePhoto), nunca un segundo selector/subida.
-   La única diferencia real es que aquí no hay ticket "abierto": el lote
-   guarda su propio ticketId explícito, que startPhotoBatchUpload() y
-   buildPhotoBatchFromFileList() ya saben preferir (ver ambos arriba).
-   Cerrar (cancelar/descartar/terminar sin fallas) reutiliza
-   closeComposerOverlay() tal cual — ya limpia UI.photoBatch por completo,
-   nunca una segunda forma de "cerrar el selector de fotos". */
+/* §51-52/Tickets Workbench §20-21: botón "📷 Imagen" de Miniaturas — MISMO
+   pipeline de fotos múltiples que el compositor (mismo UI.photoBatch, mismo
+   renderPhotoBatchPopover, mismo startPhotoBatchUpload/uploadOnePhoto),
+   nunca un segundo selector/subida. La única diferencia real es que aquí no
+   hay ticket "abierto": el lote guarda su propio ticketId explícito, que
+   startPhotoBatchUpload() y buildPhotoBatchFromFileList() ya saben preferir
+   (ver ambos arriba). Cerrar (cancelar/descartar/terminar sin fallas)
+   reutiliza closeComposerOverlay() tal cual — ya limpia UI.photoBatch por
+   completo, nunca una segunda forma de "cerrar el selector de fotos".
+
+   §20-21 (esta ronda): "Imagen" tiene que abrir el picker nativo del
+   sistema DIRECTO, sin el popover intermedio "Adjuntar fotografías" que
+   normalmente aparece primero (ese popover sigue existiendo tal cual para
+   cuando YA hay fotos elegidas — ver renderPhotoBatchPopover, fase de
+   revisión). Se crea un <input type=file multiple accept="image/*"> al
+   vuelo y se le hace .click() en el MISMO gesto de clic del usuario
+   (requisito de los navegadores para poder abrir el picker sin bloqueo) —
+   nunca se toca UI.photoBatch hasta que en efecto haya archivos elegidos,
+   así que si la persona cancela el picker del sistema "no cambia nada" de
+   verdad (nunca queda un overlay armado en memoria esperando un render
+   futuro). El listener global de focusin/change para filePickerOpen (ver
+   arriba, sección Realtime) ya escucha CUALQUIER <input type=file> del
+   documento — este input nuevo queda cubierto automáticamente, sin tocar
+   ese mecanismo. */
 function openTicketsThumbPhoto(ticketId){
   if(!findTicket(ticketId)) return;
-  resetPhotoBatch();
-  UI.photoBatch = { items: [], caption: "", uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0, ticketId: ticketId };
-  render();
+  var input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*"; input.multiple = true;
+  input.style.position = "fixed"; input.style.left = "-9999px"; input.style.opacity = "0";
+  document.body.appendChild(input);
+  input.addEventListener("change", function(){
+    var files = input.files;
+    if(input.parentNode) input.parentNode.removeChild(input);
+    if(!files || !files.length) return;
+    resetPhotoBatch();
+    UI.photoBatch = { items: [], caption: "", uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0, ticketId: ticketId };
+    buildPhotoBatchFromFileList(files);
+  });
+  input.click();
 }
 function renderTicketsThumbPhotoOverlay(){
   if(!UI.photoBatch || !UI.photoBatch.ticketId) return "";
@@ -7321,12 +8068,12 @@ async function createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing
     var ins = await sb.from("documentos").insert({
       ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
       items: items, total: total, cobrado_al_crear: cobradoAlCrear, bill_to: billTo,
-      pricing_snapshot: pricingSnapshot, autor: UI.whoami || null
+      pricing_snapshot: pricingSnapshot, autor: currentActorName() || null
     }).select().single();
     if(ins.error) throw ins.error;
     var doc = ins.data;
     newDocId = doc.id;
-    var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: UI.whoami || null,
+    var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: currentActorName() || null,
       payload: { documento_id: doc.id, tipo: tipo, numero: doc.numero, total: total, cliente_nombre: clienteNombre } });
     if(r8.error) throw r8.error;
   }catch(e){ showToast("No se pudo crear el documento: " + (e.message || "error") + (/pricing_snapshot|column/.test(e.message||"") ? " — ¿ya corriste 0006_v05_operational_commercial.sql?" : "")); }
@@ -8121,7 +8868,7 @@ async function toggleTaskEstado(ticketId, taskId){
   try{
     var r1 = await sb.from("tareas").update({ estado: next }).eq("id", taskId);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Tarea de producción · " + task.desc + " → " + estadoLabel(next) } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Tarea de producción · " + task.desc + " → " + estadoLabel(next) } });
   }catch(e){ showToast("No se pudo actualizar la tarea: " + (e.message || "error")); }
   refreshFromServer();
 }
@@ -8137,7 +8884,7 @@ async function toggleNormalTask(ticketId, taskId){
   try{
     var r1 = await sb.from("tareas").update({ estado: next }).eq("id", taskId);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Tarea · " + task.desc + " → " + estadoLabel(next) } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Tarea · " + task.desc + " → " + estadoLabel(next) } });
   }catch(e){ showToast("No se pudo actualizar la tarea: " + (e.message || "error")); }
   refreshFromServer();
 }
@@ -8188,7 +8935,7 @@ async function updateTicketFieldCore(t, elId, value, opts){
     var patch = {}; patch[def.col] = value || (def.col.indexOf("fecha_")===0 ? null : "");
     var r1 = await sb.from("tickets").update(patch).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: def.label + ": " + (value || "(vacío)") } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: def.label + ": " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
   return true;
@@ -8239,7 +8986,7 @@ async function updateQueSigueCore(t, value, opts){
   try{
     var r1 = await sb.from("tickets").update({ que_sigue: value }).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Qué sigue: " + (value || "(vacío)") } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Qué sigue: " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
   return true;
@@ -8270,10 +9017,10 @@ async function commitQueSigue(value, opts){
 async function marcarEntregadoCore(t){
   if(!t || t.entregadoAt) return;
   var now = new Date().toISOString();
-  t.entregadoAt = now; t.entregadoPor = UI.whoami || "";
+  t.entregadoAt = now; t.entregadoPor = currentActorName() || "";
   render();
   try{
-    var r1 = await sb.from("tickets").update({ entregado_at: now, entregado_por: UI.whoami || null }).eq("id", t.id);
+    var r1 = await sb.from("tickets").update({ entregado_at: now, entregado_por: currentActorName() || null }).eq("id", t.id);
     if(r1.error) throw r1.error;
     /* payload.kind (V0.5 §4): discriminador semántico agregado SOLO hacia
        adelante — tipo sigue siendo "sistema" (sin migración de esquema),
@@ -8281,7 +9028,7 @@ async function marcarEntregadoCore(t){
        menor sin parsear payload.text. Eventos ya guardados antes de este
        cambio no tienen "kind" y se siguen viendo genéricos — no se
        reclasifican retroactivamente. */
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Marcado como entregado", kind: "entrega" } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Marcado como entregado", kind: "entrega" } });
   }catch(e){ showToast("No se pudo marcar como entregado: " + (e.message || "error")); }
   refreshFromServer();
 }
@@ -8295,7 +9042,7 @@ async function deshacerEntregaCore(t){
   try{
     var r1 = await sb.from("tickets").update({ entregado_at: null, entregado_por: null }).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Se deshizo la entrega" } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Se deshizo la entrega" } });
   }catch(e){ showToast("No se pudo deshacer: " + (e.message || "error")); }
   refreshFromServer();
 }
@@ -8306,16 +9053,16 @@ async function cerrarTicketCore(t, tipo, razon){
   if(!t || (tipo !== "pagado" && tipo !== "cancelado") || !(razon||"").trim()) return;
   var now = new Date().toISOString();
   razon = razon.trim();
-  t.cierreTipo = tipo; t.cerradoAt = now; t.razonCierre = razon; t.cerradoPor = UI.whoami || "";
+  t.cierreTipo = tipo; t.cerradoAt = now; t.razonCierre = razon; t.cerradoPor = currentActorName() || "";
   UI.composer = null; UI.cierreDraft = null;
   render();
   try{
-    var r1 = await sb.from("tickets").update({ cierre_tipo: tipo, cerrado_at: now, razon_cierre: razon, cerrado_por: UI.whoami || null }).eq("id", t.id);
+    var r1 = await sb.from("tickets").update({ cierre_tipo: tipo, cerrado_at: now, razon_cierre: razon, cerrado_por: currentActorName() || null }).eq("id", t.id);
     if(r1.error) throw r1.error;
     /* payload.kind (V0.5 §4): ver comentario en marcarEntregadoCore — mismo
        mecanismo, valores más específicos porque cierre tiene dos sabores
        (pagado/cancelado) que sí importa distinguir en el timeline. */
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null,
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null,
       payload: { text: "Ticket cerrado · " + (tipo==="pagado"?"Pagado":"Cancelado") + " — " + razon, kind: tipo==="pagado" ? "cierre_pagado" : "cierre_cancelado" } });
   }catch(e){ showToast("No se pudo cerrar el ticket: " + (e.message || "error")); }
   refreshFromServer({refocus:true});
@@ -8729,7 +9476,7 @@ function bugReportContext(){
     viewport: { width: window.innerWidth, height: window.innerHeight },
     user_agent: navigator.userAgent || "",
     standalone: !!(window.navigator.standalone || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)),
-    whoami: UI.whoami || null
+    whoami: currentActorName() || null
   };
 }
 function renderBugReportPanel(){
@@ -9821,6 +10568,23 @@ async function confirmPendingSlash(){
 function wireEvents(){
   var root = document.getElementById("app");
 
+  /* Identity Foundation §7: único punto que envía el login — nunca
+     navegación de página completa (sigue siendo la misma SPA de un solo
+     archivo). preventDefault evita el GET/reload nativo del <form>. */
+  var loginForm = document.getElementById("login-form");
+  if(loginForm){
+    loginForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      if(AUTH_STATUS === "signing_in") return;
+      var emailEl = document.getElementById("login-email-input");
+      var passEl = document.getElementById("login-password-input");
+      var email = emailEl ? emailEl.value.trim() : "";
+      var password = passEl ? passEl.value : "";
+      if(!email || !password) return;
+      submitLogin(email, password);
+    });
+  }
+
   root.querySelectorAll('[data-action="new-ticket"]').forEach(function(b){
     b.addEventListener("click", function(){ createTicketFlow(); });
   });
@@ -9895,6 +10659,7 @@ function wireEvents(){
   root.querySelectorAll('[data-action="tickets-options-toggle"]').forEach(function(b){
     b.addEventListener("click", function(){
       UI.ticketsExplorer.optionsOpen = !UI.ticketsExplorer.optionsOpen;
+      if(UI.ticketsExplorer.optionsOpen) UI.ticketsExplorer.quickCreateOpen = false;
       /* §77: abrir el panel de opciones NUNCA dispara el teclado solo — el
          usuario tiene que tocar el campo Buscar explícitamente. */
       render();
@@ -9913,11 +10678,72 @@ function wireEvents(){
       render();
     });
   });
-  root.querySelectorAll('[data-action="tickets-filter-marker"]').forEach(function(b){
-    b.addEventListener("click", function(){
-      var v = b.getAttribute("data-value");
-      UI.ticketsExplorer.marker = (UI.ticketsExplorer.marker === v) ? null : v;
+  /* Tickets Workbench §19: Marcador pasa de fila de chips a un <select> — el
+     mismo dato (UI.ticketsExplorer.marker), solo cambia la forma de elegirlo. */
+  var ticketsFilterMarkerSelect = root.querySelector('[data-action="tickets-filter-marker-select"]');
+  if(ticketsFilterMarkerSelect){
+    ticketsFilterMarkerSelect.addEventListener("change", function(){
+      UI.ticketsExplorer.marker = ticketsFilterMarkerSelect.value || null;
       render();
+    });
+  }
+  root.querySelectorAll('[data-action="tickets-more-filters-toggle"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.ticketsExplorer.moreFiltersOpen = !UI.ticketsExplorer.moreFiltersOpen;
+      render();
+    });
+  });
+  /* Resumen de filtros activos (§19): cada chip quita SOLO su propio campo —
+     nunca reconstruye el filtrado, solo vuelve ese campo a su valor default
+     (mismo valor que ya usa ticketsExplorerActiveFilterCount para "sin
+     filtro"), dejando que ticketsExplorerFiltered() haga el resto, como
+     siempre. */
+  root.querySelectorAll('[data-action="tickets-summary-clear"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var field = b.getAttribute("data-field");
+      if(field === "marker") UI.ticketsExplorer.marker = null;
+      else if(field === "clienteId") UI.ticketsExplorer.clienteId = null;
+      else if(field === "responsable") UI.ticketsExplorer.responsable = "";
+      else if(field === "fecha") UI.ticketsExplorer.fecha = "todas";
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="tickets-filters-clear-all"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var ui = UI.ticketsExplorer;
+      ui.search = ""; ui.estado = "todos"; ui.marker = null; ui.clienteId = null; ui.responsable = ""; ui.fecha = "todas";
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="tickets-search-clear"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.ticketsExplorer.search = "";
+      render();
+      /* Igual criterio que el resto de "borrar y seguir escribiendo": el
+         botón × es en sí mismo el toque explícito que justifica devolver el
+         foco al campo (nunca un autofocus "de la nada" al abrir el panel). */
+      var again = document.getElementById("tickets-explorer-search");
+      if(again) again.focus();
+    });
+  });
+  /* Tickets Workbench §18: botón "+" — panel hermano de Filtros, mutuamente
+     excluyente por UX (nunca los dos overlays de toolbar abiertos a la vez,
+     se estorbarían en una pantalla angosta) aunque cada uno tenga su propio
+     bool en UI (ver comentario en UI.ticketsExplorer). */
+  root.querySelectorAll('[data-action="tickets-quickcreate-toggle"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.ticketsExplorer.quickCreateOpen = !UI.ticketsExplorer.quickCreateOpen;
+      if(UI.ticketsExplorer.quickCreateOpen) UI.ticketsExplorer.optionsOpen = false;
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="tickets-quickcreate-submit"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var g = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
+      submitTicketQuickCreate({
+        cliente: g("quickcreate-cliente"), telefono: g("quickcreate-telefono"),
+        trabajo: g("quickcreate-trabajo"), quesigue: g("quickcreate-quesigue")
+      });
     });
   });
   var ticketsFilterCliente = root.querySelector('[data-action="tickets-filter-cliente"]');
@@ -10102,11 +10928,6 @@ function wireEvents(){
       var again = document.getElementById("clientes-search-input");
       if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
     });
-  }
-
-  var whoamiInput = document.getElementById("whoami-input");
-  if(whoamiInput){
-    whoamiInput.addEventListener("change", function(){ saveWhoami(whoamiInput.value.trim()); });
   }
 
   bindField("field-cliente", "change");
@@ -10370,6 +11191,10 @@ function wireEvents(){
   if(markerPickerOverlay){
     markerPickerOverlay.addEventListener("click", function(e){ if(e.target === markerPickerOverlay) closeMarkerPicker(); });
   }
+  var ticketGalleryOverlay = document.getElementById("ticket-gallery-overlay");
+  if(ticketGalleryOverlay){
+    ticketGalleryOverlay.addEventListener("click", function(e){ if(e.target === ticketGalleryOverlay) closeTicketGallery(); });
+  }
   /* §51-52: overlay standalone de foto de Miniaturas — mismo criterio de
      cierre que closeComposerOverlay() ya usa en todos lados (no cierra
      mientras sube, sección "nunca perder una subida en curso"). */
@@ -10423,6 +11248,15 @@ function bindField(id, evtName){
 /* single delegated document-level listener, registered once at boot (never re-added on render).
    CAPTURE phase so it sees the DOM before any handler-triggered render() replaces it. */
 document.addEventListener("click", function(e){
+  /* Identity Foundation §6: menú corto de cuenta — mismo patrón "toggle +
+     cerrar con clic afuera" que el "⋯" de Miniaturas. */
+  var acctToggleBtn = e.target.closest && e.target.closest('[data-action="toggle-account-menu"]');
+  if(acctToggleBtn){ UI.accountMenuOpen = !UI.accountMenuOpen; render(); return; }
+  var logoutBtn = e.target.closest && e.target.closest('[data-action="logout"]');
+  if(logoutBtn){ UI.accountMenuOpen = false; signOut(); return; }
+  if(UI.accountMenuOpen && !(e.target.closest && e.target.closest(".sidebar-account-wrap"))){
+    UI.accountMenuOpen = false; render();
+  }
   var prodBtn = e.target.closest && e.target.closest("[data-toggle-task]");
   if(prodBtn){ toggleTaskEstado(prodBtn.getAttribute("data-ticket"), prodBtn.getAttribute("data-toggle-task")); return; }
   var normalBtn = e.target.closest && e.target.closest("[data-toggle-normal-task]");
@@ -10674,6 +11508,26 @@ document.addEventListener("click", function(e){
      pipeline de fotos de siempre (ver openTicketsThumbPhoto arriba). */
   var thumbPhotoBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-photo"]');
   if(thumbPhotoBtn){ openTicketsThumbPhoto(thumbPhotoBtn.getAttribute("data-ticket")); return; }
+  /* §22: tocar la FOTO de una tarjeta YA seleccionada abre la galería del
+     ticket (ver renderTicketsThumbCard — este data-action solo se usa
+     cuando isSelected && photoPath; si la tarjeta no está seleccionada o
+     no tiene foto, el mismo botón lleva data-action="tickets-thumb-select"
+     y cae en la rama de selección de siempre, arriba). */
+  var thumbGalleryBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-gallery"]');
+  if(thumbGalleryBtn){ openTicketGallery(thumbGalleryBtn.getAttribute("data-id"), 0); return; }
+  var galleryCloseBtn = e.target.closest && e.target.closest('[data-action="ticket-gallery-close"]');
+  if(galleryCloseBtn){ closeTicketGallery(); return; }
+  var galleryPrevBtn = e.target.closest && e.target.closest('[data-action="ticket-gallery-prev"]');
+  if(galleryPrevBtn){ ticketGalleryStep(-1); return; }
+  var galleryNextBtn = e.target.closest && e.target.closest('[data-action="ticket-gallery-next"]');
+  if(galleryNextBtn){ ticketGalleryStep(1); return; }
+  var galleryThumbBtn = e.target.closest && e.target.closest('[data-action="ticket-gallery-thumb"]');
+  if(galleryThumbBtn){
+    if(UI.ticketGallery){ UI.ticketGallery.index = parseInt(galleryThumbBtn.getAttribute("data-index"), 10) || 0; render(); }
+    return;
+  }
+  var galleryAddBtn = e.target.closest && e.target.closest('[data-action="ticket-gallery-add"]');
+  if(galleryAddBtn){ ticketGalleryAddImages(); return; }
   var historiaFilterBtn = e.target.closest && e.target.closest('[data-action="cliente-historia-filter"]');
   if(historiaFilterBtn){
     UI.clienteHistoriaFilter = historiaFilterBtn.getAttribute("data-filter");
@@ -10730,9 +11584,21 @@ document.addEventListener("click", function(e){
      pantalla (Tickets sin ticket abierto, vista thumbnails): la selección
      SÍ debe sobrevivir mientras el usuario está dentro de un ticket que
      abrió desde ahí (§85-88, "volver preserva"), así que esta limpieza
-     nunca debe dispararse solo porque no hay tarjetas en la vista actual. */
+     nunca debe dispararse solo porque no hay tarjetas en la vista actual.
+     §24 (respetar jerarquía/z-order): CUALQUIER overlay de pantalla
+     completa que pueda estar flotando ENCIMA de la grilla (galería del
+     ticket, editor central de celda, selector de marcador, el popover
+     standalone de fotos, panel de contacto, visor de documento/cierre)
+     vive FUERA de .tickets-thumb-card en el DOM — sin este guard, tocar
+     CUALQUIERA de sus botones ("Cerrar", "Siguiente", una miniatura de la
+     tira, etc.) caería en la rama de "clic afuera" y deseleccionaría la
+     tarjeta por debajo en silencio, dejándola deseleccionada para cuando
+     la persona por fin cierre ese overlay. */
+  var hasLayeredOverlay = !!(UI.ticketGallery || UI.cellEditor || UI.markerPicker ||
+    (UI.photoBatch && UI.photoBatch.ticketId) || UI.contactPanel || UI.viewingDocId || UI.cierreModal);
   if(UI.mainView === "tickets" && !UI.selectedTicketId && (UI.ticketsView || "thumbnails") === "thumbnails" &&
      (UI.ticketsExplorer.selectedCardId || UI.ticketsExplorer.thumbMoreTicketId) &&
+     !hasLayeredOverlay &&
      !(e.target.closest && e.target.closest(".tickets-thumb-card"))){
     UI.ticketsExplorer.selectedCardId = null;
     UI.ticketsExplorer.thumbMoreTicketId = null;
@@ -10807,10 +11673,25 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.bibliotecaViewer){ closeBibliotecaViewer(); return; }
   if(e.key === "Escape" && UI.contactPanel){ closeContactPanel(); return; }
   if(e.key === "Escape" && UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return; }
+  if(e.key === "Escape" && UI.ticketsExplorer.quickCreateOpen){ UI.ticketsExplorer.quickCreateOpen = false; render(); return; }
   if(e.key === "Escape" && UI.cellEditor){ closeCellEditor(); return; }
+  if(e.key === "Escape" && UI.accountMenuOpen){ UI.accountMenuOpen = false; render(); return; }
   /* §51-52: overlay standalone de foto de Miniaturas — mismo criterio que
      el botón de cerrar (nunca a medio subir). */
   if(e.key === "Escape" && UI.photoBatch && UI.photoBatch.ticketId){ if(closeComposerOverlay()) render(); return; }
+  /* §22-24: contrato de teclado de la Galería del ticket — Escape cierra
+     (con prioridad sobre "Escape deselecciona la tarjeta" de abajo, mismo
+     criterio de capas que el guard de clic-afuera más arriba: un overlay
+     encima siempre gana), izquierda/derecha navegan. Nunca intercepta si el
+     foco está en un campo de texto real (no debería haber ninguno dentro de
+     la galería, pero es el mismo guard que ya usa el resto del contrato). */
+  if(UI.ticketGallery){
+    if(e.key === "Escape"){ closeTicketGallery(); return; }
+    if(!isTypingTarget(e.target)){
+      if(e.key === "ArrowLeft"){ e.preventDefault(); ticketGalleryStep(-1); return; }
+      if(e.key === "ArrowRight"){ e.preventDefault(); ticketGalleryStep(1); return; }
+    }
+  }
   /* §58: Escape también deselecciona una tarjeta de Miniaturas (y cierra su
      menú "⋯") — mismo contrato global de teclado que el resto de la app. */
   if(e.key === "Escape" && UI.mainView === "tickets" && !UI.selectedTicketId &&
@@ -10904,13 +11785,21 @@ async function boot(){
   }
   try{
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    await ensureSession();
-    await refreshFromServer();
-    if(UI.whoami) rememberName(UI.whoami);
-    subscribeRealtime();
+    var session = await ensureSession();
+    if(!session){
+      /* Identity Foundation §7: sin sesión guardada -> pantalla de login.
+         Ya NO se crea una sesión anónima aquí — ver comentario de
+         ensureSession(). AUTH_STATUS ya arrancó en "loading"; pasa a
+         "signed_out" recién aquí para que el splash breve de "loading" no
+         se confunda con "ya sabemos que no hay sesión". */
+      AUTH_STATUS = "signed_out";
+      UI.pendingFocus = { elId: "login-email-input" };
+      render();
+      return;
+    }
+    await startAppForSession(session);
   }catch(e){
-    FATAL_ERROR = "No se pudo conectar con la base de datos: " + (e.message || "error desconocido") +
-      ". Si el proyecto sigue mostrando este error, confirma que \"Anonymous sign-ins\" esté activado en Supabase Auth.";
+    FATAL_ERROR = "No se pudo conectar con la base de datos: " + (e.message || "error desconocido") + ".";
     render();
   }
 }
