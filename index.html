@@ -337,6 +337,10 @@ button{cursor:pointer;}
   border:1px solid var(--accent); border-radius:var(--radius-s); padding:4px 8px; font-size:13px;
   background:var(--surface); color:var(--text); font:inherit; flex:1; max-width:240px;
 }
+/* Contact Panel (§13-16): mismo clienteContactBlock() de la ficha completa,
+   solo un poco más de aire entre teléfono/email dentro del panel chico. */
+.contact-panel-body{display:flex; flex-direction:column; gap:10px; margin:14px 0;}
+.contact-panel-body .cliente-contact-add{width:100%;}
 .ficha-section-title{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:600; margin-bottom:6px;}
 .ficha-section{display:flex; flex-direction:column; gap:2px;}
 .ficha-tabs{display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;}
@@ -463,6 +467,17 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .comanda-cliente-chevron{font-size:16px; color:var(--text-faint); font-weight:500;}
 .comanda-cliente-plain{color:var(--text-muted); font-style:italic; font-size:21px;}
 .comanda-cliente-plain:hover, .comanda-cliente-plain:active{color:var(--text);}
+/* §13-16: "[+]" discreto de Contacto rápido — deliberadamente chico junto al
+   nombre (nunca un botón grande que convierta la cabecera en otro
+   formulario), pero con área táctil cómoda (§66: el área tocable puede
+   exceder el ícono visible) vía padding, sin agrandar el glifo. */
+.comanda-contact-btn{
+  border:none; background:var(--surface-3); color:var(--text-faint); cursor:pointer;
+  font-size:15px; font-weight:600; line-height:1; width:22px; height:22px; padding:10px;
+  margin:0 -10px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0; box-sizing:content-box; background-clip:content-box;
+}
+.comanda-contact-btn:hover, .comanda-contact-btn:active{color:var(--accent-ink); background:var(--surface-3);}
 
 /* SIGUIENTE ACTUALIZACIÓN §6-11: tratamiento visual de identidad del
    cliente. Capa puramente decorativa sobre el MISMO markup de siempre
@@ -577,6 +592,40 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   max-height:calc(100vh - 32px - var(--safe-top) - var(--safe-bottom)); overflow-y:auto;
 }
 .cierre-modal-title{font-size:15px; font-weight:700; color:var(--text);}
+/* §42/§49: editor central de celda — mismo overlay/modal de siempre, un
+   poco más ancho porque aloja la grilla de productos (4 columnas) o una
+   lista de resultados de cliente. */
+.cell-editor-modal{max-width:480px;}
+.cell-editor-modal .cliente-picker-results{max-height:260px; overflow-y:auto;}
+/* §48-49: Quick Edit — lista vertical compacta, un renglón por campo
+   operativo (misma información que una fila de Detalles, layout distinto).
+   Cada valor es el MISMO botón que ya usa Detalles (tickets-details-cell-btn/
+   comanda-edit-inline vía detailsModalCell/detailsInlineCell) — aquí solo se
+   les da ancho completo en vez de vivir dentro de una celda de tabla. */
+.quickedit-modal{max-width:420px;}
+.quickedit-rows{display:flex; flex-direction:column; gap:2px;}
+.quickedit-row{display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px dashed var(--border);}
+.quickedit-row:last-child{border-bottom:none;}
+.quickedit-row-label{flex:0 0 108px; font-size:11.5px; color:var(--text-muted);}
+.quickedit-row-value{flex:1; min-width:0;}
+.quickedit-row-value .comanda-edit-inline{padding:0;}
+/* §51-52: overlay standalone para "📷" en Miniaturas — MISMO popover de
+   fotos del compositor (mismo HTML de renderPhotoBatchPopover(), mismo
+   UI.photoBatch), nunca un segundo selector/subida de fotos. En escritorio
+   el popover normalmente flota anclado al compositor (position:absolute
+   bottom:100%); aquí no hay compositor debajo, así que dentro de este
+   overlay apaga su propio cascarón (fondo/borde/sombra/padding) y se apoya
+   en el de .cierre-modal que ya lo envuelve — mismo criterio que cualquier
+   otro contenido dentro de cierre-modal. En móvil el popover YA pasa a
+   pantalla completa por su propio breakpoint (más abajo, ~640px) y no
+   necesita ningún ajuste aparte. */
+@media (min-width:641px){
+  #tickets-thumb-photo-overlay .popover{
+    position:static; bottom:auto; left:auto; margin-bottom:0; width:auto;
+    background:none; border:none; box-shadow:none; padding:0;
+  }
+}
+.cell-editor-pago-add{margin-top:8px;}
 .cierre-modal-sub{font-size:12px; color:var(--text-faint); margin-top:-6px;}
 .cierre-tipo-btn{
   display:flex; flex-direction:column; gap:2px; align-items:flex-start; text-align:left;
@@ -949,6 +998,22 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 }
 .tickets-view-btn:hover{color:var(--text);}
 .tickets-view-btn.active{background:var(--surface); color:var(--text); box-shadow:var(--shadow);}
+/* §17-21: toolbar reducida — fila superior es SOLO vistas + botón de
+   opciones (protagonistas de verdad, nada más permanente al lado). */
+.tickets-toolbar-top{justify-content:space-between;}
+.tickets-options-toggle{
+  display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--surface-2);
+  color:var(--text-muted); border-radius:999px; padding:6px 12px; font-size:12.5px; font-weight:600; white-space:nowrap;
+}
+.tickets-options-toggle:hover{color:var(--text); background:var(--surface-3);}
+.tickets-options-toggle.active{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink);}
+.tickets-options-panel{
+  display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border); padding-top:10px; margin-top:2px;
+}
+.tickets-options-panel-head{display:flex; align-items:center; gap:8px;}
+.tickets-options-panel-head .tickets-search-wrap{flex:1;}
+.tickets-options-close{font-size:20px; line-height:1; padding:2px 6px; flex-shrink:0;}
+.tickets-options-label-row{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-muted); font-weight:600;}
 .tickets-filters-row{justify-content:space-between;}
 .tickets-filter-chips{display:flex; align-items:center; gap:4px; flex-wrap:wrap;}
 .tickets-filter-chip{
@@ -975,13 +1040,33 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-grid-thumb{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;}
 .tickets-thumb-card{
   display:flex; flex-direction:column; text-align:left; border:1px solid var(--border); border-radius:var(--radius-m);
-  background:var(--surface); overflow:hidden; padding:0; cursor:pointer;
+  background:var(--surface); overflow:hidden; padding:0; position:relative;
 }
-.tickets-thumb-card:hover, .tickets-thumb-card:focus-visible{box-shadow:var(--shadow); border-color:var(--text-faint);}
+.tickets-thumb-card:hover{box-shadow:var(--shadow); border-color:var(--text-faint);}
 /* Spotlight (§ identidad): un aro sutil con el color del cliente — nunca
    compite con los marcadores operativos, que siguen viviendo encima en
    .tickets-thumb-markers con su propio fondo opaco. */
 .tickets-thumb-card.tickets-card-spotlight{box-shadow:0 0 0 2px var(--cid-color);}
+/* §42-45: selección de Miniaturas — un tap activa "modo selección" sobre
+   esa tarjeta (nunca abre el ticket, nunca dispara teclado) y revela una
+   franja de acciones debajo. Visual DELIBERADAMENTE distinto de Spotlight
+   (aro sutil, sin tocar fondo) y de la fila activa del sidebar (barra
+   lateral + sombra, ver .ticket-row.active): aquí el borde completo cambia
+   de color, el cuerpo se tiñe y aparece una marca de verificación — nada de
+   esto se confunde con "el cliente tiene identidad spotlight" ni con "es el
+   ticket abierto ahora mismo". */
+.tickets-thumb-card.tickets-thumb-selected{border-color:var(--accent); border-width:2px;}
+.tickets-thumb-card.tickets-thumb-selected .tickets-thumb-body{background:var(--accent-soft);}
+.tickets-thumb-select{
+  display:flex; flex-direction:column; width:100%; text-align:left; border:none; background:none; padding:0; margin:0;
+  cursor:pointer; font:inherit; color:inherit;
+}
+.tickets-thumb-select:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+.tickets-thumb-check{
+  position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:999px;
+  background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; line-height:1; box-shadow:var(--shadow); z-index:2;
+}
 .tickets-thumb-media{
   position:relative; aspect-ratio:4/3; background:var(--surface-2); display:flex; align-items:center; justify-content:center;
   overflow:hidden;
@@ -1001,6 +1086,25 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-thumb-folio{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint);}
 .tickets-thumb-work{font-size:11.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .tickets-thumb-activity{font-size:10px; color:var(--text-faint);}
+/* §46/§53: franja de acciones — solo existe mientras la tarjeta está
+   seleccionada, así que "Abrir/Editar/📷/⋯" son botones NORMALES, hermanos
+   del botón de selección (nunca anidados dentro de él — un <button> dentro
+   de otro <button> es HTML inválido, ver auditoría §102). Objetivo táctil
+   ~44px vía padding, no íconos gigantes (§66). */
+.tickets-thumb-actions{
+  display:flex; gap:4px; padding:8px; border-top:1px solid var(--border); background:var(--surface-2); flex-wrap:wrap;
+}
+.tickets-thumb-actions .btn{flex:1 1 auto; min-width:0; padding:10px 4px; font-size:11.5px; white-space:nowrap;}
+.tickets-thumb-more-wrap{position:relative; flex:0 0 auto;}
+.tickets-thumb-more-wrap .btn{padding:10px 10px;}
+/* §53/§56-57: mismo overlay-en-miniatura que ya usa el selector de
+   marcador manual/cliente — aquí flota anclado al botón "⋯" en vez de
+   centrarse en pantalla completa, porque es una lista corta de acciones de
+   un solo ticket, no un formulario. */
+.tickets-thumb-more-menu{
+  position:absolute; bottom:100%; right:0; margin-bottom:6px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-m); box-shadow:var(--shadow); padding:6px; width:200px; z-index:5; display:flex; flex-direction:column; gap:2px;
+}
 
 /* ---- Vista Iconos: más densa, para escanear muchos tickets ---- */
 .tickets-grid-icons{display:grid; grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); gap:10px;}
@@ -1017,18 +1121,22 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-icon-cliente{font-size:11px; font-weight:600; max-width:78px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .tickets-icon-meta{display:flex; align-items:center; justify-content:center; gap:4px; font-size:10px; color:var(--text-faint);}
 
-/* ---- Vista Lista: fila compacta operacional ---- */
-.tickets-list{display:flex; flex-direction:column; gap:1px;}
-.tickets-list-row{
-  display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:none; background:none;
-  padding:8px 10px; border-radius:var(--radius-s); cursor:pointer;
+/* ---- Vista Lista (§24-26): supervisión operacional — tabla ancha con
+   scroll horizontal, mismo patrón visual que Detalles (misma familia de
+   clases .tickets-details-open/-cliente/-muted/-pending, reusadas tal cual
+   vía ticketOperationalCellValues) pero de SOLO LECTURA: fila completa
+   clicable, ninguna celda individualmente accionable — esa es la diferencia
+   real con Detalles, no el layout. */
+.tickets-list-wrap{overflow-x:auto;}
+.tickets-list-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.tickets-list-table thead th{
+  text-align:left; padding:8px 10px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--text-faint); border-bottom:1px solid var(--border); white-space:nowrap;
 }
-.tickets-list-row:hover, .tickets-list-row:focus-visible{background:var(--surface-2);}
-.tickets-list-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); flex-shrink:0; width:44px;}
-.tickets-list-cliente{font-weight:600; font-size:13px; flex-shrink:0; max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.tickets-list-work{flex:1; min-width:0; font-size:12px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.tickets-list-estado{flex-shrink:0;}
-.tickets-list-markers{flex-shrink:0; display:inline-flex; gap:1px;}
+.tickets-list-row{border-bottom:1px solid var(--border); cursor:pointer;}
+.tickets-list-row:hover, .tickets-list-row:focus-visible{background:var(--surface-2); outline:none;}
+.tickets-list-row td{padding:7px 10px; vertical-align:middle; white-space:nowrap;}
+.tickets-list-cliente-cell{display:inline-flex; align-items:center; gap:6px;}
 
 /* ---- Vista Detalles: tabla en desktop, cards en mobile vía data-label
    (ver @media(max-width:880px) abajo) — mismo HTML/datos siempre. ---- */
@@ -1038,13 +1146,23 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   text-align:left; padding:8px 10px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
   color:var(--text-faint); border-bottom:1px solid var(--border); white-space:nowrap;
 }
-.tickets-details-row{border-bottom:1px solid var(--border); cursor:pointer;}
-.tickets-details-row:hover{background:var(--surface-2);}
-.tickets-details-row td{padding:7px 10px; vertical-align:middle; white-space:nowrap;}
+/* §27-30: la FILA ya no es clicable (ni cursor:pointer ni hover de fila) —
+   cada celda es su propia affordance, ver .tickets-details-cell-btn. */
+.tickets-details-row{border-bottom:1px solid var(--border);}
+.tickets-details-row td{padding:2px 4px; vertical-align:middle; white-space:nowrap;}
 .tickets-details-open{
   background:none; border:none; font-family:var(--font-mono); font-weight:700; color:var(--accent-ink);
-  cursor:pointer; padding:2px 0;
+  cursor:pointer; padding:5px 6px;
 }
+/* Celda-botón genérica de Detalles (§27-41): ocupa toda la celda, se ve
+   tocable (hover/focus) pero sin gritar "botón" — el contenido real
+   (pill de estado, texto, marcadores) se ve exactamente igual que antes,
+   solo que ahora vive dentro de un <button> en vez de un <span>/<td> suelto. */
+.tickets-details-cell-btn{
+  display:block; width:100%; text-align:left; background:none; border:none; font:inherit; color:inherit;
+  cursor:pointer; padding:5px 6px; border-radius:var(--radius-s);
+}
+.tickets-details-cell-btn:hover, .tickets-details-cell-btn:focus-visible{background:var(--surface-2);}
 .tickets-details-cliente{font-weight:600;}
 .tickets-details-muted{color:var(--text-faint);}
 .tickets-details-pending{color:var(--gold); font-size:11px;}
@@ -1189,11 +1307,12 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .tickets-search-wrap{ min-width:0; flex-basis:100%; max-width:none; }
   .tickets-filter-selects{ width:100%; }
   .tickets-filter-select{ flex:1; min-width:100px; max-width:none; }
-  /* Vista Lista: el resumen de trabajo pasa a su propia línea completa en
-     vez de robarle espacio a folio/cliente/estado/marcadores, que son lo
-     que hace falta ver de un vistazo en una pantalla angosta. */
-  .tickets-list-row{ flex-wrap:wrap; row-gap:4px; }
-  .tickets-list-work{ order:5; flex-basis:100%; padding-left:calc(22px + 10px); }
+  /* Vista Lista (§24-26): en mobile se queda como la MISMA tabla con scroll
+     horizontal que ya usa Detalles (.tickets-list-wrap{overflow-x:auto}
+     arriba, sin @media aparte) — es la opción más simple consistente con el
+     resto del sistema (§0.3) y evita duplicar el patrón de degradación a
+     cards que sí necesita Detalles (ahí sí hace falta, porque cada celda es
+     editable — ver más abajo). */
   /* Vista Detalles → cards en mobile (data-label + ::before): MISMO html/
      datos que la tabla de escritorio, solo cambia cómo se lee — nunca una
      quinta vista aparte. */
@@ -1213,6 +1332,67 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
     content:attr(data-label); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
     color:var(--text-faint); font-weight:600; text-align:left; flex-shrink:0;
   }
+  /* §41: cada celda-botón (o el input inline cuando está en edición) es el
+     lado "valor" de la fila label/valor — sigue siendo tocable de punta a
+     punta (nunca hace falta acertarle a un pedacito chico), solo cambia de
+     display:block a flex para alinearse a la derecha junto a su ::before. */
+  .tickets-details-row td .tickets-details-cell-btn,
+  .tickets-details-row td .comanda-edit-inline{
+    display:flex; justify-content:flex-end; text-align:right; width:auto; flex:1; min-width:0; padding:5px 6px;
+  }
+  .tickets-details-row td .comanda-edit-inline input,
+  .tickets-details-row td .comanda-edit-inline select{ width:100%; }
+}
+/* ---------------- Ronda "Refinamiento operativo" §2: tipografía móvil ----------------
+   Bloque único y auditable de overrides SOLO dentro de @media(max-width:880px)
+   — la densidad de desktop no cambia ni un punto (mismas reglas base de
+   siempre). Sube ~1-1.5px donde el texto móvil rondaba 10-13.5px, priorizando
+   exactamente lo pedido: thread/notas, filas, nombres de cliente, descripción
+   de productos, navegación, botones, tarjetas de Tickets, metadata, valores
+   de Detalles, labels operacionales, Biblioteca y paneles emergentes.
+   Deliberadamente NO toca Iconos (tickets-icon-*): §23/§89 piden mantenerla
+   la vista más densa a propósito — subirle tipografía la desarmaría. Los
+   inputs/select/textarea (16px, zoom-prevention iOS) tampoco se tocan aquí:
+   esa regla ya vive arriba, sin cambios. */
+@media (max-width: 880px){
+  /* Thread / notas */
+  .thread-text{ font-size:14.5px; }
+  .thread-sub{ font-size:13px; }
+  .thread-meta{ font-size:12.5px; }
+  /* Filas de ticket (sidebar) + metadata */
+  .ticket-title{ font-size:14.5px; }
+  .ticket-row-product{ font-size:12.5px; }
+  .ticket-meta{ font-size:12.5px; }
+  .comanda-meta{ font-size:12.5px; }
+  .comanda-summary{ font-size:14.5px; }
+  /* Navegación */
+  .nav-stub{ font-size:14px; }
+  /* Botones */
+  .btn{ font-size:14.5px; }
+  .btn-sm{ font-size:13.5px; }
+  /* Tarjetas de Tickets — Miniaturas y Lista (Iconos se deja intacta) */
+  .tickets-thumb-cliente{ font-size:14px; }
+  .tickets-thumb-work{ font-size:12.5px; }
+  .tickets-thumb-folio{ font-size:11.5px; }
+  .tickets-thumb-activity{ font-size:11px; }
+  .tickets-list-row td{ font-size:13.5px; }
+  /* Valores de Detalles (ya en modo tarjeta arriba) */
+  .tickets-details-row td{ font-size:13.5px; }
+  .tickets-details-row td::before{ font-size:11.5px; }
+  /* Labels operacionales de la cabecera del ticket */
+  .comanda-field-label{ font-size:12px; }
+  .comanda-field-value{ font-size:15.5px; }
+  /* Biblioteca */
+  .biblioteca-tile-logo-label{ font-size:11px; }
+  /* Paneles emergentes: cierre, ayuda, contacto, smart actions, /comandos */
+  .cierre-modal-sub{ font-size:13px; }
+  .cierre-tipo-desc{ font-size:13px; }
+  .cierre-razon-label{ font-size:13px; }
+  .popover-title{ font-size:12.5px; }
+  .popover-form label{ font-size:12.5px; }
+  .slash-menu-item span.desc{ font-size:13px; }
+  .smart-actions-label{ font-size:12.5px; }
+  .help-cmd-btn .desc{ font-size:13.5px; }
 }
 /* Addendum final §26: en mobile MUY angosto "Ver detalles"/"Ocultar
    detalles" puede no caber junto al resto de la barra superior — se acorta
@@ -1601,8 +1781,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.8.0";
-var APP_BUILD = "2026.09.07";
+var APP_VERSION = "0.8.1";
+var APP_BUILD = "2026.09.07.2";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -1651,6 +1831,12 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   slashBarePrefix: false,
   pendingConfirm: null, ephemeralLog: [], pendingFocus: null, dateFallbackElId: null,
   clienteEditDraft: null, docsListOpen: false, cierreModal: null, headerEditField: null,
+  /* §27-41/§42: cuando una celda inline de Detalles (Qué sigue/Responsable/
+     Atender/Compromiso) abre headerEditField "prestado", este lleva el
+     ticketId explícito — null significa "el ticket abierto" (comportamiento
+     de la cabecera de siempre, sin cambios). Ver renderHeaderFieldInput/
+     openDetailsCellEdit/commitHeaderField/commitQueSigue. */
+  headerEditTicketId: null,
   /* Affordances §31-33: cuál campo de contacto (telefono|email) de la ficha
      del cliente está en modo edición ahora mismo — null en el resto de los
      casos, donde el valor es tel:/mailto: y el ✎ es la única forma de
@@ -1733,9 +1919,26 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      abrir un ticket/foto y volver, pero no tienen por qué sobrevivir a
      cerrar la pestaña — no son una preferencia, son "dónde estabas". */
   ticketsView: "thumbnails",
-  ticketsExplorer: { search:"", estado:"todos", marker:null, clienteId:null, responsable:"", fecha:"todas", scrollTop:0 },
+  /* Ronda "Refinamiento operativo" §17-21: optionsOpen/sort son estado de
+     SESIÓN (como el resto de ticketsExplorer, no localStorage) — "abierto/
+     cerrado el panel de opciones" y "cómo ordenar ahora" no son preferencias
+     que deban sobrevivir a cerrar la pestaña, a diferencia de UI.ticketsView. */
+  /* selectedCardId (§42-61): tarjeta seleccionada en Miniaturas para
+     acciones rápidas — SEPARADA a propósito de UI.selectedTicketId (ese es
+     "qué ticket completo está abierto"). Nunca deben confundirse (§86-87). */
+  ticketsExplorer: { search:"", estado:"todos", marker:null, clienteId:null, responsable:"", fecha:"todas", sort:"actividad", optionsOpen:false, selectedCardId:null, thumbMoreTicketId:null, scrollTop:0 },
   biblioteca: { search:"", clienteId:null, fecha:"todas", subidoPor:"", soloLogos:false, scrollTop:0 },
-  bibliotecaViewer: null };
+  bibliotecaViewer: null,
+  /* Ronda "Refinamiento operativo" §13-16: panel de contacto rápido de la
+     cabecera del ticket — { clienteId, ticketId } | null. Estado efímero de
+     una sola interacción (igual que cierreModal/helpPanelOpen), nunca
+     persistido. Nunca dispara pendingFocus al abrir (§15/§77) — solo
+     "Agregar teléfono"/"Agregar correo"/✎ dentro del panel, que ya pasan por
+     openClienteFichaEdit() con userInitiated:true. */
+  contactPanel: null,
+  /* §42/§49: editor central por celda (Cliente/Trabajo/Estado/Cobrado) —
+     ver openCellEditor/renderCellEditorOverlay. Efímero, nunca persistido. */
+  cellEditor: null };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 /* Escape en el input de teléfono/email de la ficha del cliente cierra la
@@ -2224,6 +2427,7 @@ function openTicketById(id){
   resetPhotoBatch();
   UI.headerMoreOpen = false;
   UI.headerEditField = null;
+  UI.headerEditTicketId = null;
   UI.bibliotecaViewer = null; /* "Abrir ticket" desde el visor de Biblioteca no debe dejar el visor flotando encima del ticket abierto */
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* en móvil el sidebar es un cajón: elegir un ticket lo cierra */
@@ -2764,6 +2968,22 @@ function renderThreadItem(ev, ticketId){
   );
 }
 
+/* §27-41/§42: MISMA fuente de markup para el input inline de un campo
+   "header" (cliente libre/responsable/atencion/compromiso), usada tanto por
+   la cabecera del ticket como por la celda inline de Detalles — nunca dos
+   copias del <input>. El id es siempre el literal "field-*" (nunca uno por
+   ticket): cabecera y Detalles no se renderizan nunca al mismo tiempo (son
+   ramas mutuamente excluyentes de renderMain()), y solo puede haber UNA
+   celda en edición a la vez en toda la app (§29), así que reusar el mismo
+   id es seguro y es justo lo que permite que commitHeaderField/bindField/el
+   blur de siempre funcionen sin ningún código nuevo. */
+function renderHeaderFieldInput(t, field){
+  if(field === "cliente") return '<input type="text" id="field-cliente" placeholder="Sin definir" value="' + escapeHtml(t.cliente) + '">';
+  if(field === "responsable") return '<input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '">';
+  if(field === "atencion") return '<input type="date" id="field-fecha-atencion" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaAtencion||"") + '">';
+  if(field === "compromiso") return '<input type="date" id="field-fecha-compromiso" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaCompromiso||"") + '">';
+  return "";
+}
 function renderQueSigueSelect(t){
   var opts = STATE.meta.queSigueOptions.slice();
   if(t.queSigue && opts.indexOf(t.queSigue) === -1) opts.push(t.queSigue);
@@ -2821,11 +3041,35 @@ function openHeaderEdit(field){
      reapertura sin que el usuario haya tocado nada. Comparando el token en
      ese momento contra el actual, un cierre viejo simplemente no hace nada. */
   UI.headerEditToken = (UI.headerEditToken||0) + 1;
-  UI.pendingFocus = { elId: HEADER_EDIT_FOCUS_EL[field] };
+  /* userInitiated:true — el usuario acaba de tocar este campo explícitamente
+     (data-action="header-edit"); Mobile Reading Mode solo suprime el
+     autofocus de navegación, nunca esto. */
+  UI.pendingFocus = { elId: HEADER_EDIT_FOCUS_EL[field], userInitiated: true };
   render();
 }
 function closeHeaderEdit(){
-  if(UI.headerEditField){ UI.headerEditField = null; render(); }
+  if(UI.headerEditField){ UI.headerEditField = null; UI.headerEditTicketId = null; render(); }
+}
+/* §34-36/§42: abre el MISMO editor inline que ya usa la cabecera del ticket
+   (headerEditField + renderHeaderFieldInput + commitHeaderField/
+   commitQueSigue) pero apuntando a un ticket EXPLÍCITO — nunca una segunda
+   implementación de "editar Qué sigue/Responsable/Atender/Compromiso". Cero
+   pendingFocus salvo aquí (userInitiated:true, el usuario tocó la celda). */
+function openDetailsCellEdit(ticketId, field){
+  /* §29: una sola edición activa a la vez — abrir esto cierra cualquier
+     editor modal que hubiera quedado abierto, EXCEPTO el propio panel Quick
+     Edit (Miniaturas §48-49) del MISMO ticket: sus celdas Qué sigue/
+     Responsable/Atender/Compromiso llaman a este mismo openDetailsCellEdit
+     (nunca una segunda implementación), y deben abrirse DENTRO del panel,
+     no cerrarlo. */
+  if(!(UI.cellEditor && UI.cellEditor.kind === "quickedit" && UI.cellEditor.ticketId === ticketId)){
+    UI.cellEditor = null;
+  }
+  UI.headerEditField = field;
+  UI.headerEditTicketId = ticketId;
+  UI.headerEditToken = (UI.headerEditToken||0) + 1;
+  UI.pendingFocus = { elId: HEADER_EDIT_FOCUS_EL[field], userInitiated: true };
+  render();
 }
 
 /* Resumen corto de trabajo (sección 3.2) — derivado de los productos que ya
@@ -2917,7 +3161,7 @@ function renderTicketHeader(t){
         "</button>"
       : "";
   } else if(editing === "cliente"){
-    identityMain = '<div class="comanda-edit-inline"><input type="text" id="field-cliente" placeholder="Sin definir" value="' + escapeHtml(t.cliente) + '"></div>';
+    identityMain = '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "cliente") + "</div>";
   } else {
     identityMain = '<button class="comanda-identity-btn comanda-cliente-plain" data-action="header-edit" data-field="cliente">' +
       (t.cliente ? escapeHtml(t.cliente) : "Sin cliente definido") + " <span class=\"comanda-cliente-chevron\">&rsaquo;</span></button>";
@@ -2927,8 +3171,16 @@ function renderTicketHeader(t){
      nunca el ticket ni el thread completos, solo esta zona de identidad. */
   var identityStyle = identityC ? clienteIdentityStyle(identityC, "full") : null;
   var identityWrapClass = "comanda-identity" + (identityStyle && identityStyle.style === "spotlight" ? " cid-theme-" + identityStyle.theme + " cid-style-spotlight" : "");
+  /* §13-16: "[+]" discreto junto a la identidad — SOLO cuando hay un cliente
+     real vinculado. Botón hermano del identityMain (nunca anidado dentro del
+     <button> de identidad — dos botones anidados son HTML inválido y además
+     confundirían el tap "abrir ficha" con "abrir contacto"). Abrir el panel
+     NUNCA agrega pendingFocus (§15/§77 — ver renderContactPanel/open-contact-panel). */
+  var contactBtn = identityC
+    ? '<button type="button" class="comanda-contact-btn" data-action="open-contact-panel" data-client-id="' + identityC.id + '" data-ticket="' + t.id + '" title="Contacto rápido" aria-label="Contacto rápido">+</button>'
+    : "";
   var identity =
-    '<div class="' + identityWrapClass + '"><div>' + identityMain +
+    '<div class="' + identityWrapClass + '"><div>' + identityMain + contactBtn +
       (workSummary ? '<div class="comanda-summary">' + escapeHtml(workSummary) + "</div>" : "") +
     "</div></div>";
 
@@ -2960,13 +3212,13 @@ function renderTicketHeader(t){
     ? '<div class="comanda-edit-inline">' + renderQueSigueSelect(t) + "</div>"
     : comandaField("Qué sigue", t.queSigue ? '<span class="comanda-field-value accent">' + escapeHtml(t.queSigue) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="quesigue"');
   opRows += (editing === "responsable")
-    ? '<div class="comanda-edit-inline"><input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '"></div>'
+    ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "responsable") + "</div>"
     : comandaField("Responsable", t.responsable ? '<span class="comanda-field-value">' + escapeHtml(t.responsable) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
   opRows += (editing === "atencion")
-    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-atencion" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaAtencion||"") + '"></div>'
+    ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "atencion") + "</div>"
     : comandaField("Atender", t.fechaAtencion ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaAtencion) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
   opRows += (editing === "compromiso")
-    ? '<div class="comanda-edit-inline"><input type="date" id="field-fecha-compromiso" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaCompromiso||"") + '"></div>'
+    ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "compromiso") + "</div>"
     : comandaField("Compromiso", t.fechaCompromiso ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaCompromiso) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
 
   /* 5 — COMERCIAL: SOLO hechos ya calculados en otro lado (computeTotals,
@@ -3793,8 +4045,22 @@ function clienteContactLine(c, field, value){
     return (
       '<div class="ephemeral-row cliente-contact-row">' +
         "<strong>" + label + ":</strong> " +
-        '<input type="text" class="cliente-contact-input" id="cliente-ficha-field-' + field + '" value="' + escapeHtml(value) + '" data-client-id="' + c.id + '" data-field="' + field + '">' +
+        '<input type="text" class="cliente-contact-input" id="cliente-ficha-field-' + field + '" ' +
+          'inputmode="' + (field === "telefono" ? "tel" : "email") + '" ' +
+          'value="' + escapeHtml(value) + '" data-client-id="' + c.id + '" data-field="' + field + '">' +
       "</div>"
+    );
+  }
+  /* §80 (findability/captura rápida): un campo vacío NUNCA se esconde — se
+     ofrece "+ Agregar X" con el MISMO input/commit de siempre
+     (openClienteFichaEdit/commitClienteFichaField), nunca un segundo
+     formulario. Antes de esta ronda, un cliente sin teléfono/email
+     simplemente no mostraba nada aquí. */
+  if(!value){
+    return (
+      '<button type="button" class="help-cmd-btn cliente-contact-add" data-action="cliente-contact-edit" data-field="' + field + '">' +
+        '<span class="desc">+ Agregar ' + label.toLowerCase() + "</span>" +
+      "</button>"
     );
   }
   var href = field === "telefono" ? ("tel:" + value.replace(/[^\d+]/g, "")) : ("mailto:" + value);
@@ -3806,9 +4072,16 @@ function clienteContactLine(c, field, value){
     "</div>"
   );
 }
+/* Bloque completo teléfono+email para cualquier superficie que quiera
+   mostrar/editar el contacto de un cliente — usado por la ficha completa Y
+   por el Contact Panel de la cabecera del ticket (§13-16), para que "+
+   Agregar teléfono" nunca sea una segunda implementación. */
+function clienteContactBlock(c){
+  return clienteContactLine(c, "telefono", c.telefono || "") + clienteContactLine(c, "email", c.email || "");
+}
 function openClienteFichaEdit(field){
   UI.clienteFichaEditField = field;
-  UI.pendingFocus = { elId: "cliente-ficha-field-" + field };
+  UI.pendingFocus = { elId: "cliente-ficha-field-" + field, userInitiated: true };
   render();
 }
 function closeClienteFichaEdit(){
@@ -4073,6 +4346,10 @@ function renderCxcPlaceholderView(){
 var TICKET_ESTADO_FILTERS = [["todos","Todos"],["abierto","Abiertos"],["entregado","Entregados"],["cerrado","Cerrados"]];
 var TICKETS_VIEW_OPTIONS = [["thumbnails","Miniaturas"],["icons","Iconos"],["list","Lista"],["details","Detalles"]];
 var TICKETS_FECHA_FILTERS = [["todas","Fecha: todas"],["vencida","Atención vencida"],["hoy","Atención hoy"],["sin_fecha","Sin fecha de atención"]];
+/* §17-21: selector de orden NUEVO — nunca una prioridad de negocio inventada,
+   solo cinco criterios literales sobre el MISMO dataset ya filtrado (ver
+   ticketsExplorerSortCompare/ticketsExplorerFiltered, nunca una copia). */
+var TICKETS_SORT_OPTIONS = [["actividad","Actividad reciente"],["folio","Folio"],["cliente","Cliente"],["atencion","Fecha de atención"],["compromiso","Fecha de compromiso"]];
 
 /* Mismo criterio de orden que ya usa el sidebar (V0.5 §6): pinneados
    primero, luego abierto→entregado→cerrado, actividad reciente como
@@ -4086,6 +4363,30 @@ function ticketsExplorerBaseList(){
   var pinned = STATE.tickets.filter(function(t){ return t.pinned; }).sort(ticketsExplorerOrder);
   var rest = STATE.tickets.filter(function(t){ return !t.pinned; }).sort(ticketsExplorerOrder);
   return pinned.concat(rest);
+}
+/* §17-21: comparador para "Ordenar por" — "debe degradar cualquier opción
+   que sea inconsistente con datos faltantes": sin fecha, ese ticket se va al
+   final (nunca revienta ni lo esconde), y con empate cae de vuelta al mismo
+   desempate de siempre (actividad reciente). "cliente" usa el mismo label ya
+   usado en toda la app (sidebarClienteLabel) para que el orden coincida
+   exactamente con lo que el usuario está leyendo. */
+function ticketsExplorerSortCompare(sort){
+  return function(a, b){
+    if(sort === "folio") return a.seq - b.seq;
+    if(sort === "cliente"){
+      return normalizeWord(sidebarClienteLabel(a)).localeCompare(normalizeWord(sidebarClienteLabel(b)));
+    }
+    if(sort === "atencion" || sort === "compromiso"){
+      var field = sort === "atencion" ? "fechaAtencion" : "fechaCompromiso";
+      var da = a[field] ? parseDateOnly(a[field]) : null;
+      var db = b[field] ? parseDateOnly(b[field]) : null;
+      if(!da && !db) return ticketsExplorerOrder(a, b);
+      if(!da) return 1;
+      if(!db) return -1;
+      return da - db;
+    }
+    return ticketsExplorerOrder(a, b);
+  };
 }
 
 /* Última foto del ticket (bitácora tipo "archivo"): bitacora ya llega
@@ -4137,7 +4438,7 @@ function ticketsExplorerFiltered(){
   var qNorm = normalizeWord(qRaw.replace(/^#/, ""));
   var qDigits = qRaw.replace(/\D/g, "");
   var today = startOfDay(new Date());
-  return ticketsExplorerBaseList().filter(function(t){
+  var filtered = ticketsExplorerBaseList().filter(function(t){
     if(ui.estado === "abierto" && ticketEstado(t) !== "abierto") return false;
     if(ui.estado === "entregado" && ticketEstado(t) !== "entregado") return false;
     if(ui.estado === "cerrado" && !ticketIsCerrado(t)) return false;
@@ -4157,6 +4458,33 @@ function ticketsExplorerFiltered(){
     }
     return ticketMatchesExplorerQuery(t, qNorm, qDigits);
   });
+  /* "actividad" ya es el orden de ticketsExplorerBaseList() (pinneados
+     primero, luego rank+actividad) — cualquier otro criterio re-ordena SOBRE
+     la misma lista ya filtrada (nunca un segundo fetch/copia del dataset),
+     conservando "pinneados primero" como agrupador (§17-21: "mantener el
+     comportamiento de fijado consistente con las reglas existentes"). */
+  var sort = ui.sort || "actividad";
+  if(sort !== "actividad"){
+    var cmp = ticketsExplorerSortCompare(sort);
+    var pinnedSorted = filtered.filter(function(t){ return t.pinned; }).sort(cmp);
+    var restSorted = filtered.filter(function(t){ return !t.pinned; }).sort(cmp);
+    filtered = pinnedSorted.concat(restSorted);
+  }
+  return filtered;
+}
+/* §17-21: cuenta de filtros ACTIVOS (nunca incluye "sort" — ordenar no
+   angosta la lista, filtrar sí) para el indicador "Filtros · N" visible aun
+   con el panel colapsado. */
+function ticketsExplorerActiveFilterCount(){
+  var ui = UI.ticketsExplorer;
+  var n = 0;
+  if(ui.estado && ui.estado !== "todos") n++;
+  if(ui.marker) n++;
+  if(ui.clienteId) n++;
+  if(ui.responsable) n++;
+  if(ui.fecha && ui.fecha !== "todas") n++;
+  if((ui.search||"").trim()) n++;
+  return n;
 }
 
 function ticketsExplorerClienteOptions(){
@@ -4211,25 +4539,69 @@ function renderTicketsToolbar(list){
     '<select class="tickets-filter-select" data-action="tickets-filter-fecha" aria-label="Filtrar por fecha de atención">' +
       TICKETS_FECHA_FILTERS.map(function(f){ return '<option value="' + f[0] + '"' + (ui.fecha===f[0]?" selected":"") + '>' + f[1] + "</option>"; }).join("") +
     "</select>";
-  return (
-    '<div class="tickets-toolbar">' +
-      '<div class="tickets-toolbar-row">' +
-        '<div class="search-wrap tickets-search-wrap">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
-          '<input type="text" id="tickets-explorer-search" placeholder="Folio, cliente, empresa, teléfono, producto…" value="' + escapeHtml(ui.search||"") + '">' +
+  var sortSelect =
+    '<select class="tickets-filter-select" data-action="tickets-sort-pick" aria-label="Ordenar por">' +
+      TICKETS_SORT_OPTIONS.map(function(s){ return '<option value="' + s[0] + '"' + ((ui.sort||"actividad")===s[0]?" selected":"") + '>' + s[1] + "</option>"; }).join("") +
+    "</select>";
+  /* §17-21: toolbar reducida a título (ya lo pone renderTicketsExplorerView)
+     + los 4 botones de vista (protagonistas) + UN botón discreto de opciones
+     — nunca diez chips permanentes. El ícono es de sliders/filtro (tres
+     barras con controles), a propósito distinto de un engrane para que no se
+     confunda con "Configuración" global de la app. El badge numérico es el
+     "indicador de filtro activo" que debe verse aun con el panel cerrado —
+     nunca cuenta "sort" (ordenar no angosta la lista, ver
+     ticketsExplorerActiveFilterCount). */
+  var filterCount = ticketsExplorerActiveFilterCount();
+  var optionsIcon =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+      '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/>' +
+      '<line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/>' +
+      '<line x1="4" y1="18" x2="20" y2="18"/><circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"/>' +
+    "</svg>";
+  var optionsBtn =
+    '<button type="button" class="tickets-options-toggle' + (ui.optionsOpen?" active":"") + '" data-action="tickets-options-toggle" aria-expanded="' + (ui.optionsOpen?"true":"false") + '" aria-controls="tickets-options-panel" title="Buscar y filtrar" aria-label="Buscar y filtrar tickets">' +
+      optionsIcon +
+      '<span class="tickets-options-label">Filtros' + (filterCount ? " · " + filterCount : "") + "</span>" +
+    "</button>";
+  var panelHtml = "";
+  if(ui.optionsOpen){
+    panelHtml =
+      '<div class="tickets-options-panel" id="tickets-options-panel">' +
+        '<div class="tickets-options-panel-head">' +
+          '<div class="search-wrap tickets-search-wrap">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+            '<input type="text" id="tickets-explorer-search" placeholder="Folio, cliente, empresa, teléfono, producto…" value="' + escapeHtml(ui.search||"") + '">' +
+          "</div>" +
+          '<button type="button" class="btn-plain tickets-options-close" data-action="tickets-options-toggle" aria-label="Cerrar filtros">&times;</button>' +
         "</div>" +
-        '<div class="tickets-view-switch" role="tablist" aria-label="Vista de tickets">' + viewBtns + "</div>" +
-      "</div>" +
-      '<div class="tickets-toolbar-row tickets-filters-row">' +
+        '<label class="tickets-options-label-row">Ordenar por' + sortSelect + "</label>" +
         '<div class="tickets-filter-chips">' + estadoChips + '<span class="tickets-filter-sep" aria-hidden="true"></span>' + markerChips + "</div>" +
         '<div class="tickets-filter-selects">' + clienteSelect + respSelect + fechaSelect + "</div>" +
+        '<div class="tickets-toolbar-count">' + list.length + (list.length===1?" ticket":" tickets") + "</div>" +
+      "</div>";
+  }
+  return (
+    '<div class="tickets-toolbar">' +
+      '<div class="tickets-toolbar-row tickets-toolbar-top">' +
+        '<div class="tickets-view-switch" role="tablist" aria-label="Vista de tickets">' + viewBtns + "</div>" +
+        optionsBtn +
       "</div>" +
-      '<div class="tickets-toolbar-count">' + list.length + (list.length===1?" ticket":" tickets") + "</div>" +
+      panelHtml +
     "</div>"
   );
 }
 
-/* ---- Vista Miniaturas: prioridad visual, foto real > logo > iniciales ---- */
+/* ---- Vista Miniaturas: prioridad visual, foto real > logo > iniciales ----
+   §42-61: un tap SELECCIONA la tarjeta (nunca la abre, nunca dispara
+   teclado) y revela una franja de acciones explícitas — "segundo tap abre"
+   habría sido lo obvio, pero en una grilla densa un doble-tap accidental es
+   fácil y sin confirmación visual entre el primer y segundo tap; un botón
+   [Abrir] explícito es inequívoco y le da al usuario el resto de acciones
+   (Editar/📷/⋯) sin un gesto distinto para cada una (CAMBIO A LA PROPUESTA
+   ORIGINAL — documentado en el reporte final). El botón de selección
+   ("tickets-thumb-select") es el ÚNICO elemento interactivo mientras la
+   tarjeta no está seleccionada; la franja de acciones son botones HERMANOS
+   (nunca anidados) que solo existen cuando sí lo está. */
 function renderTicketsThumbCard(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
   var photoPath = ticketThumbPhotoPath(t);
@@ -4238,11 +4610,15 @@ function renderTicketsThumbCard(t){
     : (c ? clientAvatar(c, {size:"lg", degrade:"compact"}) : '<span class="tickets-thumb-noimg" aria-hidden="true">&#128196;</span>');
   var estado = ticketEstado(t);
   var identityStyle = c ? clienteIdentityStyle(c, "compact") : null;
-  var cardClass = "tickets-thumb-card" + (identityStyle && identityStyle.style === "spotlight" ? " cid-theme-" + identityStyle.theme + " tickets-card-spotlight" : "");
+  var isSelected = UI.ticketsExplorer.selectedCardId === t.id;
+  var cardClass = "tickets-thumb-card" +
+    (identityStyle && identityStyle.style === "spotlight" ? " cid-theme-" + identityStyle.theme + " tickets-card-spotlight" : "") +
+    (isSelected ? " tickets-thumb-selected" : "");
   var markersHtml = renderSidebarMarkerIcons(t);
-  return (
-    '<button type="button" class="' + cardClass + '" data-action="open-ticket" data-id="' + t.id + '">' +
+  var selectBtn =
+    '<button type="button" class="tickets-thumb-select" data-action="tickets-thumb-select" data-id="' + t.id + '" aria-pressed="' + (isSelected?"true":"false") + '">' +
       '<div class="tickets-thumb-media' + (photoPath?"":" tickets-thumb-media-fallback") + '">' + mediaHtml +
+        (isSelected ? '<span class="tickets-thumb-check" aria-hidden="true">&#10003;</span>' : "") +
         (markersHtml ? '<span class="tickets-thumb-markers">' + markersHtml + "</span>" : "") +
       "</div>" +
       '<div class="tickets-thumb-body">' +
@@ -4251,8 +4627,53 @@ function renderTicketsThumbCard(t){
         '<div class="tickets-thumb-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" +
         '<div class="tickets-thumb-activity">' + fmtRelativeActivity(t.lastActivityAt) + "</div>" +
       "</div>" +
-    "</button>"
+    "</button>";
+  return '<div class="' + cardClass + '" data-id="' + t.id + '">' + selectBtn + (isSelected ? renderTicketsThumbActions(t, estado) : "") + "</div>";
+}
+/* §46-49: franja de acciones de la tarjeta seleccionada. [Abrir] ->
+   openTicketById() EXACTO (mismo data-action="open-ticket" genérico que ya
+   usa toda la app, sección "redundancia en los caminos, no en la lógica").
+   [Editar] -> Quick Edit, el MISMO editor central de celda (§42) con un
+   nuevo kind "quickedit" (ver renderCellEditorQuickEdit más abajo). [📷] ->
+   overlay standalone del mismo pipeline de fotos de siempre (ver
+   openTicketsThumbPhoto). [⋯] -> menú corto de estado-gated actions. */
+function renderTicketsThumbActions(t, estado){
+  var moreOpen = UI.ticketsExplorer.thumbMoreTicketId === t.id;
+  return (
+    '<div class="tickets-thumb-actions">' +
+      '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir</button>' +
+      '<button type="button" class="btn btn-ghost" data-action="cell-editor-open-quickedit" data-ticket="' + t.id + '">Editar</button>' +
+      '<button type="button" class="btn btn-ghost" data-action="tickets-thumb-photo" data-ticket="' + t.id + '" aria-label="Agregar fotografía" title="Agregar fotografía">&#128247;</button>' +
+      '<div class="tickets-thumb-more-wrap">' +
+        '<button type="button" class="btn btn-ghost" data-action="tickets-thumb-more" data-id="' + t.id + '" aria-haspopup="true" aria-expanded="' + (moreOpen?"true":"false") + '" aria-label="Más acciones">&#8942;</button>' +
+        (moreOpen ? renderTicketsThumbMoreMenu(t, estado) : "") +
+      "</div>" +
+    "</div>"
   );
+}
+/* §53/§54-57: acciones state-gated — nunca "reabrir" un ticket cerrado (esa
+   máquina de estados no existe en esta iteración a propósito). "Marcar
+   como…" reusa EXACTAMENTE el mismo picker manual de marcador que Detalles/
+   cellEditor (openMarkerPicker("manual",…), que YA excluye 🛒 Ordenar de
+   MARKER_TYPES — nunca una segunda lista de marcadores). Fijar/Desfijar
+   llama al MISMO togglePin() de siempre (data-action propio,
+   "tickets-thumb-pin", solo para poder cerrar este menú al mismo tiempo —
+   nunca una segunda implementación de fijar/desfijar). Entregado/Cierre
+   reusan LITERALMENTE los mismos botones que renderCellEditorEstado (mismo
+   data-action, mismos cores marcarEntregadoCore/deshacerEntregaCore/
+   openCierreModalForTicket) — el ⋯ es solo otro lugar donde aparecen. */
+function renderTicketsThumbMoreMenu(t, estado){
+  var items = [];
+  items.push('<button type="button" class="help-cmd-btn" data-action="tickets-thumb-marcar" data-id="' + t.id + '"><span class="desc">Marcar como&hellip;</span></button>');
+  items.push('<button type="button" class="help-cmd-btn" data-action="tickets-thumb-pin" data-id="' + t.id + '"><span class="desc">' + (t.pinned ? "Desfijar" : "Fijar") + "</span></button>");
+  if(estado === "abierto"){
+    items.push('<button type="button" class="help-cmd-btn" data-action="cell-editor-marcar-entregado" data-ticket="' + t.id + '"><span class="desc">&#10003; Marcar entregado</span></button>');
+    items.push('<button type="button" class="help-cmd-btn" data-action="cell-editor-abrir-cierre" data-ticket="' + t.id + '"><span class="desc">Cerrar ticket&hellip;</span></button>');
+  } else if(estado === "entregado"){
+    items.push('<button type="button" class="help-cmd-btn" data-action="cell-editor-deshacer-entrega" data-ticket="' + t.id + '"><span class="desc">&#8617; Deshacer entrega</span></button>');
+    items.push('<button type="button" class="help-cmd-btn" data-action="cell-editor-abrir-cierre" data-ticket="' + t.id + '"><span class="desc">Cerrar ticket&hellip;</span></button>');
+  }
+  return '<div class="tickets-thumb-more-menu">' + items.join("") + "</div>";
 }
 
 /* ---- Vista Iconos: más densa, avatar/logo grande + folio + marcadores ---- */
@@ -4271,49 +4692,101 @@ function renderTicketsIconCard(t){
 }
 
 /* ---- Vista Lista: operacional, una fila por ticket, escaneo rápido ---- */
-function renderTicketsListRow(t){
-  var c = t.clienteId ? findCliente(t.clienteId) : null;
-  var avatarHtml = c ? clientAvatar(c, {size:"sm", degrade:"reduced"}) : '<span class="client-avatar client-avatar-initials client-avatar-sm">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
-  var estado = ticketEstado(t);
-  var markersHtml = renderSidebarMarkerIcons(t);
-  return (
-    '<button type="button" class="tickets-list-row" data-action="open-ticket" data-id="' + t.id + '">' +
-      avatarHtml +
-      '<span class="tickets-list-folio">#' + t.seq + "</span>" +
-      '<span class="tickets-list-cliente' + (c?clienteIdentityClasses(c,"reduced"):"") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</span>" +
-      '<span class="tickets-list-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</span>" +
-      '<span class="tickets-list-estado">' + (estado!=="abierto" ? '<span class="pill status-pill status-'+estado+'">'+ticketEstadoLabel(estado)+"</span>" : "") + "</span>" +
-      '<span class="tickets-list-markers">' + markersHtml + "</span>" +
-    "</button>"
-  );
-}
-
-/* ---- Vista Detalles: tabla en desktop, mismas filas se leen como cards en
-   mobile vía CSS (data-label + ::before) — NUNCA una quinta vista/renderer
-   aparte, mismo HTML/datos en los dos anchos. PRECIO ≠ DEUDA: se muestran
-   "Total conocido" y "Cobrado" como dos hechos separados, nunca una resta
-   "saldo/deuda" inventada (mismo criterio que clienteFinancials). */
-var TICKETS_DETAILS_COLS = ["Ticket","Cliente","Trabajo","Estado","Qué sigue","Responsable","Atender","Compromiso","Total conocido","Cobrado","Marcadores","Última actividad"];
-function renderTicketsDetailsRow(t){
+/* ---- Núcleo de lectura compartido Lista/Detalles (§24-26/§49): las DOS
+   vistas parten de los MISMOS valores ya calculados/formateados — Lista los
+   muestra como texto de solo lectura (supervisar/escanear), Detalles los
+   envuelve en affordances editables por celda (ver capa central de edición
+   más abajo). Nunca dos cálculos distintos de "qué va en la columna X"
+   (§0.2: redundancia en los caminos, no en la lógica). PRECIO ≠ DEUDA: Total
+   conocido y Cobrado son dos hechos separados, nunca una resta "saldo"
+   inventada (mismo criterio que clienteFinancials). */
+var TICKETS_OPERATIONAL_COLS = ["Ticket","Cliente","Trabajo","Estado","Qué sigue","Responsable","Atender","Compromiso","Total conocido","Cobrado","Marcadores","Última actividad"];
+function ticketOperationalCellValues(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
   var totals = computeTotals(t);
   var cobrado = (t.pagos||[]).reduce(function(s,p){ return s + p.monto; }, 0);
   var estado = ticketEstado(t);
   var markersHtml = renderSidebarMarkerIcons(t);
   var muted = '<span class="tickets-details-muted">—</span>';
+  return {
+    c: c, estado: estado, totals: totals, cobrado: cobrado, muted: muted,
+    clienteHtml: '<span class="' + (c?"tickets-details-cliente"+clienteIdentityClasses(c,"reduced"):"tickets-details-cliente") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</span>",
+    trabajoHtml: escapeHtml(sidebarProductoPrincipal(t)),
+    estadoHtml: '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>",
+    queSigueHtml: t.queSigue ? escapeHtml(t.queSigue) : muted,
+    responsableHtml: t.responsable ? escapeHtml(t.responsable) : muted,
+    atenderHtml: t.fechaAtencion ? fmtDateOnlyShort(t.fechaAtencion) : muted,
+    compromisoHtml: t.fechaCompromiso ? fmtDateOnlyShort(t.fechaCompromiso) : muted,
+    totalConocidoHtml: fmtMoney(totals.known) + (totals.pending ? ' <span class="tickets-details-pending">(+' + totals.pending + " sin precio)</span>" : ""),
+    cobradoHtml: fmtMoney(cobrado),
+    marcadoresHtml: markersHtml || muted,
+    ultimaActividadHtml: fmtRelativeActivity(t.lastActivityAt)
+  };
+}
+
+/* ---- Vista Lista (§24-26): supervisión operacional de muchos tickets a la
+   vez — tabla con scroll horizontal (explícitamente aceptable en
+   desktop/tablet), texto de solo lectura. La fila completa SÍ abre el
+   ticket (a diferencia de Detalles): Lista es para escanear/supervisar, no
+   para editar, así que "tocar cualquier parte de la fila para entrar" es
+   consistente con su rol — la distinción real con Detalles es que aquí
+   ninguna celda es individualmente accionable. */
+function renderTicketsListRow(t){
+  var v = ticketOperationalCellValues(t);
+  var avatarHtml = v.c ? clientAvatar(v.c, {size:"sm", degrade:"reduced"}) : '<span class="client-avatar client-avatar-initials client-avatar-sm">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
   var cells = [
     '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + "</button>",
-    '<span class="' + (c?"tickets-details-cliente"+clienteIdentityClasses(c,"reduced"):"tickets-details-cliente") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</span>",
-    escapeHtml(sidebarProductoPrincipal(t)),
-    '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>",
-    t.queSigue ? escapeHtml(t.queSigue) : muted,
-    t.responsable ? escapeHtml(t.responsable) : muted,
-    t.fechaAtencion ? fmtDateOnlyShort(t.fechaAtencion) : muted,
-    t.fechaCompromiso ? fmtDateOnlyShort(t.fechaCompromiso) : muted,
-    fmtMoney(totals.known) + (totals.pending ? ' <span class="tickets-details-pending">(+' + totals.pending + " sin precio)</span>" : ""),
-    fmtMoney(cobrado),
-    markersHtml || muted,
-    fmtRelativeActivity(t.lastActivityAt)
+    '<span class="tickets-list-cliente-cell">' + avatarHtml + v.clienteHtml + "</span>",
+    v.trabajoHtml, v.estadoHtml, v.queSigueHtml, v.responsableHtml, v.atenderHtml, v.compromisoHtml,
+    v.totalConocidoHtml, v.cobradoHtml, v.marcadoresHtml, v.ultimaActividadHtml
+  ];
+  return '<tr class="tickets-list-row" data-id="' + t.id + '" tabindex="0" role="button" aria-label="Abrir Ticket #' + t.seq + '">' + cells.map(function(html, idx){
+    return '<td data-label="' + TICKETS_OPERATIONAL_COLS[idx] + '">' + html + "</td>";
+  }).join("") + "</tr>";
+}
+
+/* ---- Vista Detalles: tabla en desktop, mismas filas se leen como cards en
+   mobile vía CSS (data-label + ::before) — NUNCA una quinta vista/renderer
+   aparte, mismo HTML/datos en los dos anchos. */
+var TICKETS_DETAILS_COLS = TICKETS_OPERATIONAL_COLS;
+/* §27-30/§81: envoltura genérica para las celdas que abren el editor central
+   modal (§42) — un <button> por celda, NUNCA la fila entera (esa regla ahora
+   es exclusiva de "#folio ↗"). Un valor vacío ("—") sigue siendo el mismo
+   botón, así que sigue siendo tocable (§81). */
+function detailsModalCell(html, kind, ticketId){
+  return '<button type="button" class="tickets-details-cell-btn" data-action="details-cell-modal" data-kind="' + kind + '" data-ticket="' + ticketId + '">' + html + "</button>";
+}
+/* §34-36: celdas de edición inline — reusan EXACTAMENTE el mismo
+   headerEditField/renderHeaderFieldInput/renderQueSigueSelect que la
+   cabecera del ticket (ver openDetailsCellEdit más arriba). Si esta celda
+   de ESTE ticket es la que está abierta, se muestra el input; si no, un
+   botón que la abre. */
+function detailsInlineCell(t, field, valueHtml){
+  var isEditingThis = UI.headerEditField === field && UI.headerEditTicketId === t.id;
+  if(isEditingThis){
+    var inputHtml = field === "quesigue" ? renderQueSigueSelect(t) : renderHeaderFieldInput(t, field);
+    return '<div class="comanda-edit-inline">' + inputHtml + "</div>";
+  }
+  return '<button type="button" class="tickets-details-cell-btn" data-action="details-cell-inline" data-field="' + field + '" data-ticket="' + t.id + '">' + valueHtml + "</button>";
+}
+function renderTicketsDetailsRow(t){
+  var v = ticketOperationalCellValues(t);
+  var cells = [
+    '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + " &#8599;</button>",
+    detailsModalCell(v.clienteHtml, "cliente", t.id),
+    detailsModalCell(v.trabajoHtml, "trabajo", t.id),
+    detailsModalCell(v.estadoHtml, "estado", t.id),
+    detailsInlineCell(t, "quesigue", v.queSigueHtml),
+    detailsInlineCell(t, "responsable", v.responsableHtml),
+    detailsInlineCell(t, "atencion", v.atenderHtml),
+    detailsInlineCell(t, "compromiso", v.compromisoHtml),
+    /* §37: "Total conocido" abre el MISMO editor de productos que "Trabajo"
+       — el total siempre se deriva de productos, nunca hay un input de
+       total aparte. */
+    detailsModalCell(v.totalConocidoHtml, "trabajo", t.id),
+    detailsModalCell(v.cobradoHtml, "cobrado", t.id),
+    detailsModalCell(v.marcadoresHtml, "marcadores", t.id),
+    v.ultimaActividadHtml
   ];
   return '<tr class="tickets-details-row" data-id="' + t.id + '">' + cells.map(function(html, idx){
     return '<td data-label="' + TICKETS_DETAILS_COLS[idx] + '">' + html + "</td>";
@@ -4322,6 +4795,17 @@ function renderTicketsDetailsRow(t){
 
 function renderTicketsExplorerView(){
   var list = ticketsExplorerFiltered();
+  /* §60-61: la selección de Miniaturas sobrevive un refresh de Realtime
+     mientras el ticket siga existiendo y pasando los filtros activos (nada
+     que hacer — selectedCardId simplemente no se toca); si desaparece del
+     listado filtrado (se cerró/cambió de estado y el filtro ya no lo
+     incluye, u otro cambio real de datos), se limpia sola aquí — mismo
+     patrón de autolimpieza que ya usan renderContactPanel/
+     renderCellEditorOverlay cuando su objetivo deja de existir. */
+  if(UI.ticketsExplorer.selectedCardId && !list.some(function(t){ return t.id === UI.ticketsExplorer.selectedCardId; })){
+    UI.ticketsExplorer.selectedCardId = null;
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+  }
   var toolbar = renderTicketsToolbar(list);
   var view = UI.ticketsView || "thumbnails";
   var body;
@@ -4330,7 +4814,11 @@ function renderTicketsExplorerView(){
   } else if(view === "icons"){
     body = '<div class="tickets-grid-icons">' + list.map(renderTicketsIconCard).join("") + "</div>";
   } else if(view === "list"){
-    body = '<div class="tickets-list">' + list.map(renderTicketsListRow).join("") + "</div>";
+    body =
+      '<div class="tickets-list-wrap"><table class="tickets-list-table">' +
+        "<thead><tr>" + TICKETS_OPERATIONAL_COLS.map(function(cn){ return "<th>" + cn + "</th>"; }).join("") + "</tr></thead>" +
+        "<tbody>" + list.map(renderTicketsListRow).join("") + "</tbody>" +
+      "</table></div>";
   } else if(view === "details"){
     body =
       '<div class="tickets-details-wrap"><table class="tickets-details">' +
@@ -5091,13 +5579,12 @@ function renderClienteFichaView(){
   var breadcrumb = UI.clienteReturnTicketId
     ? '<button class="btn-plain" data-action="open-ticket" data-id="' + UI.clienteReturnTicketId + '">&larr; Volver al Ticket #' + (findTicket(UI.clienteReturnTicketId) ? findTicket(UI.clienteReturnTicketId).seq : "") + "</button>"
     : '<button class="btn-plain" data-action="go-clientes">&larr; Clientes</button>';
-  /* Affordances §31-33: teléfono/email salen de infoLines genérico — tienen
-     su propio renderer (clienteContactLine) con tel:/mailto: + edición
-     separada, nunca texto plano muerto. El resto de infoLines sigue exactamente
-     igual (lineRow, sin cambios). */
-  var contactHtml = "";
-  if(c.telefono) contactHtml += clienteContactLine(c, "telefono", c.telefono);
-  if(c.email) contactHtml += clienteContactLine(c, "email", c.email);
+  /* Affordances §31-33/§80: teléfono/email salen de infoLines genérico — tienen
+     su propio renderer (clienteContactBlock -> clienteContactLine) con
+     tel:/mailto: + edición separada, nunca texto plano muerto, y un vacío
+     siempre ofrece "+ Agregar" (nunca se esconde el campo). El resto de
+     infoLines sigue exactamente igual (lineRow, sin cambios). */
+  var contactHtml = clienteContactBlock(c);
   var infoLines = [];
   if(c.notasComerciales) infoLines.push(["Notas comerciales", c.notasComerciales]);
   infoLines.push(["Preautorizado", c.preautorizado ? "Sí" : "No"]);
@@ -5251,6 +5738,10 @@ function render(){
     renderBugReportPanel() +
     renderTotalPedidoModal() +
     renderBibliotecaViewer() +
+    renderContactPanel() +
+    renderCellEditorOverlay() +
+    renderMarkerPickerOverlay() +
+    renderTicketsThumbPhotoOverlay() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -5570,10 +6061,24 @@ function render(){
    ambigua) necesita abrir la edición en línea antes de poder enfocar el
    selector de fecha nativo. */
 var HEADER_EDIT_FIELD_BY_EL = { "field-cliente":"cliente", "field-quesigue":"quesigue", "field-responsable":"responsable", "field-fecha-atencion":"atencion", "field-fecha-compromiso":"compromiso" };
+/* Mobile Reading Mode (Ronda "Refinamiento operativo" §3-5): un solo punto
+   decide si el teclado puede aparecer solo. Cambiar de pantalla, volver de
+   una acción, cerrar un overlay o cambiar de vista dentro de Tickets NUNCA
+   debe abrir el teclado en touch — solo cuando el usuario tocó
+   explícitamente un campo (target.userInitiated === true, marcado por el
+   propio llamador: openHeaderEdit, openClienteFichaEdit, elegir tipo de
+   cierre, abrir Reportar un problema, el fallback de fecha ambigua de un
+   comando ya escrito). Todo lo demás (el genérico "composer" que usan
+   goToX/openTicketById/dismissEphemeral/etc., y los elId de navegación
+   como tickets-explorer-search/biblioteca-search/clientes-search-input)
+   se suprime en touch y se conserva intacto en desktop — mismo umbral
+   isMobileViewport() que ya usa el resto de la app (popover de marcador),
+   nunca un segundo detector de "es móvil". */
 function applyFocus(){
   var target = UI.pendingFocus;
   UI.pendingFocus = null;
   if(!target) return;
+  var suppressAutoFocus = isMobileViewport() && !(typeof target === "object" && target.userInitiated);
   if(typeof target === "object" && target.elId){
     var wantField = HEADER_EDIT_FIELD_BY_EL[target.elId];
     if(wantField){
@@ -5585,9 +6090,11 @@ function applyFocus(){
       UI.headerEditToken = (UI.headerEditToken||0) + 1;
       if(UI.headerEditField !== wantField){ UI.headerEditField = wantField; render(); }
     }
-    var explicit = document.getElementById(target.elId);
-    if(explicit){ explicit.focus(); try{ explicit.select(); }catch(e){} return; }
+    if(suppressAutoFocus) return;
+    var explicitEl = document.getElementById(target.elId);
+    if(explicitEl){ explicitEl.focus(); try{ explicitEl.select(); }catch(e){} return; }
   }
+  if(suppressAutoFocus) return;
   var popoverField = document.querySelector('#composer-popover input, #composer-popover select, #composer-popover textarea, #composer-popover button');
   if(popoverField){ popoverField.focus(); return; }
   if(target === "composer"){
@@ -6281,11 +6788,16 @@ async function resolveMarkerCore(t, markerId){
    (§41: "selected item" explícito, nunca solo :hover). */
 function openMarkerPicker(source, opts){
   opts = opts || {};
-  var t = findTicket(UI.selectedTicketId);
+  /* §39/§56: "manual" (Detalles/Quick Edit/Miniaturas ⋯ "Marcar como…") pasa
+     su propio ticketId explícito — nunca asume UI.selectedTicketId, así el
+     mismo picker sirve para un ticket que no está abierto en pantalla. */
+  var t = opts.ticketId ? findTicket(opts.ticketId) : findTicket(UI.selectedTicketId);
   if(!t) return;
   var text;
   if(source === "note"){
     text = opts.text || "";
+  } else if(source === "manual"){
+    text = "";
   } else {
     var composerInput = document.getElementById("composer-input");
     text = ((composerInput ? composerInput.value : "") || "").trim();
@@ -6293,6 +6805,15 @@ function openMarkerPicker(source, opts){
   }
   UI.markerPicker = { source: source, ticketId: t.id, noteId: opts.noteId || null, text: text, navIndex: 0 };
   render();
+}
+/* §39/§56: overlay centrado (mismo patrón .cierre-modal-overlay que el
+   resto de paneles nuevos de esta ronda) SOLO para el disparo "manual" —
+   composer/note siguen usando su popover/inline de siempre (renderMarkerPickerPopover/
+   Inline), nunca una segunda lista de marcadores ni un segundo
+   createMarkerCore. */
+function renderMarkerPickerOverlay(){
+  if(!UI.markerPicker || UI.markerPicker.source !== "manual") return "";
+  return '<div class="cierre-modal-overlay" id="marker-picker-overlay"><div class="cierre-modal">' + renderMarkerPickerBody() + "</div></div>";
 }
 function closeMarkerPicker(){
   if(!UI.markerPicker) return;
@@ -6370,7 +6891,11 @@ function toggleSidebarMarkerPopover(ticketId, markerId){
 
 async function submitForm(kind){
   var t = findTicket(UI.selectedTicketId);
-  if(!t) return;
+  /* §51-52: "archivo" desde Miniaturas (overlay standalone de foto rápida)
+     no tiene un ticket "abierto" — UI.photoBatch.ticketId ya trae el
+     ticket explícito y startPhotoBatchUpload() lo resuelve solo, así que
+     esta guarda no debe cortar antes de llegar ahí. */
+  if(!t && kind !== "archivo") return;
   if(kind === "producto"){
     var desc = (document.getElementById("f-desc").value || "").trim();
     if(!desc){ showToast("Descripción requerida."); return; }
@@ -6487,6 +7012,35 @@ function resetPhotoBatch(){
   UI.photoBatch = null;
 }
 
+/* §51-52: botón "📷" de Miniaturas — MISMO pipeline de fotos múltiples que
+   el compositor (mismo UI.photoBatch, mismo renderPhotoBatchPopover, mismo
+   startPhotoBatchUpload/uploadOnePhoto), nunca un segundo selector/subida.
+   La única diferencia real es que aquí no hay ticket "abierto": el lote
+   guarda su propio ticketId explícito, que startPhotoBatchUpload() y
+   buildPhotoBatchFromFileList() ya saben preferir (ver ambos arriba).
+   Cerrar (cancelar/descartar/terminar sin fallas) reutiliza
+   closeComposerOverlay() tal cual — ya limpia UI.photoBatch por completo,
+   nunca una segunda forma de "cerrar el selector de fotos". */
+function openTicketsThumbPhoto(ticketId){
+  if(!findTicket(ticketId)) return;
+  resetPhotoBatch();
+  UI.photoBatch = { items: [], caption: "", uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0, ticketId: ticketId };
+  render();
+}
+function renderTicketsThumbPhotoOverlay(){
+  if(!UI.photoBatch || !UI.photoBatch.ticketId) return "";
+  var t = findTicket(UI.photoBatch.ticketId);
+  if(!t){ resetPhotoBatch(); return ""; }
+  return (
+    '<div class="cierre-modal-overlay" id="tickets-thumb-photo-overlay">' +
+      '<div class="cierre-modal">' +
+        '<div class="cierre-modal-title">' + escapeHtml(ticketLabel(t)) + "</div>" +
+        renderPhotoBatchPopover() +
+      "</div>" +
+    "</div>"
+  );
+}
+
 /* Construye la selección a partir del FileList real del <input multiple> —
    sección 3: si excede el máximo, NO arranca nada (ni siquiera arma la
    selección), solo avisa con un mensaje claro y deja el selector listo para
@@ -6505,7 +7059,12 @@ function buildPhotoBatchFromFileList(fileList){
   var items = files.map(function(file){
     return { id: uid(), file: file, previewUrl: URL.createObjectURL(file), name: file.name };
   });
-  UI.photoBatch = { items: items, caption: "", uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0 };
+  /* §51-52: si este lote ya traía un ticket explícito (overlay standalone de
+     Miniaturas, ver openTicketsThumbPhoto), seleccionar archivos del <input>
+     no debe perderlo — nunca dos formas de saber "para qué ticket es esta
+     foto". Ausente (flujo normal del compositor) queda null, igual que
+     siempre. */
+  UI.photoBatch = { items: items, caption: "", uploading: false, progress: null, totalOriginal: 0, succeededSoFar: 0, ticketId: (UI.photoBatch && UI.photoBatch.ticketId) || null };
   render();
 }
 
@@ -6619,7 +7178,11 @@ function discardPhotoBatch(){
 async function startPhotoBatchUpload(){
   var pb = UI.photoBatch;
   if(!pb || !pb.items.length || pb.uploading) return;
-  var t = findTicket(UI.selectedTicketId);
+  /* §51-52: el lote de Miniaturas trae su propio ticket explícito
+     (pb.ticketId, ver openTicketsThumbPhoto) — se prefiere sobre
+     UI.selectedTicketId, que en ese caso ni siquiera aplica (no hay ticket
+     "abierto" en pantalla). */
+  var t = findTicket((pb && pb.ticketId) || UI.selectedTicketId);
   if(!t){ showToast("Selecciona un ticket primero."); return; }
   if(!pb.totalOriginal){
     var capInput = document.getElementById("f-photo-caption");
@@ -7599,34 +8162,26 @@ var HEADER_FIELDS = {
   "field-fecha-compromiso":{ key: "fechaCompromiso",   col: "fecha_compromiso", label: "Fecha de compromiso" }
 };
 
-async function commitHeaderField(elId, value, opts){
-  var t = findTicket(UI.selectedTicketId);
-  if(!t) return;
+/* ---------------- §42/§49: núcleo de mutación compartido — cabecera del
+   ticket, Detalles y Quick Edit llaman a EXACTAMENTE estas dos funciones
+   (updateTicketFieldCore/updateQueSigueCore); nunca reimplementan el
+   guardado. Reciben el ticket EXPLÍCITO (nunca asumen UI.selectedTicketId),
+   así que sirven igual para el ticket abierto que para uno editado desde la
+   lista sin entrar a él. Cada superficie solo decide cuándo llamarlas y
+   cómo cerrar SU PROPIO estado de presentación (UI.headerEditField para la
+   cabecera, UI.cellEditor/celda activa para Detalles/Quick Edit). ---------------- */
+async function updateTicketFieldCore(t, elId, value, opts){
+  if(!t) return false;
   var def = HEADER_FIELDS[elId];
-  if(!def) return;
-  /* Addendum "Date Correctness" §9, y bug reportado en la siguiente ronda
-     (§47-52): nunca guardar una fecha calendario absurda (el bug de "año
-     0002"), PERO sin cerrar ni re-renderizar el campo mientras se está
-     escribiendo — root cause real: un <input type="date"> nativo dispara
-     "change" en CADA dígito que se teclea en el segmento del año, no solo
-     al terminar (Chrome rellena el año a la izquierda mientras se escribe:
-     "2" -> "0002", "02" -> "0020", "202" -> "0203", "2026" -> "2026" — cada
-     paso intermedio es, técnicamente, una fecha ISO "válida" así que SÍ
-     dispara "change"). La versión anterior cerraba el campo (UI.headerEditField
-     = null + render()) en cada uno de esos pasos intermedios, expulsando al
-     usuario antes de terminar de escribir el año. Ahora: un valor
-     intermedio fuera de rango simplemente se IGNORA (ni STATE, ni Supabase,
-     ni render — el navegador conserva su propio estado de edición intacto,
-     el cursor sigue donde el usuario lo dejó) y se deja que el usuario siga
-     escribiendo; el aviso de "fecha inválida" (si el usuario de verdad
-     abandona el campo con un año fuera de rango) vive ahora en el blur de
-     wireEvents(), que es el único momento en que "cerrar" tiene sentido. */
-  if(def.col.indexOf("fecha_")===0 && value && !isSaneDateOnly(value)){
-    return;
-  }
-  if(t[def.key] === value) return;
+  if(!def) return false;
+  /* Addendum "Date Correctness" §9 / bug "año 0002": nunca guardar una fecha
+     calendario absurda — un valor intermedio fuera de rango simplemente se
+     ignora (ni STATE, ni Supabase, ni render), dejando que el llamador
+     decida qué hacer (el blur de la cabecera avisa "fecha inválida"; ver
+     wireEvents). */
+  if(def.col.indexOf("fecha_")===0 && value && !isSaneDateOnly(value)) return false;
+  if(t[def.key] === value) return false;
   t[def.key] = value;
-  UI.headerEditField = null;
   render();
   if(def.key === "responsable" && value) rememberName(value);
   try{
@@ -7636,24 +8191,50 @@ async function commitHeaderField(elId, value, opts){
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: def.label + ": " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
+  return true;
+}
+async function commitHeaderField(elId, value, opts){
+  /* §42: headerEditTicketId es null para la cabecera de siempre (el ticket
+     abierto) y explícito cuando este mismo editor fue abierto desde una
+     celda de Detalles (openDetailsCellEdit) — ni Detalles ni la cabecera
+     necesitan saber el uno del otro, solo comparten esta función. */
+  var t = findTicket(UI.headerEditTicketId || UI.selectedTicketId);
+  if(!t) return;
+  var def = HEADER_FIELDS[elId];
+  if(!def) return;
+  /* Mismo pre-chequeo de "sin cambios" que ya tenía commitHeaderField, SOLO
+     para decidir si la cabecera se cierra (root cause "año 0002" descrita
+     arriba: un <input type="date"> dispara "change" en cada dígito
+     intermedio del año, y cerrar el campo ahí expulsaría al usuario antes de
+     terminar de escribir) — la mutación real vive una sola vez en
+     updateTicketFieldCore, esto nunca vuelve a tocar Supabase/bitácora. */
+  if(def.col.indexOf("fecha_")===0 && value && !isSaneDateOnly(value)) return;
+  if(t[def.key] === value) return;
+  UI.headerEditField = null;
+  UI.headerEditTicketId = null;
+  render();
+  await updateTicketFieldCore(t, elId, value, opts);
 }
 
-async function commitQueSigue(value, opts){
-  var t = findTicket(UI.selectedTicketId);
-  if(!t) return;
-  if(value === "__custom__"){
-    var custom = window.prompt('Nueva opción de "Qué sigue":', "");
-    custom = (custom || "").trim();
-    if(!custom){ UI.headerEditField = null; render(); return; }
-    if(STATE.meta.queSigueOptions.indexOf(custom) === -1){
-      STATE.meta.queSigueOptions = STATE.meta.queSigueOptions.concat([custom]);
-      sb.from("app_settings").update({ values: STATE.meta.queSigueOptions }).eq("key", "que_sigue_options").then(function(){});
-    }
-    value = custom;
+/* "+ Nueva opción…" (§34/§49): agregar al catálogo global ES parte del
+   núcleo (toca STATE.meta + app_settings), pero el prompt() que la pide es
+   presentación — cada superficie lo llama si su selector ofrece
+   "__custom__" y pasa el valor YA resuelto a updateQueSigueCore(). Regresa
+   null si el usuario canceló el prompt. */
+function resolveQueSigueCustomValue(){
+  var custom = window.prompt('Nueva opción de "Qué sigue":', "");
+  custom = (custom || "").trim();
+  if(!custom) return null;
+  if(STATE.meta.queSigueOptions.indexOf(custom) === -1){
+    STATE.meta.queSigueOptions = STATE.meta.queSigueOptions.concat([custom]);
+    sb.from("app_settings").update({ values: STATE.meta.queSigueOptions }).eq("key", "que_sigue_options").then(function(){});
   }
-  if(t.queSigue === value) return;
+  return custom;
+}
+async function updateQueSigueCore(t, value, opts){
+  if(!t) return false;
+  if(t.queSigue === value) return false;
   t.queSigue = value;
-  UI.headerEditField = null;
   render();
   try{
     var r1 = await sb.from("tickets").update({ que_sigue: value }).eq("id", t.id);
@@ -7661,6 +8242,20 @@ async function commitQueSigue(value, opts){
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: UI.whoami || null, payload: { text: "Qué sigue: " + (value || "(vacío)") } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
+  return true;
+}
+async function commitQueSigue(value, opts){
+  var t = findTicket(UI.headerEditTicketId || UI.selectedTicketId);
+  if(!t) return;
+  if(value === "__custom__"){
+    value = resolveQueSigueCustomValue();
+    if(value === null){ UI.headerEditField = null; UI.headerEditTicketId = null; render(); return; }
+  }
+  if(t.queSigue === value) return;
+  UI.headerEditField = null;
+  UI.headerEditTicketId = null;
+  render();
+  await updateQueSigueCore(t, value, opts);
 }
 
 /* ---------------- Entrega y cierre (sección 6/7 de la iteración "Comanda")
@@ -7737,11 +8332,15 @@ async function cerrarTicketCore(t, tipo, razon){
    "Cancelar" con la × de una fila del sidebar que no está necesariamente
    abierta en pantalla. Sigue siendo UNA sola función de cierre
    (cerrarTicketCore) con un solo modal — nunca una segunda ruta. */
-function openCierreModal(){ UI.cierreModal = { step: "choice", ticketId: UI.selectedTicketId }; render(); }
+/* §33/§42: variante con ticketId explícito — usada por el picker de Estado
+   de Detalles/Quick Edit sobre un ticket que puede no estar abierto. La
+   cabecera del ticket abierto sigue llamando openCierreModal() a secas. */
+function openCierreModalForTicket(ticketId){ UI.cierreModal = { step: "choice", ticketId: ticketId }; render(); }
+function openCierreModal(){ openCierreModalForTicket(UI.selectedTicketId); }
 function closeCierreModal(){ UI.cierreModal = null; render(); }
 function chooseCierreTipo(tipo){
   UI.cierreModal = { step: "form", tipo: tipo, ticketId: UI.cierreModal && UI.cierreModal.ticketId };
-  UI.pendingFocus = { elId: "cierre-razon" };
+  UI.pendingFocus = { elId: "cierre-razon", userInitiated: true };
   render();
 }
 /* Atajo directo de "Cancelar" desde la × del sidebar (V0.5 §6): salta el
@@ -7753,7 +8352,7 @@ function chooseCierreTipo(tipo){
    en cuanto refreshFromServer termine. */
 function openCancelTicketModal(ticketId){
   UI.cierreModal = { step: "form", tipo: "cancelado", ticketId: ticketId, quick: true };
-  UI.pendingFocus = { elId: "cierre-razon" };
+  UI.pendingFocus = { elId: "cierre-razon", userInitiated: true };
   render();
 }
 function submitCierreForm(){
@@ -7806,6 +8405,228 @@ function renderCierreModal(){
   return (
     '<div class="cierre-modal-overlay" id="cierre-modal-overlay">' +
       '<div class="cierre-modal">' + inner + "</div>" +
+    "</div>"
+  );
+}
+
+/* ---------------- Ronda "Refinamiento operativo" §13-16: Contact Panel ----------------
+   Panel discreto de contacto rápido desde la cabecera del ticket — mismo
+   overlay .cierre-modal-overlay que el resto de la app (nunca un componente
+   nuevo), mismo clienteContactBlock() que ya usa la ficha completa (nunca un
+   segundo renderer de teléfono/email, nunca una segunda edición de cliente:
+   todo pasa por openClienteFichaEdit()/commitClienteFichaField() ->
+   updateClienteCore()). Abrir NUNCA agrega pendingFocus — §15/§77, el
+   teclado solo aparece si el usuario toca "+ Agregar…"/✎ adentro. */
+function openContactPanel(clienteId, ticketId){
+  if(!clienteId) return;
+  UI.contactPanel = { clienteId: clienteId, ticketId: ticketId || null };
+  render();
+}
+function closeContactPanel(){
+  if(!UI.contactPanel) return;
+  UI.contactPanel = null;
+  /* Cerrar el panel de contacto también sale de cualquier edición inline de
+     teléfono/email que hubiera quedado abierta dentro de él, sin guardar —
+     mismo criterio que closeClienteFichaEdit() en el resto de la app. */
+  UI.clienteFichaEditField = null;
+  render();
+}
+function renderContactPanel(){
+  if(!UI.contactPanel) return "";
+  var c = STATE.clientes.filter(function(x){ return x.id === UI.contactPanel.clienteId; })[0];
+  if(!c){ UI.contactPanel = null; return ""; }
+  var t = UI.contactPanel.ticketId ? findTicket(UI.contactPanel.ticketId) : null;
+  var verClienteBtn = '<button type="button" class="help-cmd-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '"' +
+    (t ? ' data-ticket="' + t.id + '"' : "") + '><span class="desc">Ver cliente completo &#8594;</span></button>';
+  return (
+    '<div class="cierre-modal-overlay" id="contact-panel-overlay">' +
+      '<div class="cierre-modal contact-panel">' +
+        '<div class="cierre-modal-title">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</div>" +
+        '<div class="contact-panel-body">' + clienteContactBlock(c) + "</div>" +
+        '<div class="popover-actions">' + verClienteBtn + '<button class="btn btn-ghost" data-action="contact-panel-close">Cerrar</button></div>' +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* ---------------- Ronda "Refinamiento operativo" §42/§49: capa central de
+   edición por celda ----------------
+   UNA sola pieza de estado (UI.cellEditor) para los editores compactos que
+   Detalles y Quick Edit (Miniaturas) disparan sobre un ticket que NO tiene
+   por qué estar abierto — nunca UI.selectedTicketId (§86-87). "kind" decide
+   qué panel se muestra; cada panel reutiliza EXACTAMENTE el core que ya
+   existía para esa acción (linkClienteToTicket, addProductoCore/
+   updateProductoCore, marcarEntregadoCore/deshacerEntregaCore/
+   openCierreModalForTicket, addPagoCore) — esta capa nunca vuelve a guardar
+   nada por su cuenta, solo decide QUÉ mostrar y CUÁNDO cerrarse. Abrir
+   cualquiera de estos paneles NUNCA agrega pendingFocus (§50/§77): el
+   teclado solo aparece si el usuario toca un campo de texto real adentro
+   (buscar cliente, descripción de producto, monto de pago). "Total
+   conocido" (§37) y "Trabajo" (§32) comparten el MISMO panel "trabajo" —
+   total siempre se deriva de productos, así que editar uno es editar el
+   otro; no existe (ni debe existir) un input de "total" aparte. */
+function openCellEditor(kind, ticketId){
+  /* §29: una sola edición activa a la vez en toda la app — abrir el editor
+     modal cierra cualquier celda inline que hubiera quedado abierta (mismo
+     criterio que openDetailsCellEdit hace a la inversa). */
+  UI.headerEditField = null;
+  UI.headerEditTicketId = null;
+  UI.cellEditor = { kind: kind, ticketId: ticketId, query: "" };
+  render();
+}
+function closeCellEditor(){
+  if(!UI.cellEditor) return;
+  UI.cellEditor = null;
+  render();
+}
+function renderCellEditorCliente(t){
+  var q = UI.cellEditor.query || "";
+  var results = rankClientes(q).slice(0, 8);
+  var rows = results.length
+    ? results.map(function(c){
+        return '<button type="button" class="help-cmd-btn" data-action="cliente-link" data-client-id="' + c.id + '" data-ticket="' + t.id + '">' +
+          '<span class="desc">' + escapeHtml(clienteLabel(c)) + (t.clienteId===c.id ? " · ya vinculado" : "") + "</span>" +
+        "</button>";
+      }).join("")
+    : '<div class="empty-list">Sin resultados.</div>';
+  return (
+    '<div class="cierre-modal-title">Cambiar cliente</div>' +
+    '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
+    '<div class="search-wrap"><input type="text" id="cell-editor-cliente-search" placeholder="Buscar cliente…" value="' + escapeHtml(q) + '"></div>' +
+    '<div class="cliente-picker-results">' + rows + "</div>"
+  );
+}
+function renderCellEditorTrabajo(t){
+  var header = '<div class="producto-edit-row producto-edit-header"><span>Descripción</span><span>Cant.</span><span>Precio u.</span><span>Total</span></div>';
+  var rows = t.productos.length ? t.productos.map(function(p){ return productoEditRow(t, p); }).join("") : '<div class="empty-list">Sin productos todavía.</div>';
+  var addRow =
+    '<div class="producto-edit-row producto-add-row">' +
+      '<input type="text" id="cell-editor-add-desc" placeholder="Descripción">' +
+      '<input type="number" id="cell-editor-add-cant" min="0" step="1" placeholder="Cant." value="1">' +
+      '<input type="number" id="cell-editor-add-precio" min="0" step="0.01" placeholder="pendiente">' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-action="cell-editor-add-producto" data-ticket="' + t.id + '">+ Agregar</button>' +
+    "</div>";
+  return (
+    '<div class="cierre-modal-title">Trabajo</div>' +
+    '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
+    header + rows + addRow +
+    '<div class="ephemeral-sub">Editar aquí actualiza el producto del ticket — nunca modifica una cotización o invoice ya creado. El total siempre se calcula de estos productos.</div>'
+  );
+}
+function renderCellEditorEstado(t){
+  var estado = ticketEstado(t);
+  var actions = "";
+  if(estado === "abierto"){
+    actions =
+      '<button type="button" class="help-cmd-btn" data-action="cell-editor-marcar-entregado" data-ticket="' + t.id + '"><span class="desc">&#10003; Marcar entregado</span></button>' +
+      '<button type="button" class="help-cmd-btn" data-action="cell-editor-abrir-cierre" data-ticket="' + t.id + '"><span class="desc">Cerrar ticket…</span></button>';
+  } else if(estado === "entregado"){
+    actions =
+      '<button type="button" class="help-cmd-btn" data-action="cell-editor-deshacer-entrega" data-ticket="' + t.id + '"><span class="desc">&#8617; Deshacer entrega</span></button>' +
+      '<button type="button" class="help-cmd-btn" data-action="cell-editor-abrir-cierre" data-ticket="' + t.id + '"><span class="desc">Cerrar ticket…</span></button>';
+  } else {
+    /* Cerrado: solo información — NUNCA "reabrir" (no existe ese estado). */
+    actions = '<div class="ephemeral-sub">' + ticketEstadoLabel(estado) + " · " + fmtDateShort(t.cerradoAt) +
+      (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") +
+      (t.razonCierre ? "<br>" + escapeHtml(t.razonCierre) : "") + "</div>";
+  }
+  return (
+    '<div class="cierre-modal-title">Estado</div>' +
+    '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + " · " + ticketEstadoLabel(estado) + "</div>" +
+    actions
+  );
+}
+function renderCellEditorCobrado(t){
+  var pagos = (t.pagos||[]).slice().sort(function(a,b){ return new Date(b.fecha) - new Date(a.fecha); });
+  var rows = pagos.length
+    ? pagos.map(function(p){
+        return '<div class="ephemeral-row"><strong>' + fmtMoney(p.monto) + "</strong> · " + fmtDateOnlyShort(p.fecha) +
+          (p.concepto ? " · " + escapeHtml(p.concepto) : "") + "</div>";
+      }).join("")
+    : '<div class="empty-list">Sin pagos registrados todavía.</div>';
+  return (
+    '<div class="cierre-modal-title">Cobrado</div>' +
+    '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
+    rows +
+    '<div class="producto-edit-row producto-add-row cell-editor-pago-add">' +
+      '<input type="number" id="cell-editor-pago-monto" min="0" step="0.01" placeholder="Monto" inputmode="decimal">' +
+      '<input type="text" id="cell-editor-pago-concepto" placeholder="Concepto (opcional)">' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-action="cell-editor-add-pago" data-ticket="' + t.id + '">+ Agregar pago</button>' +
+    "</div>" +
+    '<div class="ephemeral-sub">Un pago registrado nunca se edita ni se borra desde aquí — es historial.</div>'
+  );
+}
+function renderCellEditorMarcadores(t){
+  var active = activeMarkers(t);
+  /* Reusa EXACTAMENTE data-action="marker-resolve" (ya cableado de forma
+     genérica en el delegado global de clicks) — cero wiring nuevo para
+     resolver desde aquí. */
+  var rows = active.length
+    ? active.map(function(m){
+        return '<div class="ephemeral-row cell-editor-marker-row"><span>' + markerIcon(m.type) + " " + escapeHtml(markerLabel(m.type)) + "</span>" +
+          '<button type="button" class="btn btn-ghost btn-sm" data-action="marker-resolve" data-ticket="' + t.id + '" data-marker="' + m.id + '">Resolver</button></div>';
+      }).join("")
+    : '<div class="empty-list">Sin marcadores activos.</div>';
+  return (
+    '<div class="cierre-modal-title">Marcadores</div>' +
+    '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
+    rows +
+    '<button type="button" class="help-cmd-btn" data-action="cell-editor-add-marker" data-ticket="' + t.id + '"><span class="desc">+ Agregar marcador</span></button>'
+  );
+}
+/* §42/§48-49: Quick Edit (Miniaturas) — el mismo panel central de celda,
+   solo que en vez de un ticket abierto en Detalles muestra TODOS los campos
+   operativos en una lista vertical compacta. Cada fila reusa EXACTAMENTE
+   detailsModalCell/detailsInlineCell (mismos data-action, mismos botones
+   que Detalles) — nunca una segunda implementación de "cómo se ve/edita
+   Cliente/Trabajo/Estado/Qué sigue/etc.", solo un layout distinto
+   (columna vs fila de tabla). El renglón de Contacto reusa
+   data-action="open-contact-panel" (mismo Contact Panel de la cabecera) y
+   solo aparece si el ticket ya tiene cliente vinculado. */
+function quickEditFieldRow(label, controlHtml){
+  return '<div class="quickedit-row"><div class="quickedit-row-label">' + escapeHtml(label) + '</div><div class="quickedit-row-value">' + controlHtml + "</div></div>";
+}
+function renderCellEditorQuickEdit(t){
+  var v = ticketOperationalCellValues(t);
+  var rows =
+    quickEditFieldRow("Cliente", detailsModalCell(v.clienteHtml, "cliente", t.id)) +
+    quickEditFieldRow("Trabajo", detailsModalCell(v.trabajoHtml, "trabajo", t.id)) +
+    quickEditFieldRow("Estado", detailsModalCell(v.estadoHtml, "estado", t.id)) +
+    quickEditFieldRow("Qué sigue", detailsInlineCell(t, "quesigue", v.queSigueHtml)) +
+    quickEditFieldRow("Responsable", detailsInlineCell(t, "responsable", v.responsableHtml)) +
+    quickEditFieldRow("Atender", detailsInlineCell(t, "atencion", v.atenderHtml)) +
+    quickEditFieldRow("Compromiso", detailsInlineCell(t, "compromiso", v.compromisoHtml)) +
+    /* §37: "Total conocido" abre el MISMO editor de productos que "Trabajo" — nunca un input de total aparte. */
+    quickEditFieldRow("Total conocido", detailsModalCell(v.totalConocidoHtml, "trabajo", t.id)) +
+    quickEditFieldRow("Cobrado", detailsModalCell(v.cobradoHtml, "cobrado", t.id)) +
+    quickEditFieldRow("Marcadores", detailsModalCell(v.marcadoresHtml, "marcadores", t.id));
+  if(v.c){
+    rows += quickEditFieldRow("Contacto", '<button type="button" class="help-cmd-btn" data-action="open-contact-panel" data-client-id="' + v.c.id + '" data-ticket="' + t.id + '"><span class="desc">Ver/editar teléfono y correo &#8594;</span></button>');
+  }
+  return (
+    '<div class="cierre-modal-title">Editar rápido</div>' +
+    '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
+    '<div class="quickedit-rows">' + rows + "</div>"
+  );
+}
+function renderCellEditorOverlay(){
+  if(!UI.cellEditor) return "";
+  var t = findTicket(UI.cellEditor.ticketId);
+  if(!t){ UI.cellEditor = null; return ""; }
+  var inner;
+  if(UI.cellEditor.kind === "cliente") inner = renderCellEditorCliente(t);
+  else if(UI.cellEditor.kind === "trabajo") inner = renderCellEditorTrabajo(t);
+  else if(UI.cellEditor.kind === "estado") inner = renderCellEditorEstado(t);
+  else if(UI.cellEditor.kind === "cobrado") inner = renderCellEditorCobrado(t);
+  else if(UI.cellEditor.kind === "marcadores") inner = renderCellEditorMarcadores(t);
+  else if(UI.cellEditor.kind === "quickedit") inner = renderCellEditorQuickEdit(t);
+  else return "";
+  var modalClass = "cierre-modal cell-editor-modal" + (UI.cellEditor.kind === "quickedit" ? " quickedit-modal" : "");
+  return (
+    '<div class="cierre-modal-overlay" id="cell-editor-overlay">' +
+      '<div class="' + modalClass + '">' + inner +
+        '<div class="popover-actions"><button class="btn btn-ghost" data-action="cell-editor-close">Cerrar</button></div>' +
+      "</div>" +
     "</div>"
   );
 }
@@ -7884,7 +8705,7 @@ function openBugReport(){
   UI.helpPanelOpen = false; UI.helpPanelTab = null;
   UI.bugReportOpen = true; UI.bugReportSeverity = "molestia"; UI.bugReportSaving = false;
   bugReportScreenshotFile = null;
-  UI.pendingFocus = { elId: "bugreport-desc" };
+  UI.pendingFocus = { elId: "bugreport-desc", userInitiated: true };
   render();
 }
 function closeBugReport(){
@@ -8962,7 +9783,7 @@ async function dispatchCommand(raw){
          así que el aviso siempre se muestra DESPUÉS de renderizar. */
       if(result.focusElId){
         UI.dateFallbackElId = result.focusElId;
-        UI.pendingFocus = { elId: result.focusElId };
+        UI.pendingFocus = { elId: result.focusElId, userInitiated: true };
         render();
       }
       showToast(result.error);
@@ -9064,9 +9885,28 @@ function wireEvents(){
   root.querySelectorAll('[data-action="tickets-view-pick"]').forEach(function(b){
     b.addEventListener("click", function(){
       UI.ticketsView = b.getAttribute("data-view");
+      /* §59: cambiar de vista puede perder la selección de Miniatura — no
+         tiene por qué sobrevivir, no es dato comercial. */
+      UI.ticketsExplorer.selectedCardId = null;
+      UI.ticketsExplorer.thumbMoreTicketId = null;
       saveUi(); render();
     });
   });
+  root.querySelectorAll('[data-action="tickets-options-toggle"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.ticketsExplorer.optionsOpen = !UI.ticketsExplorer.optionsOpen;
+      /* §77: abrir el panel de opciones NUNCA dispara el teclado solo — el
+         usuario tiene que tocar el campo Buscar explícitamente. */
+      render();
+    });
+  });
+  var ticketsSortSelect = root.querySelector('[data-action="tickets-sort-pick"]');
+  if(ticketsSortSelect){
+    ticketsSortSelect.addEventListener("change", function(){
+      UI.ticketsExplorer.sort = ticketsSortSelect.value || "actividad";
+      render();
+    });
+  }
   root.querySelectorAll('[data-action="tickets-filter-estado"]').forEach(function(b){
     b.addEventListener("click", function(){
       UI.ticketsExplorer.estado = b.getAttribute("data-value");
@@ -9120,17 +9960,31 @@ function wireEvents(){
        elemento recién se acaba de crear en este mismo ciclo. */
     ticketsExplorerScrollEl.scrollTop = UI.ticketsExplorer.scrollTop || 0;
   }
-  /* Vista Detalles: la fila entera abre el ticket (mismo openTicketById de
-     siempre) para que hacer clic en cualquier celda funcione como en una
-     tabla normal, pero SIN duplicar el disparo cuando el clic cae dentro
-     del <button data-action="open-ticket"> de la celda "Ticket" — ese botón
-     ya está cableado arriba por el querySelectorAll genérico de
-     [data-action="open-ticket"], así que aquí se ignora explícitamente
-     cualquier clic que venga de un <button> para no llamar openTicketById
-     dos veces (una desde el botón, otra desde la fila). */
-  root.querySelectorAll(".tickets-details-row").forEach(function(tr){
+  /* §27-30: Vista Detalles — la fila YA NO abre el ticket completa; cada
+     celda actúa sola. "#folio ↗" (data-action="open-ticket") es la ÚNICA
+     forma de entrar al ticket completo desde aquí — ya está cableada por el
+     querySelectorAll genérico de [data-action="open-ticket"] más abajo, así
+     que no hace falta ningún listener a nivel de fila. */
+  root.querySelectorAll('[data-action="details-cell-modal"]').forEach(function(b){
+    b.addEventListener("click", function(){ openCellEditor(b.getAttribute("data-kind"), b.getAttribute("data-ticket")); });
+  });
+  root.querySelectorAll('[data-action="details-cell-inline"]').forEach(function(b){
+    b.addEventListener("click", function(){ openDetailsCellEdit(b.getAttribute("data-ticket"), b.getAttribute("data-field")); });
+  });
+  /* Vista Lista (§24-26/§63-65): fila completa abre el ticket — es su rol
+     (supervisar/escanear, no editar), a diferencia de Detalles. tabindex=0 +
+     role="button" en el <tr> (puesto en el render) más Enter/Espacio aquí
+     hacen que sea alcanzable y accionable por teclado igual que un botón
+     nativo, sin construir un sistema de foco aparte. */
+  root.querySelectorAll(".tickets-list-row").forEach(function(tr){
     tr.addEventListener("click", function(e){
       if(e.target.closest("button")) return;
+      openTicketById(tr.getAttribute("data-id"));
+    });
+    tr.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      if(e.target !== tr) return;
+      e.preventDefault();
       openTicketById(tr.getAttribute("data-id"));
     });
   });
@@ -9504,6 +10358,38 @@ function wireEvents(){
   if(totalPedidoOverlay){
     totalPedidoOverlay.addEventListener("click", function(e){ if(e.target === totalPedidoOverlay) closeTotalPedidoEditor(); });
   }
+  var contactPanelOverlay = document.getElementById("contact-panel-overlay");
+  if(contactPanelOverlay){
+    contactPanelOverlay.addEventListener("click", function(e){ if(e.target === contactPanelOverlay) closeContactPanel(); });
+  }
+  var cellEditorOverlay = document.getElementById("cell-editor-overlay");
+  if(cellEditorOverlay){
+    cellEditorOverlay.addEventListener("click", function(e){ if(e.target === cellEditorOverlay) closeCellEditor(); });
+  }
+  var markerPickerOverlay = document.getElementById("marker-picker-overlay");
+  if(markerPickerOverlay){
+    markerPickerOverlay.addEventListener("click", function(e){ if(e.target === markerPickerOverlay) closeMarkerPicker(); });
+  }
+  /* §51-52: overlay standalone de foto de Miniaturas — mismo criterio de
+     cierre que closeComposerOverlay() ya usa en todos lados (no cierra
+     mientras sube, sección "nunca perder una subida en curso"). */
+  var thumbPhotoOverlay = document.getElementById("tickets-thumb-photo-overlay");
+  if(thumbPhotoOverlay){
+    thumbPhotoOverlay.addEventListener("click", function(e){ if(e.target === thumbPhotoOverlay){ if(closeComposerOverlay()) render(); } });
+  }
+  /* Buscador del picker "cliente" del editor central (§42): mismo patrón que
+     tickets-explorer-search — recupera foco+cursor tras el render para que
+     escribir varias letras seguidas no se sienta interrumpido. Nunca un
+     segundo rankClientes/algoritmo de búsqueda. */
+  var cellEditorClienteSearch = document.getElementById("cell-editor-cliente-search");
+  if(cellEditorClienteSearch){
+    cellEditorClienteSearch.addEventListener("input", function(){
+      UI.cellEditor.query = cellEditorClienteSearch.value;
+      render();
+      var again = document.getElementById("cell-editor-cliente-search");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
   var bugreportFileInput = document.getElementById("bugreport-screenshot-input");
   if(bugreportFileInput){
     bugreportFileInput.addEventListener("change", function(){
@@ -9656,6 +10542,11 @@ document.addEventListener("click", function(e){
   if(clienteLinkBtn){
     var linkTicket = findTicket(clienteLinkBtn.getAttribute("data-ticket"));
     var linkCliente = STATE.clientes.filter(function(c){ return c.id === clienteLinkBtn.getAttribute("data-client-id"); })[0];
+    /* §31/§42: cuando este botón viene del picker "cliente" de Detalles/Quick
+       Edit (mismo botón, mismo linkClienteToTicket de siempre — cero lógica
+       nueva de vinculación), vincular cierra el picker; el picker de /cliente
+       dentro del compositor no usa UI.cellEditor así que esto no le afecta. */
+    if(UI.cellEditor && UI.cellEditor.kind === "cliente" && linkTicket && UI.cellEditor.ticketId === linkTicket.id) UI.cellEditor = null;
     if(linkTicket && linkCliente) linkClienteToTicket(linkTicket, linkCliente);
     return;
   }
@@ -9663,9 +10554,126 @@ document.addEventListener("click", function(e){
   if(openFichaBtn){
     var fichaClientId = openFichaBtn.getAttribute("data-client-id");
     var fichaFromTicket = openFichaBtn.getAttribute("data-ticket") || null;
+    /* "Ver cliente completo →" del Contact Panel navega a la ficha completa —
+       el panel nunca debe quedar abierto encima de esa vista. */
+    UI.contactPanel = null;
     openClienteFicha(fichaClientId, { fromTicketId: fichaFromTicket });
     return;
   }
+  var openContactBtn = e.target.closest && e.target.closest('[data-action="open-contact-panel"]');
+  if(openContactBtn){
+    openContactPanel(openContactBtn.getAttribute("data-client-id"), openContactBtn.getAttribute("data-ticket"));
+    return;
+  }
+  var closeContactBtn = e.target.closest && e.target.closest('[data-action="contact-panel-close"]');
+  if(closeContactBtn){ closeContactPanel(); return; }
+  /* §42/§49: acciones del editor central de celda — cada una llama al MISMO
+     core que ya usaba cualquier otro camino (marcarEntregadoCore/
+     deshacerEntregaCore/openCierreModalForTicket/addProductoCore/
+     addPagoCore), esta capa solo decide cuándo cerrarse. */
+  var cellEditorCloseBtn = e.target.closest && e.target.closest('[data-action="cell-editor-close"]');
+  if(cellEditorCloseBtn){ closeCellEditor(); return; }
+  var cellEditorAddProductoBtn = e.target.closest && e.target.closest('[data-action="cell-editor-add-producto"]');
+  if(cellEditorAddProductoBtn){
+    var addT = findTicket(cellEditorAddProductoBtn.getAttribute("data-ticket"));
+    var descEl = document.getElementById("cell-editor-add-desc");
+    var cantEl = document.getElementById("cell-editor-add-cant");
+    var precioEl = document.getElementById("cell-editor-add-precio");
+    var desc = descEl ? descEl.value.trim() : "";
+    var cantidad = cantEl ? parseFloat(cantEl.value) : NaN;
+    var precio = (precioEl && precioEl.value !== "") ? parseFloat(precioEl.value) : null;
+    if(!desc){ showToast("Escribe una descripción."); return; }
+    if(!cantidad || cantidad <= 0) cantidad = 1;
+    if(addT) addProductoCore(addT, desc, cantidad, precio);
+    return;
+  }
+  var cellEditorEntregadoBtn = e.target.closest && e.target.closest('[data-action="cell-editor-marcar-entregado"]');
+  if(cellEditorEntregadoBtn){
+    var entT = findTicket(cellEditorEntregadoBtn.getAttribute("data-ticket"));
+    closeCellEditor();
+    UI.ticketsExplorer.thumbMoreTicketId = null; // §53: mismo botón reusado dentro del ⋯ de Miniaturas
+    if(entT) marcarEntregadoCore(entT);
+    return;
+  }
+  var cellEditorDeshacerBtn = e.target.closest && e.target.closest('[data-action="cell-editor-deshacer-entrega"]');
+  if(cellEditorDeshacerBtn){
+    var undT = findTicket(cellEditorDeshacerBtn.getAttribute("data-ticket"));
+    closeCellEditor();
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    if(undT) deshacerEntregaCore(undT);
+    return;
+  }
+  var cellEditorCierreBtn = e.target.closest && e.target.closest('[data-action="cell-editor-abrir-cierre"]');
+  if(cellEditorCierreBtn){
+    var cierreTicketId = cellEditorCierreBtn.getAttribute("data-ticket");
+    closeCellEditor();
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    openCierreModalForTicket(cierreTicketId);
+    return;
+  }
+  var cellEditorAddPagoBtn = e.target.closest && e.target.closest('[data-action="cell-editor-add-pago"]');
+  if(cellEditorAddPagoBtn){
+    var pagoT = findTicket(cellEditorAddPagoBtn.getAttribute("data-ticket"));
+    var montoEl = document.getElementById("cell-editor-pago-monto");
+    var conceptoEl = document.getElementById("cell-editor-pago-concepto");
+    var monto = montoEl ? parseFloat(montoEl.value) : NaN;
+    if(!monto || monto <= 0){ showToast("Escribe un monto válido."); return; }
+    if(pagoT) addPagoCore(pagoT, monto, todayLocalYYYYMMDD(), "", conceptoEl ? conceptoEl.value.trim() : "");
+    return;
+  }
+  var cellEditorAddMarkerBtn = e.target.closest && e.target.closest('[data-action="cell-editor-add-marker"]');
+  if(cellEditorAddMarkerBtn){
+    var markT = cellEditorAddMarkerBtn.getAttribute("data-ticket");
+    closeCellEditor();
+    openMarkerPicker("manual", { ticketId: markT });
+    return;
+  }
+  /* §42-49: Editar de la franja de acciones de Miniaturas abre Quick Edit —
+     el MISMO editor central de celda (§42), kind "quickedit". */
+  var thumbEditBtn = e.target.closest && e.target.closest('[data-action="cell-editor-open-quickedit"]');
+  if(thumbEditBtn){ openCellEditor("quickedit", thumbEditBtn.getAttribute("data-ticket")); return; }
+  /* §42-45: seleccionar/deseleccionar una tarjeta de Miniaturas — nunca abre
+     el ticket, nunca dispara pendingFocus (mismo criterio "leer y navegar"
+     de Mobile Reading Mode: un tap sobre la tarjeta es lectura, no
+     escritura). Tocar otra tarjeta reemplaza la selección; tocar la misma
+     otra vez deselecciona. */
+  var thumbSelectBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-select"]');
+  if(thumbSelectBtn){
+    var thumbId = thumbSelectBtn.getAttribute("data-id");
+    UI.ticketsExplorer.selectedCardId = (UI.ticketsExplorer.selectedCardId === thumbId) ? null : thumbId;
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    render();
+    return;
+  }
+  /* §53: menú "⋯" — mismo alternar abierto/cerrado que el resto de la app. */
+  var thumbMoreBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-more"]');
+  if(thumbMoreBtn){
+    var moreId = thumbMoreBtn.getAttribute("data-id");
+    UI.ticketsExplorer.thumbMoreTicketId = (UI.ticketsExplorer.thumbMoreTicketId === moreId) ? null : moreId;
+    render();
+    return;
+  }
+  /* §56: "Marcar como…" del ⋯ — MISMO selector manual de marcador que
+     Detalles/cellEditor (openMarkerPicker ya excluye 🛒 Ordenar de
+     MARKER_TYPES por construcción, nunca una segunda lista). */
+  var thumbMarcarBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-marcar"]');
+  if(thumbMarcarBtn){
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    openMarkerPicker("manual", { ticketId: thumbMarcarBtn.getAttribute("data-id") });
+    return;
+  }
+  /* §57: Fijar/Desfijar del ⋯ — MISMO togglePin() genérico de siempre, solo
+     que este botón vive dentro de un menú que también hay que cerrar. */
+  var thumbPinBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-pin"]');
+  if(thumbPinBtn){
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    togglePin(thumbPinBtn.getAttribute("data-id"));
+    return;
+  }
+  /* §51-52: "📷" de la franja de acciones — overlay standalone del MISMO
+     pipeline de fotos de siempre (ver openTicketsThumbPhoto arriba). */
+  var thumbPhotoBtn = e.target.closest && e.target.closest('[data-action="tickets-thumb-photo"]');
+  if(thumbPhotoBtn){ openTicketsThumbPhoto(thumbPhotoBtn.getAttribute("data-ticket")); return; }
   var historiaFilterBtn = e.target.closest && e.target.closest('[data-action="cliente-historia-filter"]');
   if(historiaFilterBtn){
     UI.clienteHistoriaFilter = historiaFilterBtn.getAttribute("data-filter");
@@ -9714,6 +10722,21 @@ document.addEventListener("click", function(e){
      de marcador del sidebar si estaba abierto. */
   if(UI.sidebarMarkerPopover && !(e.target.closest && e.target.closest(".ticket-marker-icon-wrap"))){
     closeSidebarMarkerPopover();
+  }
+  /* §58: clic fuera de CUALQUIER tarjeta de Miniaturas deselecciona (y
+     cierra el menú "⋯" si estaba abierto) — mismo patrón "revisar al final
+     del delegado" que el popover del compositor y el de marcador del
+     sidebar, arriba. Acotado a cuando Miniaturas realmente está en
+     pantalla (Tickets sin ticket abierto, vista thumbnails): la selección
+     SÍ debe sobrevivir mientras el usuario está dentro de un ticket que
+     abrió desde ahí (§85-88, "volver preserva"), así que esta limpieza
+     nunca debe dispararse solo porque no hay tarjetas en la vista actual. */
+  if(UI.mainView === "tickets" && !UI.selectedTicketId && (UI.ticketsView || "thumbnails") === "thumbnails" &&
+     (UI.ticketsExplorer.selectedCardId || UI.ticketsExplorer.thumbMoreTicketId) &&
+     !(e.target.closest && e.target.closest(".tickets-thumb-card"))){
+    UI.ticketsExplorer.selectedCardId = null;
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    render();
   }
 }, true);
 
@@ -9782,6 +10805,24 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.helpPanelOpen){ closeHelpPanel(); return; }
   if(e.key === "Escape" && UI.totalDraft){ closeTotalPedidoEditor(); return; }
   if(e.key === "Escape" && UI.bibliotecaViewer){ closeBibliotecaViewer(); return; }
+  if(e.key === "Escape" && UI.contactPanel){ closeContactPanel(); return; }
+  if(e.key === "Escape" && UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return; }
+  if(e.key === "Escape" && UI.cellEditor){ closeCellEditor(); return; }
+  /* §51-52: overlay standalone de foto de Miniaturas — mismo criterio que
+     el botón de cerrar (nunca a medio subir). */
+  if(e.key === "Escape" && UI.photoBatch && UI.photoBatch.ticketId){ if(closeComposerOverlay()) render(); return; }
+  /* §58: Escape también deselecciona una tarjeta de Miniaturas (y cierra su
+     menú "⋯") — mismo contrato global de teclado que el resto de la app. */
+  if(e.key === "Escape" && UI.mainView === "tickets" && !UI.selectedTicketId &&
+     (UI.ticketsExplorer.selectedCardId || UI.ticketsExplorer.thumbMoreTicketId)){
+    UI.ticketsExplorer.selectedCardId = null;
+    UI.ticketsExplorer.thumbMoreTicketId = null;
+    render();
+    return;
+  }
+  /* Escape/flechas/Enter del selector de marcador (cualquier fuente,
+     incluida "manual") ya viven en el bloque genérico UI.markerPicker más
+     abajo en este mismo handler — no se duplica aquí. */
   /* §44: Total del pedido también entra al contrato global de teclado —
      Enter aplica (mismo core que el botón "Aplicar", §43), Esc cancela (ya
      arriba). No se intercepta si el foco está en un campo de precio Y el
