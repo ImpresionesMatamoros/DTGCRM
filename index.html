@@ -16,7 +16,27 @@
      de Supabase — cachear el shell de forma agresiva arriesga mostrar datos
      desactualizados sin necesidad real (no hay caso de uso offline). -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Ronda "PWA iPhone + Tickets + Biblioteca" — Bug A confirmado por QA físico
+     (Martín, iPhone real): con "black-translucent" el WebView de la PWA
+     instalada se extiende DEBAJO de la barra de estado de iOS (hora, notch/
+     Dynamic Island, señal, WiFi, batería) y el contenido del CRM puede
+     dibujarse en esa misma zona si algún contenedor no aplicó su padding de
+     safe-area — y eso es justo lo que se veía en las capturas físicas. Con
+     "black" iOS RESERVA físicamente el alto de la barra de estado (área
+     opaca) y el viewport del WebView empieza debajo de esa reserva — el
+     contenido del CRM ya no puede dibujarse ahí sin importar si algún
+     componente se olvida de padding-top, porque el sistema nunca le da esa
+     zona en primer lugar. Es la alternativa más robusta (soluciona la clase
+     completa de bug, no un padding por componente) y "black" es coherente
+     con el tema oscuro por defecto de la app. env(safe-area-inset-top)
+     pasa a reportar 0 en standalone bajo "black" (la zona ya no es "insegura"
+     porque el sistema la reservó) — el padding-top:var(--safe-top) que ya
+     existe en el resto del archivo simplemente colapsa a 0 solo, sin doble
+     padding y sin tener que tocar cada selector. safe-bottom/left/right
+     (home indicator, notch en landscape) siguen aplicando igual, esos NO
+     dependían de este meta tag. Requiere reinstalar la PWA para que el
+     cambio de metadata surta efecto — ver QA MANUAL. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Design To Go">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
@@ -115,6 +135,11 @@ button{cursor:pointer;}
 .sidebar{
   width:290px; flex-shrink:0; background:var(--surface-2); border-right:1px solid var(--border);
   display:flex; flex-direction:column; height:100%;
+  /* Mismo razonamiento que .main de arriba: 0 en desktop real, protege el
+     caso iPad/iPhone-landscape-ancho en PWA donde .sidebar es un panel fijo
+     visible en flujo (no el drawer superpuesto) y por lo tanto NO se
+     beneficia del padding-top de .main (es su hermano, no su hijo). */
+  padding-top:var(--safe-top);
 }
 .sidebar-top{padding:14px 14px 10px; display:flex; flex-direction:column; gap:8px;}
 .brand{
@@ -202,7 +227,12 @@ button{cursor:pointer;}
    puede recortar un tooltip position:absolute si el icono está muy cerca
    del borde inferior/superior visible. Con z-index alto y max-width chico
    el caso práctico es raro (el tooltip es angosto y bajo), así que se
-   acepta el riesgo en vez de reposicionar por JS — ver QA MANUAL. */
+   acepta el riesgo en vez de reposicionar por JS — ver QA MANUAL.
+   Ronda "PWA+Tickets+Biblioteca": renderSidebarMarkerIcons() se reutiliza
+   tal cual dentro de las 4 vistas de Tickets (.tickets-explorer-scroll
+   también es overflow-y:auto), así que el mismo riesgo aceptado aplica ahí
+   — nunca se justificó construir un mecanismo de reposicionamiento nuevo
+   solo para esta ronda. */
 .ticket-marker-tip{
   position:absolute; left:0; top:22px; z-index:60; background:var(--surface); color:var(--text);
   border:1px solid var(--border); border-radius:var(--radius-s); box-shadow:var(--shadow);
@@ -342,7 +372,19 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .hist-total{color:var(--text-muted); font-weight:600;}
 
 /* ---------- main ---------- */
-.main{flex:1; display:flex; flex-direction:column; min-width:0; height:100%; position:relative;}
+/* Ronda "PWA iPhone + Tickets + Biblioteca": padding-top:var(--safe-top) es
+   0 en cualquier navegador de escritorio real (sin notch, env() no reporta
+   nada) — así que esto es un no-op ahí, cero riesgo visual. Donde SÍ importa
+   es en un iPad o un iPhone grande en landscape corriendo como PWA
+   standalone: en ese ancho, la app cae al layout "desktop" (sidebar fijo
+   siempre visible, SIN .mobile-topbar, que es quien reserva la safe-area en
+   el layout móvil) — sin esto, el contenido de renderMain() (cabecera del
+   ticket, Clientes, Inicio…) podía empezar debajo del notch/Dynamic Island
+   en esa combinación específica, un hueco real que el fix anterior (solo
+   dentro de @media max-width:880px) no cubría. Única fuente de la reserva
+   superior para TODO lo que .main contiene — .mobile-topbar abajo ya NO
+   duplica su propio safe-top, para no aplicarlo dos veces en mobile. */
+.main{flex:1; display:flex; flex-direction:column; min-width:0; height:100%; position:relative; padding-top:var(--safe-top);}
 .readonly-banner{
   background:var(--gold-soft); color:var(--gold); font-size:12.5px; font-weight:600;
   padding:7px 20px; border-bottom:1px solid var(--border); text-align:center;
@@ -597,6 +639,10 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .help-cmd-btn:hover, .help-example-btn:hover{background:var(--surface-3); border-color:var(--accent);}
 .help-cmd-btn code{font-family:var(--font-mono); color:var(--accent); flex-shrink:0;}
 .help-cmd-btn .desc{color:var(--text-muted);}
+/* Auditoría keyboard-first: ítem "seleccionado" de una lista de varias
+   coincidencias (/cliente, /editarcliente) — visible SIEMPRE, nunca solo
+   en :hover, igual criterio que .slash-menu-item.active/.marker-picker-item.active. */
+.help-cmd-btn.active{background:var(--accent-soft); border-color:var(--accent);}
 
 /* Ronda "Fluidez, Confiabilidad, Realtime y QA" §1: panel global "?" —
    reutiliza .cierre-modal/.cierre-modal-title/.popover-actions tal cual
@@ -878,6 +924,164 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
 
+/* ---------- sección Tickets — explorador general (Bug B) ----------
+   Móvil/tablet/desktop desde el inicio vía CSS Grid con auto-fill/minmax:
+   el número de columnas se resuelve solo según el ancho disponible, sin
+   necesidad de reglas por breakpoint aparte para Miniaturas/Iconos — un
+   iPhone angosto cae solo en 2 columnas (Miniaturas) o 4 (Iconos), un
+   iPad/desktop ancho cae solo en más columnas. Solo Lista y Detalles
+   necesitan ajustes explícitos dentro del @media(max-width:880px) de abajo,
+   porque una fila/tabla no se "acomoda sola" igual que una grilla. */
+.tickets-explorer{display:flex; flex-direction:column; flex:1; min-height:0;}
+.tickets-toolbar{
+  border-bottom:1px solid var(--border); background:var(--surface); padding:10px 22px;
+  display:flex; flex-direction:column; gap:8px; flex-shrink:0;
+}
+.tickets-toolbar-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.tickets-search-wrap{flex:1; min-width:200px; max-width:420px;}
+.tickets-view-switch{
+  display:inline-flex; align-items:center; gap:2px; background:var(--surface-2);
+  border:1px solid var(--border); border-radius:999px; padding:2px; flex-shrink:0;
+}
+.tickets-view-btn{
+  background:none; border:none; padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
+  color:var(--text-muted); white-space:nowrap;
+}
+.tickets-view-btn:hover{color:var(--text);}
+.tickets-view-btn.active{background:var(--surface); color:var(--text); box-shadow:var(--shadow);}
+.tickets-filters-row{justify-content:space-between;}
+.tickets-filter-chips{display:flex; align-items:center; gap:4px; flex-wrap:wrap;}
+.tickets-filter-chip{
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text-muted);
+  border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;
+}
+.tickets-filter-chip:hover{background:var(--surface-3); color:var(--text);}
+.tickets-filter-chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+.tickets-filter-marker{
+  padding:4px 8px; font-size:13px; line-height:1; display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; box-sizing:border-box;
+}
+.tickets-filter-sep{width:1px; height:16px; background:var(--border); margin:0 4px; flex-shrink:0;}
+.tickets-filter-selects{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.tickets-filter-select{
+  border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--radius-s);
+  padding:5px 8px; font-size:12px; max-width:160px;
+}
+.tickets-toolbar-count{font-size:11.5px; color:var(--text-faint);}
+.tickets-explorer-scroll{flex:1; min-height:0; overflow-y:auto; padding:16px 22px; padding-bottom:calc(16px + var(--safe-bottom));}
+.tickets-empty{padding:40px 10px;}
+
+/* ---- Vista Miniaturas: prioridad visual, foto real > logo > iniciales ---- */
+.tickets-grid-thumb{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;}
+.tickets-thumb-card{
+  display:flex; flex-direction:column; text-align:left; border:1px solid var(--border); border-radius:var(--radius-m);
+  background:var(--surface); overflow:hidden; padding:0; cursor:pointer;
+}
+.tickets-thumb-card:hover, .tickets-thumb-card:focus-visible{box-shadow:var(--shadow); border-color:var(--text-faint);}
+/* Spotlight (§ identidad): un aro sutil con el color del cliente — nunca
+   compite con los marcadores operativos, que siguen viviendo encima en
+   .tickets-thumb-markers con su propio fondo opaco. */
+.tickets-thumb-card.tickets-card-spotlight{box-shadow:0 0 0 2px var(--cid-color);}
+.tickets-thumb-media{
+  position:relative; aspect-ratio:4/3; background:var(--surface-2); display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.tickets-thumb-photo{width:100%; height:100%; object-fit:cover; display:block;}
+.tickets-thumb-media-fallback .client-avatar{width:52px; height:52px; font-size:18px;}
+.tickets-thumb-noimg{font-size:26px; opacity:.35;}
+.tickets-thumb-markers{
+  position:absolute; top:6px; right:6px; display:inline-flex; gap:2px; background:rgba(0,0,0,.45);
+  border-radius:999px; padding:2px 3px;
+}
+.tickets-thumb-markers .ticket-marker-icon{color:#fff;}
+.tickets-thumb-markers .ticket-marker-icon:hover, .tickets-thumb-markers .ticket-marker-icon:focus-visible{background:rgba(255,255,255,.25);}
+.tickets-thumb-body{display:flex; flex-direction:column; gap:2px; padding:8px 10px 10px;}
+.tickets-thumb-cliente{font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tickets-thumb-meta-row{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.tickets-thumb-folio{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint);}
+.tickets-thumb-work{font-size:11.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tickets-thumb-activity{font-size:10px; color:var(--text-faint);}
+
+/* ---- Vista Iconos: más densa, para escanear muchos tickets ---- */
+.tickets-grid-icons{display:grid; grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); gap:10px;}
+.tickets-icon-card{
+  display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; border:none; background:none;
+  padding:8px 4px; border-radius:var(--radius-m); cursor:pointer;
+}
+.tickets-icon-card:hover, .tickets-icon-card:focus-visible{background:var(--surface-2);}
+.tickets-icon-avatar-wrap{position:relative;}
+.tickets-icon-markers{
+  position:absolute; top:-4px; right:-6px; display:inline-flex; gap:1px; background:var(--surface);
+  border-radius:999px; padding:1px 2px; box-shadow:var(--shadow);
+}
+.tickets-icon-cliente{font-size:11px; font-weight:600; max-width:78px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tickets-icon-meta{display:flex; align-items:center; justify-content:center; gap:4px; font-size:10px; color:var(--text-faint);}
+
+/* ---- Vista Lista: fila compacta operacional ---- */
+.tickets-list{display:flex; flex-direction:column; gap:1px;}
+.tickets-list-row{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:none; background:none;
+  padding:8px 10px; border-radius:var(--radius-s); cursor:pointer;
+}
+.tickets-list-row:hover, .tickets-list-row:focus-visible{background:var(--surface-2);}
+.tickets-list-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); flex-shrink:0; width:44px;}
+.tickets-list-cliente{font-weight:600; font-size:13px; flex-shrink:0; max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tickets-list-work{flex:1; min-width:0; font-size:12px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tickets-list-estado{flex-shrink:0;}
+.tickets-list-markers{flex-shrink:0; display:inline-flex; gap:1px;}
+
+/* ---- Vista Detalles: tabla en desktop, cards en mobile vía data-label
+   (ver @media(max-width:880px) abajo) — mismo HTML/datos siempre. ---- */
+.tickets-details-wrap{overflow-x:auto;}
+.tickets-details{width:100%; border-collapse:collapse; font-size:12.5px;}
+.tickets-details thead th{
+  text-align:left; padding:8px 10px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
+  color:var(--text-faint); border-bottom:1px solid var(--border); white-space:nowrap;
+}
+.tickets-details-row{border-bottom:1px solid var(--border); cursor:pointer;}
+.tickets-details-row:hover{background:var(--surface-2);}
+.tickets-details-row td{padding:7px 10px; vertical-align:middle; white-space:nowrap;}
+.tickets-details-open{
+  background:none; border:none; font-family:var(--font-mono); font-weight:700; color:var(--accent-ink);
+  cursor:pointer; padding:2px 0;
+}
+.tickets-details-cliente{font-weight:600;}
+.tickets-details-muted{color:var(--text-faint);}
+.tickets-details-pending{color:var(--gold); font-size:11px;}
+
+/* ---------- sección Biblioteca — memoria visual ----------
+   Reutiliza .tickets-toolbar/.tickets-explorer-scroll/.tickets-filter-*
+   (misma familia visual que Tickets, sección de arriba) — solo la grilla y
+   el visor son nuevos. auto-fill/minmax da "3 columnas-ish" en un iPhone
+   angosto y más columnas solas en tablet/desktop, sin reglas @media
+   aparte para el grid en sí. */
+.biblioteca-day-label{
+  font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);
+  font-weight:600; padding:14px 2px 8px;
+}
+.biblioteca-day-label:first-child{padding-top:2px;}
+.biblioteca-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:6px; margin-bottom:6px;}
+.biblioteca-tile{
+  position:relative; aspect-ratio:1/1; border:none; padding:0; border-radius:var(--radius-s); overflow:hidden;
+  background:var(--surface-2); cursor:pointer;
+}
+.biblioteca-tile:hover, .biblioteca-tile:focus-visible{box-shadow:0 0 0 2px var(--accent) inset;}
+.biblioteca-tile-img{width:100%; height:100%; object-fit:cover; display:block;}
+.biblioteca-tile-logo{
+  aspect-ratio:auto; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  padding:12px 6px; background:var(--surface);
+}
+.biblioteca-tile-logo .client-avatar{width:44px; height:44px;}
+.biblioteca-tile-logo-label{font-size:10px; color:var(--text-muted); text-align:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.biblioteca-empty{padding:40px 10px;}
+.biblioteca-viewer-modal{max-width:420px; position:relative;}
+.biblioteca-viewer-close{position:absolute; top:8px; right:8px; font-size:20px; line-height:1; z-index:1;}
+.biblioteca-viewer-media{
+  width:100%; border-radius:var(--radius-m); overflow:hidden; background:var(--surface-2);
+  display:flex; align-items:center; justify-content:center; max-height:50vh;
+}
+.biblioteca-viewer-media img{max-width:100%; max-height:50vh; object-fit:contain; display:block;}
+
 @media (max-width: 880px){
   /* Addendum §3: el cajón (drawer) del sidebar ya existía de una ronda
      anterior — aquí solo se audita/pule: ancho completo hasta un tope
@@ -887,13 +1091,22 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .sidebar{
     position:fixed; inset:0 auto 0 0; z-index:30; transform:translateX(-100%); transition:transform .18s ease;
     width:min(86vw, 340px);
-    padding-left:var(--safe-left); padding-bottom:var(--safe-bottom);
+    /* Bug A (QA físico iPhone): a diferencia de .mobile-topbar, el drawer es
+       su PROPIO position:fixed de pantalla completa — nunca hereda el
+       padding-top de .mobile-topbar porque no está dentro de su flujo
+       normal. Sin este padding-top, el primer elemento del drawer (buscador/
+       primer ítem de navegación) empezaba literalmente debajo de la hora/
+       notch al abrirlo. */
+    padding-top:var(--safe-top); padding-left:var(--safe-left); padding-bottom:var(--safe-bottom);
   }
   .sidebar.open{transform:translateX(0);}
   .sidebar-toggle{display:inline-flex!important;}
   .mobile-topbar{display:flex!important;}
   .sidebar-backdrop{display:block!important;}
-  .mobile-topbar{padding-top:calc(10px + var(--safe-top)); padding-left:calc(16px + var(--safe-left)); padding-right:calc(16px + var(--safe-right));}
+  /* padding-top ya NO suma --safe-top aquí: .main (su padre) ya reserva esa
+     zona una sola vez para todo lo que contiene, mobile-topbar incluido —
+     sumarlo también aquí sería doble padding. */
+  .mobile-topbar{padding-top:10px; padding-left:calc(16px + var(--safe-left)); padding-right:calc(16px + var(--safe-right));}
 
   /* Addendum §4: cualquier input/select/textarea por debajo de 16px de
      font-size dispara el auto-zoom de iOS Safari al enfocarlo (comportamiento
@@ -966,6 +1179,40 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .th-expanded .comanda-secondary-btn{ display:none; }
   .th-expanded.th-more-open .ticket-header-actions{ display:flex!important; }
   .th-expanded.th-more-open .comanda-secondary-btn{ display:inline-flex!important; }
+
+  /* Tickets — explorador: Miniaturas/Iconos ya se acomodan solos vía
+     auto-fill/minmax (ver regla base, sin @media). Lista y Detalles SÍ
+     necesitan ayuda explícita aquí porque una fila/tabla no se reacomoda
+     sola en un ancho angosto. */
+  .tickets-toolbar{ padding:10px 16px; }
+  .tickets-explorer-scroll{ padding:14px 16px; padding-bottom:calc(14px + var(--safe-bottom)); }
+  .tickets-search-wrap{ min-width:0; flex-basis:100%; max-width:none; }
+  .tickets-filter-selects{ width:100%; }
+  .tickets-filter-select{ flex:1; min-width:100px; max-width:none; }
+  /* Vista Lista: el resumen de trabajo pasa a su propia línea completa en
+     vez de robarle espacio a folio/cliente/estado/marcadores, que son lo
+     que hace falta ver de un vistazo en una pantalla angosta. */
+  .tickets-list-row{ flex-wrap:wrap; row-gap:4px; }
+  .tickets-list-work{ order:5; flex-basis:100%; padding-left:calc(22px + 10px); }
+  /* Vista Detalles → cards en mobile (data-label + ::before): MISMO html/
+     datos que la tabla de escritorio, solo cambia cómo se lee — nunca una
+     quinta vista aparte. */
+  .tickets-details-wrap{ overflow-x:visible; }
+  .tickets-details thead{ display:none; }
+  .tickets-details, .tickets-details tbody, .tickets-details tr{ display:block; width:100%; }
+  .tickets-details-row{
+    display:block; border:1px solid var(--border); border-radius:var(--radius-m);
+    margin-bottom:8px; padding:2px 12px; background:var(--surface);
+  }
+  .tickets-details-row td{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px solid var(--border); white-space:normal; text-align:right;
+  }
+  .tickets-details-row td:last-child{ border-bottom:none; }
+  .tickets-details-row td::before{
+    content:attr(data-label); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--text-faint); font-weight:600; text-align:left; flex-shrink:0;
+  }
 }
 /* Addendum final §26: en mobile MUY angosto "Ver detalles"/"Ocultar
    detalles" puede no caber junto al resto de la barra superior — se acorta
@@ -1354,8 +1601,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.7.0";
-var APP_BUILD = "2026.09.05";
+var APP_VERSION = "0.8.0";
+var APP_BUILD = "2026.09.07";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -1421,6 +1668,12 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* Autocomplete predictivo de /cliente dentro del compositor (sección 1.2/6.2):
      mismo patrón de interacción que el menú de "/", pero para el argumento. */
   cliSuggestOpen: false, cliSuggestQuery: "", cliSuggestIndex: 0,
+  /* Ronda "PWA+Tickets+Biblioteca" — auditoría keyboard-first: navegación
+     con flechas sobre la lista de "varias coincidencias" de /cliente y
+     /editarcliente (antes solo se podía "tocar la correcta"). Ver
+     currentPickListEntry()/entryPickList() — { entryId, index }, null
+     cuando no hay ninguna lista de coincidencias activa. */
+  pickNav: null,
   /* Composer Intelligence §1: panel de "Usar como…" sobre texto plano —
      { text, actions } mientras está abierto, null cuando no. El texto vive
      AQUÍ (no solo en el DOM) porque una acción puede necesitar reconstruir
@@ -1472,7 +1725,17 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   markerPicker: null,
   /* §22-24: qué icono de marcador del sidebar tiene su popover abierto
      (hover desktop / tap mobile) — null = ninguno. { ticketId, markerId } */
-  sidebarMarkerPopover: null };
+  sidebarMarkerPopover: null,
+  /* Ronda "PWA + Tickets + Biblioteca": UI.ticketsView es preferencia LOCAL
+     persistida (ver loadUi/saveUi) — "cómo quiero ver mis tickets", no algo
+     por ticket. UI.ticketsExplorer/UI.biblioteca son estado de SESIÓN (no
+     localStorage): búsqueda/filtros/scroll de cada explorador sobreviven a
+     abrir un ticket/foto y volver, pero no tienen por qué sobrevivir a
+     cerrar la pestaña — no son una preferencia, son "dónde estabas". */
+  ticketsView: "thumbnails",
+  ticketsExplorer: { search:"", estado:"todos", marker:null, clienteId:null, responsable:"", fecha:"todas", scrollTop:0 },
+  biblioteca: { search:"", clienteId:null, fecha:"todas", subidoPor:"", soloLogos:false, scrollTop:0 },
+  bibliotecaViewer: null };
 var FATAL_ERROR = null;
 var signedUrlCache = {};
 /* Escape en el input de teléfono/email de la ficha del cliente cierra la
@@ -1637,13 +1900,20 @@ function loadUi(){
       UI.mainView = parsed.mainView || null;
       UI.selectedClienteId = parsed.selectedClienteId || null;
       UI.clienteReturnTicketId = parsed.clienteReturnTicketId || null;
+      /* Ronda "PWA + Tickets + Biblioteca": única preferencia nueva que se
+         persiste — validada contra la lista real de vistas para que un
+         valor viejo/corrupto en localStorage nunca deje la app en una vista
+         inexistente (cae a "thumbnails", el default de siempre). */
+      var validViews = { thumbnails:1, icons:1, list:1, details:1 };
+      UI.ticketsView = validViews[parsed.ticketsView] ? parsed.ticketsView : "thumbnails";
     }
   }catch(e){}
   try{ UI.whoami = localStorage.getItem("dtg_whoami") || ""; }catch(e){ UI.whoami = ""; }
 }
 function saveUi(){
   try{ localStorage.setItem("dtg_ui", JSON.stringify({selectedTicketId:UI.selectedTicketId, search:UI.search,
-    mainView:UI.mainView, selectedClienteId:UI.selectedClienteId, clienteReturnTicketId:UI.clienteReturnTicketId})); }catch(e){}
+    mainView:UI.mainView, selectedClienteId:UI.selectedClienteId, clienteReturnTicketId:UI.clienteReturnTicketId,
+    ticketsView:UI.ticketsView})); }catch(e){}
 }
 function saveWhoami(v){
   UI.whoami = v;
@@ -1954,6 +2224,7 @@ function openTicketById(id){
   resetPhotoBatch();
   UI.headerMoreOpen = false;
   UI.headerEditField = null;
+  UI.bibliotecaViewer = null; /* "Abrir ticket" desde el visor de Biblioteca no debe dejar el visor flotando encima del ticket abierto */
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false; /* en móvil el sidebar es un cajón: elegir un ticket lo cierra */
   saveUi();
@@ -2030,6 +2301,30 @@ function goToCxc(){
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
+/* Bug B ("no existe el explorador general de tickets"): mismo patrón exacto
+   que las otras vistas de arriba — un solo punto de entrada, ningún modelo
+   de datos nuevo. A diferencia de esas, NO se resetea UI.ticketsExplorer
+   (búsqueda/filtros/scroll) al entrar — entrar "de nuevo" a Tickets desde
+   el nav-stub conserva lo último que se buscó/filtró, y abrir un ticket
+   desde aquí y volver también, que es justo lo que pide la ronda ("Abrir y
+   regresar"). Solo /clear-equivalente sería resetearlo a mano, y no hay tal
+   comando — es intencional: es más útil recordar que olvidar. */
+function goToTickets(){
+  UI.selectedTicketId = null; UI.mainView = "tickets"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
+  UI.pendingFocus = { elId: "tickets-explorer-search" };
+  UI.sidebarOpen = false;
+  saveUi(); render();
+}
+/* Biblioteca: mismo criterio — no se resetea UI.biblioteca al entrar. */
+function goToBiblioteca(){
+  UI.selectedTicketId = null; UI.mainView = "biblioteca"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
+  UI.bibliotecaViewer = null;
+  UI.pendingFocus = { elId: "biblioteca-search" };
+  UI.sidebarOpen = false;
+  saveUi(); render();
+}
 
 /* opts.fromTicketId: cuando se entra desde el nombre del cliente en el
    encabezado de un ticket (sección 1.8) — permite mostrar "← Volver al
@@ -2051,6 +2346,7 @@ function openClienteFicha(clienteId, opts){
   UI.smartActions = null;
   resetPhotoBatch();
   UI.headerMoreOpen = false;
+  UI.bibliotecaViewer = null; /* mismo motivo que en openTicketById: "Abrir cliente" desde el visor no debe dejarlo flotando */
   UI.pendingFocus = "composer";
   UI.sidebarOpen = false;
   saveUi();
@@ -2343,7 +2639,7 @@ function renderSidebarList(){
    y se vuelven vistas reales (derivadas, sin tabla/módulo nuevo — igual que
    Clientes). Kanban e Informes siguen siendo stubs a propósito (V0.5 §24).
    "Tickets cerrados" es una entrada nueva, sin equivalente previo. */
-var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc"];
+var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca"];
 function renderSidebar(){
   var onOtherView = REAL_VIEWS.indexOf(UI.mainView) !== -1;
   return (
@@ -2356,6 +2652,8 @@ function renderSidebar(){
       "</div>" +
       '<ul class="nav-stubs">' +
         '<button class="nav-stub' + (!UI.selectedTicketId && !onOtherView?" active":"") + '" data-action="go-home"><span>Inicio</span><span class="kbd-hint">' + HOME_SHORTCUT_LABEL + '</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="tickets"?" active":"") + '" data-action="go-tickets"><span>Tickets</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="biblioteca"?" active":"") + '" data-action="go-biblioteca"><span>Biblioteca</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="atencion"?" active":"") + '" data-action="go-atencion"><span>Atención</span></button>' +
         '<button class="nav-stub" data-action="stub" data-name="Kanban"><span>Kanban</span><span class="tag">pronto</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="produccion"?" active":"") + '" data-action="go-produccion"><span>Producción</span></button>' +
@@ -3585,6 +3883,53 @@ function findClienteMatches(query){
   if(!q) return [];
   return rankClientes(q);
 }
+/* ---------------- Auditoría keyboard-first: navegar con flechas la lista
+   de "varias coincidencias" de /cliente y /editarcliente ----------------
+   Antes de esta ronda, esa lista SOLO podía resolverse tocándola (el propio
+   texto de la UI decía literalmente "toca la correcta") — sin equivalente
+   de teclado real más allá de Tab, que es incómodo para una lista larga.
+   Mismo patrón ya probado por UI.cliSuggestOpen/UI.smartActions: las
+   flechas mueven un índice, Enter llama al MISMO helper que ya usa el
+   click del botón (pushEphemeral/dismissEphemeral) — nunca una segunda
+   ruta de "confirmar". Se activa solo con el compositor vacío (ver el
+   keydown del compositor), justo el estado en el que queda tras
+   pushEphemeral, así que nunca roba flechas/Enter mientras se escribe algo
+   nuevo. */
+function currentPickListEntry(){
+  var scope = UI.selectedTicketId || null;
+  var candidates = UI.ephemeralLog.filter(function(e){
+    return e.ticketId === scope && (e.kind === "cliente" || e.kind === "editarcliente");
+  });
+  return candidates.length ? candidates[candidates.length - 1] : null;
+}
+function entryPickList(entry){
+  if(!entry || !entry.params) return null;
+  if(entry.kind === "cliente"){
+    if(entry.params.resolvedId) return null;
+    var query = entry.params.query || "";
+    /* Sin texto todavía = la lista de "clientes frecuentes" que ya muestra
+       clienteEntryContent (mismo rankClientes("") — nunca una segunda
+       fuente) — también es "seleccionar cliente", así que también navega
+       con flechas. */
+    var matches = query.trim() ? findClienteMatches(query) : rankClientes("").slice(0, 8);
+    if(matches.length <= 1) return null;
+    return { items: matches, pick: function(c){
+      pushEphemeral("cliente", entry.ticketId, { mode: entry.params.mode, resolvedId: c.id });
+    } };
+  }
+  if(entry.kind === "editarcliente"){
+    if(entry.params.targetId) return null;
+    var nameQuery = entry.params.nameQuery;
+    if(!nameQuery) return null;
+    var matches2 = findClienteMatches(nameQuery);
+    if(matches2.length <= 1) return null;
+    return { items: matches2, pick: function(c){
+      dismissEphemeral(entry.id);
+      pushEphemeral("editarcliente", entry.ticketId, { patch: entry.params.patch, targetId: c.id, nameQuery: null });
+    } };
+  }
+  return null;
+}
 function ticketsForCliente(c){
   return STATE.tickets.filter(function(t){ return t.clienteId === c.id; });
 }
@@ -3715,6 +4060,525 @@ function renderCxcPlaceholderView(){
   );
 }
 
+/* ================= TICKETS — explorador general (ronda "PWA + Tickets +
+   Biblioteca", Bug B) =================
+   NO es un modelo de datos paralelo: las 4 vistas leen exactamente
+   STATE.tickets vía las mismas funciones que ya usa el resto de la app
+   (ticketEstado/ticketIsCerrado/activeMarkers/computeTotals/clientAvatar/
+   findCliente/ticketOrderRank) y comparten UN SOLO dataset ya filtrado y
+   ordenado (ticketsExplorerFiltered) — cada vista SOLO cambia el renderer,
+   nunca la búsqueda/filtros/orden/acciones (mismo `data-action="open-ticket"`
+   que ya usa el sidebar, así que clic/tap/teclado llaman al mismo
+   openTicketById de siempre, sin código nuevo). */
+var TICKET_ESTADO_FILTERS = [["todos","Todos"],["abierto","Abiertos"],["entregado","Entregados"],["cerrado","Cerrados"]];
+var TICKETS_VIEW_OPTIONS = [["thumbnails","Miniaturas"],["icons","Iconos"],["list","Lista"],["details","Detalles"]];
+var TICKETS_FECHA_FILTERS = [["todas","Fecha: todas"],["vencida","Atención vencida"],["hoy","Atención hoy"],["sin_fecha","Sin fecha de atención"]];
+
+/* Mismo criterio de orden que ya usa el sidebar (V0.5 §6): pinneados
+   primero, luego abierto→entregado→cerrado, actividad reciente como
+   desempate — nunca una prioridad nueva inventada para este explorador. */
+function ticketsExplorerOrder(a, b){
+  var ra = ticketOrderRank(a), rb = ticketOrderRank(b);
+  if(ra !== rb) return ra - rb;
+  return new Date(b.lastActivityAt) - new Date(a.lastActivityAt);
+}
+function ticketsExplorerBaseList(){
+  var pinned = STATE.tickets.filter(function(t){ return t.pinned; }).sort(ticketsExplorerOrder);
+  var rest = STATE.tickets.filter(function(t){ return !t.pinned; }).sort(ticketsExplorerOrder);
+  return pinned.concat(rest);
+}
+
+/* Última foto del ticket (bitácora tipo "archivo"): bitacora ya llega
+   ordenada por ts ASCENDENTE desde fetchAllState (order("ts",{ascending:
+   true})), así que el último evento "archivo" del hilo YA ES el más
+   reciente — no hay que ordenar nada de nuevo ni tocar Storage. Nunca
+   descarga/copia la imagen: solo regresa el storage_path, que se hidrata
+   con el MISMO signedUrlCache/hydrateImages que ya usa cualquier otra
+   <img data-storage-path> del archivo (composer, hilo, avatar). */
+function ticketThumbPhotoPath(t){
+  var thread = t.thread || [];
+  for(var i = thread.length - 1; i >= 0; i--){
+    if(thread[i].type === "archivo" && thread[i].storage_path) return thread[i].storage_path;
+  }
+  return null;
+}
+
+/* Búsqueda determinista (folio, cliente, empresa, teléfono tolerante a
+   formato, producto/trabajo, responsable, texto de notas ya en bitácora) —
+   sin IA, sin motor de búsqueda nuevo: reutiliza normalizeWord() (ya
+   existente, usado por rankClientes) para may/min + acentos, y una
+   comparación de solo-dígitos aparte para teléfono (956-561-2970 debe
+   encontrarse escribiendo 9565612970 y viceversa). */
+function ticketMatchesExplorerQuery(t, qNorm, qDigits){
+  var hasText = !!qNorm;
+  var hasPhone = !!(qDigits && qDigits.length >= 3);
+  if(!hasText && !hasPhone) return true;
+  var c = t.clienteId ? findCliente(t.clienteId) : null;
+  if(hasText){
+    var parts = [String(t.seq||""), t.cliente||"", t.responsable||""];
+    if(c){ parts.push(c.nombre||""); parts.push(c.empresa||""); }
+    (t.productos||[]).forEach(function(p){ parts.push(p.desc||""); });
+    (t.thread||[]).forEach(function(ev){ if(ev.type === "nota" && ev.text) parts.push(ev.text); });
+    if(normalizeWord(parts.join(" \n ")).indexOf(qNorm) !== -1) return true;
+  }
+  if(hasPhone){
+    var phoneDigits = ((c && c.telefono) || "").replace(/\D/g, "");
+    if(phoneDigits && phoneDigits.indexOf(qDigits) !== -1) return true;
+  }
+  return false;
+}
+
+/* Filtros "compactos y razonables" (nunca un query builder): estado,
+   marcador (mismos ticket_markers de siempre), cliente, responsable, y
+   fecha de atención — todo derivado de STATE.tickets, cero tablas nuevas. */
+function ticketsExplorerFiltered(){
+  var ui = UI.ticketsExplorer;
+  var qRaw = (ui.search || "").trim();
+  var qNorm = normalizeWord(qRaw.replace(/^#/, ""));
+  var qDigits = qRaw.replace(/\D/g, "");
+  var today = startOfDay(new Date());
+  return ticketsExplorerBaseList().filter(function(t){
+    if(ui.estado === "abierto" && ticketEstado(t) !== "abierto") return false;
+    if(ui.estado === "entregado" && ticketEstado(t) !== "entregado") return false;
+    if(ui.estado === "cerrado" && !ticketIsCerrado(t)) return false;
+    if(ui.marker && !activeMarkers(t).some(function(m){ return m.type === ui.marker; })) return false;
+    if(ui.clienteId && t.clienteId !== ui.clienteId) return false;
+    if(ui.responsable && t.responsable !== ui.responsable) return false;
+    if(ui.fecha === "vencida"){
+      if(ticketIsCerrado(t) || !t.fechaAtencion) return false;
+      var da = parseDateOnly(t.fechaAtencion);
+      if(!da || da > today) return false;
+    } else if(ui.fecha === "hoy"){
+      if(!t.fechaAtencion) return false;
+      var da2 = parseDateOnly(t.fechaAtencion);
+      if(!da2 || da2.getTime() !== today.getTime()) return false;
+    } else if(ui.fecha === "sin_fecha" && t.fechaAtencion){
+      return false;
+    }
+    return ticketMatchesExplorerQuery(t, qNorm, qDigits);
+  });
+}
+
+function ticketsExplorerClienteOptions(){
+  var seen = {}, out = [];
+  STATE.tickets.forEach(function(t){
+    if(!t.clienteId || seen[t.clienteId]) return;
+    var c = findCliente(t.clienteId);
+    if(!c) return;
+    seen[t.clienteId] = true;
+    out.push({ id: c.id, label: clienteLabel(c) });
+  });
+  out.sort(function(a,b){ return a.label.localeCompare(b.label); });
+  return out;
+}
+function ticketsExplorerResponsableOptions(){
+  var seen = {}, out = [];
+  STATE.tickets.forEach(function(t){
+    var r = (t.responsable||"").trim();
+    if(!r || seen[r]) return;
+    seen[r] = true; out.push(r);
+  });
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
+}
+
+function renderTicketsToolbar(list){
+  var ui = UI.ticketsExplorer;
+  var viewBtns = TICKETS_VIEW_OPTIONS.map(function(v){
+    return '<button type="button" class="tickets-view-btn' + (UI.ticketsView===v[0]?" active":"") + '" data-action="tickets-view-pick" data-view="' + v[0] + '" aria-pressed="' + (UI.ticketsView===v[0]?"true":"false") + '">' + v[1] + "</button>";
+  }).join("");
+  var estadoChips = TICKET_ESTADO_FILTERS.map(function(f){
+    return '<button type="button" class="tickets-filter-chip' + (ui.estado===f[0]?" active":"") + '" data-action="tickets-filter-estado" data-value="' + f[0] + '">' + f[1] + "</button>";
+  }).join("");
+  var markerChips = MARKER_TYPES.concat([MARKER_META.ordenar]).map(function(m){
+    return '<button type="button" class="tickets-filter-chip tickets-filter-marker' + (ui.marker===m.type?" active":"") + '" data-action="tickets-filter-marker" data-value="' + m.type + '" title="Filtrar: ' + escapeHtml(markerLabel(m.type)) + '" aria-label="Filtrar por ' + escapeHtml(markerLabel(m.type)) + '" aria-pressed="' + (ui.marker===m.type?"true":"false") + '">' + markerIcon(m.type) + "</button>";
+  }).join("");
+  var clienteOpts = ticketsExplorerClienteOptions();
+  var clienteSelect = clienteOpts.length ? (
+    '<select class="tickets-filter-select" data-action="tickets-filter-cliente" aria-label="Filtrar por cliente">' +
+      '<option value="">Cliente: todos</option>' +
+      clienteOpts.map(function(o){ return '<option value="' + o.id + '"' + (ui.clienteId===o.id?" selected":"") + '>' + escapeHtml(o.label) + "</option>"; }).join("") +
+    "</select>"
+  ) : "";
+  var respOpts = ticketsExplorerResponsableOptions();
+  var respSelect = respOpts.length ? (
+    '<select class="tickets-filter-select" data-action="tickets-filter-responsable" aria-label="Filtrar por responsable">' +
+      '<option value="">Responsable: todos</option>' +
+      respOpts.map(function(r){ return '<option value="' + escapeHtml(r) + '"' + (ui.responsable===r?" selected":"") + '>' + escapeHtml(r) + "</option>"; }).join("") +
+    "</select>"
+  ) : "";
+  var fechaSelect =
+    '<select class="tickets-filter-select" data-action="tickets-filter-fecha" aria-label="Filtrar por fecha de atención">' +
+      TICKETS_FECHA_FILTERS.map(function(f){ return '<option value="' + f[0] + '"' + (ui.fecha===f[0]?" selected":"") + '>' + f[1] + "</option>"; }).join("") +
+    "</select>";
+  return (
+    '<div class="tickets-toolbar">' +
+      '<div class="tickets-toolbar-row">' +
+        '<div class="search-wrap tickets-search-wrap">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+          '<input type="text" id="tickets-explorer-search" placeholder="Folio, cliente, empresa, teléfono, producto…" value="' + escapeHtml(ui.search||"") + '">' +
+        "</div>" +
+        '<div class="tickets-view-switch" role="tablist" aria-label="Vista de tickets">' + viewBtns + "</div>" +
+      "</div>" +
+      '<div class="tickets-toolbar-row tickets-filters-row">' +
+        '<div class="tickets-filter-chips">' + estadoChips + '<span class="tickets-filter-sep" aria-hidden="true"></span>' + markerChips + "</div>" +
+        '<div class="tickets-filter-selects">' + clienteSelect + respSelect + fechaSelect + "</div>" +
+      "</div>" +
+      '<div class="tickets-toolbar-count">' + list.length + (list.length===1?" ticket":" tickets") + "</div>" +
+    "</div>"
+  );
+}
+
+/* ---- Vista Miniaturas: prioridad visual, foto real > logo > iniciales ---- */
+function renderTicketsThumbCard(t){
+  var c = t.clienteId ? findCliente(t.clienteId) : null;
+  var photoPath = ticketThumbPhotoPath(t);
+  var mediaHtml = photoPath
+    ? '<img class="tickets-thumb-photo" data-storage-path="' + escapeHtml(photoPath) + '" alt="">'
+    : (c ? clientAvatar(c, {size:"lg", degrade:"compact"}) : '<span class="tickets-thumb-noimg" aria-hidden="true">&#128196;</span>');
+  var estado = ticketEstado(t);
+  var identityStyle = c ? clienteIdentityStyle(c, "compact") : null;
+  var cardClass = "tickets-thumb-card" + (identityStyle && identityStyle.style === "spotlight" ? " cid-theme-" + identityStyle.theme + " tickets-card-spotlight" : "");
+  var markersHtml = renderSidebarMarkerIcons(t);
+  return (
+    '<button type="button" class="' + cardClass + '" data-action="open-ticket" data-id="' + t.id + '">' +
+      '<div class="tickets-thumb-media' + (photoPath?"":" tickets-thumb-media-fallback") + '">' + mediaHtml +
+        (markersHtml ? '<span class="tickets-thumb-markers">' + markersHtml + "</span>" : "") +
+      "</div>" +
+      '<div class="tickets-thumb-body">' +
+        '<div class="tickets-thumb-cliente' + (c?clienteIdentityClasses(c,"compact"):"") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+        '<div class="tickets-thumb-meta-row"><span class="tickets-thumb-folio">#' + t.seq + "</span>" + (estado!=="abierto" ? '<span class="pill status-pill status-'+estado+'">'+ticketEstadoLabel(estado)+"</span>" : "") + "</div>" +
+        '<div class="tickets-thumb-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" +
+        '<div class="tickets-thumb-activity">' + fmtRelativeActivity(t.lastActivityAt) + "</div>" +
+      "</div>" +
+    "</button>"
+  );
+}
+
+/* ---- Vista Iconos: más densa, avatar/logo grande + folio + marcadores ---- */
+function renderTicketsIconCard(t){
+  var c = t.clienteId ? findCliente(t.clienteId) : null;
+  var avatarHtml = c ? clientAvatar(c, {size:"lg", degrade:"compact"}) : '<span class="client-avatar client-avatar-initials client-avatar-lg">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
+  var estado = ticketEstado(t);
+  var markersHtml = renderSidebarMarkerIcons(t);
+  return (
+    '<button type="button" class="tickets-icon-card" data-action="open-ticket" data-id="' + t.id + '">' +
+      '<div class="tickets-icon-avatar-wrap">' + avatarHtml + (markersHtml ? '<span class="tickets-icon-markers">'+markersHtml+"</span>" : "") + "</div>" +
+      '<div class="tickets-icon-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+      '<div class="tickets-icon-meta"><span class="tickets-icon-folio">#' + t.seq + "</span>" + (estado!=="abierto" ? ' <span class="pill status-pill status-'+estado+'">'+ticketEstadoLabel(estado)+"</span>" : "") + "</div>" +
+    "</button>"
+  );
+}
+
+/* ---- Vista Lista: operacional, una fila por ticket, escaneo rápido ---- */
+function renderTicketsListRow(t){
+  var c = t.clienteId ? findCliente(t.clienteId) : null;
+  var avatarHtml = c ? clientAvatar(c, {size:"sm", degrade:"reduced"}) : '<span class="client-avatar client-avatar-initials client-avatar-sm">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
+  var estado = ticketEstado(t);
+  var markersHtml = renderSidebarMarkerIcons(t);
+  return (
+    '<button type="button" class="tickets-list-row" data-action="open-ticket" data-id="' + t.id + '">' +
+      avatarHtml +
+      '<span class="tickets-list-folio">#' + t.seq + "</span>" +
+      '<span class="tickets-list-cliente' + (c?clienteIdentityClasses(c,"reduced"):"") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</span>" +
+      '<span class="tickets-list-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</span>" +
+      '<span class="tickets-list-estado">' + (estado!=="abierto" ? '<span class="pill status-pill status-'+estado+'">'+ticketEstadoLabel(estado)+"</span>" : "") + "</span>" +
+      '<span class="tickets-list-markers">' + markersHtml + "</span>" +
+    "</button>"
+  );
+}
+
+/* ---- Vista Detalles: tabla en desktop, mismas filas se leen como cards en
+   mobile vía CSS (data-label + ::before) — NUNCA una quinta vista/renderer
+   aparte, mismo HTML/datos en los dos anchos. PRECIO ≠ DEUDA: se muestran
+   "Total conocido" y "Cobrado" como dos hechos separados, nunca una resta
+   "saldo/deuda" inventada (mismo criterio que clienteFinancials). */
+var TICKETS_DETAILS_COLS = ["Ticket","Cliente","Trabajo","Estado","Qué sigue","Responsable","Atender","Compromiso","Total conocido","Cobrado","Marcadores","Última actividad"];
+function renderTicketsDetailsRow(t){
+  var c = t.clienteId ? findCliente(t.clienteId) : null;
+  var totals = computeTotals(t);
+  var cobrado = (t.pagos||[]).reduce(function(s,p){ return s + p.monto; }, 0);
+  var estado = ticketEstado(t);
+  var markersHtml = renderSidebarMarkerIcons(t);
+  var muted = '<span class="tickets-details-muted">—</span>';
+  var cells = [
+    '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + "</button>",
+    '<span class="' + (c?"tickets-details-cliente"+clienteIdentityClasses(c,"reduced"):"tickets-details-cliente") + '">' + escapeHtml(sidebarClienteLabel(t)) + "</span>",
+    escapeHtml(sidebarProductoPrincipal(t)),
+    '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>",
+    t.queSigue ? escapeHtml(t.queSigue) : muted,
+    t.responsable ? escapeHtml(t.responsable) : muted,
+    t.fechaAtencion ? fmtDateOnlyShort(t.fechaAtencion) : muted,
+    t.fechaCompromiso ? fmtDateOnlyShort(t.fechaCompromiso) : muted,
+    fmtMoney(totals.known) + (totals.pending ? ' <span class="tickets-details-pending">(+' + totals.pending + " sin precio)</span>" : ""),
+    fmtMoney(cobrado),
+    markersHtml || muted,
+    fmtRelativeActivity(t.lastActivityAt)
+  ];
+  return '<tr class="tickets-details-row" data-id="' + t.id + '">' + cells.map(function(html, idx){
+    return '<td data-label="' + TICKETS_DETAILS_COLS[idx] + '">' + html + "</td>";
+  }).join("") + "</tr>";
+}
+
+function renderTicketsExplorerView(){
+  var list = ticketsExplorerFiltered();
+  var toolbar = renderTicketsToolbar(list);
+  var view = UI.ticketsView || "thumbnails";
+  var body;
+  if(!list.length){
+    body = '<div class="empty-list tickets-empty">No encontramos tickets con estos filtros.</div>';
+  } else if(view === "icons"){
+    body = '<div class="tickets-grid-icons">' + list.map(renderTicketsIconCard).join("") + "</div>";
+  } else if(view === "list"){
+    body = '<div class="tickets-list">' + list.map(renderTicketsListRow).join("") + "</div>";
+  } else if(view === "details"){
+    body =
+      '<div class="tickets-details-wrap"><table class="tickets-details">' +
+        "<thead><tr>" + TICKETS_DETAILS_COLS.map(function(cn){ return "<th>" + cn + "</th>"; }).join("") + "</tr></thead>" +
+        "<tbody>" + list.map(renderTicketsDetailsRow).join("") + "</tbody>" +
+      "</table></div>";
+  } else {
+    body = '<div class="tickets-grid-thumb">' + list.map(renderTicketsThumbCard).join("") + "</div>";
+  }
+  return (
+    '<div class="home-header"><h1>Tickets</h1></div>' +
+    '<div class="tickets-explorer">' + toolbar +
+      '<div class="tickets-explorer-scroll" id="tickets-explorer-scroll">' + body + "</div>" +
+    "</div>"
+  );
+}
+
+/* ================= BIBLIOTECA — memoria visual (Findability: FIND →
+   RECOGNIZE → CONTEXT → OPEN ORIGIN) =================
+   Sin modelo de datos paralelo ni migración nueva: cada foto ya vive en
+   Storage y ya está referenciada por un evento de bitácora tipo "archivo"
+   dentro de t.thread (storage_path/filename/caption/ts/autor) — exactamente
+   lo mismo que ya lee ticketThumbPhotoPath()/hydrateImages(). Biblioteca
+   solo RECORRE STATE.tickets una vez y arma un índice plano en memoria; no
+   descarga, copia ni re-sube ninguna imagen. */
+function bibliotecaAllPhotos(){
+  var out = [];
+  STATE.tickets.forEach(function(t){
+    (t.thread || []).forEach(function(ev){
+      if(ev.type === "archivo" && ev.storage_path){
+        out.push({
+          ticketId: t.id, ticketSeq: t.seq, clienteId: t.clienteId, clienteNombre: t.cliente || "",
+          storagePath: ev.storage_path, filename: ev.filename || "", caption: ev.caption || "",
+          autor: ev.autor || "", ts: ev.ts
+        });
+      }
+    });
+  });
+  out.sort(function(a, b){ return new Date(b.ts) - new Date(a.ts); });
+  return out;
+}
+function bibliotecaClienteOptions(){
+  var seen = {}, out = [];
+  bibliotecaAllPhotos().forEach(function(p){
+    if(!p.clienteId || seen[p.clienteId]) return;
+    var c = findCliente(p.clienteId);
+    if(!c) return;
+    seen[p.clienteId] = true;
+    out.push({ id: c.id, label: clienteLabel(c) });
+  });
+  out.sort(function(a, b){ return a.label.localeCompare(b); });
+  return out;
+}
+function bibliotecaSubidoPorOptions(){
+  var seen = {}, out = [];
+  bibliotecaAllPhotos().forEach(function(p){
+    var a = (p.autor || "").trim();
+    if(!a || seen[a]) return;
+    seen[a] = true; out.push(a);
+  });
+  out.sort(function(a, b){ return a.localeCompare(b); });
+  return out;
+}
+/* Búsqueda determinista, mismo criterio que Tickets: cliente/empresa,
+   folio, caption y filename, tolerante a may/min y acentos vía
+   normalizeWord() (ya existente, sin motor de búsqueda nuevo). */
+function bibliotecaFilteredPhotos(){
+  var ui = UI.biblioteca;
+  var qNorm = normalizeWord((ui.search || "").trim().replace(/^#/, ""));
+  var today = startOfDay(new Date());
+  return bibliotecaAllPhotos().filter(function(p){
+    if(ui.clienteId && p.clienteId !== ui.clienteId) return false;
+    if(ui.subidoPor && p.autor !== ui.subidoPor) return false;
+    if(ui.fecha !== "todas"){
+      var d = startOfDay(new Date(p.ts));
+      var diffDays = Math.round((today - d) / 86400000);
+      if(ui.fecha === "hoy" && diffDays !== 0) return false;
+      if(ui.fecha === "semana" && diffDays > 7) return false;
+      if(ui.fecha === "mes" && diffDays > 31) return false;
+    }
+    if(!qNorm) return true;
+    var c = p.clienteId ? findCliente(p.clienteId) : null;
+    var parts = [String(p.ticketSeq || ""), p.clienteNombre, p.caption, p.filename];
+    if(c){ parts.push(c.nombre || ""); parts.push(c.empresa || ""); }
+    return normalizeWord(parts.join(" \n ")).indexOf(qNorm) !== -1;
+  });
+}
+/* Logos: fuente completamente distinta (cliente.logoStoragePath, no
+   bitácora) — a propósito NUNCA se mezclan en el mismo arreglo que las
+   fotos de trabajo, para que "Recientes" (el caso de uso principal) jamás
+   se vea inundado de logos, tal como pide el addendum. Filtro "Logos"
+   secundario y simple: cambia el DATASET completo, no lo combina. */
+function bibliotecaLogoClientes(){
+  var qNorm = normalizeWord((UI.biblioteca.search || "").trim());
+  return (STATE.clientes || []).filter(function(c){
+    if(!c.logoStoragePath) return false;
+    if(UI.biblioteca.clienteId && c.id !== UI.biblioteca.clienteId) return false;
+    if(!qNorm) return true;
+    return normalizeWord((c.nombre || "") + " " + (c.empresa || "")).indexOf(qNorm) !== -1;
+  }).sort(function(a, b){ return clienteLabel(a).localeCompare(clienteLabel(b)); });
+}
+
+function renderBibliotecaToolbar(count){
+  var ui = UI.biblioteca;
+  var clienteOpts = bibliotecaClienteOptions();
+  var clienteSelect = clienteOpts.length ? (
+    '<select class="tickets-filter-select" data-action="biblioteca-filter-cliente" aria-label="Filtrar por cliente">' +
+      '<option value="">Cliente: todos</option>' +
+      clienteOpts.map(function(o){ return '<option value="' + o.id + '"' + (ui.clienteId===o.id?" selected":"") + '>' + escapeHtml(o.label) + "</option>"; }).join("") +
+    "</select>"
+  ) : "";
+  var subidoOpts = bibliotecaSubidoPorOptions();
+  var subidoSelect = subidoOpts.length ? (
+    '<select class="tickets-filter-select" data-action="biblioteca-filter-subido" aria-label="Filtrar por quién subió">' +
+      '<option value="">Subido por: todos</option>' +
+      subidoOpts.map(function(a){ return '<option value="' + escapeHtml(a) + '"' + (ui.subidoPor===a?" selected":"") + '>' + escapeHtml(a) + "</option>"; }).join("") +
+    "</select>"
+  ) : "";
+  var fechaSelect =
+    '<select class="tickets-filter-select" data-action="biblioteca-filter-fecha" aria-label="Filtrar por fecha">' +
+      [["todas","Fecha: todas"],["hoy","Hoy"],["semana","Últimos 7 días"],["mes","Últimos 30 días"]].map(function(f){
+        return '<option value="' + f[0] + '"' + (ui.fecha===f[0]?" selected":"") + '>' + f[1] + "</option>";
+      }).join("") +
+    "</select>";
+  return (
+    '<div class="tickets-toolbar">' +
+      '<div class="tickets-toolbar-row">' +
+        '<div class="search-wrap tickets-search-wrap">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+          '<input type="text" id="biblioteca-search" placeholder="Cliente, folio, descripción…" value="' + escapeHtml(ui.search||"") + '">' +
+        "</div>" +
+        '<button type="button" class="tickets-filter-chip' + (ui.soloLogos?" active":"") + '" data-action="biblioteca-toggle-logos" aria-pressed="' + (ui.soloLogos?"true":"false") + '">Logos</button>' +
+      "</div>" +
+      (ui.soloLogos ? "" : (
+        '<div class="tickets-toolbar-row tickets-filters-row">' +
+          '<div class="tickets-filter-selects">' + clienteSelect + subidoSelect + fechaSelect + "</div>" +
+        "</div>"
+      )) +
+      '<div class="tickets-toolbar-count">' + count + (count===1?" foto":" fotos") + "</div>" +
+    "</div>"
+  );
+}
+
+function renderBibliotecaPhotoTile(p){
+  return (
+    '<button type="button" class="biblioteca-tile" data-action="biblioteca-open-photo" ' +
+      'data-ticket-id="' + p.ticketId + '" data-storage-path="' + escapeHtml(p.storagePath) + '" ' +
+      'data-cliente-id="' + (p.clienteId||"") + '" data-ts="' + escapeHtml(p.ts||"") + '" ' +
+      'data-autor="' + escapeHtml(p.autor||"") + '" data-caption="' + escapeHtml(p.caption||"") + '" ' +
+      'data-filename="' + escapeHtml(p.filename||"") + '" aria-label="' + escapeHtml((p.clienteNombre||"Sin cliente") + ", ticket #" + p.ticketSeq) + '">' +
+      '<img class="biblioteca-tile-img" data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
+    "</button>"
+  );
+}
+function renderBibliotecaLogoTile(c){
+  return (
+    '<button type="button" class="biblioteca-tile biblioteca-tile-logo" data-action="biblioteca-open-logo" data-cliente-id="' + c.id + '" aria-label="Logo de ' + escapeHtml(clienteLabel(c)) + '">' +
+      clientAvatar(c, { size: "lg", degrade: "full", noIdentity: true }) +
+      '<span class="biblioteca-tile-logo-label">' + escapeHtml(c.nombre) + "</span>" +
+    "</button>"
+  );
+}
+
+/* Agrupación "HOY / AYER / 4 SEP" reutilizando dayKey()/fmtDaySeparatorLabel()
+   (ya existentes para el hilo del ticket) — nunca una segunda lógica de
+   "bucket por día" desde cero. */
+function renderBibliotecaGrid(){
+  var ui = UI.biblioteca;
+  if(ui.soloLogos){
+    var logos = bibliotecaLogoClientes();
+    if(!logos.length) return '<div class="empty-list biblioteca-empty">Todavía no hay logos que mostrar.</div>';
+    return '<div class="biblioteca-grid">' + logos.map(renderBibliotecaLogoTile).join("") + "</div>";
+  }
+  var photos = bibliotecaFilteredPhotos();
+  if(!photos.length) return '<div class="empty-list biblioteca-empty">Todavía no hay imágenes que mostrar.</div>';
+  var html = "", lastDay = null;
+  photos.forEach(function(p){
+    var dk = dayKey(p.ts);
+    if(dk !== lastDay){
+      if(lastDay !== null) html += "</div>";
+      html += '<div class="biblioteca-day-label">' + escapeHtml(fmtDaySeparatorLabel(p.ts)) + "</div><div class=\"biblioteca-grid\">";
+      lastDay = dk;
+    }
+    html += renderBibliotecaPhotoTile(p);
+  });
+  html += "</div>";
+  return html;
+}
+
+function renderBibliotecaView(){
+  var count = UI.biblioteca.soloLogos ? bibliotecaLogoClientes().length : bibliotecaFilteredPhotos().length;
+  return (
+    '<div class="home-header"><h1>Biblioteca</h1></div>' +
+    '<div class="tickets-explorer">' + renderBibliotecaToolbar(count) +
+      '<div class="tickets-explorer-scroll" id="biblioteca-scroll">' + renderBibliotecaGrid() + "</div>" +
+    "</div>"
+  );
+}
+
+/* Visor: tap/click sobre una miniatura abre esto — imagen grande + cliente/
+   ticket/caption/autor/fecha + "Abrir ticket"/"Abrir cliente", reutilizando
+   openTicketById/data-action="open-cliente-ficha" de siempre (cero lógica
+   de navegación nueva). Falta de cliente vinculado NUNCA bloquea el visor
+   (§ Biblioteca y cliente): si no hay clienteId, simplemente no se muestra
+   el botón "Abrir cliente". */
+function closeBibliotecaViewer(){ UI.bibliotecaViewer = null; render(); }
+function renderBibliotecaViewer(){
+  var v = UI.bibliotecaViewer;
+  if(!v) return "";
+  if(v.kind === "logo"){
+    var lc = findCliente(v.clienteId);
+    if(!lc) return "";
+    return (
+      '<div class="cierre-modal-overlay biblioteca-viewer-overlay" id="biblioteca-viewer-overlay">' +
+        '<div class="cierre-modal biblioteca-viewer-modal">' +
+          '<button type="button" class="btn-plain biblioteca-viewer-close" data-action="biblioteca-viewer-close" aria-label="Cerrar">&times;</button>' +
+          '<div class="biblioteca-viewer-media"><img data-storage-path="' + escapeHtml(lc.logoStoragePath) + '" alt=""></div>' +
+          '<div class="cierre-modal-title">' + escapeHtml(clienteLabel(lc)) + "</div>" +
+          '<div class="cierre-modal-sub">Logo del cliente</div>' +
+          '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="open-cliente-ficha" data-client-id="' + lc.id + '">Abrir cliente</button></div>' +
+        "</div>" +
+      "</div>"
+    );
+  }
+  var t = findTicket(v.ticketId);
+  var c = v.clienteId ? findCliente(v.clienteId) : null;
+  var when = v.ts ? fmtDateShort(v.ts) : "";
+  /* Falta de cliente vinculado NUNCA bloquea el visor: si no hay ficha de
+     cliente, se cae al nombre libre del ticket y, si tampoco existe, a un
+     texto explícito — nunca undefined/"" silencioso. */
+  var titleLine = c ? clienteLabel(c) : ((t && t.cliente) ? t.cliente : "Sin cliente vinculado");
+  return (
+    '<div class="cierre-modal-overlay biblioteca-viewer-overlay" id="biblioteca-viewer-overlay">' +
+      '<div class="cierre-modal biblioteca-viewer-modal">' +
+        '<button type="button" class="btn-plain biblioteca-viewer-close" data-action="biblioteca-viewer-close" aria-label="Cerrar">&times;</button>' +
+        '<div class="biblioteca-viewer-media"><img data-storage-path="' + escapeHtml(v.storagePath) + '" alt=""></div>' +
+        '<div class="cierre-modal-title">' + escapeHtml(titleLine) + "</div>" +
+        (t ? '<div class="cierre-modal-sub">Ticket #' + t.seq + (v.caption ? " · " + escapeHtml(v.caption) : "") + "</div>" : "") +
+        '<div class="cierre-modal-sub">' + (v.autor ? "Subida por " + escapeHtml(v.autor) : "") + (when ? " · " + escapeHtml(when) : "") + "</div>" +
+        '<div class="popover-actions">' +
+          (t ? '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' : "") +
+          (c ? '<button type="button" class="btn btn-ghost" data-action="open-cliente-ficha" data-client-id="' + c.id + '">Abrir cliente</button>' : "") +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
 function clienteFinancials(c){
   var tickets = ticketsForCliente(c);
   var known = 0, cobrado = 0, pend = 0, activos = 0, lastTs = 0;
@@ -3783,20 +4647,26 @@ function clienteEntryContent(entry){
         (mode === "ticket" ? " Escribe /cliente seguido de un nombre para crear el primero." : "") + "</div>";
       return { title: "Clientes", html: emptyHtml };
     }
-    var freqRows = frequent.map(function(c){
-      return '<button class="help-cmd-btn" data-action="cliente-select" data-client-id="' + c.id + '" data-ticket="' + (t?t.id:"") + '" data-mode="' + mode + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
+    var freqActiveIdx = (frequent.length > 1 && UI.pickNav && UI.pickNav.entryId === entry.id) ? UI.pickNav.index : -1;
+    var freqRows = frequent.map(function(c, idx){
+      return '<button class="help-cmd-btn' + (idx===freqActiveIdx?" active":"") + '" data-action="cliente-select" data-client-id="' + c.id + '" data-ticket="' + (t?t.id:"") + '" data-mode="' + mode + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
     }).join("");
     var freqFooter = mode !== "ticket" ? '<button class="help-cmd-btn" data-action="go-clientes"><span class="desc">Ver todos en Clientes &#8594;</span></button>' : "";
-    return { title: "Clientes frecuentes", html: freqRows + freqFooter + '<div class="ephemeral-sub">Sigue escribiendo un nombre o empresa para buscar.</div>' };
+    var freqHint = frequent.length > 1 ? "Sigue escribiendo para buscar, o usa &uarr;/&darr; y Enter." : "Sigue escribiendo un nombre o empresa para buscar.";
+    return { title: "Clientes frecuentes", html: freqRows + freqFooter + '<div class="ephemeral-sub">' + freqHint + "</div>" };
   }
   var matches = findClienteMatches(query);
   var title = 'Cliente — "' + query + '"';
   if(matches.length === 1) return clienteFichaContent(matches[0], t, mode);
   if(matches.length > 1){
-    var rows = matches.map(function(c){
-      return '<button class="help-cmd-btn" data-action="cliente-select" data-client-id="' + c.id + '" data-ticket="' + (t?t.id:"") + '" data-mode="' + mode + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
+    /* Auditoría keyboard-first: ítem activo visible (nunca solo hover) — el
+       índice viene de UI.pickNav, la MISMA fuente que ya mueve el keydown
+       del compositor (currentPickListEntry/entryPickList), nunca una copia. */
+    var activeIdx = (UI.pickNav && UI.pickNav.entryId === entry.id) ? UI.pickNav.index : 0;
+    var rows = matches.map(function(c, idx){
+      return '<button class="help-cmd-btn' + (idx===activeIdx?" active":"") + '" data-action="cliente-select" data-client-id="' + c.id + '" data-ticket="' + (t?t.id:"") + '" data-mode="' + mode + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
     }).join("");
-    return { title: title, html: rows + '<div class="ephemeral-sub">Varias coincidencias — toca la correcta.</div>' };
+    return { title: title, html: rows + '<div class="ephemeral-sub">Varias coincidencias — &uarr;/&darr; y Enter, o toca la correcta.</div>' };
   }
   var html = '<div class="ephemeral-sub">No encontré ningún cliente que coincida con "' + escapeHtml(query) + '".</div>';
   if(mode === "ticket" && t){
@@ -3826,10 +4696,11 @@ function editarClienteEntryContent(entry){
       return { title: 'Editar cliente — "' + nameQuery + '"', html: '<div class="ephemeral-sub">No encontré ningún cliente llamado "' + escapeHtml(nameQuery) + '". Usa /cliente para crearlo primero.</div>' };
     }
     if(matches.length > 1){
-      var rows = matches.map(function(c){
-        return '<button class="help-cmd-btn" data-action="editarcliente-select" data-client-id="' + c.id + '" data-ephemeral-id="' + entry.id + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
+      var activeIdx2 = (UI.pickNav && UI.pickNav.entryId === entry.id) ? UI.pickNav.index : 0;
+      var rows = matches.map(function(c, idx){
+        return '<button class="help-cmd-btn' + (idx===activeIdx2?" active":"") + '" data-action="editarcliente-select" data-client-id="' + c.id + '" data-ephemeral-id="' + entry.id + '"><span class="desc">' + escapeHtml(clienteLabel(c)) + "</span></button>";
       }).join("");
-      return { title: 'Editar cliente — "' + nameQuery + '"', html: rows + '<div class="ephemeral-sub">Varias coincidencias — toca la correcta para revisar los cambios.</div>' };
+      return { title: 'Editar cliente — "' + nameQuery + '"', html: rows + '<div class="ephemeral-sub">Varias coincidencias — &uarr;/&darr; y Enter, o toca la correcta para revisar los cambios.</div>' };
     }
     target = matches[0];
   } else {
@@ -4298,6 +5169,8 @@ function renderMain(){
   if(UI.mainView === "produccion" && !UI.selectedTicketId) return renderProduccionView();
   if(UI.mainView === "cerrados" && !UI.selectedTicketId) return renderCerradosView();
   if(UI.mainView === "cxc" && !UI.selectedTicketId) return renderCxcPlaceholderView();
+  if(UI.mainView === "tickets" && !UI.selectedTicketId) return renderTicketsExplorerView();
+  if(UI.mainView === "biblioteca" && !UI.selectedTicketId) return renderBibliotecaView();
   var t = UI.selectedTicketId ? findTicket(UI.selectedTicketId) : null;
   if(!t){
     /* Inicio / Centro de consulta: no selecciona ni modifica ningún ticket.
@@ -4377,6 +5250,7 @@ function render(){
     renderHelpPanel() +
     renderBugReportPanel() +
     renderTotalPedidoModal() +
+    renderBibliotecaViewer() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -4578,6 +5452,22 @@ function render(){
       if(UI.pendingConfirm){
         if(e.key === "Enter"){ e.preventDefault(); confirmPendingSlash(); return; }
         if(e.key === "Escape"){ e.preventDefault(); UI.pendingConfirm = null; render(); return; }
+      }
+      /* Auditoría keyboard-first: "varias coincidencias" de /cliente y
+         /editarcliente — ver currentPickListEntry()/entryPickList(). Solo
+         con el compositor vacío, para no secuestrar flechas/Enter mientras
+         se escribe una nota nueva. */
+      if(!composerInput.value.trim()){
+        var pickEntry = currentPickListEntry();
+        var pickList = entryPickList(pickEntry);
+        if(pickList){
+          if(!UI.pickNav || UI.pickNav.entryId !== pickEntry.id) UI.pickNav = { entryId: pickEntry.id, index: 0 };
+          if(UI.pickNav.index >= pickList.items.length) UI.pickNav.index = 0;
+          if(e.key === "ArrowDown"){ e.preventDefault(); UI.pickNav.index = (UI.pickNav.index+1) % pickList.items.length; render(); restoreComposerText(""); return; }
+          if(e.key === "ArrowUp"){ e.preventDefault(); UI.pickNav.index = (UI.pickNav.index-1+pickList.items.length) % pickList.items.length; render(); restoreComposerText(""); return; }
+          if(e.key === "Enter"){ e.preventDefault(); var pickedIdx = UI.pickNav.index; UI.pickNav = null; pickList.pick(pickList.items[pickedIdx]); return; }
+          if(e.key === "Escape"){ e.preventDefault(); UI.pickNav = null; dismissEphemeral(pickEntry.id); return; }
+        }
       }
       /* Addendum final "Composer ultrarrápido" §3-§9: captura continua con
          un solo Enter, y navegación ArrowLeft/ArrowRight entre Smart
@@ -8153,9 +9043,158 @@ function wireEvents(){
   root.querySelectorAll('[data-action="go-cxc"]').forEach(function(b){
     b.addEventListener("click", function(){ goToCxc(); });
   });
+  root.querySelectorAll('[data-action="go-tickets"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToTickets(); });
+  });
+  root.querySelectorAll('[data-action="go-biblioteca"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToBiblioteca(); });
+  });
   root.querySelectorAll('[data-action="cerrados-filter"]').forEach(function(b){
     b.addEventListener("click", function(){ UI.cerradosFilter = b.getAttribute("data-filter"); render(); });
   });
+
+  /* Tickets — explorador general: los 4 botones de vista, los chips de
+     estado/marcador y los 3 <select> de filtro NUNCA construyen su propia
+     copia de la lista — solo cambian UI.ticketsView/UI.ticketsExplorer.* y
+     dejan que ticketsExplorerFiltered()/renderTicketsExplorerView() hagan
+     el trabajo real en el siguiente render(). El input de búsqueda sigue
+     el mismo patrón que clientesSearchInput arriba (recupera foco+cursor
+     tras el render, para que escribir varias letras seguidas no se sienta
+     interrumpido). */
+  root.querySelectorAll('[data-action="tickets-view-pick"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.ticketsView = b.getAttribute("data-view");
+      saveUi(); render();
+    });
+  });
+  root.querySelectorAll('[data-action="tickets-filter-estado"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.ticketsExplorer.estado = b.getAttribute("data-value");
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="tickets-filter-marker"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      var v = b.getAttribute("data-value");
+      UI.ticketsExplorer.marker = (UI.ticketsExplorer.marker === v) ? null : v;
+      render();
+    });
+  });
+  var ticketsFilterCliente = root.querySelector('[data-action="tickets-filter-cliente"]');
+  if(ticketsFilterCliente){
+    ticketsFilterCliente.addEventListener("change", function(){
+      UI.ticketsExplorer.clienteId = ticketsFilterCliente.value || null;
+      render();
+    });
+  }
+  var ticketsFilterResponsable = root.querySelector('[data-action="tickets-filter-responsable"]');
+  if(ticketsFilterResponsable){
+    ticketsFilterResponsable.addEventListener("change", function(){
+      UI.ticketsExplorer.responsable = ticketsFilterResponsable.value || "";
+      render();
+    });
+  }
+  var ticketsFilterFecha = root.querySelector('[data-action="tickets-filter-fecha"]');
+  if(ticketsFilterFecha){
+    ticketsFilterFecha.addEventListener("change", function(){
+      UI.ticketsExplorer.fecha = ticketsFilterFecha.value || "todas";
+      render();
+    });
+  }
+  var ticketsExplorerSearchInput = document.getElementById("tickets-explorer-search");
+  if(ticketsExplorerSearchInput){
+    ticketsExplorerSearchInput.addEventListener("input", function(){
+      UI.ticketsExplorer.search = ticketsExplorerSearchInput.value;
+      render();
+      var again = document.getElementById("tickets-explorer-search");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
+  var ticketsExplorerScrollEl = document.getElementById("tickets-explorer-scroll");
+  if(ticketsExplorerScrollEl){
+    ticketsExplorerScrollEl.addEventListener("scroll", function(){
+      UI.ticketsExplorer.scrollTop = ticketsExplorerScrollEl.scrollTop;
+    });
+    /* Restaura la posición de scroll al volver de "abrir y regresar" — se
+       hace aquí (tras wireEvents montar el DOM) y no en render() porque el
+       elemento recién se acaba de crear en este mismo ciclo. */
+    ticketsExplorerScrollEl.scrollTop = UI.ticketsExplorer.scrollTop || 0;
+  }
+  /* Vista Detalles: la fila entera abre el ticket (mismo openTicketById de
+     siempre) para que hacer clic en cualquier celda funcione como en una
+     tabla normal, pero SIN duplicar el disparo cuando el clic cae dentro
+     del <button data-action="open-ticket"> de la celda "Ticket" — ese botón
+     ya está cableado arriba por el querySelectorAll genérico de
+     [data-action="open-ticket"], así que aquí se ignora explícitamente
+     cualquier clic que venga de un <button> para no llamar openTicketById
+     dos veces (una desde el botón, otra desde la fila). */
+  root.querySelectorAll(".tickets-details-row").forEach(function(tr){
+    tr.addEventListener("click", function(e){
+      if(e.target.closest("button")) return;
+      openTicketById(tr.getAttribute("data-id"));
+    });
+  });
+
+  /* Biblioteca — memoria visual: mismo patrón que Tickets Explorer arriba
+     (los controles solo tocan UI.biblioteca / UI.bibliotecaViewer y dejan
+     que renderBibliotecaView()/renderBibliotecaViewer() hagan el resto en
+     el siguiente render()). Las miniaturas guardan sus propios datos en
+     data-* (ticket/cliente/storage-path/autor/caption/fecha) en vez de un
+     índice — así el visor siempre puede reconstruirse aunque la lista
+     filtrada cambie entre un render y otro. */
+  var bibliotecaSearchInput = document.getElementById("biblioteca-search");
+  if(bibliotecaSearchInput){
+    bibliotecaSearchInput.addEventListener("input", function(){
+      UI.biblioteca.search = bibliotecaSearchInput.value;
+      render();
+      var again = document.getElementById("biblioteca-search");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
+  root.querySelectorAll('[data-action="biblioteca-toggle-logos"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.biblioteca.soloLogos = !UI.biblioteca.soloLogos; render(); });
+  });
+  var bibFilterCliente = root.querySelector('[data-action="biblioteca-filter-cliente"]');
+  if(bibFilterCliente){
+    bibFilterCliente.addEventListener("change", function(){ UI.biblioteca.clienteId = bibFilterCliente.value || null; render(); });
+  }
+  var bibFilterSubido = root.querySelector('[data-action="biblioteca-filter-subido"]');
+  if(bibFilterSubido){
+    bibFilterSubido.addEventListener("change", function(){ UI.biblioteca.subidoPor = bibFilterSubido.value || ""; render(); });
+  }
+  var bibFilterFecha = root.querySelector('[data-action="biblioteca-filter-fecha"]');
+  if(bibFilterFecha){
+    bibFilterFecha.addEventListener("change", function(){ UI.biblioteca.fecha = bibFilterFecha.value || "todas"; render(); });
+  }
+  root.querySelectorAll('[data-action="biblioteca-open-photo"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.bibliotecaViewer = {
+        kind: "photo", ticketId: b.getAttribute("data-ticket-id"), storagePath: b.getAttribute("data-storage-path"),
+        clienteId: b.getAttribute("data-cliente-id") || null, ts: b.getAttribute("data-ts") || null,
+        autor: b.getAttribute("data-autor") || "", caption: b.getAttribute("data-caption") || "",
+        filename: b.getAttribute("data-filename") || ""
+      };
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="biblioteca-open-logo"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.bibliotecaViewer = { kind: "logo", clienteId: b.getAttribute("data-cliente-id") };
+      render();
+    });
+  });
+  root.querySelectorAll('[data-action="biblioteca-viewer-close"]').forEach(function(b){
+    b.addEventListener("click", closeBibliotecaViewer);
+  });
+  var bibViewerOverlay = document.getElementById("biblioteca-viewer-overlay");
+  if(bibViewerOverlay){
+    bibViewerOverlay.addEventListener("click", function(e){ if(e.target === bibViewerOverlay) closeBibliotecaViewer(); });
+  }
+  var bibliotecaScrollEl = document.getElementById("biblioteca-scroll");
+  if(bibliotecaScrollEl){
+    bibliotecaScrollEl.addEventListener("scroll", function(){ UI.biblioteca.scrollTop = bibliotecaScrollEl.scrollTop; });
+    bibliotecaScrollEl.scrollTop = UI.biblioteca.scrollTop || 0;
+  }
 
   /* Menú lateral en móvil (sección 16: el sidebar ya tenía el CSS de cajón
      y UI.sidebarOpen, pero le faltaba el botón para abrirlo — sin esto era
@@ -8742,6 +9781,7 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.bugReportOpen){ closeBugReport(); return; }
   if(e.key === "Escape" && UI.helpPanelOpen){ closeHelpPanel(); return; }
   if(e.key === "Escape" && UI.totalDraft){ closeTotalPedidoEditor(); return; }
+  if(e.key === "Escape" && UI.bibliotecaViewer){ closeBibliotecaViewer(); return; }
   /* §44: Total del pedido también entra al contrato global de teclado —
      Enter aplica (mismo core que el botón "Aplicar", §43), Esc cancela (ya
      arriba). No se intercepta si el foco está en un campo de precio Y el
