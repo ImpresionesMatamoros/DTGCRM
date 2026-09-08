@@ -880,7 +880,14 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
    parpadeo/animación de alarma. Un borde izquierdo de color + fondo MUY
    tenue por tipo (mismo criterio de contraste que ya usa el resto de la
    app para "known"/"pending"/"danger"), nunca pintar el ticket completo. */
-.markers-bar{display:flex; flex-direction:column; gap:4px; padding:8px 20px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0;}
+/* max-height + scroll propio (nunca display:none/ocultar un marcador): con
+   truncateMarkerText() ya no debería hacer falta para un marcador nuevo,
+   pero es la red de seguridad para cualquier fila vieja/futura fuera de lo
+   esperado — la barra de marcadores nunca debe poder crecer sin límite y
+   empujar el hilo/compositor fuera de la pantalla (ver investigación de
+   layout roto de esta ronda). Todo marcador activo sigue estando ahí,
+   accesible con scroll — ninguno se esconde. */
+.markers-bar{display:flex; flex-direction:column; gap:4px; padding:8px 20px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; max-height:160px; overflow-y:auto;}
 .marker-row{display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:var(--radius-s); border-left:3px solid var(--text-faint); background:var(--surface-2); font-size:12.5px;}
 .marker-row-urgente, .marker-row-cliente_molesto, .marker-row-no_producir{border-left-color:var(--danger); background:var(--danger-soft);}
 .marker-row-pendiente_cobro{border-left-color:var(--gold); background:var(--gold-soft);}
@@ -2016,8 +2023,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.10.1";
-var APP_BUILD = "2026.09.07.5";
+var APP_VERSION = "0.10.2";
+var APP_BUILD = "2026.09.08.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -3254,7 +3261,7 @@ function renderSidebarMarkerIcons(t){
   var icons = shown.map(function(m){
     var isOpen = open && open.ticketId === t.id && open.markerId === m.id;
     var tip = isOpen
-      ? '<span class="ticket-marker-tip" role="tooltip"><b>' + escapeHtml(markerLabel(m.type)) + "</b>" + (m.text ? "<br>" + escapeHtml(m.text) : "") + "</span>"
+      ? '<span class="ticket-marker-tip" role="tooltip"><b>' + escapeHtml(markerLabel(m.type)) + "</b>" + (m.text ? "<br>" + escapeHtml(truncateMarkerText(m.text)) : "") + "</span>"
       : "";
     return (
       '<span class="ticket-marker-icon-wrap">' +
@@ -3507,18 +3514,25 @@ function renderThreadItem(ev, ticketId){
   var meta = metaBits.join(" · ");
   var fullStamp = escapeHtml(fmtDateShort(ev.ts) + " · " + fmtTime(ev.ts));
   if(ev.type === "nota"){
-    /* §26: convertir una nota YA GUARDADA en marcador — mismo icono "[!]"
-       discreto que el compositor (§25), mismo selector, mismo core
-       (chooseMarkerType). Solo se ofrece si el ticket sigue existiendo
-       (ticketId truthy — nunca en la ficha de cliente/historial global,
-       donde este mismo renderThreadItem también se reutiliza). */
-    var markerToggleBtn = ticketId
-      ? '<button type="button" class="note-marker-btn" data-action="marker-picker-open-note" data-note-id="' + ev.id + '" data-ticket="' + ticketId + '" title="Marcar como…" aria-label="Marcar como…">!</button>'
-      : "";
-    body = '<div class="thread-text-row"><div class="thread-text">' + escapeHtml(ev.text).replace(/\n/g,"<br>") + "</div>" + markerToggleBtn + "</div>";
-    if(UI.markerPicker && UI.markerPicker.source === "note" && UI.markerPicker.noteId === ev.id){
-      body += renderMarkerPickerInline();
-    }
+    /* §26 (DESHABILITADO — reporte de layout roto tras usar exactamente este
+       botón, esta ronda): "convertir una nota YA GUARDADA en marcador" vía
+       el icono "[!]" junto a la nota. La causa más probable ya identificada
+       (ver MARKER_TEXT_DISPLAY_MAX/truncateMarkerText arriba) es que este
+       camino copiaba el TEXTO COMPLETO de la nota original — sin cortar —
+       al marcador nuevo, y ese texto largo dominaba/descuadraba la barra
+       compacta de marcadores. Se aplicó el corte de longitud en el renderer
+       como arreglo de fondo, pero esta entrada específica se apaga por
+       ahora (prioridad: estabilidad inmediata) hasta confirmar con QA real
+       que el síntoma desapareció. Los otros dos caminos para crear un
+       marcador — el "!" del compositor ANTES de enviar (chooseMarkerType
+       source:"composer") y "Marcar como…" desde Detalles/Miniaturas/⋯
+       (source:"manual", overlay centrado, código completamente aparte) —
+       siguen intactos, igual que TODOS los marcadores ya guardados (siguen
+       viéndose y pudiéndose resolver exactamente igual). Para reactivar
+       este botón: restaurar las 2 líneas de var markerToggleBtn/body de
+       abajo (siguen en el historial de git) una vez identificada la causa
+       raíz con evidencia real (consola del navegador). */
+    body = '<div class="thread-text-row"><div class="thread-text">' + escapeHtml(ev.text).replace(/\n/g,"<br>") + "</div></div>";
   } else if(ev.type === "sistema"){
     body = '<div class="thread-sub">' + escapeHtml(ev.text) + "</div>";
   } else if(ev.type === "producto"){
@@ -6744,7 +6758,7 @@ function renderMarkersBar(t){
   if(!active.length) return "";
   var rows = active.map(function(m){
     var body = m.text
-      ? escapeHtml(m.text)
+      ? escapeHtml(truncateMarkerText(m.text))
       : '<span class="marker-row-label-only">' + escapeHtml(markerLabel(m.type)) + "</span>";
     return (
       '<div class="marker-row marker-row-' + escapeHtml(m.type) + '">' +
@@ -8039,8 +8053,14 @@ function chooseMarkerType(idx){
     restoreComposerText(""); // mismo criterio optimista que cualquier envío exitoso del compositor
     addNotaCore(t, mp.text, m.type);
   } else {
+    /* Sin render() aquí: createMarkerCore es async pero empuja el marcador
+       optimista y llama render() de forma SÍNCRONA antes de su primer
+       await (mismo patrón que cualquier otro *Core de esta app) — un
+       render() extra aquí era puramente redundante (doble reconstrucción
+       de #app por cada marcador creado, detectado durante la
+       investigación de layout roto de esta ronda; no explicaba el síntoma
+       reportado por sí solo, pero no había razón para conservarlo). */
     createMarkerCore(t, m.type, mp.text, mp.noteId);
-    render();
   }
 }
 /* Cuerpo compartido del selector — el ORIGEN decide cómo se envuelve: el
@@ -8070,9 +8090,14 @@ function renderMarkerPickerPopover(){
   if(!UI.markerPicker) return "";
   return '<div class="popover marker-picker-popover" id="marker-picker-popover">' + renderMarkerPickerBody() + "</div>";
 }
+/* Actualmente sin llamador vivo (ver nota "DESHABILITADO" en
+   renderThreadItem) — se conserva para poder reactivar el botón "!" de una
+   nota ya guardada sin reescribir esta función. id distinto del popover del
+   compositor (antes compartían "marker-picker-popover", un id duplicado en
+   el DOM aunque nunca coincidieran a la vez — corregido de todos modos). */
 function renderMarkerPickerInline(){
   if(!UI.markerPicker) return "";
-  return '<div class="marker-picker-inline" id="marker-picker-popover">' + renderMarkerPickerBody() + "</div>";
+  return '<div class="marker-picker-inline" id="marker-picker-inline-popover">' + renderMarkerPickerBody() + "</div>";
 }
 
 /* §22-24: popover informativo de un icono de marcador en el sidebar. */
@@ -10453,6 +10478,26 @@ MARKER_TYPES.forEach(function(m){ MARKER_META[m.type] = m; });
 function markerIcon(type){ return (MARKER_META[type]||{}).icon || "•"; }
 function markerLabel(type){ return (MARKER_META[type]||{}).label || type; }
 function activeMarkers(t){ return (t.markers||[]).filter(function(m){ return !m.resolvedAt; }); }
+/* Reporte de layout roto tras marcar "Urgente" (§ investigación de esta
+   ronda): ticket_markers.text nunca tuvo un límite de longitud — la barra
+   .markers-bar/.marker-row se diseñó para una anotación corta ("cliente
+   llamó molesto"), NUNCA para un párrafo completo. La única ruta que podía
+   copiar un párrafo entero ahí era "convertir una nota YA guardada en
+   marcador" (el botón "!" junto a una nota — ver nota en renderThreadItem
+   más abajo, deshabilitada por esta misma razón): mp.text ahí era el TEXTO
+   COMPLETO de la nota original, sin cortar, y createMarkerCore lo guardaba
+   tal cual en la columna. Una nota larga (varios renglones) convertida en
+   marcador producía una fila de .markers-bar mucho más alta de lo que ese
+   layout fijo/no-colapsable esperaba, arriba del hilo — en el peor caso
+   (nota muy larga en pantalla chica) empujando/descuadrando el resto de la
+   cabecera. Nunca se toca el dato guardado (nunca se trunca en la base de
+   datos, nunca se pierde texto) — solo se corta lo que se MUESTRA en la
+   barra compacta/tooltip, que es donde vivía el problema real. */
+var MARKER_TEXT_DISPLAY_MAX = 140;
+function truncateMarkerText(text){
+  if(!text || text.length <= MARKER_TEXT_DISPLAY_MAX) return text || "";
+  return text.slice(0, MARKER_TEXT_DISPLAY_MAX).replace(/\s+\S*$/, "") + "…";
+}
 
 function parseEditarClienteArg(arg){
   var tokens = (arg||"").trim().split(/\s+/).filter(Boolean);
