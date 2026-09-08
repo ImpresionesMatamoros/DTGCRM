@@ -903,6 +903,67 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .marker-resolve-btn:hover, .marker-resolve-btn:active{background:var(--success-soft); color:var(--success-ink); border-color:var(--success);}
 @media(max-width:640px){ .markers-bar{ padding:8px 14px; } }
 
+/* ===== Feed del equipo (Inicio) — "GRAN ACTUALIZACIÓN NOCTURNA" =====
+   Tarjetas SIEMPRE como <div> (nunca <button>) con sus acciones como
+   <button> hijos reales — a propósito, para no repetir la clase de bug de
+   button-anidado que causó el layout roto de la ronda anterior (ver
+   renderSidebarMarkerIcons). Aquí nunca hace falta el truco de
+   span[role=button] porque ninguna tarjeta del feed es en sí misma
+   clicable/un botón. */
+.feed-header{align-items:center;}
+.feed-filter-bar{display:flex; gap:6px; padding:0 20px 8px; flex-shrink:0;}
+.feed-filter-btn{border:1px solid var(--border); background:var(--surface); color:var(--text-muted); border-radius:999px; padding:4px 12px; font-size:12px; cursor:pointer;}
+.feed-filter-btn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
+.feed-scroll{flex:1; min-height:0; overflow-y:auto; padding:0 20px 16px;}
+.feed-empty{padding:24px 4px; color:var(--text-muted); font-size:13px;}
+.feed-pinned-section{display:flex; flex-direction:column; gap:8px; padding-bottom:10px; margin-bottom:10px; border-bottom:1px dashed var(--border);}
+.feed-list{display:flex; flex-direction:column; gap:8px;}
+.feed-item{display:flex; gap:10px; padding:10px 12px; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface);}
+.feed-item-pinned{border-color:var(--accent); background:var(--accent-soft);}
+.feed-item-icon{font-size:16px; flex-shrink:0; width:24px; text-align:center;}
+.feed-item-avatar{width:28px; height:28px; border-radius:50%; background:var(--accent-soft); color:var(--accent-ink); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;}
+.feed-item-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+.feed-item-meta{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--text-muted);}
+.feed-item-autor{font-weight:600; color:var(--text);}
+.feed-item-text{font-size:13.5px; color:var(--text); overflow-wrap:break-word; white-space:pre-wrap;}
+.feed-item-img{max-width:280px; max-height:280px; border-radius:var(--radius-s); border:1px solid var(--border); object-fit:cover; display:block;}
+.feed-ticket-chip{border:1px solid var(--border); background:var(--surface-2); color:var(--text-muted); border-radius:999px; padding:2px 9px; font-size:11.5px; cursor:pointer;}
+.feed-ticket-chip:hover{border-color:var(--accent); color:var(--accent-ink);}
+.feed-pin-badge{font-size:11px; font-weight:600; color:var(--accent-ink); background:var(--accent-soft); border-radius:999px; padding:2px 8px;}
+.feed-pin-badge-mega{color:var(--gold, #9a7a12);}
+.feed-post-resolution{display:flex; gap:6px; flex-wrap:wrap;}
+.feed-relacionar-picker{display:flex; flex-direction:column; gap:6px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface-2);}
+.feed-relacionar-picker input{padding:6px 8px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font-size:13px;}
+.feed-relacionar-list{display:flex; flex-direction:column; gap:2px; max-height:160px; overflow-y:auto;}
+.feed-relacionar-row{text-align:left; padding:6px 8px; border-radius:var(--radius-s); border:none; background:transparent; color:var(--text); font-size:12.5px; cursor:pointer;}
+.feed-relacionar-row:hover{background:var(--surface);}
+.feed-relacionar-empty{font-size:12px; color:var(--text-faint); padding:4px 2px;}
+.feed-reactions{display:flex; flex-direction:column; gap:4px;}
+.feed-reaction-buttons{display:flex; gap:2px;}
+.feed-reaction-btn{border:1px solid transparent; background:transparent; border-radius:var(--radius-s); font-size:15px; padding:2px 6px; cursor:pointer; line-height:1;}
+.feed-reaction-btn:hover{background:var(--surface-2);}
+.feed-reaction-btn.active{border-color:var(--accent); background:var(--accent-soft);}
+.feed-reaction-summary{font-size:11.5px; color:var(--text-muted);}
+.feed-post-controls{display:flex; gap:6px; flex-wrap:wrap;}
+.feed-pin-btn{border:1px solid var(--border); background:var(--surface); color:var(--text-muted); border-radius:999px; padding:2px 10px; font-size:11.5px; cursor:pointer;}
+.feed-pin-btn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
+.feed-post-delete-btn{border:none; background:transparent; color:var(--danger, #b3261e); font-size:11.5px; cursor:pointer; padding:2px 4px;}
+.feed-composer{display:flex; flex-direction:column; gap:8px; padding:10px 20px; border-bottom:1px solid var(--border); background:var(--surface-2); flex-shrink:0;}
+.feed-composer textarea{width:100%; resize:vertical; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font:inherit; padding:8px;}
+.feed-composer-preview{position:relative; width:fit-content;}
+.feed-composer-preview img{max-height:140px; border-radius:var(--radius-s); border:1px solid var(--border); display:block;}
+.feed-composer-row{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12px;}
+.feed-composer-row-label{color:var(--text-muted); margin-right:2px;}
+.feed-composer-pin-btn, .feed-composer-exp-btn{border:1px solid var(--border); background:var(--surface); color:var(--text-muted); border-radius:999px; padding:3px 10px; font-size:11.5px; cursor:pointer;}
+.feed-composer-pin-btn.active, .feed-composer-exp-btn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
+.feed-composer-actions{display:flex; align-items:center; gap:8px; justify-content:flex-end;}
+.biblioteca-sin-relacionar{display:flex; flex-direction:column; gap:8px; padding:12px; margin-bottom:14px; border:1px dashed var(--accent); border-radius:var(--radius); background:var(--accent-soft);}
+.biblioteca-sin-relacionar-title{font-weight:700; color:var(--accent-ink); font-size:13px;}
+@media(max-width:640px){
+  .feed-scroll, .feed-composer, .feed-filter-bar{padding-left:14px; padding-right:14px;}
+  .feed-item-img, .feed-composer-preview img{max-width:100%;}
+}
+
 .composer-wrap{border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; position:relative;}
 /* Preview en vivo de /producto (sección 6): mismo parser que guarda, en
    modo solo-lectura — se actualiza con cada tecla, nunca toca datos.
@@ -2023,8 +2084,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.10.3";
-var APP_BUILD = "2026.09.08.2";
+var APP_VERSION = "0.11.0";
+var APP_BUILD = "2026.09.08.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2080,7 +2141,18 @@ var AUTH_STATUS = "loading";
 var AUTH_SESSION = null;
 var CURRENT_PROFILE = null;
 var AUTH_ERROR = "";
-var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
+/* Feed del equipo (§68 y siguientes, "GRAN ACTUALIZACIÓN NOCTURNA"):
+   teamPosts/feedReactions/profiles se cargan en fetchAllState() igual que
+   todo lo demás — nunca un fetch aparte, nunca fuera de refreshFromServer/
+   Realtime. profiles (roster completo, no solo CURRENT_PROFILE) es nuevo
+   aquí: antes esta app nunca necesitó mostrar el nombre de alguien más que
+   el autor de un evento (que ya viene como texto plano en autor/
+   author_name_snapshot) — pero para armar el resumen de reacciones
+   ("Jonathan y 2 más") si algún día se necesita resolver un id a nombre
+   fresco (p.ej. si display_name cambió después de reaccionar) conviene
+   tener el roster a la mano. profiles_select_active_members (0010) ya
+   permite leerlo completo. */
+var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, accountMenuOpen: false,
   /* Cuenta — "Editar nombre": true mientras el menú de cuenta muestra el
      campo de edición de display_name en vez de "Cerrar sesión". Vive
@@ -2233,7 +2305,26 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   contactPanel: null,
   /* §42/§49: editor central por celda (Cliente/Trabajo/Estado/Cobrado) —
      ver openCellEditor/renderCellEditorOverlay. Efímero, nunca persistido. */
-  cellEditor: null };
+  cellEditor: null,
+  /* Feed del equipo (Inicio — "GRAN ACTUALIZACIÓN NOCTURNA"): estado 100%
+     efímero del composer "+ Publicar" y de la resolución de fotos sin
+     ticket. Nunca se persiste (igual que docDraft/bugReportDraft) — un
+     refresh a medio escribir simplemente se pierde, mismo criterio que ya
+     rige el resto de los formularios cortos de esta app. */
+  feedComposerOpen: false,
+  feedComposerPin: "none", // "none" | "pin" | "megapin" — elegido en el composer, aplicado al publicar
+  feedComposerExpires: "never", // "never" | "24h" | "3d" | "7d"
+  feedComposerPhoto: null, // { file, previewUrl } | null — una sola foto por post, igual que el resto de la app
+  feedComposerBusy: false,
+  /* id del team_post "sin ticket" que tiene abierto su mini-buscador de
+     Relacionar ahora mismo — null en cualquier otro momento. Solo uno a la
+     vez, mismo patrón que markerPicker/cellEditor. */
+  feedRelacionarOpenFor: null,
+  feedRelacionarQuery: "",
+  /* filtro visual de Inicio: "todo" | "posts" (solo lo que publicó una
+     persona) | "eventos" (solo automáticos) — nunca cambia qué se guarda,
+     solo qué se muestra (spec §108-110 "filtros simples"). */
+  feedFilter: "todo" };
 /* Identity Foundation §9: snapshot del UI "recién arrancado" — signOut()
    lo usa para regresar a este estado exacto en vez de re-listar a mano
    cada campo (sería el segundo lugar que hay que recordar mantener en
@@ -2579,7 +2670,7 @@ async function signOut(){
   CURRENT_PROFILE = null;
   AUTH_STATUS = "signed_out";
   AUTH_ERROR = "";
-  STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [] };
+  STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [] };
   UI = JSON.parse(UI_INITIAL_SNAPSHOT);
   UI.pendingFocus = { elId: "login-email-input" };
   render();
@@ -2643,6 +2734,38 @@ async function fetchTicketMarkers(){
     return { rows: [], missing: true };
   }
 }
+/* team_posts/feed_reactions/profiles (0013 — feed del equipo): mismo criterio
+   tolerante que fetchClientes()/fetchTicketMarkers() — si 0013 todavía no se
+   corrió, Inicio simplemente muestra solo los eventos automáticos (derivados
+   de bitacora, que ya existe) sin ningún post humano, en vez de tumbar el
+   arranque completo de la app por una tabla nueva opcional. */
+async function fetchTeamPosts(){
+  try{
+    var res = await sb.from("team_posts").select("*").is("deleted_at", null).order("created_at", {ascending:false});
+    if(res.error) throw res.error;
+    return { rows: res.data || [], missing: false };
+  }catch(e){
+    return { rows: [], missing: true };
+  }
+}
+async function fetchFeedReactions(){
+  try{
+    var res = await sb.from("feed_reactions").select("*");
+    if(res.error) throw res.error;
+    return { rows: res.data || [], missing: false };
+  }catch(e){
+    return { rows: [], missing: true };
+  }
+}
+async function fetchProfiles(){
+  try{
+    var res = await sb.from("profiles").select("*");
+    if(res.error) throw res.error;
+    return { rows: res.data || [], missing: false };
+  }catch(e){
+    return { rows: [], missing: true };
+  }
+}
 async function fetchAllState(){
   var results = await Promise.all([
     sb.from("tickets").select("*"),
@@ -2659,6 +2782,9 @@ async function fetchAllState(){
       documentosRows = results[6].data;
   var clientesInfo = await fetchClientes();
   var markersInfo = await fetchTicketMarkers();
+  var teamPostsInfo = await fetchTeamPosts();
+  var feedReactionsInfo = await fetchFeedReactions();
+  var profilesInfo = await fetchProfiles();
 
   var byTicket = {};
   ticketsRows.forEach(function(row){
@@ -2719,12 +2845,35 @@ async function fetchAllState(){
     if(row.key === "que_sigue_options") settings.queSigueOptions = row.values || [];
     if(row.key === "team_names") settings.teamNames = row.values || [];
   });
+  var teamPosts = teamPostsInfo.rows.map(function(row){
+    return {
+      id: row.id, authorUserId: row.author_user_id || null, autor: row.author_name_snapshot || "",
+      text: row.text || "", imageStoragePath: row.image_storage_path || null,
+      ticketId: row.ticket_id || null, noTicketRequired: !!row.no_ticket_required,
+      pinLevel: row.pin_level || "none", pinnedBy: row.pinned_by || "", pinnedAt: row.pinned_at || null,
+      expiresAt: row.expires_at || null, createdAt: row.created_at
+    };
+  });
+  var feedReactions = feedReactionsInfo.rows.map(function(row){
+    return {
+      id: row.id, targetType: row.target_type, targetId: row.target_id,
+      userId: row.user_id, autor: row.user_name_snapshot || "",
+      reactionType: row.reaction_type, createdAt: row.created_at
+    };
+  });
+  var profiles = profilesInfo.rows.map(function(row){
+    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active };
+  });
   return {
     meta: settings,
     tickets: Object.keys(byTicket).map(function(k){ return byTicket[k]; }),
     clientes: clientesInfo.rows.map(mapClienteRow),
     clientesTableMissing: clientesInfo.missing,
-    markersTableMissing: markersInfo.missing
+    markersTableMissing: markersInfo.missing,
+    teamPosts: teamPosts,
+    feedReactions: feedReactions,
+    profiles: profiles,
+    teamPostsTableMissing: teamPostsInfo.missing
   };
 }
 
@@ -2848,7 +2997,7 @@ function syncDeepLinkUrl(ticketOrNull){
 function subscribeRealtime(){
   if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
   var channel = sb.channel("dtg-changes");
-  ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes","ticket_markers"].forEach(function(table){
+  ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes","ticket_markers","team_posts","feed_reactions"].forEach(function(table){
     channel.on("postgres_changes", { event: "*", schema: "public", table: table }, scheduleRefresh);
   });
   channel.subscribe();
@@ -5899,7 +6048,7 @@ function renderBibliotecaView(){
   return (
     '<div class="home-header"><h1>Biblioteca</h1></div>' +
     '<div class="tickets-explorer">' + renderBibliotecaToolbar(count) +
-      '<div class="tickets-explorer-scroll" id="biblioteca-scroll">' + renderBibliotecaGrid() + "</div>" +
+      '<div class="tickets-explorer-scroll" id="biblioteca-scroll">' + renderBibliotecaSinRelacionar() + renderBibliotecaGrid() + "</div>" +
     "</div>"
   );
 }
@@ -6718,6 +6867,506 @@ function renderClienteFichaView(){
   );
 }
 
+/* ================= Feed del equipo (Inicio) =================
+   "GRAN ACTUALIZACIÓN NOCTURNA": Inicio deja de ser "¿Qué necesitas
+   encontrar?" y pasa a ser "Actividad reciente" — el pulso vivo del equipo.
+   Dos clases de contenido, nunca mezcladas en el modelo de datos:
+     - EVENTOS AUTOMÁTICOS: se derivan de bitacora (ya existe, ya es la
+       fuente de verdad) vía activityFeedEntry(). No AI, no LLM — puro
+       mapeo determinista tipo -> texto, exactamente igual que ya hace
+       renderThreadItem() dentro de un ticket, solo que resumido para verse
+       bien fuera de contexto y con la referencia al ticket visible.
+     - POSTS HUMANOS: viven en team_posts (migración 0013). Con o sin
+       ticket — "foto sin ticket" es el caso NORMAL (spec §31), no una
+       excepción.
+   Alcance de esta ronda (documentado también en el reporte final, §149 "se
+   puede degradar limpio"): se cubren P0-P5 completos. Se dejó
+   deliberadamente más simple que el spec ideal: el buscador de "Relacionar"
+   es un filtro de texto simple sobre los tickets ya cargados (no un buscador
+   con ranking/fuzzy), y no hay expiración automática vía cron — un post
+   "vencido" simplemente deja de listarse en el cliente (expires_at ya
+   pasado), la fila sigue existiendo. */
+
+/* Reacciones (§17-20): ids ESTABLES, nunca un emoji/filename como llave —
+   el emoji es solo la representación visual de HOY; si el equipo pide
+   cambiar un ícono más adelante, cambia aquí, nunca en las filas ya
+   guardadas en feed_reactions. */
+var REACTIONS = [
+  { type: "celebrate", emoji: "🎉", label: "Celebrar" },
+  { type: "terrible",  emoji: "😬", label: "Terrible" },
+  { type: "surprised", emoji: "😮", label: "Sorpresa" },
+  { type: "oh_no",     emoji: "😱", label: "Oh no" },
+  { type: "im_in",     emoji: "🙋", label: "Yo me apunto" },
+  { type: "confused",  emoji: "🤔", label: "Confundido" }
+];
+function reactionMeta(type){ return REACTIONS.filter(function(r){ return r.type === type; })[0] || null; }
+
+/* §81-82: booleano derivado de profiles.role — nunca un sistema de roles
+   nuevo. Sin sesión/perfil todavía, false (nunca revienta). La UI solo usa
+   esto para DECIDIR QUÉ MOSTRAR (ej. la opción "Megapin" en el composer) —
+   la aplicación real vive en is_admin()/set_post_pin() del lado de
+   Postgres (0013); esta variable nunca es, por sí sola, un control de
+   seguridad. */
+function isAdmin(){ return !!(CURRENT_PROFILE && CURRENT_PROFILE.role === "admin"); }
+
+/* Tipos de bitacora que SÍ aparecen en el feed de Inicio — "producto" y
+   "tarea"/"tarea_produccion" se dejan fuera a propósito (spec §150 P1 pide
+   "el pulso vivo", no un firehose de cada línea de producto agregada; un
+   ticket sigue mostrando eso en su propio hilo, sin cambios). Si otra ronda
+   decide que sí deben verse aquí, es un solo `if` más en esta función —
+   nunca un segundo camino de datos. */
+function activityFeedEntry(ev, t){
+  if(ev.deleted_at) return null;
+  var base = { kind: "event", id: ev.id, ts: ev.ts, ticketId: t.id, ticketSeq: t.seq, ticketCliente: t.cliente || "", autor: ev.autor || "" };
+  if(ev.type === "nota"){
+    if(!ev.text) return null;
+    return Object.assign(base, { icon: "📝", text: truncateMarkerText(ev.text) });
+  }
+  if(ev.type === "pago"){
+    return Object.assign(base, { icon: "💵", text: "Pago registrado" + (ev.concepto ? " — " + ev.concepto : "") + " · " + fmtMoney(ev.monto) });
+  }
+  if(ev.type === "archivo"){
+    return Object.assign(base, { icon: "📷", text: ev.caption || "Foto agregada", hasImage: !!ev.storage_path, storagePath: ev.storage_path || null, filename: ev.filename || "" });
+  }
+  if(ev.type === "documento"){
+    var docLabel = ev.tipo === "invoice" ? "Invoice" : "Cotización";
+    return Object.assign(base, { icon: ev.tipo === "invoice" ? "🧾" : "📄", text: docLabel + " #" + (ev.numero||"") + " · " + fmtMoney(ev.total) });
+  }
+  if(ev.type === "sistema"){
+    if(!ev.text) return null;
+    return Object.assign(base, { icon: "•", text: ev.text });
+  }
+  return null;
+}
+
+function isPostExpired(p){ return !!(p.expiresAt && new Date(p.expiresAt).getTime() < Date.now()); }
+
+/* Une eventos automáticos (todos los tickets) + posts humanos, ordena por
+   fecha descendente y separa lo fijado (Pin/Megapin) a su propia sección —
+   Megapin siempre antes que Pin normal, empatando por fecha de fijado. */
+function buildActivityFeed(){
+  var items = [];
+  STATE.tickets.forEach(function(t){
+    (t.thread || []).forEach(function(ev){
+      var entry = activityFeedEntry(ev, t);
+      if(entry) items.push(entry);
+    });
+  });
+  STATE.teamPosts.forEach(function(p){
+    if(isPostExpired(p)) return;
+    items.push({ kind: "post", id: p.id, ts: p.createdAt, post: p });
+  });
+  if(UI.feedFilter === "posts") items = items.filter(function(i){ return i.kind === "post"; });
+  if(UI.feedFilter === "eventos") items = items.filter(function(i){ return i.kind === "event"; });
+  items.sort(function(a,b){ return new Date(b.ts).getTime() - new Date(a.ts).getTime(); });
+  var pinnedPosts = items.filter(function(i){ return i.kind === "post" && i.post.pinLevel !== "none"; });
+  pinnedPosts.sort(function(a,b){
+    if(a.post.pinLevel !== b.post.pinLevel) return a.post.pinLevel === "megapin" ? -1 : 1;
+    return new Date(b.post.pinnedAt||b.post.createdAt).getTime() - new Date(a.post.pinnedAt||a.post.createdAt).getTime();
+  });
+  var pinnedIds = {};
+  pinnedPosts.forEach(function(i){ pinnedIds[i.id] = true; });
+  var rest = items.filter(function(i){ return !(i.kind === "post" && pinnedIds[i.id]); });
+  /* Tope de rendimiento: nunca renderizar miles de filas de golpe — el
+     historial completo se sigue viendo dentro de cada ticket, esto es solo
+     "lo reciente". 150 es generoso para uso diario de un equipo chico. */
+  return { pinned: pinnedPosts, items: rest.slice(0, 150) };
+}
+
+function reactionsForTarget(targetType, targetId){
+  return STATE.feedReactions.filter(function(r){ return r.targetType === targetType && String(r.targetId) === String(targetId); });
+}
+function currentUserReactionType(targetType, targetId){
+  var uidActor = currentActorId();
+  if(!uidActor) return null;
+  var mine = reactionsForTarget(targetType, targetId).filter(function(r){ return r.userId === uidActor; })[0];
+  return mine ? mine.reactionType : null;
+}
+
+/* Microcopy determinista (§22-26 "No AI. No LLM."): agrupa por tipo de
+   reacción (en el orden fijo de REACTIONS, nunca por frecuencia — así el
+   resultado es 100% reproducible dado el mismo conjunto de filas) y arma
+   "Fulano, Zutano y N más reaccionaron con 🎉" por cada tipo presente,
+   uniendo varios tipos con " · ". Función pura (sin DOM/red) a propósito:
+   así se puede probar con datos de prueba, ver feed_qa_test.js. */
+function buildReactionMicrocopy(reactions){
+  if(!reactions || !reactions.length) return "";
+  var byType = {};
+  reactions.forEach(function(r){
+    var name = r.autor || "Alguien";
+    (byType[r.reactionType] = byType[r.reactionType] || []).push(name);
+  });
+  var parts = [];
+  REACTIONS.forEach(function(meta){
+    var names = byType[meta.type];
+    if(!names || !names.length) return;
+    var namesText;
+    if(names.length === 1) namesText = names[0];
+    else if(names.length === 2) namesText = names[0] + " y " + names[1];
+    else namesText = names[0] + " y " + (names.length - 1) + " más";
+    var verb = names.length === 1 ? "reaccionó" : "reaccionaron";
+    parts.push(namesText + " " + verb + " con " + meta.emoji);
+  });
+  return parts.join(" · ");
+}
+
+async function toggleFeedReaction(targetType, targetId, reactionType){
+  var uidActor = currentActorId();
+  if(!uidActor) return;
+  var existing = reactionsForTarget(targetType, targetId).filter(function(r){ return r.userId === uidActor; })[0];
+  var turningOff = existing && existing.reactionType === reactionType;
+  /* Optimista, mismo criterio que el resto de la app: se ve al instante,
+     refreshFromServer() de abajo reconcilia con la fuente de verdad. */
+  STATE.feedReactions = STATE.feedReactions.filter(function(r){ return !(r.targetType===targetType && String(r.targetId)===String(targetId) && r.userId===uidActor); });
+  if(!turningOff){
+    STATE.feedReactions.push({ id: uid(), targetType: targetType, targetId: targetId, userId: uidActor, autor: currentActorName()||"", reactionType: reactionType, createdAt: new Date().toISOString() });
+  }
+  render();
+  try{
+    if(turningOff){
+      await sb.from("feed_reactions").delete().eq("target_type", targetType).eq("target_id", String(targetId)).eq("user_id", uidActor);
+    } else {
+      var res = await sb.from("feed_reactions").upsert(
+        { target_type: targetType, target_id: String(targetId), user_id: uidActor, user_name_snapshot: currentActorName()||"", reaction_type: reactionType },
+        { onConflict: "target_type,target_id,user_id" }
+      );
+      if(res.error) throw res.error;
+    }
+  }catch(e){ showToast("No se pudo guardar la reacción: " + (e.message || "error")); }
+  refreshFromServer({ refocus: false });
+}
+
+function feedExpiresIsoFromChoice(choice){
+  var hours = { "24h": 24, "3d": 72, "7d": 168 }[choice];
+  if(!hours) return null;
+  return new Date(Date.now() + hours*3600000).toISOString();
+}
+
+function openFeedComposer(){ UI.feedComposerOpen = true; UI.pendingFocus = { elId: "feed-composer-text", userInitiated: true }; render(); }
+function closeFeedComposer(){
+  if(UI.feedComposerPhoto && UI.feedComposerPhoto.previewUrl){ try{ URL.revokeObjectURL(UI.feedComposerPhoto.previewUrl); }catch(e){} }
+  UI.feedComposerOpen = false; UI.feedComposerPhoto = null; UI.feedComposerPin = "none"; UI.feedComposerExpires = "never"; UI.feedComposerBusy = false;
+  render();
+}
+function setFeedComposerPhoto(file){
+  if(UI.feedComposerPhoto && UI.feedComposerPhoto.previewUrl){ try{ URL.revokeObjectURL(UI.feedComposerPhoto.previewUrl); }catch(e){} }
+  UI.feedComposerPhoto = file ? { file: file, previewUrl: URL.createObjectURL(file) } : null;
+  render();
+}
+
+async function publishFeedPost(){
+  if(UI.feedComposerBusy) return;
+  var textEl = document.getElementById("feed-composer-text");
+  var text = textEl ? textEl.value.trim() : "";
+  var photo = UI.feedComposerPhoto;
+  if(!text && !photo){ showToast("Escribe algo o adjunta una foto."); return; }
+  /* team_posts_insert (0013) NUNCA permite pin_level='megapin' directo en el
+     INSERT (a propósito — ver el comentario de esa policy) — Megapin SIEMPRE
+     pasa por set_post_pin() después de crear la fila, sea quien sea quien
+     publique. "pin" normal sí puede ir directo en el INSERT (cualquier
+     miembro activo puede fijar su propio post). */
+  var wantsMegapin = UI.feedComposerPin === "megapin" && isAdmin();
+  var pinLevel = UI.feedComposerPin === "pin" ? "pin" : "none";
+  UI.feedComposerBusy = true; render();
+  try{
+    var imagePath = null;
+    if(photo){
+      var blob = await resizeImageToBlob(photo.file, 1280, 0.8);
+      imagePath = "feed/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
+      var up = await sb.storage.from(FILES_BUCKET).upload(imagePath, blob, { contentType: "image/jpeg" });
+      if(up.error) throw up.error;
+    }
+    var row = {
+      author_user_id: currentActorId(), author_name_snapshot: currentActorName() || "",
+      text: text, image_storage_path: imagePath, ticket_id: null,
+      pin_level: pinLevel, pinned_by: pinLevel !== "none" ? (currentActorName()||"") : null,
+      pinned_at: pinLevel !== "none" ? new Date().toISOString() : null,
+      expires_at: feedExpiresIsoFromChoice(UI.feedComposerExpires)
+    };
+    var ins = await sb.from("team_posts").insert(row).select().single();
+    if(ins.error) throw ins.error;
+    if(wantsMegapin && ins.data && ins.data.id){
+      try{ await sb.rpc("set_post_pin", { post_id: ins.data.id, new_pin_level: "megapin" }); }catch(e2){ /* el post ya se publicó; si el Megapin falla, no perdemos el post — solo se queda sin fijar */ }
+    }
+    closeFeedComposer();
+    await refreshFromServer({ refocus: false });
+    showToast("Publicado.");
+  }catch(e){
+    UI.feedComposerBusy = false; render();
+    showToast("No se pudo publicar: " + (e.message || "error"));
+  }
+}
+
+async function togglePostPin(postId, newLevel){
+  try{
+    var res = await sb.rpc("set_post_pin", { post_id: postId, new_pin_level: newLevel });
+    if(res.error) throw res.error;
+  }catch(e){ showToast("No se pudo actualizar el fijado: " + (e.message || "error")); return; }
+  refreshFromServer({ refocus: false });
+}
+
+async function deleteFeedPost(postId){
+  try{
+    var res = await sb.from("team_posts").update({ deleted_at: new Date().toISOString(), deleted_by: currentActorName()||"" }).eq("id", postId);
+    if(res.error) throw res.error;
+  }catch(e){ showToast("No se pudo eliminar: " + (e.message || "error")); return; }
+  refreshFromServer({ refocus: false });
+}
+
+function openFeedRelacionar(postId){ UI.feedRelacionarOpenFor = postId; UI.feedRelacionarQuery = ""; render(); }
+function closeFeedRelacionar(){ UI.feedRelacionarOpenFor = null; UI.feedRelacionarQuery = ""; render(); }
+
+/* Relacionar/Crear ticket (§35-40): NUNCA se vuelve a subir la imagen — se
+   inserta una fila nueva de bitacora tipo "archivo" apuntando al MISMO
+   storage_path que ya tiene el post (idéntico criterio que
+   duplicatePhotoTargets, sección 9, para el caso ya existente de "misma
+   foto en más de un lugar"). team_posts.ticket_id se actualiza para que el
+   post deje de listarse como "sin relacionar". */
+async function relacionarFeedPost(postId, ticketId){
+  var p = STATE.teamPosts.filter(function(x){ return x.id === postId; })[0];
+  var t = findTicket(ticketId);
+  if(!p || !t) return;
+  try{
+    if(p.imageStoragePath){
+      var r = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: p.autor || currentActorName() || null, payload: { storage_path: p.imageStoragePath, filename: "", caption: p.text || "" } });
+      if(r.error) throw r.error;
+    }
+    var res = await sb.from("team_posts").update({ ticket_id: t.id }).eq("id", postId);
+    if(res.error) throw res.error;
+  }catch(e){ showToast("No se pudo relacionar: " + (e.message || "error")); return; }
+  closeFeedRelacionar();
+  await refreshFromServer({ refocus: false });
+  showToast("Relacionado con el ticket #" + t.seq + ".");
+}
+
+async function crearTicketDesdeFeedPost(postId){
+  var p = STATE.teamPosts.filter(function(x){ return x.id === postId; })[0];
+  if(!p) return;
+  var newId = await createTicketCore({});
+  if(!newId) return;
+  try{
+    if(p.imageStoragePath){
+      await sb.from("bitacora").insert({ ticket_id: newId, tipo: "archivo", autor: p.autor || currentActorName() || null, payload: { storage_path: p.imageStoragePath, filename: "", caption: p.text || "" } });
+    }
+    await sb.from("team_posts").update({ ticket_id: newId }).eq("id", postId);
+  }catch(e){ showToast("El ticket se creó, pero no se pudo vincular la foto: " + (e.message||"error")); }
+  openTicketById(newId);
+  await refreshFromServer({ refocus: false });
+  showTicketCreatedToast(newId);
+}
+
+async function marcarFeedPostNoRequiereTicket(postId){
+  try{
+    var res = await sb.from("team_posts").update({ no_ticket_required: true }).eq("id", postId);
+    if(res.error) throw res.error;
+  }catch(e){ showToast("No se pudo actualizar: " + (e.message || "error")); return; }
+  refreshFromServer({ refocus: false });
+}
+
+/* Tickets que "Sin relacionar" y el mini-buscador de Relacionar ofrecen —
+   client-side, sobre lo que ya está cargado (nunca una llamada de red
+   nueva): filtro simple por folio o nombre de cliente, tickets abiertos
+   primero. Alcance deliberadamente simple (ver comentario al inicio de esta
+   sección) — no es ranking/fuzzy search. */
+function feedRelacionarCandidates(query){
+  var q = (query||"").trim().toLowerCase();
+  var list = STATE.tickets.filter(function(t){
+    if(!q) return true;
+    return ("#"+t.seq).indexOf(q) !== -1 || (t.cliente||"").toLowerCase().indexOf(q) !== -1 || String(t.seq).indexOf(q) !== -1;
+  });
+  list.sort(function(a,b){
+    var aClosed = !!a.cerradoAt, bClosed = !!b.cerradoAt;
+    if(aClosed !== bClosed) return aClosed ? 1 : -1;
+    return new Date(b.lastActivityAt||b.createdAt).getTime() - new Date(a.lastActivityAt||a.createdAt).getTime();
+  });
+  return list.slice(0, 12);
+}
+
+function fmtFeedRelative(iso){
+  if(!iso) return "";
+  var diffMs = Date.now() - new Date(iso).getTime();
+  var mins = Math.floor(diffMs / 60000);
+  if(mins < 1) return "ahora";
+  if(mins < 60) return "hace " + mins + (mins===1?" min":" min");
+  var hours = Math.floor(mins/60);
+  if(hours < 24) return "hace " + hours + (hours===1?" hora":" horas");
+  return fmtRelativeActivity(iso);
+}
+
+function renderFeedReactionBar(targetType, targetId){
+  var mine = currentUserReactionType(targetType, targetId);
+  var buttons = REACTIONS.map(function(r){
+    return '<button type="button" class="feed-reaction-btn' + (mine===r.type?" active":"") + '" data-action="feed-reaction" data-target-type="' + targetType + '" data-target-id="' + escapeHtml(String(targetId)) + '" data-reaction="' + r.type + '" title="' + escapeHtml(r.label) + '" aria-pressed="' + (mine===r.type?"true":"false") + '">' + r.emoji + "</button>";
+  }).join("");
+  var summary = buildReactionMicrocopy(reactionsForTarget(targetType, targetId));
+  return (
+    '<div class="feed-reactions">' +
+      '<div class="feed-reaction-buttons">' + buttons + "</div>" +
+      (summary ? '<div class="feed-reaction-summary">' + escapeHtml(summary) + "</div>" : "") +
+    "</div>"
+  );
+}
+
+function renderFeedTicketChip(t){
+  if(!t) return "";
+  return '<button type="button" class="feed-ticket-chip" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + (t.cliente ? " · " + escapeHtml(t.cliente) : "") + "</button>";
+}
+
+function renderFeedEventItem(item){
+  var t = findTicket(item.ticketId);
+  var img = item.hasImage && item.storagePath ? '<img class="feed-item-img" data-storage-path="' + escapeHtml(item.storagePath) + '" alt="">' : "";
+  return (
+    '<div class="feed-item feed-item-event">' +
+      '<div class="feed-item-icon" aria-hidden="true">' + item.icon + "</div>" +
+      '<div class="feed-item-body">' +
+        '<div class="feed-item-meta">' +
+          (item.autor ? '<span class="feed-item-autor">' + escapeHtml(item.autor) + "</span>" : "") +
+          '<span class="feed-item-time">' + fmtFeedRelative(item.ts) + "</span>" +
+          renderFeedTicketChip(t) +
+        "</div>" +
+        '<div class="feed-item-text">' + escapeHtml(item.text) + "</div>" +
+        img +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function renderFeedPostPinControls(p){
+  var canManage = isAdmin() || p.authorUserId === currentActorId();
+  var btns = [];
+  if(p.pinLevel === "none"){
+    btns.push('<button type="button" class="feed-pin-btn" data-action="feed-post-pin" data-post-id="' + p.id + '" data-level="pin" title="Cualquier persona del equipo puede fijar o quitar un Pin normal">📌 Fijar</button>');
+    if(isAdmin()) btns.push('<button type="button" class="feed-pin-btn" data-action="feed-post-pin" data-post-id="' + p.id + '" data-level="megapin">⭐ Megapin</button>');
+  } else if(p.pinLevel === "pin"){
+    btns.push('<button type="button" class="feed-pin-btn active" data-action="feed-post-pin" data-post-id="' + p.id + '" data-level="none">📌 Quitar fijado</button>');
+    if(isAdmin()) btns.push('<button type="button" class="feed-pin-btn" data-action="feed-post-pin" data-post-id="' + p.id + '" data-level="megapin">⭐ Megapin</button>');
+  } else if(p.pinLevel === "megapin"){
+    if(isAdmin()) btns.push('<button type="button" class="feed-pin-btn active" data-action="feed-post-pin" data-post-id="' + p.id + '" data-level="none">⭐ Quitar Megapin</button>');
+  }
+  if(canManage) btns.push('<button type="button" class="feed-post-delete-btn" data-action="feed-post-delete" data-post-id="' + p.id + '" title="Eliminar">Eliminar</button>');
+  return btns.length ? '<div class="feed-post-controls">' + btns.join("") + "</div>" : "";
+}
+
+function renderFeedRelacionarPicker(p){
+  if(UI.feedRelacionarOpenFor !== p.id) return "";
+  var candidates = feedRelacionarCandidates(UI.feedRelacionarQuery);
+  var rows = candidates.length
+    ? candidates.map(function(t){
+        return '<button type="button" class="feed-relacionar-row" data-action="feed-photo-relacionar-choose" data-post-id="' + p.id + '" data-ticket-id="' + t.id + '">#' + t.seq + (t.cliente ? " · " + escapeHtml(t.cliente) : " · sin cliente") + "</button>";
+      }).join("")
+    : '<div class="feed-relacionar-empty">Sin resultados.</div>';
+  return (
+    '<div class="feed-relacionar-picker">' +
+      '<input type="text" id="feed-relacionar-input" placeholder="Buscar ticket por folio o cliente…" value="' + escapeHtml(UI.feedRelacionarQuery) + '">' +
+      '<div class="feed-relacionar-list">' + rows + "</div>" +
+      '<button type="button" class="btn-plain" data-action="feed-relacionar-cancel">Cancelar</button>' +
+    "</div>"
+  );
+}
+
+function renderFeedPostItem(item){
+  var p = item.post || item; // Biblioteca reusa esto pasando el post directo, sin envolver en {kind,post}
+  var t = p.ticketId ? findTicket(p.ticketId) : null;
+  var img = p.imageStoragePath ? '<img class="feed-item-img" data-storage-path="' + escapeHtml(p.imageStoragePath) + '" alt="">' : "";
+  var pinBadge = p.pinLevel === "megapin"
+    ? '<span class="feed-pin-badge feed-pin-badge-mega">⭐ Megapin' + (p.pinnedBy ? " · " + escapeHtml(p.pinnedBy) : "") + "</span>"
+    : p.pinLevel === "pin"
+      ? '<span class="feed-pin-badge">📌 Fijado' + (p.pinnedBy ? " · " + escapeHtml(p.pinnedBy) : "") + "</span>"
+      : "";
+  var needsResolution = !p.ticketId && !p.noTicketRequired && p.imageStoragePath;
+  var resolutionActions = needsResolution
+    ? '<div class="feed-post-resolution">' +
+        '<button type="button" class="btn btn-ghost" data-action="feed-photo-relacionar-open" data-post-id="' + p.id + '">Relacionar</button>' +
+        '<button type="button" class="btn btn-ghost" data-action="feed-photo-crear-ticket" data-post-id="' + p.id + '">Crear ticket</button>' +
+        '<button type="button" class="btn-plain" data-action="feed-photo-no-requiere" data-post-id="' + p.id + '">No requiere ticket</button>' +
+      "</div>" + renderFeedRelacionarPicker(p)
+    : "";
+  return (
+    '<div class="feed-item feed-item-post' + (p.pinLevel!=="none"?" feed-item-pinned":"") + '">' +
+      '<div class="feed-item-avatar" aria-hidden="true">' + escapeHtml((p.autor||"?").slice(0,1).toUpperCase()) + "</div>" +
+      '<div class="feed-item-body">' +
+        '<div class="feed-item-meta">' +
+          '<span class="feed-item-autor">' + escapeHtml(p.autor || "Alguien") + "</span>" +
+          '<span class="feed-item-time">' + fmtFeedRelative(p.createdAt) + "</span>" +
+          pinBadge +
+          renderFeedTicketChip(t) +
+        "</div>" +
+        (p.text ? '<div class="feed-item-text">' + escapeHtml(p.text).replace(/\n/g,"<br>") + "</div>" : "") +
+        img +
+        resolutionActions +
+        renderFeedReactionBar("post", p.id) +
+        renderFeedPostPinControls(p) +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function renderFeedFilterBar(){
+  var opts = [["todo","Todo"],["posts","Publicaciones"],["eventos","Automático"]];
+  return '<div class="feed-filter-bar">' + opts.map(function(o){
+    return '<button type="button" class="feed-filter-btn' + (UI.feedFilter===o[0]?" active":"") + '" data-action="feed-filter" data-value="' + o[0] + '">' + o[1] + "</button>";
+  }).join("") + "</div>";
+}
+
+function renderFeedComposer(){
+  var photo = UI.feedComposerPhoto;
+  var pinOptions = [["none","Normal"],["pin","📌 Pin"]];
+  if(isAdmin()) pinOptions.push(["megapin","⭐ Megapin"]);
+  var pinBtns = pinOptions.map(function(o){
+    return '<button type="button" class="feed-composer-pin-btn' + (UI.feedComposerPin===o[0]?" active":"") + '" data-action="feed-composer-pin" data-value="' + o[0] + '">' + o[1] + "</button>";
+  }).join("");
+  var expOptions = [["never","Nunca vence"],["24h","24 horas"],["3d","3 días"],["7d","7 días"]];
+  var expBtns = expOptions.map(function(o){
+    return '<button type="button" class="feed-composer-exp-btn' + (UI.feedComposerExpires===o[0]?" active":"") + '" data-action="feed-composer-expires" data-value="' + o[0] + '">' + o[1] + "</button>";
+  }).join("");
+  return (
+    '<div class="feed-composer">' +
+      '<textarea id="feed-composer-text" placeholder="¿Qué está pasando? (opcional si adjuntas una foto)" rows="3"></textarea>' +
+      (photo ? '<div class="feed-composer-preview"><img src="' + photo.previewUrl + '" alt=""><button type="button" class="btn-plain" data-action="feed-composer-remove-photo">Quitar foto</button></div>' : "") +
+      '<div class="feed-composer-row"><span class="feed-composer-row-label">Fijar:</span>' + pinBtns + "</div>" +
+      '<div class="feed-composer-row"><span class="feed-composer-row-label">Vence:</span>' + expBtns + "</div>" +
+      '<input type="file" id="feed-composer-photo-input" accept="image/*" hidden>' +
+      '<div class="feed-composer-actions">' +
+        '<button type="button" class="btn btn-ghost" data-action="feed-composer-attach">📷 Adjuntar foto</button>' +
+        '<button type="button" class="btn-plain" data-action="feed-close-composer">Cancelar</button>' +
+        '<button type="button" class="btn btn-primary" data-action="feed-composer-submit"' + (UI.feedComposerBusy?" disabled":"") + '>' + (UI.feedComposerBusy?"Publicando…":"Publicar") + "</button>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function renderInicioFeed(){
+  var built = buildActivityFeed();
+  var header = '<div class="home-header feed-header"><h1>Actividad reciente</h1><button type="button" class="btn btn-primary" data-action="feed-open-composer">+ Publicar</button></div>';
+  var composer = UI.feedComposerOpen ? renderFeedComposer() : "";
+  var filterBar = renderFeedFilterBar();
+  var pinnedHtml = built.pinned.length ? '<div class="feed-pinned-section">' + built.pinned.map(renderFeedPostItem).join("") + "</div>" : "";
+  var listHtml = built.items.length
+    ? built.items.map(function(item){ return item.kind === "post" ? renderFeedPostItem(item) : renderFeedEventItem(item); }).join("")
+    : '<div class="feed-empty">Todavía no hay actividad. Publica algo o crea un ticket para que empiece a aparecer aquí.</div>';
+  return (
+    header + composer + filterBar +
+    '<div class="feed-scroll" id="feed-scroll">' + pinnedHtml + '<div class="feed-list">' + listHtml + "</div></div>"
+  );
+}
+
+/* Biblioteca — "Sin relacionar" (§76/§150): fotos publicadas desde Inicio
+   que todavía no se resolvieron. Reusa renderFeedPostItem TAL CUAL (mismo
+   markup/acciones que en Inicio) — nunca una segunda tarjeta a mantener. */
+function feedUnresolvedPosts(){
+  return STATE.teamPosts.filter(function(p){ return !p.ticketId && !p.noTicketRequired && p.imageStoragePath && !isPostExpired(p); });
+}
+function renderBibliotecaSinRelacionar(){
+  var pending = feedUnresolvedPosts();
+  if(!pending.length) return "";
+  return (
+    '<div class="biblioteca-sin-relacionar">' +
+      '<div class="biblioteca-sin-relacionar-title">Sin relacionar (' + pending.length + ")</div>" +
+      pending.map(renderFeedPostItem).join("") +
+    "</div>"
+  );
+}
+
 function renderMain(){
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
     return UI.selectedClienteId ? renderClienteFichaView() : renderClientesListView();
@@ -6751,16 +7400,17 @@ function renderMain(){
        usa /pendientes, /dinero, /help o /buscar aparece la misma consola
        que dentro de un ticket, para que "consultar sin abrir nada" también
        se sienta como el mismo hilo continuo. */
+    /* §102-103 ("GRAN ACTUALIZACIÓN NOCTURNA"): Inicio ya NO abre en la
+       pantalla enorme "¿Qué necesitas encontrar?" — lo primero que ve la
+       persona es "Actividad reciente" (renderInicioFeed). La consola de "/"
+       (buscar, pendientes, dinero, ayuda) sigue existiendo tal cual, sin
+       tocar su lógica: en cuanto hay texto en el compositor que activa un
+       comando efímero (globalEphemeralHtml() no vacío), esa consola toma la
+       pantalla completa, exactamente como antes — el feed simplemente deja
+       de competir por espacio en ese momento en vez de vivir siempre debajo. */
     var globalHtml = globalEphemeralHtml();
     if(!globalHtml){
-      return (
-        '<div class="empty-state">' +
-          "<h1>¿Qué necesitas encontrar?</h1>" +
-          "<p>Este es el centro de consulta: usa / para buscar un ticket, abrir uno por número, ver pendientes o dinero de todos los tickets, o pedir ayuda. Nada de esto modifica ningún ticket.</p>" +
-          '<button class="btn btn-primary" data-action="new-ticket">+ Nuevo ticket</button>' +
-        "</div>" +
-        renderComposer()
-      );
+      return renderInicioFeed() + renderComposer();
     }
     return (
       '<div class="home-header"><h1>¿Qué necesitas encontrar?</h1><button class="btn btn-ghost" data-action="new-ticket">+ Nuevo ticket</button></div>' +
@@ -11160,6 +11810,27 @@ function wireEvents(){
     b.addEventListener("click", function(){ openTicketById(b.getAttribute("data-id")); });
   });
 
+  /* Feed del equipo: input de foto del composer (mismo patrón que el resto
+     de la app — file input oculto, un botón visible lo dispara) y el filtro
+     en vivo del mini-buscador de Relacionar (renderKeepingLiveInputs()
+     preserva foco/selección de #feed-relacionar-input entre cada tecleo,
+     igual que ya hace con /cliente y el resto de los inputs con id). */
+  var feedPhotoInput = document.getElementById("feed-composer-photo-input");
+  if(feedPhotoInput){
+    feedPhotoInput.addEventListener("change", function(){
+      var f = feedPhotoInput.files && feedPhotoInput.files[0];
+      if(f) setFeedComposerPhoto(f);
+      feedPhotoInput.value = "";
+    });
+  }
+  var feedRelacionarInput = document.getElementById("feed-relacionar-input");
+  if(feedRelacionarInput){
+    feedRelacionarInput.addEventListener("input", function(){
+      UI.feedRelacionarQuery = feedRelacionarInput.value;
+      renderKeepingLiveInputs();
+    });
+  }
+
   /* §23: hover en desktop — el clic/tap (data-action="sidebar-marker-icon",
      manejado en el listener delegado) ya cubre mobile/tablet (§24) y sirve
      como respaldo en desktop; esto SOLO agrega el hover real. Se ignora en
@@ -12191,6 +12862,47 @@ document.addEventListener("click", function(e){
     }
     return;
   }
+  /* Feed del equipo (Inicio) — mismo patrón de siempre: cada data-action se
+     revisa una sola vez con e.target.closest, nunca por posición/índice. */
+  var feedOpenComposerBtn = e.target.closest && e.target.closest('[data-action="feed-open-composer"]');
+  if(feedOpenComposerBtn){ openFeedComposer(); return; }
+  var feedCloseComposerBtn = e.target.closest && e.target.closest('[data-action="feed-close-composer"]');
+  if(feedCloseComposerBtn){ closeFeedComposer(); return; }
+  var feedAttachBtn = e.target.closest && e.target.closest('[data-action="feed-composer-attach"]');
+  if(feedAttachBtn){
+    var feedFileInput = document.getElementById("feed-composer-photo-input");
+    if(feedFileInput) feedFileInput.click();
+    return;
+  }
+  var feedRemovePhotoBtn = e.target.closest && e.target.closest('[data-action="feed-composer-remove-photo"]');
+  if(feedRemovePhotoBtn){ setFeedComposerPhoto(null); return; }
+  var feedPinChoiceBtn = e.target.closest && e.target.closest('[data-action="feed-composer-pin"]');
+  if(feedPinChoiceBtn){ UI.feedComposerPin = feedPinChoiceBtn.getAttribute("data-value"); renderKeepingLiveInputs(); return; }
+  var feedExpChoiceBtn = e.target.closest && e.target.closest('[data-action="feed-composer-expires"]');
+  if(feedExpChoiceBtn){ UI.feedComposerExpires = feedExpChoiceBtn.getAttribute("data-value"); renderKeepingLiveInputs(); return; }
+  var feedSubmitBtn = e.target.closest && e.target.closest('[data-action="feed-composer-submit"]');
+  if(feedSubmitBtn){ publishFeedPost(); return; }
+  var feedFilterBtn = e.target.closest && e.target.closest('[data-action="feed-filter"]');
+  if(feedFilterBtn){ UI.feedFilter = feedFilterBtn.getAttribute("data-value"); render(); return; }
+  var feedReactionBtn = e.target.closest && e.target.closest('[data-action="feed-reaction"]');
+  if(feedReactionBtn){
+    toggleFeedReaction(feedReactionBtn.getAttribute("data-target-type"), feedReactionBtn.getAttribute("data-target-id"), feedReactionBtn.getAttribute("data-reaction"));
+    return;
+  }
+  var feedPinBtn = e.target.closest && e.target.closest('[data-action="feed-post-pin"]');
+  if(feedPinBtn){ togglePostPin(feedPinBtn.getAttribute("data-post-id"), feedPinBtn.getAttribute("data-level")); return; }
+  var feedDeleteBtn = e.target.closest && e.target.closest('[data-action="feed-post-delete"]');
+  if(feedDeleteBtn){ deleteFeedPost(feedDeleteBtn.getAttribute("data-post-id")); return; }
+  var feedRelacionarOpenBtn = e.target.closest && e.target.closest('[data-action="feed-photo-relacionar-open"]');
+  if(feedRelacionarOpenBtn){ openFeedRelacionar(feedRelacionarOpenBtn.getAttribute("data-post-id")); return; }
+  var feedRelacionarCancelBtn = e.target.closest && e.target.closest('[data-action="feed-relacionar-cancel"]');
+  if(feedRelacionarCancelBtn){ closeFeedRelacionar(); return; }
+  var feedRelacionarChooseBtn = e.target.closest && e.target.closest('[data-action="feed-photo-relacionar-choose"]');
+  if(feedRelacionarChooseBtn){ relacionarFeedPost(feedRelacionarChooseBtn.getAttribute("data-post-id"), feedRelacionarChooseBtn.getAttribute("data-ticket-id")); return; }
+  var feedCrearTicketBtn = e.target.closest && e.target.closest('[data-action="feed-photo-crear-ticket"]');
+  if(feedCrearTicketBtn){ crearTicketDesdeFeedPost(feedCrearTicketBtn.getAttribute("data-post-id")); return; }
+  var feedNoRequiereBtn = e.target.closest && e.target.closest('[data-action="feed-photo-no-requiere"]');
+  if(feedNoRequiereBtn){ marcarFeedPostNoRequiereTicket(feedNoRequiereBtn.getAttribute("data-post-id")); return; }
   if(UI.composer){
     var pop = document.getElementById("composer-popover");
     var plus = document.querySelector('[data-action="toggle-menu"]');
