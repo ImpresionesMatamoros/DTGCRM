@@ -2023,8 +2023,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.10.2";
-var APP_BUILD = "2026.09.08.1";
+var APP_VERSION = "0.10.3";
+var APP_BUILD = "2026.09.08.2";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -3252,6 +3252,36 @@ function renderTicketRow(t, opts){
    muestra la barra completa de marcadores activos, así que no hace falta
    duplicar esa información aquí). */
 var SIDEBAR_MARKER_ICONS_MAX = 3;
+/* CAUSA RAÍZ del layout roto tras marcar una nota como Urgente (investigada
+   a fondo esta ronda, confirmada con jsdom): esta función se reutiliza tal
+   cual dentro de 4 vistas de Tickets (comentario de arriba), y en 3 de esas
+   4 (sidebar renderTicketRow, Miniaturas renderTicketsThumbCard, Iconos
+   renderTicketsIconCard) su HTML se inserta DENTRO de otro <button> ya
+   existente (la tarjeta/fila completa es clicable). Mientras ningún ticket
+   tenía marcadores activos, activeMarkers(t) devolvía [] y esta función
+   nunca emitía nada — el defecto era invisible. En cuanto CUALQUIER ticket
+   visible en esas vistas tuvo su primer marcador activo (en este caso,
+   Urgente), el icono de abajo se generaba como <button> real anidado
+   dentro de OTRO <button> — HTML inválido (interactive content dentro de
+   interactive content). El parser HTML5 del navegador reacciona cerrando
+   el <button> exterior en cuanto encuentra el interior, y todo lo que
+   venía DESPUÉS del ícono pero que debía seguir dentro del botón exterior
+   (el resto de la fila/tarjeta) se reubica como hermano suelto en vez de
+   hijo — verificado con jsdom: el nodo re-parseado saca literalmente esos
+   elementos fuera de su contenedor ("elementos volando"). Esto explica
+   TODO lo reportado: ningún error de JavaScript (es el parser HTML del
+   navegador, no una excepción), reproducible en cualquier dispositivo o
+   recarga (el HTML inválido nace del dato persistido, no de estado local),
+   y roto tanto en móvil como en escritorio (defecto estructural, no de
+   viewport). Arreglo: el icono deja de ser un <button> real — pasa a
+   <span role="button" tabindex="0"> con el mismo data-action de siempre
+   (el listener delegado ya es agnóstico a la etiqueta) más un keydown
+   Enter/Espacio explícito (mismo patrón ya usado por .tickets-list-row,
+   ver wireEvents) para conservar accesibilidad de teclado sin volver a
+   anidar un elemento interactivo real. La barra de marcadores del propio
+   ticket (renderMarkersBar/.markers-bar) NUNCA tuvo este problema — vive
+   dentro de un <div>, no de un <button> — así que sus botones "✓ Resolver"
+   siguen siendo <button> reales sin cambio. */
 function renderSidebarMarkerIcons(t){
   var active = activeMarkers(t);
   if(!active.length) return "";
@@ -3265,7 +3295,7 @@ function renderSidebarMarkerIcons(t){
       : "";
     return (
       '<span class="ticket-marker-icon-wrap">' +
-        '<button type="button" class="ticket-marker-icon" data-action="sidebar-marker-icon" data-ticket="' + t.id + '" data-marker="' + m.id + '" aria-label="' + escapeHtml(markerLabel(m.type)) + '" title="' + escapeHtml(markerLabel(m.type)) + '">' + markerIcon(m.type) + "</button>" +
+        '<span class="ticket-marker-icon" role="button" tabindex="0" data-action="sidebar-marker-icon" data-ticket="' + t.id + '" data-marker="' + m.id + '" aria-label="' + escapeHtml(markerLabel(m.type)) + '" title="' + escapeHtml(markerLabel(m.type)) + '">' + markerIcon(m.type) + "</span>" +
         tip +
       "</span>"
     );
@@ -3514,25 +3544,24 @@ function renderThreadItem(ev, ticketId){
   var meta = metaBits.join(" · ");
   var fullStamp = escapeHtml(fmtDateShort(ev.ts) + " · " + fmtTime(ev.ts));
   if(ev.type === "nota"){
-    /* §26 (DESHABILITADO — reporte de layout roto tras usar exactamente este
-       botón, esta ronda): "convertir una nota YA GUARDADA en marcador" vía
-       el icono "[!]" junto a la nota. La causa más probable ya identificada
-       (ver MARKER_TEXT_DISPLAY_MAX/truncateMarkerText arriba) es que este
-       camino copiaba el TEXTO COMPLETO de la nota original — sin cortar —
-       al marcador nuevo, y ese texto largo dominaba/descuadraba la barra
-       compacta de marcadores. Se aplicó el corte de longitud en el renderer
-       como arreglo de fondo, pero esta entrada específica se apaga por
-       ahora (prioridad: estabilidad inmediata) hasta confirmar con QA real
-       que el síntoma desapareció. Los otros dos caminos para crear un
-       marcador — el "!" del compositor ANTES de enviar (chooseMarkerType
-       source:"composer") y "Marcar como…" desde Detalles/Miniaturas/⋯
-       (source:"manual", overlay centrado, código completamente aparte) —
-       siguen intactos, igual que TODOS los marcadores ya guardados (siguen
-       viéndose y pudiéndose resolver exactamente igual). Para reactivar
-       este botón: restaurar las 2 líneas de var markerToggleBtn/body de
-       abajo (siguen en el historial de git) una vez identificada la causa
-       raíz con evidencia real (consola del navegador). */
-    body = '<div class="thread-text-row"><div class="thread-text">' + escapeHtml(ev.text).replace(/\n/g,"<br>") + "</div></div>";
+    /* §26: convertir una nota YA GUARDADA en marcador — mismo icono "[!]"
+       discreto que el compositor (§25), mismo selector, mismo core
+       (chooseMarkerType). Solo se ofrece si el ticket sigue existiendo
+       (ticketId truthy — nunca en la ficha de cliente/historial global,
+       donde este mismo renderThreadItem también se reutiliza).
+       REACTIVADO (esta ronda lo apagó por precaución mientras se investigaba
+       "layout roto tras marcar Urgente", sospechando de este camino
+       específico por ser el que Diego confirmó usar). La causa raíz real
+       resultó ser otra y completamente independiente de este botón — ver el
+       comentario "CAUSA RAÍZ" en renderSidebarMarkerIcons — así que no había
+       necesidad real de mantenerlo apagado; se restaura tal cual estaba. */
+    var markerToggleBtn = ticketId
+      ? '<button type="button" class="note-marker-btn" data-action="marker-picker-open-note" data-note-id="' + ev.id + '" data-ticket="' + ticketId + '" title="Marcar como…" aria-label="Marcar como…">!</button>'
+      : "";
+    body = '<div class="thread-text-row"><div class="thread-text">' + escapeHtml(ev.text).replace(/\n/g,"<br>") + "</div>" + markerToggleBtn + "</div>";
+    if(UI.markerPicker && UI.markerPicker.source === "note" && UI.markerPicker.noteId === ev.id){
+      body += renderMarkerPickerInline();
+    }
   } else if(ev.type === "sistema"){
     body = '<div class="thread-sub">' + escapeHtml(ev.text) + "</div>";
   } else if(ev.type === "producto"){
@@ -8090,11 +8119,9 @@ function renderMarkerPickerPopover(){
   if(!UI.markerPicker) return "";
   return '<div class="popover marker-picker-popover" id="marker-picker-popover">' + renderMarkerPickerBody() + "</div>";
 }
-/* Actualmente sin llamador vivo (ver nota "DESHABILITADO" en
-   renderThreadItem) — se conserva para poder reactivar el botón "!" de una
-   nota ya guardada sin reescribir esta función. id distinto del popover del
-   compositor (antes compartían "marker-picker-popover", un id duplicado en
-   el DOM aunque nunca coincidieran a la vez — corregido de todos modos). */
+/* id distinto del popover del compositor (antes ambos compartían
+   "marker-picker-popover", un id duplicado en el DOM aunque nunca
+   coincidieran a la vez — corregido de todos modos). */
 function renderMarkerPickerInline(){
   if(!UI.markerPicker) return "";
   return '<div class="marker-picker-inline" id="marker-picker-inline-popover">' + renderMarkerPickerBody() + "</div>";
@@ -11355,6 +11382,22 @@ function wireEvents(){
     });
   });
 
+  /* Íconos de marcador del sidebar/Miniaturas/Iconos (role="button" en vez
+     de <button> real — ver el comentario "CAUSA RAÍZ" en
+     renderSidebarMarkerIcons: ya no pueden ser <button> porque viven DENTRO
+     de otro <button>, HTML inválido). Mismo patrón de arriba: tabindex=0 +
+     role="button" en el render + Enter/Espacio aquí para no perder
+     accesibilidad de teclado. El clic ya lo resuelve el listener delegado
+     genérico (data-action="sidebar-marker-icon", agnóstico a la etiqueta),
+     así que aquí solo hace falta cubrir el teclado. */
+  root.querySelectorAll('.ticket-marker-icon[role="button"]').forEach(function(el){
+    el.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      toggleSidebarMarkerPopover(el.getAttribute("data-ticket"), el.getAttribute("data-marker"));
+    });
+  });
+
   /* Biblioteca — memoria visual: mismo patrón que Tickets Explorer arriba
      (los controles solo tocan UI.biblioteca / UI.bibliotecaViewer y dejan
      que renderBibliotecaView()/renderBibliotecaViewer() hagan el resto en
@@ -11887,9 +11930,19 @@ document.addEventListener("click", function(e){
   }
   /* §22-24: mismo botón para tap (mobile) y clic (desktop, además del hover
      de wireEvents) — click/tap SIEMPRE alterna abierto/cerrado, nunca dos
-     lógicas distintas (sección 85). */
+     lógicas distintas (sección 85).
+     stopPropagation() (nuevo, parte del arreglo de layout roto de esta
+     ronda): con el icono ahora como <span role="button"> DENTRO de un
+     <button data-action="open-ticket"/"tickets-thumb-select"> válido (antes
+     era un <button> anidado — HTML inválido — que el navegador expulsaba
+     fuera de ese contenedor, así que este clic nunca llegaba a "burbujear"
+     por él), sin esto un tap en el icono de marcador también abriría el
+     ticket por debajo. Este listener corre en fase de CAPTURA (ver el
+     registro al fondo del archivo), así que detenerlo aquí sí alcanza a
+     evitar el listener de clic del botón contenedor más abajo. */
   var sidebarMarkerIconBtn = e.target.closest && e.target.closest('[data-action="sidebar-marker-icon"]');
   if(sidebarMarkerIconBtn){
+    e.stopPropagation();
     toggleSidebarMarkerPopover(sidebarMarkerIconBtn.getAttribute("data-ticket"), sidebarMarkerIconBtn.getAttribute("data-marker"));
     return;
   }
