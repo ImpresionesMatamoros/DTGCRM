@@ -849,10 +849,89 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 }
 .producto-edit-row .pe-total{font-family:var(--font-mono); font-size:12.5px; text-align:right; color:var(--text);}
 .producto-edit-row .pe-total.pending{color:var(--gold);}
+.producto-edit-done-btn{grid-column:1 / -1; justify-self:end; font-size:12px; color:var(--accent-ink); padding:4px 2px;}
 @media (max-width:520px){
   .producto-edit-row{grid-template-columns:1fr; gap:4px; border-bottom:1px dashed var(--border); padding-bottom:8px;}
   .producto-edit-header{display:none;}
   .producto-edit-row .pe-total{text-align:left;}
+}
+/* Fila COMPACTA de producto (§ "EDICIÓN DE PRODUCTOS + KANBAN") — por
+   defecto (nunca los 3 inputs abiertos de siempre); Editar la conmuta a
+   .producto-edit-row de arriba. Mismo criterio de "tarjeta = div, acciones
+   = button hijos reales" que el feed del equipo — nunca botón anidado. */
+.producto-compact-row{
+  display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border);
+}
+.producto-compact-row:last-of-type{border-bottom:none;}
+.producto-compact-main{flex:1; min-width:0;}
+.producto-compact-desc{font-size:13px; color:var(--text); overflow-wrap:break-word;}
+.producto-compact-meta{font-size:12px; color:var(--text-muted); margin-top:2px;}
+.producto-precio-pending{color:var(--gold);}
+.producto-more-wrap{position:relative; flex-shrink:0;}
+.producto-more-btn{padding:6px 8px; border-radius:var(--radius-s);}
+.producto-more-btn:hover{background:var(--surface-2);}
+.producto-more-menu{
+  position:absolute; top:100%; right:0; margin-top:4px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-m); box-shadow:var(--shadow); padding:6px; width:170px; z-index:5; display:flex; flex-direction:column; gap:2px;
+}
+.producto-more-danger{color:var(--danger);}
+.producto-more-danger .desc{color:var(--danger);}
+
+/* Identidad de color del responsable (§ "COLORES POR PERSONA") — 4 variables
+   de color, reutilizando los mismos hex que .cid-theme-* (violeta/azul/
+   cian/rosa) para verse consistente con la identidad de cliente que ya
+   existe, pero bajo un prefijo de clase distinto (dos conceptos distintos).
+   CADA lugar que usa el color decide CÓMO (dot/borde/franja) — una sola
+   variable --resp-color, nunca una regla por combinación tema×superficie. */
+.resp-theme-violet{--resp-color:#B18CFF;}
+.resp-theme-blue{--resp-color:#6FA8FF;}
+.resp-theme-cyan{--resp-color:#3FC3E8;}
+.resp-theme-rose{--resp-color:#FF7AA8;}
+.resp-chip{display:inline-flex; align-items:center; gap:5px;}
+.resp-dot{width:7px; height:7px; border-radius:50%; background:var(--resp-color, var(--text-faint)); flex-shrink:0;}
+
+/* ===== Kanban de Responsables (§ "EDICIÓN DE PRODUCTOS + KANBAN") =====
+   Tablero horizontal, dark theme, cards compactas — "no Trello genérico":
+   sin sombras grandes ni gradientes, el mismo lenguaje visual (bordes finos,
+   radios pequeños) que ya usa el resto del CRM. Si las columnas no caben,
+   scroll horizontal (nunca comprimirlas hasta ilegibles) — .tickets-explorer-scroll-kanban
+   desactiva el padding vertical genérico para que el tablero controle su
+   propio scroll horizontal sin un doble scrollbar confuso. */
+.tickets-explorer-scroll-kanban{padding:0;}
+.kanban-board{display:flex; gap:12px; padding:14px 20px; overflow-x:auto; align-items:flex-start; min-height:100%;}
+.kanban-column{width:236px; flex-shrink:0; display:flex; flex-direction:column; gap:8px;}
+.kanban-column-header{
+  display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:var(--radius-s);
+  background:var(--surface-2); border-top:2px solid var(--resp-color, var(--border));
+}
+.kanban-column-dot{width:8px; height:8px; border-radius:50%; background:var(--resp-color, var(--text-faint)); flex-shrink:0;}
+.kanban-column-label{flex:1; min-width:0; font-size:12.5px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.kanban-column-count{font-size:11px; color:var(--text-faint); font-family:var(--font-mono);}
+.kanban-column-readonly .kanban-column-header{opacity:.7;}
+.kanban-column-dragover{outline:2px dashed var(--accent); outline-offset:2px; border-radius:var(--radius-m);}
+.kanban-column-cards{display:flex; flex-direction:column; gap:8px;}
+.kanban-column-empty{font-size:11.5px; color:var(--text-faint); padding:10px 4px; text-align:center; border:1px dashed var(--border); border-radius:var(--radius-s);}
+.kanban-card{
+  display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--border);
+  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-m); padding:6px; cursor:grab;
+}
+.kanban-card-dragging{opacity:.4;}
+.kanban-card-open{
+  display:flex; flex-direction:column; gap:3px; text-align:left; background:none; border:none; padding:2px; width:100%;
+}
+.kanban-card-top{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.kanban-card-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint);}
+.kanban-card-markers{display:flex; gap:2px;}
+.kanban-card-cliente{font-size:13px; font-weight:600; color:var(--text); overflow-wrap:break-word;}
+.kanban-card-work{font-size:12px; color:var(--text-muted); overflow-wrap:break-word;}
+.kanban-card-quesigue{font-size:11.5px; color:var(--accent-ink); background:var(--accent-soft); border-radius:var(--radius-s); padding:2px 6px; width:fit-content;}
+.kanban-card-resp-select{
+  font-size:11px; color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-s);
+  padding:3px 4px; background:var(--surface-2); width:100%;
+}
+@media(max-width:640px){
+  .kanban-board{padding:10px 14px; gap:10px;}
+  .kanban-column{width:200px;}
 }
 .prod-toggle{
   display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; flex-shrink:0;
@@ -1241,6 +1320,13 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-thumb-card{
   display:flex; flex-direction:column; text-align:left; border:1px solid var(--border); border-radius:var(--radius-m);
   background:var(--surface); padding:0; position:relative;
+  /* Identidad de color del responsable (§ "COLORES POR PERSONA"): acento
+     discreto — SOLO el borde izquierdo cambia de color (mismo grosor de
+     1px que el resto del borde, nunca una franja ancha que compita con
+     ❗ Urgente/otros markers). var(--resp-color) solo existe cuando la
+     tarjeta trae la clase .resp-theme-* (responsibleThemeClass) — sin
+     responsable, cae de vuelta al mismo var(--border) de siempre. */
+  border-left-color:var(--resp-color, var(--border));
   /* Tickets Workbench §20 (bug reportado): overflow:hidden AQUÍ es lo que
      recortaba el menú "⋯" (position:absolute, ver .tickets-thumb-more-menu)
      contra los bordes de la tarjeta. El recorte de esquinas redondeadas que
@@ -2084,8 +2170,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.11.0";
-var APP_BUILD = "2026.09.08.3";
+var APP_VERSION = "0.12.0";
+var APP_BUILD = "2026.09.10.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2324,7 +2410,25 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* filtro visual de Inicio: "todo" | "posts" (solo lo que publicó una
      persona) | "eventos" (solo automáticos) — nunca cambia qué se guarda,
      solo qué se muestra (spec §108-110 "filtros simples"). */
-  feedFilter: "todo" };
+  feedFilter: "todo",
+  /* Productos del ticket — "EDICIÓN DE PRODUCTOS + KANBAN" (esta ronda):
+     estado 100% efímero, mismo patrón que markerPicker/cellEditor. Un solo
+     producto a la vez en cada modo (edición/menú "⋯") — "difícil de usar
+     mal". La confirmación de eliminar SÍ es un overlay real (productoDeleteConfirm,
+     mismo patrón que deletePhotoConfirm) porque es la única acción
+     destructiva de las tres. */
+  productoEditingId: null,
+  productoMenuOpenId: null,
+  productoDeleteConfirm: null }; // { productoId, ticketId } | null
+/* Kanban de Responsables — el feedback visual de "arrastrando"/"columna
+   activa" se maneja con classList directo sobre el DOM (ver wireEvents,
+   listeners dragstart/dragover/dragleave/dragend) — NUNCA con UI.algo +
+   render(), a propósito: render() reemplaza #app por completo (innerHTML),
+   así que llamarlo DURANTE un drag (en dragover, que dispara decenas de
+   veces por segundo) destruiría los propios elementos que el navegador está
+   arrastrando/recibiendo el drop a la mitad de la operación. render() solo
+   se dispara al soltar (drop) o al cambiar el <select> de respaldo — ambos
+   YA fuera del gesto de arrastre. */
 /* Identity Foundation §9: snapshot del UI "recién arrancado" — signOut()
    lo usa para regresar a este estado exacto en vez de re-listar a mano
    cada campo (sería el segundo lugar que hay que recordar mantener en
@@ -2862,7 +2966,7 @@ async function fetchAllState(){
     };
   });
   var profiles = profilesInfo.rows.map(function(row){
-    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active };
+    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active, createdAt: row.created_at || null };
   });
   return {
     meta: settings,
@@ -3772,9 +3876,93 @@ function renderThreadItem(ev, ticketId){
    celda en edición a la vez en toda la app (§29), así que reusar el mismo
    id es seguro y es justo lo que permite que commitHeaderField/bindField/el
    blur de siempre funcionen sin ningún código nuevo. */
+/* Responsable — "EDICIÓN DE PRODUCTOS + KANBAN": ya NO se teclea, se elige
+   entre perfiles reales activos (STATE.profiles, la misma fuente que ya
+   usa el resto de la Identity Foundation — nunca una lista hardcodeada en
+   varios lugares). Orden: fecha de alta (createdAt) — "quién se unió
+   primero" es un orden estable y derivado, no una preferencia inventada.
+   Perfil INACTIVO que sigue siendo responsable de este ticket (historia):
+   se agrega como opción EXTRA al final, deshabilitada salvo por ser la ya
+   seleccionada — nunca se pierde el dato, pero tampoco se ofrece como
+   destino de una asignación nueva (spec: "no debería aparecer como opción
+   normal"). Incluye también cualquier valor histórico en texto libre que no
+   coincida con NINGÚN perfil (de antes de esta ronda, cuando el campo era
+   texto libre) por el mismo motivo. */
+function activeAssignableProfiles(){
+  return STATE.profiles
+    .filter(function(p){ return p.active && p.displayName; })
+    .sort(function(a,b){ return new Date(a.createdAt||0).getTime() - new Date(b.createdAt||0).getTime(); });
+}
+/* Fuente única de las <option> de Responsable — usada por el <select> de la
+   cabecera/Detalles (id="field-responsable") Y por el <select> de respaldo
+   de cada tarjeta del Kanban (data-kanban-resp-select): mismo roster, mismo
+   orden, mismo criterio para el valor histórico/inactivo. Nunca dos listas
+   que puedan desincronizarse. */
+function responsableOptionsHtml(current){
+  current = current || "";
+  var active = activeAssignableProfiles();
+  var currentMatchesActive = active.some(function(p){ return p.displayName === current; });
+  var options = '<option value=""' + (current===""?" selected":"") + '>Sin responsable</option>';
+  options += active.map(function(p){
+    return '<option value="' + escapeHtml(p.displayName) + '"' + (current===p.displayName?" selected":"") + '>' + escapeHtml(p.displayName) + "</option>";
+  }).join("");
+  if(current && !currentMatchesActive){
+    options += '<option value="' + escapeHtml(current) + '" selected disabled>' + escapeHtml(current) + " (inactivo)</option>";
+  }
+  return options;
+}
+function renderResponsableSelect(t){
+  return '<select id="field-responsable">' + responsableOptionsHtml(t.responsable) + "</select>";
+}
+/* Identidad de color del RESPONSABLE (§ "COLORES POR PERSONA") — UNA sola
+   fuente para todo el CRM, nunca "if Alexia -> rosa" repetido en cada
+   renderer. Determinista por HASH del nombre (no requiere columna nueva en
+   profiles ni una pantalla de "elegir tu color" — la especificación deja
+   esto a criterio de Claude, y un hash estable es la opción sin migración
+   y sin UI nueva). Se hashea el NOMBRE (no el id de perfil): así un
+   responsable histórico/inactivo — que ya no tiene una fila útil en
+   profiles pero sigue en tickets viejos — conserva el MISMO color siempre,
+   sin tener que resolverlo contra profiles.
+   Paleta de 4 tonos reutiliza EXACTAMENTE los mismos hex que ya usa la
+   identidad visual de cliente (.cid-theme-violet/blue/cyan/rose,
+   ronda "SIGUIENTE ACTUALIZACIÓN") — ya están calibrados para verse bien
+   sobre el dark theme por defecto de esta app, así que no hace falta
+   inventar una paleta nueva. Prefijo de clase distinto (.resp-theme-*, no
+   .cid-theme-*) a propósito: son dos conceptos distintos (cliente vs.
+   responsable) y nunca deben confundirse en el código aunque el color final
+   se vea igual. */
+var RESP_COLOR_THEMES = ["violet", "blue", "cyan", "rose"];
+function hashStringToIndex(str, mod){
+  var s = str || "", h = 0;
+  for(var i=0; i<s.length; i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+  return Math.abs(h) % mod;
+}
+function responsibleTheme(name){
+  if(!name) return null;
+  return RESP_COLOR_THEMES[hashStringToIndex(name, RESP_COLOR_THEMES.length)];
+}
+/* Clase para acentos discretos (borde/franja) — "" (sin acento, color
+   neutro) cuando no hay responsable, NUNCA confundible con los colores
+   semánticos de marcadores/estado (--danger/--gold/--success no están en
+   esta paleta a propósito, ver la especificación "evitar rojo de error,
+   verde de éxito, amarillo de warning"). */
+function responsibleThemeClass(name){
+  var theme = responsibleTheme(name);
+  return theme ? " resp-theme-" + theme : "";
+}
+/* Chip de texto — "● Nombre", el patrón que pide la especificación para
+   Ticket/Lista/Detalles ("acento discreto", nunca pintar todo el bloque).
+   inline:true omite el nombre (solo el punto) para espacios muy angostos
+   (Miniaturas/Kanban ya muestran el nombre aparte). */
+function responsibleChip(name, opts){
+  opts = opts || {};
+  if(!name) return "";
+  var dot = '<span class="resp-dot" aria-hidden="true"></span>';
+  return '<span class="resp-chip' + responsibleThemeClass(name) + '">' + dot + (opts.dotOnly ? "" : escapeHtml(name)) + "</span>";
+}
 function renderHeaderFieldInput(t, field){
   if(field === "cliente") return '<input type="text" id="field-cliente" placeholder="Sin definir" value="' + escapeHtml(t.cliente) + '">';
-  if(field === "responsable") return '<input type="text" id="field-responsable" list="dtg-team-names" placeholder="Sin asignar" value="' + escapeHtml(t.responsable) + '">';
+  if(field === "responsable") return renderResponsableSelect(t);
   if(field === "atencion") return '<input type="date" id="field-fecha-atencion" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaAtencion||"") + '">';
   if(field === "compromiso") return '<input type="date" id="field-fecha-compromiso" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (t.fechaCompromiso||"") + '">';
   return "";
@@ -4014,7 +4202,7 @@ function renderTicketHeader(t){
     : comandaField("Qué sigue", t.queSigue ? '<span class="comanda-field-value accent">' + escapeHtml(t.queSigue) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="quesigue"');
   opRows += (editing === "responsable")
     ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "responsable") + "</div>"
-    : comandaField("Responsable", t.responsable ? '<span class="comanda-field-value">' + escapeHtml(t.responsable) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
+    : comandaField("Responsable", t.responsable ? '<span class="comanda-field-value">' + responsibleChip(t.responsable) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
   opRows += (editing === "atencion")
     ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "atencion") + "</div>"
     : comandaField("Atender", t.fechaAtencion ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaAtencion) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
@@ -4664,11 +4852,14 @@ function chooseCliSuggestion(idx, execute){
    rápida (sección 4). El detalle de un comando exacto también puede
    completarse tecleando /help <comando>. */
 
-/* Vista editable de productos (sección 7) — un solo renderer parametrizado
-   reutilizado por /productos, por "Total conocido" y por "N pendientes de
-   precio" en el encabezado (nunca un módulo de productos aparte). Cada
-   campo se guarda solo (blur/change) llamando a updateProductoCore, la
-   misma función que usaría cualquier otro camino de edición. */
+/* Fila de EDICIÓN de un producto (sección 7, sin cambios de fondo esta
+   ronda) — un solo renderer parametrizado reutilizado por /productos, por
+   "Total conocido" y por "N pendientes de precio" en el encabezado (nunca
+   un módulo de productos aparte). Cada campo se guarda solo (blur/change)
+   llamando a updateProductoCore, la misma función que usaría cualquier otro
+   camino de edición. Ahora vive DENTRO de productoRow() — solo se muestra
+   cuando ese producto específico está en modo edición (UI.productoEditingId),
+   nunca los 3 campos abiertos de siempre como antes de esta ronda. */
 function productoEditRow(t, p){
   return (
     '<div class="producto-edit-row">' +
@@ -4676,6 +4867,49 @@ function productoEditRow(t, p){
       '<input type="number" class="pe-cant" min="0" step="1" data-producto-edit="' + p.id + '" data-field="cantidad" data-ticket="' + t.id + '" value="' + p.cantidad + '">' +
       '<input type="number" class="pe-precio" min="0" step="0.01" placeholder="pendiente" data-producto-edit="' + p.id + '" data-field="precio" data-ticket="' + t.id + '" value="' + (p.precio==null?"":p.precio) + '">' +
       '<span class="pe-total' + (p.precio==null?" pending":"") + '">' + (p.precio==null ? "pendiente" : fmtMoney(p.cantidad*p.precio)) + "</span>" +
+      '<button type="button" class="btn-plain producto-edit-done-btn" data-action="producto-edit-done">Listo</button>' +
+    "</div>"
+  );
+}
+/* Menú "⋯" de un producto (§ "EDICIÓN DE PRODUCTOS + KANBAN") — Editar
+   entra al mismo productoEditRow() de siempre (arriba); Duplicar/Eliminar
+   son nuevos. Mismo patrón visual que renderTicketsThumbMoreMenu (Miniaturas)
+   — .help-cmd-btn ya es un botón real, nunca anidado dentro de otro botón
+   (el wrapper .producto-more-wrap es un <div>, nunca un <button>). */
+function productoMoreMenu(t, p){
+  return (
+    '<div class="producto-more-menu">' +
+      '<button type="button" class="help-cmd-btn" data-action="producto-edit-open" data-producto="' + p.id + '" data-ticket="' + t.id + '"><span class="desc">Editar</span></button>' +
+      '<button type="button" class="help-cmd-btn" data-action="producto-duplicate" data-producto="' + p.id + '" data-ticket="' + t.id + '"><span class="desc">Duplicar</span></button>' +
+      '<button type="button" class="help-cmd-btn producto-more-danger" data-action="producto-delete-open" data-producto="' + p.id + '" data-ticket="' + t.id + '"><span class="desc">Eliminar</span></button>' +
+    "</div>"
+  );
+}
+/* Fila COMPACTA por defecto (§ "no quiero una interfaz pesada") — exactamente
+   el formato pedido:
+     Playeras negras personalizadas
+     12 × $19.99                         $239.88
+                                            ⋯
+   "Editar" desde el ⋯ conmuta ESTE producto a productoEditRow() (arriba) —
+   nunca dos mecanismos de edición distintos, solo dos presentaciones del
+   mismo. Precio vacío/null se muestra siempre como "pendiente", nunca como
+   $0.00 (ni aquí ni en productoEditRow ni en computeTotals). */
+function productoRow(t, p){
+  if(UI.productoEditingId === p.id) return productoEditRow(t, p);
+  var menuOpen = UI.productoMenuOpenId === p.id;
+  var precioText = p.precio == null ? '<span class="producto-precio-pending">pendiente</span>' : fmtMoney(p.precio);
+  var totalText = p.precio == null ? '<span class="pe-total pending">pendiente</span>' : '<span class="pe-total">' + fmtMoney(p.cantidad * p.precio) + "</span>";
+  return (
+    '<div class="producto-compact-row">' +
+      '<div class="producto-compact-main">' +
+        '<div class="producto-compact-desc">' + escapeHtml(p.desc) + "</div>" +
+        '<div class="producto-compact-meta">' + p.cantidad + " × " + precioText + "</div>" +
+      "</div>" +
+      totalText +
+      '<div class="producto-more-wrap">' +
+        '<button type="button" class="btn-plain producto-more-btn" data-action="producto-menu-toggle" data-producto="' + p.id + '" data-ticket="' + t.id + '" aria-haspopup="true" aria-expanded="' + (menuOpen?"true":"false") + '" aria-label="Más acciones sobre este producto">&#8942;</button>' +
+        (menuOpen ? productoMoreMenu(t, p) : "") +
+      "</div>" +
     "</div>"
   );
 }
@@ -4689,10 +4923,9 @@ function productosEntryContent(entry){
     var msg = onlyPending ? "Ya no hay productos pendientes de precio." : "Este ticket todavía no tiene productos.";
     return { title: title, html: '<div class="ephemeral-sub">' + msg + "</div>" };
   }
-  var header = '<div class="producto-edit-row producto-edit-header"><span>Descripción</span><span>Cant.</span><span>Precio u.</span><span>Total</span></div>';
-  var rows = list.map(function(p){ return productoEditRow(t, p); }).join("");
+  var rows = list.map(function(p){ return productoRow(t, p); }).join("");
   var note = '<div class="ephemeral-sub">Editar aquí actualiza el producto del ticket — nunca modifica una cotización o invoice ya creado.</div>';
-  return { title: title, html: header + rows + note };
+  return { title: title, html: rows + note };
 }
 
 /* ---------------- Documentos (sección 12): badge "Documentos · N" en el
@@ -5233,7 +5466,7 @@ function renderCxcPlaceholderView(){
    que ya usa el sidebar, así que clic/tap/teclado llaman al mismo
    openTicketById de siempre, sin código nuevo). */
 var TICKET_ESTADO_FILTERS = [["todos","Todos"],["abierto","Abiertos"],["entregado","Entregados"],["cerrado","Cerrados"]];
-var TICKETS_VIEW_OPTIONS = [["thumbnails","Miniaturas"],["icons","Iconos"],["list","Lista"],["details","Detalles"]];
+var TICKETS_VIEW_OPTIONS = [["thumbnails","Miniaturas"],["icons","Iconos"],["list","Lista"],["details","Detalles"],["kanban","Responsables"]];
 var TICKETS_FECHA_FILTERS = [["todas","Fecha: todas"],["vencida","Atención vencida"],["hoy","Atención hoy"],["sin_fecha","Sin fecha de atención"]];
 /* §17-21: selector de orden NUEVO — nunca una prioridad de negocio inventada,
    solo cinco criterios literales sobre el MISMO dataset ya filtrado (ver
@@ -5620,7 +5853,7 @@ function renderTicketsThumbCard(t){
   var estado = ticketEstado(t);
   var identityStyle = c ? clienteIdentityStyle(c, "compact") : null;
   var isSelected = UI.ticketsExplorer.selectedCardId === t.id;
-  var cardClass = "tickets-thumb-card" +
+  var cardClass = "tickets-thumb-card" + responsibleThemeClass(t.responsable) +
     (identityStyle && identityStyle.style === "spotlight" ? " cid-theme-" + identityStyle.theme + " tickets-card-spotlight" : "") +
     (isSelected ? " tickets-thumb-selected" : "");
   var markersHtml = renderSidebarMarkerIcons(t);
@@ -5737,7 +5970,7 @@ function ticketOperationalCellValues(t){
     trabajoHtml: escapeHtml(sidebarProductoPrincipal(t)),
     estadoHtml: '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>",
     queSigueHtml: t.queSigue ? escapeHtml(t.queSigue) : muted,
-    responsableHtml: t.responsable ? escapeHtml(t.responsable) : muted,
+    responsableHtml: t.responsable ? responsibleChip(t.responsable) : muted,
     atenderHtml: t.fechaAtencion ? fmtDateOnlyShort(t.fechaAtencion) : muted,
     compromisoHtml: t.fechaCompromiso ? fmtDateOnlyShort(t.fechaCompromiso) : muted,
     totalConocidoHtml: fmtMoney(totals.known) + (totals.pending ? ' <span class="tickets-details-pending">(+' + totals.pending + " sin precio)</span>" : ""),
@@ -5854,15 +6087,92 @@ function renderTicketsExplorerView(){
         "<thead><tr>" + TICKETS_DETAILS_COLS.map(function(cn){ return "<th>" + cn + "</th>"; }).join("") + "</tr></thead>" +
         "<tbody>" + list.map(renderTicketsDetailsRow).join("") + "</tbody>" +
       "</table></div>";
+  } else if(view === "kanban"){
+    body = renderKanbanBoard(list);
   } else {
     body = '<div class="tickets-grid-thumb">' + list.map(renderTicketsThumbCard).join("") + "</div>";
   }
   return (
     '<div class="home-header"><h1>Tickets</h1></div>' +
     '<div class="tickets-explorer">' + toolbar +
-      '<div class="tickets-explorer-scroll" id="tickets-explorer-scroll">' + body + "</div>" +
+      '<div class="tickets-explorer-scroll' + (view==="kanban"?" tickets-explorer-scroll-kanban":"") + '" id="tickets-explorer-scroll">' + body + "</div>" +
     "</div>"
   );
+}
+
+/* ================= Kanban de Responsables (§ "EDICIÓN DE PRODUCTOS +
+   KANBAN") =================
+   "¿Quién trae cada ticket ahora?" — NO etapas de proceso, NO workflow
+   rígido (spec, muy explícito). Es SOLO una vista más de los mismos
+   tickets ya filtrados por ticketsExplorerFiltered() (misma fuente que
+   Miniaturas/Iconos/Lista/Detalles — nunca una copia de datos). Columnas
+   derivadas de activeAssignableProfiles() (nunca los 5 nombres
+   hardcodeados) + "Sin responsable" (siempre primera) + "Otros" (solo si
+   hace falta — responsables históricos/texto libre que ya no coinciden con
+   ningún perfil activo; ver comentario en activeAssignableProfiles).
+   Arrastrar una tarjeta a otra columna llama EXACTAMENTE a
+   updateTicketFieldCore(t, "field-responsable", nuevoValor, ...) — la MISMA
+   función que usa el <select> de la cabecera del ticket (nunca una segunda
+   mutación kanbanResponsibleMutation() paralela). */
+function kanbanColumns(list){
+  var active = activeAssignableProfiles();
+  var byName = {};
+  active.forEach(function(p){ byName[p.displayName] = { key: p.displayName, label: p.displayName, tickets: [] }; });
+  var sinResponsable = { key: "", label: "Sin responsable", tickets: [] };
+  var otros = { key: "__otros__", label: "Otros (inactivo/histórico)", tickets: [], readOnly: true };
+  list.forEach(function(t){
+    var r = t.responsable || "";
+    if(!r) sinResponsable.tickets.push(t);
+    else if(byName[r]) byName[r].tickets.push(t);
+    else otros.tickets.push(t);
+  });
+  var cols = [sinResponsable].concat(active.map(function(p){ return byName[p.displayName]; }));
+  /* "Otros" solo aparece si de verdad hay algo que mostrar ahí — nunca una
+     columna vacía y confusa por default. No es un destino de drop válido
+     (ver renderKanbanColumn/wireEvents): no representa una sola persona, así
+     que "mover un ticket a Otros" no tendría un significado real. */
+  if(otros.tickets.length) cols.push(otros);
+  return cols;
+}
+function renderKanbanColumn(col){
+  var themeClass = col.key && !col.readOnly ? responsibleThemeClass(col.key) : "";
+  return (
+    '<div class="kanban-column' + themeClass + (col.readOnly?" kanban-column-readonly":"") + '"' +
+      (col.readOnly ? "" : ' data-kanban-column="' + escapeHtml(col.key) + '"') + '>' +
+      '<div class="kanban-column-header"><span class="kanban-column-dot" aria-hidden="true"></span>' +
+        '<span class="kanban-column-label">' + escapeHtml(col.label) + '</span>' +
+        '<span class="kanban-column-count">' + col.tickets.length + "</span></div>" +
+      '<div class="kanban-column-cards">' +
+        col.tickets.map(renderKanbanCard).join("") +
+        (!col.tickets.length ? '<div class="kanban-column-empty">Sin tickets</div>' : "") +
+      "</div>" +
+    "</div>"
+  );
+}
+function renderKanbanCard(t){
+  var markersHtml = renderSidebarMarkerIcons(t);
+  var themeClass = responsibleThemeClass(t.responsable);
+  return (
+    '<div class="kanban-card' + themeClass + '" draggable="true" data-kanban-card="' + t.id + '">' +
+      '<button type="button" class="kanban-card-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
+        '<div class="kanban-card-top"><span class="kanban-card-folio">#' + t.seq + "</span>" + (markersHtml ? '<span class="kanban-card-markers">' + markersHtml + "</span>" : "") + "</div>" +
+        '<div class="kanban-card-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+        (t.productos.length ? '<div class="kanban-card-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" : "") +
+        (t.queSigue ? '<div class="kanban-card-quesigue">' + escapeHtml(t.queSigue) + "</div>" : "") +
+      "</button>" +
+      /* Camino seguro/keyboard (§ "KEYBOARD / ACCESIBILIDAD" — "drag es el
+         camino rápido, dropdown es el camino seguro"): el MISMO roster que
+         el <select> de la cabecera (responsableOptionsHtml), en cada
+         tarjeta, siempre visible — nunca condicionado a "si el drag táctil
+         falla" porque no hay forma de detectar eso de antemano; es más
+         simple y más seguro ofrecerlo siempre. */
+      '<select class="kanban-card-resp-select" draggable="false" data-kanban-resp-select="' + t.id + '" aria-label="Cambiar responsable de este ticket">' + responsableOptionsHtml(t.responsable) + "</select>" +
+    "</div>"
+  );
+}
+function renderKanbanBoard(list){
+  var cols = kanbanColumns(list);
+  return '<div class="kanban-board" id="kanban-board">' + cols.map(renderKanbanColumn).join("") + "</div>";
 }
 
 /* ================= BIBLIOTECA — memoria visual (Findability: FIND →
@@ -6211,6 +6521,35 @@ function renderDeletePhotoConfirmOverlay(){
         '<div class="popover-actions">' +
           '<button type="button" class="btn btn-ghost" data-action="delete-photo-cancel">Cancelar</button>' +
           '<button type="button" class="btn btn-danger" data-action="delete-photo-confirm">Eliminar</button>' +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* Confirmación de "Eliminar producto" (§ "EDICIÓN DE PRODUCTOS + KANBAN") —
+   mismo overlay/patrón que renderDeletePhotoConfirmOverlay, la única de las
+   3 acciones de producto que es destructiva. */
+function openProductoDeleteConfirm(productoId, ticketId){
+  UI.productoMenuOpenId = null;
+  UI.productoDeleteConfirm = { productoId: productoId, ticketId: ticketId };
+  render();
+}
+function closeProductoDeleteConfirm(){ UI.productoDeleteConfirm = null; render(); }
+function renderProductoDeleteConfirmOverlay(){
+  var dc = UI.productoDeleteConfirm;
+  if(!dc) return "";
+  var t = findTicket(dc.ticketId);
+  var p = t ? t.productos.filter(function(x){ return x.id === dc.productoId; })[0] : null;
+  if(!p) return "";
+  return (
+    '<div class="cierre-modal-overlay" id="delete-producto-confirm-overlay">' +
+      '<div class="cierre-modal">' +
+        '<div class="cierre-modal-title">&#191;Eliminar &quot;' + escapeHtml(p.desc) + '&quot;?</div>' +
+        '<div class="ephemeral-sub">Desaparece del ticket y del total. Nunca modifica una cotización/invoice ya emitido.</div>' +
+        '<div class="popover-actions">' +
+          '<button type="button" class="btn btn-ghost" data-action="producto-delete-cancel">Cancelar</button>' +
+          '<button type="button" class="btn btn-danger" data-action="producto-delete-confirm">Eliminar</button>' +
         "</div>" +
       "</div>" +
     "</div>"
@@ -7503,6 +7842,7 @@ function render(){
     renderTicketsThumbPhotoOverlay() +
     renderTicketGalleryOverlay() +
     renderDeletePhotoConfirmOverlay() +
+    renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast"></div>';
   wireEvents();
   hydrateImages();
@@ -8457,6 +8797,48 @@ async function updateProductoCore(t, productoId, patch){
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Producto editado: " + prod.desc + " — " + (prod.precio==null ? "precio pendiente" : prod.cantidad + " × " + fmtMoney(prod.precio)) } });
   }catch(e){ showToast("No se pudo actualizar el producto: " + (e.message || "error")); }
   refreshFromServer();
+}
+
+/* Duplicar (§ "EDICIÓN DE PRODUCTOS + KANBAN"): "Debe utilizar la misma
+   operación central de creación de producto. No copiar manualmente lógica."
+   — llama a addProductoCore TAL CUAL, con los mismos valores que ya tiene
+   la línea original. La persona edita la copia después si hace falta
+   (cambiar cantidad/descripción), nunca al revés. */
+async function duplicateProductoCore(t, productoId){
+  var prod = t.productos.filter(function(p){ return p.id === productoId; })[0];
+  if(!prod) return false;
+  return await addProductoCore(t, prod.desc, prod.cantidad, prod.precio);
+}
+
+/* Eliminar (§ "EDICIÓN DE PRODUCTOS + KANBAN"): DECISIÓN DOCUMENTADA — a
+   diferencia de bitacora (soft-delete real desde la migración 0012,
+   deleted_at/deleted_by), la tabla `productos` NUNCA tuvo ese patrón y no
+   hay ningún lector en esta app preparado para filtrar productos
+   "eliminados" (computeTotals, la vista Miniaturas/Lista/Detalles, los
+   documentos comerciales — ninguno los excluye hoy). Agregar soft-delete
+   aquí significaría auditar y tocar cada uno de esos lectores solo para
+   esta ronda — exactamente la "arquitectura enorme de recuperación" que la
+   especificación pide NO construir si no existe ya. Un DELETE real es más
+   simple y más seguro (no hay ningún lector que pueda "olvidarse" de
+   filtrar algo que ya no está), y la bitácora conserva un rastro humano
+   legible de la acción — igual que cualquier otra mutación de esta app.
+   Los documentos comerciales YA emitidos nunca se ven afectados: guardan su
+   propia fotografía de items (documentos.items, jsonb) y jamás leen de
+   `productos` después de creados — confirmado al inspeccionar
+   createDocumentoCore antes de esta ronda. */
+async function deleteProductoCore(t, productoId){
+  var prod = t.productos.filter(function(p){ return p.id === productoId; })[0];
+  if(!prod) return false;
+  t.productos = t.productos.filter(function(p){ return p.id !== productoId; });
+  render();
+  var ok = true;
+  try{
+    var r1 = await sb.from("productos").delete().eq("id", productoId);
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Producto eliminado: " + prod.desc + " (" + prod.cantidad + " × " + (prod.precio==null?"precio pendiente":fmtMoney(prod.precio)) + ")" } });
+  }catch(e){ showToast("No se pudo eliminar el producto: " + (e.message || "error")); ok = false; }
+  refreshFromServer();
+  return ok;
 }
 
 /* ---------------- clientes (sección 8/9): entidad mínima, "no Salesforce" ----------------
@@ -10125,14 +10507,32 @@ async function updateTicketFieldCore(t, elId, value, opts){
      wireEvents). */
   if(def.col.indexOf("fecha_")===0 && value && !isSaneDateOnly(value)) return false;
   if(t[def.key] === value) return false;
+  var prevValue = t[def.key];
   t[def.key] = value;
   render();
-  if(def.key === "responsable" && value) rememberName(value);
+  /* rememberName() (agregar a app_settings.team_names, el catálogo de texto
+     libre) YA NO aplica aquí — "EDICIÓN DE PRODUCTOS + KANBAN" reemplazó el
+     campo libre de Responsable por un <select> de perfiles reales
+     (renderResponsableSelect), así que cualquier valor que llegue aquí ya
+     existe en profiles; "recordarlo" como texto libre no aporta nada.
+     team_names sigue vivo para Tareas (responsable de una tarea es un campo
+     distinto, fuera del alcance de esta ronda — ver addTareaCore). */
   try{
     var patch = {}; patch[def.col] = value || (def.col.indexOf("fecha_")===0 ? null : "");
     var r1 = await sb.from("tickets").update(patch).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: def.label + ": " + (value || "(vacío)") } });
+    /* §"BITÁCORA": "Alexia cambió Responsable de Jonathan a Martín" — solo
+       Responsable recibe esta redacción más humana (actor = currentActorName(),
+       nunca UI.whoami; responsable = el valor del campo, dos conceptos
+       distintos — ver comentario de la especificación). Cliente/fechas
+       conservan su mensaje genérico de siempre, sin cambios. */
+    var bitacoraText = def.label + ": " + (value || "(vacío)");
+    if(def.key === "responsable"){
+      if(value && prevValue) bitacoraText = "Responsable: " + prevValue + " → " + value;
+      else if(value) bitacoraText = "Ticket asignado a " + value;
+      else bitacoraText = "Responsable removido (antes: " + prevValue + ")";
+    }
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: bitacoraText } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
   return true;
@@ -11831,6 +12231,53 @@ function wireEvents(){
     });
   }
 
+  /* Kanban de Responsables — drag & drop entre columnas + el <select> de
+     respaldo de cada tarjeta (§ "KEYBOARD / ACCESIBILIDAD": el <select>
+     siempre visible, no solo en mobile). IMPORTANTE (ver comentario en UI):
+     dragover/dragenter/dragleave/dragstart NUNCA llaman a render() —
+     manipulan classList directamente. Solo "drop" y el "change" del
+     <select> llaman a updateTicketFieldCore (misma función central que usa
+     el <select> de la cabecera del ticket — nunca una mutación paralela). */
+  var kanbanBoard = document.getElementById("kanban-board");
+  if(kanbanBoard){
+    kanbanBoard.querySelectorAll("[data-kanban-card]").forEach(function(card){
+      card.addEventListener("dragstart", function(e){
+        try{ e.dataTransfer.setData("text/plain", card.getAttribute("data-kanban-card")); }catch(err){}
+        if(e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+        card.classList.add("kanban-card-dragging");
+      });
+      card.addEventListener("dragend", function(){
+        card.classList.remove("kanban-card-dragging");
+        kanbanBoard.querySelectorAll(".kanban-column-dragover").forEach(function(c){ c.classList.remove("kanban-column-dragover"); });
+      });
+    });
+    kanbanBoard.querySelectorAll("[data-kanban-column]").forEach(function(col){
+      col.addEventListener("dragover", function(e){
+        e.preventDefault(); // requerido para que el navegador permita soltar aquí
+        if(e.dataTransfer) e.dataTransfer.dropEffect = "move";
+        col.classList.add("kanban-column-dragover");
+      });
+      col.addEventListener("dragleave", function(e){
+        if(e.target === col) col.classList.remove("kanban-column-dragover");
+      });
+      col.addEventListener("drop", function(e){
+        e.preventDefault();
+        col.classList.remove("kanban-column-dragover");
+        var draggedId = e.dataTransfer ? e.dataTransfer.getData("text/plain") : null;
+        var t = draggedId ? findTicket(draggedId) : null;
+        if(!t) return;
+        var newResp = col.getAttribute("data-kanban-column") || "";
+        if(t.responsable !== newResp) updateTicketFieldCore(t, "field-responsable", newResp, { refocus:false });
+      });
+    });
+    kanbanBoard.querySelectorAll("[data-kanban-resp-select]").forEach(function(sel){
+      sel.addEventListener("change", function(){
+        var t = findTicket(sel.getAttribute("data-kanban-resp-select"));
+        if(t && t.responsable !== sel.value) updateTicketFieldCore(t, "field-responsable", sel.value, { refocus:false });
+      });
+    });
+  }
+
   /* §23: hover en desktop — el clic/tap (data-action="sidebar-marker-icon",
      manejado en el listener delegado) ya cubre mobile/tablet (§24) y sirve
      como respaldo en desktop; esto SOLO agrega el hover real. Se ignora en
@@ -12903,6 +13350,55 @@ document.addEventListener("click", function(e){
   if(feedCrearTicketBtn){ crearTicketDesdeFeedPost(feedCrearTicketBtn.getAttribute("data-post-id")); return; }
   var feedNoRequiereBtn = e.target.closest && e.target.closest('[data-action="feed-photo-no-requiere"]');
   if(feedNoRequiereBtn){ marcarFeedPostNoRequiereTicket(feedNoRequiereBtn.getAttribute("data-post-id")); return; }
+  /* Productos del ticket — Editar/Duplicar/Eliminar (§ "EDICIÓN DE
+     PRODUCTOS + KANBAN"). Mismo patrón delegado que el resto de la app. */
+  var productoMenuBtn = e.target.closest && e.target.closest('[data-action="producto-menu-toggle"]');
+  if(productoMenuBtn){
+    var pmId = productoMenuBtn.getAttribute("data-producto");
+    UI.productoMenuOpenId = UI.productoMenuOpenId === pmId ? null : pmId;
+    renderKeepingLiveInputs();
+    return;
+  }
+  var productoEditOpenBtn = e.target.closest && e.target.closest('[data-action="producto-edit-open"]');
+  if(productoEditOpenBtn){
+    UI.productoMenuOpenId = null;
+    UI.productoEditingId = productoEditOpenBtn.getAttribute("data-producto");
+    renderKeepingLiveInputs();
+    return;
+  }
+  var productoEditDoneBtn = e.target.closest && e.target.closest('[data-action="producto-edit-done"]');
+  if(productoEditDoneBtn){ UI.productoEditingId = null; renderKeepingLiveInputs(); return; }
+  var productoDuplicateBtn = e.target.closest && e.target.closest('[data-action="producto-duplicate"]');
+  if(productoDuplicateBtn){
+    UI.productoMenuOpenId = null;
+    var dupTicket = findTicket(productoDuplicateBtn.getAttribute("data-ticket"));
+    if(dupTicket) duplicateProductoCore(dupTicket, productoDuplicateBtn.getAttribute("data-producto"));
+    return;
+  }
+  var productoDeleteOpenBtn = e.target.closest && e.target.closest('[data-action="producto-delete-open"]');
+  if(productoDeleteOpenBtn){
+    openProductoDeleteConfirm(productoDeleteOpenBtn.getAttribute("data-producto"), productoDeleteOpenBtn.getAttribute("data-ticket"));
+    return;
+  }
+  var productoDeleteCancelBtn = e.target.closest && e.target.closest('[data-action="producto-delete-cancel"]');
+  if(productoDeleteCancelBtn){ closeProductoDeleteConfirm(); return; }
+  var productoDeleteConfirmBtn = e.target.closest && e.target.closest('[data-action="producto-delete-confirm"]');
+  if(productoDeleteConfirmBtn){
+    var pdc = UI.productoDeleteConfirm;
+    if(pdc){
+      var delTicket = findTicket(pdc.ticketId);
+      closeProductoDeleteConfirm();
+      if(delTicket) deleteProductoCore(delTicket, pdc.productoId);
+    }
+    return;
+  }
+  /* Clic fuera del menú "⋯" de un producto lo cierra — mismo patrón que el
+     resto de los popovers de un solo campo de esta app (revisado al final
+     del delegado, como sidebarMarkerPopover/composer arriba). */
+  if(UI.productoMenuOpenId && !(e.target.closest && e.target.closest(".producto-more-wrap"))){
+    UI.productoMenuOpenId = null;
+    renderKeepingLiveInputs();
+  }
   if(UI.composer){
     var pop = document.getElementById("composer-popover");
     var plus = document.querySelector('[data-action="toggle-menu"]');
@@ -12935,7 +13431,7 @@ document.addEventListener("click", function(e){
      la persona por fin cierre ese overlay. */
   var hasLayeredOverlay = !!(UI.ticketGallery || UI.cellEditor || UI.markerPicker ||
     (UI.photoBatch && UI.photoBatch.ticketId) || UI.contactPanel || UI.viewingDocId || UI.cierreModal ||
-    UI.deletePhotoConfirm || UI.bibliotecaViewer);
+    UI.deletePhotoConfirm || UI.bibliotecaViewer || UI.productoDeleteConfirm);
   if(UI.mainView === "tickets" && !UI.selectedTicketId && (UI.ticketsView || "thumbnails") === "thumbnails" &&
      (UI.ticketsExplorer.selectedCardId || UI.ticketsExplorer.thumbMoreTicketId) &&
      !hasLayeredOverlay &&
