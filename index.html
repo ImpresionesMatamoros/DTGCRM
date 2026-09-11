@@ -933,6 +933,148 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .kanban-board{padding:10px 14px; gap:10px;}
   .kanban-column{width:200px;}
 }
+
+/* ===== Calendar Workbench (§ "CALENDARIO") =====
+   Mismo lenguaje visual que Kanban arriba (bordes finos, radios pequeños,
+   sin sombras/gradientes grandes) — "no Google Calendar genérico". Reusa
+   --resp-color (ya definido arriba por .resp-theme-*) para el acento de
+   responsable en cada tarjeta; NUNCA una paleta de color nueva para
+   Atención/Compromiso (§24: el tipo se distingue por ETIQUETA, no color —
+   ver .calendar-entry-type-label). */
+.calendar-view{display:flex; flex-direction:column; height:100%; min-height:0;}
+.calendar-toolbar{border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; padding:10px 20px; display:flex; flex-direction:column; gap:8px;}
+.calendar-toolbar-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+.calendar-nav{display:flex; align-items:center; gap:4px;}
+.calendar-today-btn{padding:5px 12px; font-size:12.5px;}
+.calendar-step-btn{font-size:16px; padding:4px 8px; line-height:1;}
+.calendar-period-label{font-size:14px; font-weight:700; color:var(--text); min-width:150px; text-align:center;}
+.calendar-view-switch{display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; flex-shrink:0;}
+.calendar-view-btn{border:none; background:var(--surface); padding:5px 12px; font-size:12px; color:var(--text-muted); font-weight:600;}
+.calendar-view-btn+.calendar-view-btn{border-left:1px solid var(--border);}
+.calendar-view-btn.active{background:var(--accent); color:#fff;}
+.calendar-mios-btn{border:1px solid var(--border); border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; background:var(--surface); color:var(--text-muted);}
+.calendar-mios-btn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
+.calendar-filters-toggle{border:1px solid var(--border); border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; background:var(--surface); color:var(--text-muted);}
+.calendar-filters-toggle.active{background:var(--surface-2); color:var(--text);}
+.calendar-programar-btn{padding:5px 14px; font-size:12.5px; margin-left:auto;}
+.calendar-filters-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-top:4px; border-top:1px dashed var(--border);}
+.calendar-search-wrap{max-width:260px;}
+.calendar-filter-selects{display:flex; gap:8px; flex-wrap:wrap;}
+.calendar-filter-select{
+  font-size:12px; color:var(--text); border:1px solid var(--border); border-radius:var(--radius-s);
+  padding:5px 8px; background:var(--surface-2);
+}
+.calendar-filter-check{font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:5px;}
+.calendar-scroll{flex:1; min-height:0; overflow-y:auto;}
+
+/* ---- Mes ---- */
+.calendar-month{display:flex; flex-direction:column; min-height:100%;}
+.calendar-month-headrow{display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid var(--border); flex-shrink:0;}
+.calendar-month-headcell{padding:6px 8px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); font-weight:600; text-align:center;}
+.calendar-month-grid{display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:1fr; flex:1;}
+.calendar-month-cell{
+  border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:4px; min-height:96px;
+  display:flex; flex-direction:column; gap:3px; background:var(--surface);
+}
+.calendar-month-cell-outside{background:var(--surface-2); opacity:.55;}
+.calendar-day-weekend{background:var(--surface-2);}
+.calendar-month-cell-today{background:var(--accent-soft);}
+.calendar-month-cell-daynum{align-self:flex-start; font-size:11.5px; font-weight:700; color:var(--text-muted); padding:2px 5px; border-radius:999px;}
+.calendar-month-cell-today .calendar-month-cell-daynum{background:var(--accent); color:#fff;}
+.calendar-month-cell-entries{display:flex; flex-direction:column; gap:3px; min-height:0;}
+.calendar-month-dropzone{display:flex; flex-direction:column; gap:3px; min-height:6px;}
+.calendar-month-cell-more{font-size:10.5px; color:var(--text-faint); text-align:left; padding:1px 4px; font-weight:600;}
+
+/* ---- Semana ---- */
+.calendar-week{display:flex; gap:0; min-height:100%; overflow-x:auto;}
+.calendar-week-day{flex:1; min-width:150px; border-right:1px solid var(--border); display:flex; flex-direction:column;}
+.calendar-week-day:last-child{border-right:none;}
+.calendar-week-day-today{background:var(--accent-soft);}
+.calendar-week-day-head{
+  border:none; border-bottom:1px solid var(--border); background:transparent; padding:8px 10px; font-size:12px;
+  font-weight:700; color:var(--text-muted); text-align:left; flex-shrink:0;
+}
+.calendar-week-day-today .calendar-week-day-head{color:var(--accent-ink);}
+.calendar-week-day-body{padding:6px; display:flex; flex-direction:column; gap:10px; flex:1;}
+.calendar-week-dropzone{display:flex; flex-direction:column; gap:6px; min-height:14px;}
+
+/* ---- Agenda ---- */
+.calendar-agenda{display:flex; flex-direction:column; padding:8px 20px 24px;}
+.calendar-agenda-day{padding:14px 0; border-bottom:1px solid var(--border);}
+.calendar-agenda-day:last-child{border-bottom:none;}
+.calendar-agenda-day-head{font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text-muted); margin-bottom:8px;}
+.calendar-agenda-group{display:flex; flex-direction:column; gap:6px; margin-bottom:10px;}
+.calendar-agenda-group:last-child{margin-bottom:0;}
+.calendar-agenda-group-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:700;}
+.calendar-empty-state{display:flex; flex-direction:column; align-items:center; gap:12px; padding:60px 20px; text-align:center; color:var(--text-muted);}
+
+/* ---- tarjeta de entrada (Mes/Semana/Agenda/panel de día) ---- */
+.calendar-entry-card{
+  display:flex; align-items:stretch; gap:2px; background:var(--surface); border:1px solid var(--border);
+  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-s); cursor:grab;
+}
+.calendar-entry-dragging{opacity:.4;}
+.calendar-entry-open{display:flex; flex-direction:column; gap:2px; text-align:left; background:none; border:none; padding:4px 5px; flex:1; min-width:0;}
+.calendar-entry-top{display:flex; align-items:center; gap:5px;}
+.calendar-entry-type-label{font-size:9.5px; font-weight:700; letter-spacing:.04em; color:var(--text-faint);}
+.calendar-entry-attention .calendar-entry-type-label{color:var(--cyan);}
+.calendar-entry-commitment .calendar-entry-type-label{color:var(--accent-ink);}
+.calendar-entry-overdue{font-size:11px; color:var(--gold); margin-left:auto;}
+.calendar-entry-folio-row{display:flex; align-items:center; gap:5px;}
+.calendar-entry-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint);}
+.calendar-entry-markers{display:flex; gap:2px;}
+.calendar-entry-cliente{font-size:12.5px; font-weight:600; color:var(--text); overflow-wrap:break-word;}
+.calendar-entry-work{font-size:11.5px; color:var(--text-muted); overflow-wrap:break-word;}
+.calendar-entry-quesigue{font-size:11px; color:var(--accent-ink); background:var(--accent-soft); border-radius:var(--radius-s); padding:1px 6px; width:fit-content;}
+.calendar-entry-resp{font-size:11px; color:var(--text-muted); display:flex; align-items:center;}
+.calendar-entry-more{flex-shrink:0; align-self:flex-start; padding:4px 6px; color:var(--text-faint); background:none; border:none;}
+.calendar-entry-more:hover{color:var(--text);}
+.calendar-dropzone-over{outline:2px dashed var(--accent); outline-offset:2px; border-radius:var(--radius-s);}
+
+/* ---- panel de día / popover de entrada / "+ Programar" — mismo
+   .cierre-modal-overlay/.cierre-modal de siempre, cero componente nuevo. ---- */
+.calendar-day-panel{max-width:420px; width:100%;}
+.calendar-day-panel-counts{font-size:11.5px; color:var(--text-faint); margin-bottom:8px;}
+.calendar-day-panel-body{display:flex; flex-direction:column; gap:4px; max-height:50vh; overflow-y:auto;}
+.calendar-entry-popover{max-width:340px; width:100%;}
+.calendar-entrypanel-summary{display:flex; flex-direction:column; gap:6px; margin:6px 0 10px;}
+.calendar-entrypanel-row{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px;}
+.calendar-entrypanel-k{color:var(--text-faint); flex-shrink:0;}
+.calendar-entrypanel-v{color:var(--text); text-align:right; overflow-wrap:break-word;}
+.calendar-quickdate-actions{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;}
+.calendar-programar-type{display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; margin-bottom:8px;}
+.calendar-programar-type-btn{border:none; background:var(--surface); padding:5px 12px; font-size:12px; color:var(--text-muted); font-weight:600;}
+.calendar-programar-type-btn+.calendar-programar-type-btn{border-left:1px solid var(--border);}
+.calendar-programar-type-btn.active{background:var(--accent); color:#fff;}
+.calendar-programar-results{display:flex; flex-direction:column; gap:2px; max-height:220px; overflow-y:auto; margin-top:6px;}
+
+/* prefers-reduced-motion (§101): la única animación de este módulo es la
+   opacidad de arrastre — respeta la preferencia del sistema igual que el
+   resto de la app. */
+@media(prefers-reduced-motion:no-preference){
+  .calendar-entry-card{transition:opacity .2s ease;}
+}
+@media(max-width:880px){
+  /* §15: Agenda es la vista principal en mobile (default automático la
+     primera vez, ver el init de UI.calendar arriba) — Mes/Semana siguen
+     alcanzables desde el mismo selector, nunca escondidos, para cuando la
+     persona sí los prefiera. Semana en pantalla angosta usa scroll
+     horizontal con columnas de ancho mínimo legible (.calendar-week-day
+     abajo) en vez de comprimir 7 columnas hasta ilegibles — exactamente lo
+     que pide §120 ("Week puede requerir horizontal si pantalla estrecha"). */
+  .calendar-period-label{min-width:0; font-size:13px;}
+  .calendar-toolbar{padding:8px 14px;}
+  .calendar-month-cell{min-height:72px; padding:3px;}
+  .calendar-programar-btn{margin-left:0;}
+}
+@media(max-width:640px){
+  .calendar-month-cell{min-height:60px;}
+  .calendar-month-cell-daynum{font-size:10.5px;}
+  .calendar-entry-work, .calendar-entry-quesigue{display:none;} /* Mes en pantalla muy angosta: mantener la celda legible (§12 "nunca celdas gigantes") */
+  .calendar-week-day{min-width:130px;}
+  .calendar-agenda{padding:6px 14px 24px;}
+}
+
 .prod-toggle{
   display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; flex-shrink:0;
 }
@@ -2170,8 +2312,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.12.0";
-var APP_BUILD = "2026.09.10.1";
+var APP_VERSION = "0.13.0";
+var APP_BUILD = "2026.09.11.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2419,7 +2561,40 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      destructiva de las tres. */
   productoEditingId: null,
   productoMenuOpenId: null,
-  productoDeleteConfirm: null }; // { productoId, ticketId } | null
+  productoDeleteConfirm: null, // { productoId, ticketId } | null
+  /* Calendar Workbench (§ "CALENDARIO"): estado 100% de presentación —
+     nunca una copia de tickets/fechas (§116: entradas se DERIVAN de
+     STATE.tickets en cada render, esto solo recuerda qué está viendo/
+     filtrando la persona ahora mismo). "cursor" es la fecha (date-only)
+     que ancla el periodo visible — el mes que contiene cursor en Mes, la
+     semana Lun-Dom que contiene cursor en Semana, los días desde cursor en
+     Agenda. Arranca en null y se resuelve a HOY la primera vez que se
+     renderiza (calendarCursor()) para no tener que sembrarlo en dos
+     lugares (UI init + goToCalendario). view/mios se persisten en
+     localStorage (§44 "recordar Mes/Semana/Agenda, Míos/Todos") — el resto
+     es intencionalmente efímero, igual que el resto de los popovers de un
+     solo objeto de esta app (markerPicker/cellEditor/productoDeleteConfirm
+     arriba). */
+  calendar: {
+    /* §15: "preferir AGENDA como experiencia principal" en mobile — SOLO
+       afecta la primera vez que se abre Calendario en este dispositivo
+       (loadUi() pisa esto con lo persistido en localStorage en cuanto
+       exista, ver §44 "recordar Mes/Semana/Agenda"); isMobileViewport() ya
+       es seguro de llamar aquí (window.matchMedia no depende de que el DOM
+       termine de cargar), mismo breakpoint 880px de siempre. */
+    view: isMobileViewport() ? "agenda" : "month", // "month" | "week" | "agenda"
+    cursor: null,              // "YYYY-MM-DD" | null (null == hoy, resuelto en calendarCursor())
+    mios: false,
+    responsable: "",           // "" = todos | "__sin__" = Sin responsable | nombre exacto de un perfil activo
+    tipo: "todos",             // "todos" | "atencion" | "compromiso"
+    incluirCerrados: false,
+    search: "",
+    filtersOpen: false,
+    dayPanel: null,            // "YYYY-MM-DD" del día cuyo detalle completo ("+N más") está abierto | null
+    entryPanel: null,          // { ticketId, type } — quick view + cambiar fecha de UNA entrada | null
+    entryPanelPicking: false,  // dentro de entryPanel: false = quick view, true = mostrando el date-picker rápido
+    programar: null            // { step:"search"|"pick", query, type } — flujo "+ Programar" | null
+  } };
 /* Kanban de Responsables — el feedback visual de "arrastrando"/"columna
    activa" se maneja con classList directo sobre el DOM (ver wireEvents,
    listeners dragstart/dragover/dragleave/dragend) — NUNCA con UI.algo +
@@ -2606,15 +2781,27 @@ function loadUi(){
          persiste — validada contra la lista real de vistas para que un
          valor viejo/corrupto en localStorage nunca deje la app en una vista
          inexistente (cae a "thumbnails", el default de siempre). */
-      var validViews = { thumbnails:1, icons:1, list:1, details:1 };
+      /* "kanban" faltaba aquí desde que se agregó esa vista (ronda "EDICIÓN
+         DE PRODUCTOS + KANBAN") — un refresh estando en Kanban caía
+         silenciosamente a Miniaturas. Se corrige de paso en esta ronda
+         porque el mismo bug afectaría a "calendar" si no se incluye desde
+         el principio. */
+      var validViews = { thumbnails:1, icons:1, list:1, details:1, kanban:1 };
       UI.ticketsView = validViews[parsed.ticketsView] ? parsed.ticketsView : "thumbnails";
+      /* Calendar Workbench §44: solo view/mios se recuerdan entre sesiones
+         (preferencia de presentación) — cursor/filtros/paneles abiertos
+         nunca se persisten, mismo criterio que UI.ticketsExplorer. */
+      if(parsed.calendarView === "month" || parsed.calendarView === "week" || parsed.calendarView === "agenda"){
+        UI.calendar.view = parsed.calendarView;
+      }
+      UI.calendar.mios = !!parsed.calendarMios;
     }
   }catch(e){}
 }
 function saveUi(){
   try{ localStorage.setItem("dtg_ui", JSON.stringify({selectedTicketId:UI.selectedTicketId, search:UI.search,
     mainView:UI.mainView, selectedClienteId:UI.selectedClienteId, clienteReturnTicketId:UI.clienteReturnTicketId,
-    ticketsView:UI.ticketsView})); }catch(e){}
+    ticketsView:UI.ticketsView, calendarView:UI.calendar.view, calendarMios:UI.calendar.mios})); }catch(e){}
 }
 /* ---------------- Identity Foundation: currentActor() ----------------
    Punto ÚNICO de identidad de la app — nada más debe leer AUTH_SESSION/
@@ -3292,6 +3479,22 @@ function goToBiblioteca(){
   UI.sidebarOpen = false;
   saveUi(); render();
 }
+/* Calendar Workbench: mismo patrón exacto que goToTickets/goToBiblioteca —
+   NO se resetea UI.calendar al entrar (view/cursor/filtros sobreviven,
+   igual que UI.ticketsExplorer — "volver" a Calendario desde el nav-stub
+   conserva el periodo/filtro que se estaba viendo). Única diferencia
+   deliberada: UI.pendingFocus queda en null, NUNCA un elId de búsqueda —
+   spec §16 "Abrir Calendario NO debe mostrar teclado" es más estricto que
+   el resto de las vistas (que sí autofocan su buscador en desktop); acá
+   ningún campo de texto se enfoca solo, en ningún dispositivo, hasta que
+   la persona toque uno explícitamente. */
+function goToCalendario(){
+  UI.selectedTicketId = null; UI.mainView = "calendario"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
+  UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
+  UI.pendingFocus = null;
+  UI.sidebarOpen = false;
+  saveUi(); render();
+}
 
 /* opts.fromTicketId: cuando se entra desde el nombre del cliente en el
    encabezado de un ticket (sección 1.8) — permite mostrar "← Volver al
@@ -3636,7 +3839,7 @@ function renderSidebarList(){
    y se vuelven vistas reales (derivadas, sin tabla/módulo nuevo — igual que
    Clientes). Kanban e Informes siguen siendo stubs a propósito (V0.5 §24).
    "Tickets cerrados" es una entrada nueva, sin equivalente previo. */
-var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca"];
+var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca","calendario"];
 function renderSidebar(){
   var onOtherView = REAL_VIEWS.indexOf(UI.mainView) !== -1;
   return (
@@ -3650,6 +3853,7 @@ function renderSidebar(){
       '<ul class="nav-stubs">' +
         '<button class="nav-stub' + (!UI.selectedTicketId && !onOtherView?" active":"") + '" data-action="go-home"><span>Inicio</span><span class="kbd-hint">' + HOME_SHORTCUT_LABEL + '</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="tickets"?" active":"") + '" data-action="go-tickets"><span>Tickets</span></button>' +
+        '<button class="nav-stub' + (UI.mainView==="calendario"?" active":"") + '" data-action="go-calendario"><span>Calendario</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="biblioteca"?" active":"") + '" data-action="go-biblioteca"><span>Biblioteca</span></button>' +
         '<button class="nav-stub' + (UI.mainView==="atencion"?" active":"") + '" data-action="go-atencion"><span>Atención</span></button>' +
         '<button class="nav-stub" data-action="stub" data-name="Kanban"><span>Kanban</span><span class="tag">pronto</span></button>' +
@@ -6175,6 +6379,672 @@ function renderKanbanBoard(list){
   return '<div class="kanban-board" id="kanban-board">' + cols.map(renderKanbanColumn).join("") + "</div>";
 }
 
+/* ================= CALENDAR WORKBENCH (§ "CALENDARIO — Calendario
+   operacional basado en Atención + Compromiso") =================
+   "¿Cuándo?" — la tercera vista derivada de los mismos tickets (Kanban ya
+   responde "¿Quién?", Qué Sigue responde "¿Qué?"). CERO tabla nueva: cada
+   entrada del calendario es una proyección EN MEMORIA de
+   t.fechaAtencion/t.fechaCompromiso (§95 — nunca calendar_items, que solo
+   replicaría esas dos columnas). Un ticket con ambas fechas aparece dos
+   veces (§18) — dos ENTRADAS derivadas de UN ticket, nunca dos tickets.
+   Mutación: SIEMPRE updateTicketFieldCore(t, "field-fecha-atencion"|
+   "field-fecha-compromiso"|"field-responsable", valor) — la MISMA función
+   central que ya usa la cabecera del ticket/Detalles/Kanban (§30: "caminos
+   diferentes, misma lógica" — nunca updateAttentionDateCore() paralela).
+   Realtime: gratis — "tickets" ya vive en subscribeRealtime() desde V0.1,
+   así que cualquier cambio de fecha/responsable en cualquier dispositivo
+   dispara scheduleRefresh() -> renderKeepingLiveInputs(), que redibuja
+   este módulo con datos frescos sin cerrar ningún panel/popover abierto
+   (todo vive en UI.calendar.*, que render() simplemente vuelve a leer —
+   §59). */
+
+/* ---- fechas de calendario: SOLO el módulo date-only ya existente
+   (parseDateOnly/dateOnlyFromDate/addDaysToDateOnly/todayLocalYYYYMMDD,
+   ver "Addendum Date Correctness" arriba) — §7 "auditar cuidadosamente" ya
+   está resuelto ahí, cero fórmulas de fecha nuevas en este módulo. */
+var CALENDAR_WEEKDAY_SHORT = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+var CALENDAR_WEEKDAY_LONG = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+var CALENDAR_MONTH_LABELS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+/* Lunes de la semana civil que contiene dateStr (§10: la semana empieza en
+   lunes) — getDay() de JS es 0=Domingo..6=Sábado. */
+function mondayOfWeekContaining(dateStr){
+  var d = parseDateOnly(dateStr);
+  if(!d) return dateStr;
+  var dow = d.getDay();
+  var delta = (dow === 0) ? -6 : (1 - dow);
+  d.setDate(d.getDate() + delta);
+  return dateOnlyFromDate(d);
+}
+/* Cursor de la sesión — null hasta el primer render, entonces se fija a HOY
+   UNA sola vez (nunca "hoy" recalculado en cada render, que movería el
+   periodo visible solo por dejar la pestaña abierta pasada la medianoche —
+   §60 "no saltar de contexto sin que la persona lo pida"). */
+function calendarCursor(){
+  if(!UI.calendar.cursor) UI.calendar.cursor = todayLocalYYYYMMDD();
+  return UI.calendar.cursor;
+}
+/* 42 días (6 semanas) SIEMPRE — grilla de altura predecible en vez de 4-6
+   filas variables según el mes; arranca el lunes de la semana que contiene
+   el día 1 del mes. */
+function calendarMonthGridDates(cursorStr){
+  var d = parseDateOnly(cursorStr) || new Date();
+  var firstOfMonth = dateOnlyFromDate(new Date(d.getFullYear(), d.getMonth(), 1));
+  var cur = mondayOfWeekContaining(firstOfMonth);
+  var out = [];
+  for(var i=0; i<42; i++){ out.push(cur); cur = addDaysToDateOnly(cur, 1); }
+  return out;
+}
+function calendarWeekDates(cursorStr){
+  var mon = mondayOfWeekContaining(cursorStr);
+  var out = [];
+  for(var i=0; i<7; i++){ out.push(i===0 ? mon : addDaysToDateOnly(mon, i)); }
+  return out;
+}
+function calendarIsToday(dateStr){ return dateStr === todayLocalYYYYMMDD(); }
+/* §45/§47: "pasado" es presentación pura, nunca un estado guardado (§93) —
+   se deriva comparando contra hoy en cada render, siempre en hora local. */
+function calendarIsPastDate(dateStr){
+  var d = parseDateOnly(dateStr), today = parseDateOnly(todayLocalYYYYMMDD());
+  return !!(d && today && d < today);
+}
+function calendarIsSameMonth(dateStr, cursorStr){
+  var d = parseDateOnly(dateStr), c = parseDateOnly(cursorStr);
+  return !!(d && c && d.getFullYear()===c.getFullYear() && d.getMonth()===c.getMonth());
+}
+
+/* ---- fuente + derivación (§2 "otra vista de los mismos tickets", §95
+   "nunca una tabla que replique fecha_atencion/fecha_compromiso") ---- */
+function calendarSourceTickets(){
+  /* §68-70: cerrados/cancelados/entregados NUNCA pierden su fecha — solo
+     se excluyen del calendario OPERACIONAL por default (mismo criterio que
+     ya usa el sidebar principal, ticketIsCerrado), con un escape hatch
+     explícito ("Incluir cerrados") para cuando sí hace falta verlos.
+     Entregado ≠ Cerrado se preserva tal cual: un ticket "entregado" pero
+     no cerrado sigue apareciendo por default (§70). */
+  return UI.calendar.incluirCerrados ? STATE.tickets : STATE.tickets.filter(function(t){ return !ticketIsCerrado(t); });
+}
+/* §116: entrada = view-model desechable, NUNCA una segunda verdad — se
+   reconstruye completa en cada render() a partir de STATE.tickets. */
+function calendarDeriveEntries(tickets){
+  var out = [];
+  tickets.forEach(function(t){
+    if(t.fechaAtencion) out.push({ ticketId: t.id, type: "attention", date: t.fechaAtencion, ticket: t });
+    if(t.fechaCompromiso) out.push({ ticketId: t.id, type: "commitment", date: t.fechaCompromiso, ticket: t });
+  });
+  return out;
+}
+/* §39-43: filtros compactos, se combinan (nunca queries incompatibles) —
+   Responsable/Míos comparten un solo eje (elegir "Míos" apaga el <select>
+   de responsable, ver renderCalendarFiltersPanel/el delegado — nunca dos
+   filtros de responsable activos y en conflicto a la vez). Tipo y Buscar
+   se aplican siempre encima, sobre lo que ya dejó ese primer filtro. */
+function calendarEntriesFiltered(){
+  var ui = UI.calendar;
+  var entries = calendarDeriveEntries(calendarSourceTickets());
+  if(ui.tipo === "atencion") entries = entries.filter(function(e){ return e.type === "attention"; });
+  else if(ui.tipo === "compromiso") entries = entries.filter(function(e){ return e.type === "commitment"; });
+  if(ui.mios){
+    var me = currentActorName() || "";
+    entries = entries.filter(function(e){ return (e.ticket.responsable||"") === me; });
+  } else if(ui.responsable === "__sin__"){
+    entries = entries.filter(function(e){ return !e.ticket.responsable; });
+  } else if(ui.responsable){
+    entries = entries.filter(function(e){ return e.ticket.responsable === ui.responsable; });
+  }
+  var qRaw = (ui.search||"").trim();
+  if(qRaw){
+    var qNorm = normalizeWord(qRaw.replace(/^#/, ""));
+    var qDigits = qRaw.replace(/\D/g, "");
+    entries = entries.filter(function(e){ return ticketMatchesExplorerQuery(e.ticket, qNorm, qDigits); });
+  }
+  return entries;
+}
+/* §73: orden dentro de un día — markers críticos primero, luego
+   responsable (agrupa visualmente "lo de Martín" junto), folio como
+   desempate estable. Nada de un motor de prioridad nuevo. */
+function calendarSortDayEntries(list){
+  return list.slice().sort(function(a, b){
+    var ma = activeMarkers(a.ticket).length ? 0 : 1;
+    var mb = activeMarkers(b.ticket).length ? 0 : 1;
+    if(ma !== mb) return ma - mb;
+    var ra = a.ticket.responsable || "￿", rb = b.ticket.responsable || "￿";
+    if(ra !== rb) return ra < rb ? -1 : 1;
+    return (a.ticket.seq||0) - (b.ticket.seq||0);
+  });
+}
+/* Único punto que corre calendarEntriesFiltered() por render (§63 "no
+   N+1") — Mes/Semana/Agenda/panel de día reciben este mismo mapa ya armado
+   en vez de recalcularlo cada uno por su cuenta. */
+function calendarEntriesByDate(entries){
+  var map = {};
+  entries.forEach(function(e){ (map[e.date] = map[e.date] || []).push(e); });
+  Object.keys(map).forEach(function(k){ map[k] = calendarSortDayEntries(map[k]); });
+  return map;
+}
+
+/* ---- toolbar / navegación temporal / filtros ---- */
+var CALENDAR_VIEW_OPTIONS = [["month","Mes"],["week","Semana"],["agenda","Agenda"]];
+function calendarPeriodLabel(){
+  var ui = UI.calendar, cursor = calendarCursor();
+  var d = parseDateOnly(cursor);
+  if(!d) return "";
+  if(ui.view === "month") return CALENDAR_MONTH_LABELS[d.getMonth()] + " " + d.getFullYear();
+  if(ui.view === "week"){
+    var dates = calendarWeekDates(cursor);
+    var first = parseDateOnly(dates[0]), last = parseDateOnly(dates[6]);
+    if(first.getMonth() === last.getMonth() && first.getFullYear() === last.getFullYear()){
+      return first.getDate() + "–" + last.getDate() + " " + CALENDAR_MONTH_LABELS[first.getMonth()] + " " + first.getFullYear();
+    }
+    return first.getDate() + " " + CALENDAR_MONTH_LABELS[first.getMonth()] + " – " + last.getDate() + " " + CALENDAR_MONTH_LABELS[last.getMonth()] + " " + last.getFullYear();
+  }
+  var endStr = addDaysToDateOnly(cursor, 13);
+  var e = parseDateOnly(endStr);
+  return d.getDate() + " " + CALENDAR_MONTH_LABELS[d.getMonth()] + " – " + e.getDate() + " " + CALENDAR_MONTH_LABELS[e.getMonth()];
+}
+/* §36-38: "Hoy" centra el periodo actual (nunca solo cambia el título) —
+   los tres saltan a HOY, cada uno en su propia unidad; anterior/siguiente
+   avanza por mes/semana/14 días según la vista activa (§37). Sin reload de
+   página — el mismo render() de siempre. */
+function calendarGoToday(){ UI.calendar.cursor = todayLocalYYYYMMDD(); }
+function calendarStepPeriod(dir){
+  var ui = UI.calendar, cursor = calendarCursor();
+  var d = parseDateOnly(cursor);
+  if(ui.view === "month") ui.cursor = dateOnlyFromDate(new Date(d.getFullYear(), d.getMonth() + dir, 1));
+  else if(ui.view === "week") ui.cursor = addDaysToDateOnly(cursor, dir * 7);
+  else ui.cursor = addDaysToDateOnly(cursor, dir * 14);
+}
+function calendarActiveFilterCount(){
+  var ui = UI.calendar, n = 0;
+  if(ui.tipo !== "todos") n++;
+  if(!ui.mios && ui.responsable) n++;
+  if(ui.incluirCerrados) n++;
+  if((ui.search||"").trim()) n++;
+  return n;
+}
+function renderCalendarFiltersPanel(){
+  var ui = UI.calendar;
+  /* §39/§108: el <select> de responsable sale de activeAssignableProfiles()
+     (perfiles activos reales) — nunca los 4 nombres hardcodeados; un
+     responsable histórico/inactivo puede seguir en un ticket viejo (ver
+     calendarEntriesFiltered) pero no aparece aquí como opción de filtro
+     nueva, mismo criterio ya usado por Kanban/responsableOptionsHtml. */
+  var respOpts = activeAssignableProfiles();
+  var respSelect =
+    '<select class="calendar-filter-select" data-action="calendar-filter-responsable" aria-label="Filtrar por responsable"' + (ui.mios?" disabled":"") + '>' +
+      '<option value="">Responsable: todos</option>' +
+      '<option value="__sin__"' + (ui.responsable==="__sin__"?" selected":"") + '>Sin responsable</option>' +
+      respOpts.map(function(p){ return '<option value="' + escapeHtml(p.displayName) + '"' + (ui.responsable===p.displayName?" selected":"") + '>' + escapeHtml(p.displayName) + "</option>"; }).join("") +
+    "</select>";
+  var tipoSelect =
+    '<select class="calendar-filter-select" data-action="calendar-filter-tipo" aria-label="Filtrar por tipo de fecha">' +
+      '<option value="todos"' + (ui.tipo==="todos"?" selected":"") + '>Tipo: todos</option>' +
+      '<option value="atencion"' + (ui.tipo==="atencion"?" selected":"") + '>Solo Atender</option>' +
+      '<option value="compromiso"' + (ui.tipo==="compromiso"?" selected":"") + '>Solo Compromiso</option>' +
+    "</select>";
+  return (
+    '<div class="calendar-filters-panel" id="calendar-filters-panel">' +
+      '<div class="search-wrap calendar-search-wrap">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+        '<input type="text" id="calendar-search-input" placeholder="Folio, cliente o trabajo" value="' + escapeHtml(ui.search||"") + '">' +
+        (ui.search ? '<button type="button" class="search-clear-btn" data-action="calendar-search-clear" aria-label="Borrar búsqueda">&times;</button>' : "") +
+      "</div>" +
+      '<div class="calendar-filter-selects">' + respSelect + tipoSelect + "</div>" +
+      '<label class="calendar-filter-check"><input type="checkbox" id="calendar-filter-cerrados"' + (ui.incluirCerrados?" checked":"") + '> Incluir cerrados</label>' +
+    "</div>"
+  );
+}
+function renderCalendarToolbar(){
+  var ui = UI.calendar;
+  var viewBtns = CALENDAR_VIEW_OPTIONS.map(function(v){
+    return '<button type="button" class="calendar-view-btn' + (ui.view===v[0]?" active":"") + '" data-action="calendar-view-pick" data-view="' + v[0] + '" aria-pressed="' + (ui.view===v[0]?"true":"false") + '">' + v[1] + "</button>";
+  }).join("");
+  var filterCount = calendarActiveFilterCount();
+  var miosOn = !!ui.mios;
+  return (
+    '<div class="calendar-toolbar">' +
+      '<div class="calendar-toolbar-row calendar-toolbar-top">' +
+        '<div class="calendar-nav">' +
+          '<button type="button" class="btn btn-ghost calendar-today-btn" data-action="calendar-today">Hoy</button>' +
+          '<button type="button" class="btn-plain calendar-step-btn" data-action="calendar-step" data-dir="-1" aria-label="Periodo anterior">&#8249;</button>' +
+          '<span class="calendar-period-label">' + escapeHtml(calendarPeriodLabel()) + "</span>" +
+          '<button type="button" class="btn-plain calendar-step-btn" data-action="calendar-step" data-dir="1" aria-label="Periodo siguiente">&#8250;</button>' +
+        "</div>" +
+        '<div class="calendar-view-switch" role="tablist" aria-label="Vista de calendario">' + viewBtns + "</div>" +
+      "</div>" +
+      '<div class="calendar-toolbar-row calendar-toolbar-bottom">' +
+        '<button type="button" class="calendar-mios-btn' + (miosOn?" active":"") + '" data-action="calendar-toggle-mios" aria-pressed="' + (miosOn?"true":"false") + '">Míos</button>' +
+        '<button type="button" class="calendar-filters-toggle' + (ui.filtersOpen?" active":"") + '" data-action="calendar-filters-toggle" aria-expanded="' + (ui.filtersOpen?"true":"false") + '" aria-controls="calendar-filters-panel">Filtros' + (filterCount?" · "+filterCount:"") + "</button>" +
+        '<button type="button" class="btn btn-primary calendar-programar-btn" data-action="calendar-programar-open" data-type="attention">+ Programar</button>' +
+      "</div>" +
+      (ui.filtersOpen ? renderCalendarFiltersPanel() : "") +
+    "</div>"
+  );
+}
+
+/* ---- tarjeta de una entrada — reutilizada por Mes/Semana/Agenda/panel de
+   día (§20: compacta — folio+cliente+Qué sigue+responsable+marker, NUNCA
+   teléfono/productos completos/pagos/historial). Mismo patrón de
+   seguridad DOM que Kanban (auditoría §117-118): el wrapper draggable es
+   un <div>, "abrir ticket" y "⋯" son dos <button> HERMANOS — nunca uno
+   anidado en el otro, aunque renderSidebarMarkerIcons() (safe: <span
+   role="button">) quede dentro del botón de abrir. */
+function calendarEntryTypeLabel(type){ return type === "attention" ? "ATENDER" : "COMPROMISO"; }
+function renderCalendarEntryCard(entry, opts){
+  opts = opts || {};
+  var t = entry.ticket;
+  var markersHtml = renderSidebarMarkerIcons(t);
+  var themeClass = responsibleThemeClass(t.responsable);
+  /* §47: "pasado" se señala con un icono discreto, NUNCA pintando la
+     tarjeta de rojo (eso competiría con el color del responsable — §24). */
+  var isPast = calendarIsPastDate(entry.date);
+  var typeClass = entry.type === "attention" ? " calendar-entry-attention" : " calendar-entry-commitment";
+  var workLine = (!opts.compact && t.productos && t.productos.length) ? escapeHtml(sidebarProductoPrincipal(t)) : "";
+  var quesigue = (!opts.compact && t.queSigue) ? '<div class="calendar-entry-quesigue">' + escapeHtml(t.queSigue) + "</div>" : "";
+  var respHtml = t.responsable ? responsibleChip(t.responsable) : "";
+  return (
+    '<div class="calendar-entry-card' + themeClass + typeClass + (isPast?" calendar-entry-past":"") + '" draggable="true" data-calendar-entry="' + t.id + '" data-calendar-entry-type="' + entry.type + '">' +
+      '<button type="button" class="calendar-entry-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
+        '<div class="calendar-entry-top">' +
+          '<span class="calendar-entry-type-label">' + calendarEntryTypeLabel(entry.type) + "</span>" +
+          (isPast ? '<span class="calendar-entry-overdue" title="Fecha ya pasada, ticket sigue activo">&#9888;</span>' : "") +
+        "</div>" +
+        '<div class="calendar-entry-folio-row"><span class="calendar-entry-folio">#' + t.seq + "</span>" + (markersHtml ? '<span class="calendar-entry-markers">' + markersHtml + "</span>" : "") + "</div>" +
+        '<div class="calendar-entry-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+        (workLine ? '<div class="calendar-entry-work">' + workLine + "</div>" : "") +
+        quesigue +
+        (respHtml ? '<div class="calendar-entry-resp">' + respHtml + "</div>" : "") +
+      "</button>" +
+      '<button type="button" class="calendar-entry-more" draggable="false" data-action="calendar-entry-more" data-ticket="' + t.id + '" data-type="' + entry.type + '" aria-haspopup="true" aria-label="Ver o cambiar fecha">&#8942;</button>' +
+    "</div>"
+  );
+}
+
+/* ---- vista MES (§12) ---- */
+var CALENDAR_MONTH_CELL_MAX = 3;
+function renderCalendarMonthCell(dateStr, byDate, cursorStr){
+  var entries = byDate[dateStr] || [];
+  var inMonth = calendarIsSameMonth(dateStr, cursorStr);
+  var d = parseDateOnly(dateStr);
+  var shown = entries.slice(0, CALENDAR_MONTH_CELL_MAX);
+  var overflow = entries.length - shown.length;
+  var attentionShown = shown.filter(function(e){ return e.type === "attention"; });
+  var commitmentShown = shown.filter(function(e){ return e.type === "commitment"; });
+  var dow = d.getDay();
+  var weekendClass = (dow===0 || dow===6) ? " calendar-day-weekend" : "";
+  /* §28-30/§118: la celda ENTERA no es un solo drop target — Atención y
+     Compromiso son DOS zonas de drop separadas dentro de la misma celda
+     (data-calendar-column-type), para nunca dejar ambiguo cuál fecha
+     cambió al soltar (§19/§89). Un día vacío SIGUE siendo un target válido
+     (el div existe siempre, aunque no tenga tarjetas dentro). */
+  function dropzone(type, list){
+    return '<div class="calendar-month-dropzone" data-calendar-column="' + dateStr + '" data-calendar-column-type="' + type + '">' +
+      list.map(function(e){ return renderCalendarEntryCard(e, { compact:true }); }).join("") +
+    "</div>";
+  }
+  return (
+    '<div class="calendar-month-cell' + (inMonth?"":" calendar-month-cell-outside") + weekendClass + (calendarIsToday(dateStr)?" calendar-month-cell-today":"") + '">' +
+      '<button type="button" class="calendar-month-cell-daynum" data-action="calendar-open-day" data-date="' + dateStr + '">' + d.getDate() + "</button>" +
+      '<div class="calendar-month-cell-entries">' +
+        dropzone("attention", attentionShown) +
+        dropzone("commitment", commitmentShown) +
+        (overflow > 0 ? '<button type="button" class="calendar-month-cell-more" data-action="calendar-open-day" data-date="' + dateStr + '">+' + overflow + " más</button>" : "") +
+      "</div>" +
+    "</div>"
+  );
+}
+function renderCalendarMonth(byDate){
+  var cursor = calendarCursor();
+  var dates = calendarMonthGridDates(cursor);
+  var header = CALENDAR_WEEKDAY_SHORT.map(function(w){ return '<div class="calendar-month-headcell">' + w + "</div>"; }).join("");
+  var cells = dates.map(function(ds){ return renderCalendarMonthCell(ds, byDate, cursor); }).join("");
+  return (
+    '<div class="calendar-month">' +
+      '<div class="calendar-month-headrow">' + header + "</div>" +
+      '<div class="calendar-month-grid">' + cells + "</div>" +
+    "</div>"
+  );
+}
+
+/* ---- vista SEMANA (§13) — NUNCA horaria, solo Lun..Dom con las mismas dos
+   zonas de drop (Atender/Compromiso) que Mes, con más aire por columna. ---- */
+function renderCalendarWeekDropzone(dateStr, type, list){
+  return (
+    '<div class="calendar-week-dropzone" data-calendar-column="' + dateStr + '" data-calendar-column-type="' + type + '">' +
+      list.map(function(e){ return renderCalendarEntryCard(e); }).join("") +
+    "</div>"
+  );
+}
+function renderCalendarWeekColumn(dateStr, byDate){
+  var entries = byDate[dateStr] || [];
+  var d = parseDateOnly(dateStr);
+  var dow = d.getDay();
+  var weekendClass = (dow===0 || dow===6) ? " calendar-day-weekend" : "";
+  var label = CALENDAR_WEEKDAY_SHORT[dow===0?6:dow-1] + " " + d.getDate();
+  var attention = entries.filter(function(e){ return e.type === "attention"; });
+  var commitment = entries.filter(function(e){ return e.type === "commitment"; });
+  return (
+    '<div class="calendar-week-day' + weekendClass + (calendarIsToday(dateStr)?" calendar-week-day-today":"") + '">' +
+      '<button type="button" class="calendar-week-day-head" data-action="calendar-open-day" data-date="' + dateStr + '">' + label + "</button>" +
+      '<div class="calendar-week-day-body">' +
+        renderCalendarWeekDropzone(dateStr, "attention", attention) +
+        renderCalendarWeekDropzone(dateStr, "commitment", commitment) +
+      "</div>" +
+    "</div>"
+  );
+}
+function renderCalendarWeek(byDate){
+  var dates = calendarWeekDates(calendarCursor());
+  return '<div class="calendar-week">' + dates.map(function(ds){ return renderCalendarWeekColumn(ds, byDate); }).join("") + "</div>";
+}
+
+/* ---- vista AGENDA (§14) — lista vertical, la principal en mobile (§15).
+   Nunca depende de drag (§33) — cada tarjeta trae su propio "⋯" con el
+   date-picker rápido, el mismo camino "seguro" que ya usa Kanban con su
+   <select> de respaldo. ---- */
+function renderCalendarAgendaDay(dateStr, byDate){
+  var entries = byDate[dateStr] || [];
+  if(!entries.length) return "";
+  var d = parseDateOnly(dateStr);
+  var todayStr = todayLocalYYYYMMDD();
+  var tomorrowStr = addDaysToDateOnly(todayStr, 1);
+  var prefix = dateStr === todayStr ? "HOY · " : (dateStr === tomorrowStr ? "MAÑANA · " : "");
+  var dayLabel = prefix + CALENDAR_WEEKDAY_LONG[d.getDay()].toUpperCase() + " " + d.getDate();
+  var attention = entries.filter(function(e){ return e.type === "attention"; });
+  var commitment = entries.filter(function(e){ return e.type === "commitment"; });
+  function group(list, label){
+    if(!list.length) return "";
+    return '<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">' + label + "</div>" + list.map(function(e){ return renderCalendarEntryCard(e); }).join("") + "</div>";
+  }
+  return (
+    '<div class="calendar-agenda-day">' +
+      '<div class="calendar-agenda-day-head">' + escapeHtml(dayLabel) + "</div>" +
+      group(attention, "ATENDER") +
+      group(commitment, "COMPROMISOS") +
+    "</div>"
+  );
+}
+/* §61: ventana de 14 días desde el cursor — nunca todo el histórico.
+   Anterior/siguiente avanza por esa misma ventana (calendarStepPeriod). */
+function renderCalendarAgenda(byDate){
+  var cursor = calendarCursor();
+  var days = [], cur = cursor;
+  for(var i=0; i<14; i++){ days.push(cur); cur = addDaysToDateOnly(cur, 1); }
+  var html = days.map(function(ds){ return renderCalendarAgendaDay(ds, byDate); }).join("");
+  if(!html) return renderCalendarEmptyState();
+  return '<div class="calendar-agenda">' + html + "</div>";
+}
+
+function renderCalendarEmptyState(){
+  /* §49/§102: "sin fecha" NUNCA se presenta como error/alerta — un
+     calendario vacío es un estado legítimo, no un problema a resolver. */
+  return (
+    '<div class="calendar-empty-state">' +
+      "<p>No hay fechas programadas para este periodo.</p>" +
+      '<button type="button" class="btn btn-primary" data-action="calendar-programar-open" data-type="attention">+ Programar ticket</button>' +
+    "</div>"
+  );
+}
+
+/* ---- panel de día completo (§72, "+N más") — mismo overlay .cierre-modal
+   de siempre, funciona igual en desktop (popover centrado) y mobile
+   (pantalla completa vía el mismo CSS responsive que ya tiene esa clase). ---- */
+function renderCalendarDayPanel(byDate){
+  var dateStr = UI.calendar.dayPanel;
+  if(!dateStr) return "";
+  var entries = byDate[dateStr] || [];
+  var d = parseDateOnly(dateStr);
+  if(!d) return "";
+  var attention = entries.filter(function(e){ return e.type === "attention"; });
+  var commitment = entries.filter(function(e){ return e.type === "commitment"; });
+  function group(list, label){
+    if(!list.length) return "";
+    return '<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">' + label + "</div>" + list.map(function(e){ return renderCalendarEntryCard(e); }).join("") + "</div>";
+  }
+  return (
+    '<div class="cierre-modal-overlay" id="calendar-day-panel-overlay">' +
+      '<div class="cierre-modal calendar-day-panel">' +
+        '<div class="cierre-modal-title">' + CALENDAR_WEEKDAY_LONG[d.getDay()] + " " + d.getDate() + " de " + CALENDAR_MONTH_LABELS[d.getMonth()].toLowerCase() + "</div>" +
+        '<div class="calendar-day-panel-counts">' + attention.length + (attention.length===1?" atención":" atenciones") + " · " + commitment.length + (commitment.length===1?" compromiso":" compromisos") + "</div>" +
+        '<div class="calendar-day-panel-body">' +
+          (entries.length ? (group(attention,"ATENDER") + group(commitment,"COMPROMISO")) : '<div class="ephemeral-sub">Sin tickets programados este día.</div>') +
+        "</div>" +
+        '<div class="popover-actions">' +
+          '<button type="button" class="btn-plain" data-action="calendar-programar-open" data-type="attention" data-date="' + dateStr + '">+ Programar este día</button>' +
+          '<button type="button" class="btn btn-ghost" data-action="calendar-day-panel-close">Cerrar</button>' +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* ---- popover de una entrada: quick view (§27) + cambiar fecha (§34) ----
+   Mismo overlay .cierre-modal — un solo componente reutilizado para todos
+   los popovers/paneles de este módulo, nunca uno distinto por caso. */
+var CALENDAR_TYPE_ELID = { attention: "field-fecha-atencion", commitment: "field-fecha-compromiso" };
+var CALENDAR_TYPE_LABEL = { attention: "Atender", commitment: "Compromiso" };
+function renderCalendarEntryPopover(){
+  var p = UI.calendar.entryPanel;
+  if(!p) return "";
+  var t = findTicket(p.ticketId);
+  if(!t) return "";
+  var elId = CALENDAR_TYPE_ELID[p.type];
+  var def = HEADER_FIELDS[elId];
+  var currentVal = t[def.key];
+  var label = CALENDAR_TYPE_LABEL[p.type];
+  var body;
+  if(UI.calendar.entryPanelPicking){
+    var today = todayLocalYYYYMMDD();
+    var tomorrow = addDaysToDateOnly(today, 1);
+    var plus7 = addDaysToDateOnly(today, 7);
+    /* §34: "Hoy/Mañana/+7 días/Elegir fecha/Quitar fecha" — sin NLP nuevo
+       (§35 dice explícitamente no construir eso si no existe ya; no
+       existe, así que se queda en estos atajos deterministas + un
+       <input type=date> nativo para cualquier otra fecha). */
+    body =
+      '<div class="calendar-quickdate-actions">' +
+        '<button type="button" class="help-cmd-btn" data-action="calendar-quickdate-set" data-value="' + today + '"><span class="desc">Hoy</span></button>' +
+        '<button type="button" class="help-cmd-btn" data-action="calendar-quickdate-set" data-value="' + tomorrow + '"><span class="desc">Mañana</span></button>' +
+        '<button type="button" class="help-cmd-btn" data-action="calendar-quickdate-set" data-value="' + plus7 + '"><span class="desc">+7 días</span></button>' +
+      "</div>" +
+      '<div class="popover-form">' +
+        '<label>Elegir fecha<input type="date" id="calendar-quickdate-input" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (currentVal||"") + '"></label>' +
+      "</div>" +
+      '<div class="popover-actions">' +
+        (currentVal ? '<button type="button" class="btn btn-ghost" data-action="calendar-quickdate-clear">Quitar fecha</button>' : "") +
+        '<button type="button" class="btn btn-primary" data-action="calendar-quickdate-apply">Guardar</button>' +
+      "</div>";
+  } else {
+    body =
+      '<div class="calendar-entrypanel-summary">' +
+        '<div class="calendar-entrypanel-row"><span class="calendar-entrypanel-k">Qué sigue</span><span class="calendar-entrypanel-v">' + (t.queSigue ? escapeHtml(t.queSigue) : "—") + "</span></div>" +
+        '<div class="calendar-entrypanel-row"><span class="calendar-entrypanel-k">Responsable</span><span class="calendar-entrypanel-v">' + (t.responsable ? responsibleChip(t.responsable) : "Sin responsable") + "</span></div>" +
+        '<div class="calendar-entrypanel-row"><span class="calendar-entrypanel-k">' + label + "</span><span class=\"calendar-entrypanel-v\">" + (currentVal ? fmtDateOnlyShort(currentVal) : "Sin fecha") + "</span></div>" +
+      "</div>" +
+      '<div class="popover-actions">' +
+        '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' +
+        '<button type="button" class="btn btn-primary" data-action="calendar-quickdate-open-picker">Cambiar fecha</button>' +
+      "</div>";
+  }
+  return (
+    '<div class="cierre-modal-overlay" id="calendar-entry-popover-overlay">' +
+      '<div class="cierre-modal calendar-entry-popover">' +
+        '<div class="cierre-modal-title">#' + t.seq + " · " + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+        body +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* ---- "+ Programar" (§50-53): buscar ticket existente (camino principal) o
+   crear uno nuevo casi vacío — reutiliza ticketMatchesExplorerQuery (misma
+   búsqueda de siempre) y createTicketCore (el MISMO creador central que
+   "+ Nuevo ticket"/Quick Create/­/nuevo, nunca un formulario paralelo). ---- */
+function renderCalendarProgramarPanel(){
+  var st = UI.calendar.programar;
+  if(!st) return "";
+  if(st.step === "pick"){
+    var t = findTicket(st.ticketId);
+    if(!t){ st.step = "search"; }
+  }
+  var body;
+  if(st.step === "pick"){
+    var t2 = findTicket(st.ticketId);
+    body =
+      '<div class="ephemeral-sub">#' + t2.seq + " · " + escapeHtml(sidebarClienteLabel(t2)) + "</div>" +
+      '<div class="popover-form">' +
+        '<label>' + (st.type==="commitment"?"Compromiso":"Atender") + '<input type="date" id="calendar-programar-date" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + (st.initialDate||"") + '"></label>' +
+      "</div>" +
+      '<div class="popover-actions">' +
+        '<button type="button" class="btn btn-ghost" data-action="calendar-programar-back">&larr; Buscar otro</button>' +
+        '<button type="button" class="btn btn-primary" data-action="calendar-programar-save">Guardar</button>' +
+      "</div>";
+  } else {
+    var qNorm = normalizeWord((st.query||"").trim());
+    var qDigits = (st.query||"").replace(/\D/g,"");
+    var results = (qNorm || (qDigits && qDigits.length>=3))
+      ? ticketsExplorerBaseList().filter(function(tk){ return !ticketIsCerrado(tk) && ticketMatchesExplorerQuery(tk, qNorm, qDigits); }).slice(0,8)
+      : [];
+    var typeToggle =
+      '<div class="calendar-programar-type">' +
+        '<button type="button" class="calendar-programar-type-btn' + (st.type==="attention"?" active":"") + '" data-action="calendar-programar-type" data-type="attention">Atender</button>' +
+        '<button type="button" class="calendar-programar-type-btn' + (st.type==="commitment"?" active":"") + '" data-action="calendar-programar-type" data-type="commitment">Compromiso</button>' +
+      "</div>";
+    body =
+      typeToggle +
+      '<div class="search-wrap">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+        '<input type="text" id="calendar-programar-search" placeholder="Buscar ticket existente…" value="' + escapeHtml(st.query||"") + '">' +
+      "</div>" +
+      (results.length ? '<div class="calendar-programar-results">' + results.map(function(tk){
+        return '<button type="button" class="help-cmd-btn" data-action="calendar-programar-pick" data-ticket="' + tk.id + '"><span class="desc">#' + tk.seq + " · " + escapeHtml(sidebarClienteLabel(tk)) + "</span></button>";
+      }).join("") + "</div>" : (st.query ? '<div class="ephemeral-sub">Sin resultados.</div>' : "")) +
+      '<div class="popover-actions">' +
+        '<button type="button" class="btn btn-ghost" data-action="calendar-programar-cancel">Cancelar</button>' +
+        '<button type="button" class="btn btn-primary" data-action="calendar-programar-new">+ Crear ticket nuevo</button>' +
+      "</div>";
+  }
+  return (
+    '<div class="cierre-modal-overlay" id="calendar-programar-overlay">' +
+      '<div class="cierre-modal">' +
+        '<div class="cierre-modal-title">Programar ' + (st.type==="commitment"?"compromiso":"atención") + "</div>" +
+        body +
+      "</div>" +
+    "</div>"
+  );
+}
+
+/* ---- dispatcher principal ---- */
+function renderCalendarView(){
+  var ui = UI.calendar;
+  /* §60: limpiar referencias a un panel/popover cuyo ticket ya no exista
+     (se cerró/dejó de pasar los filtros) — mismo criterio de autolimpieza
+     que ya usa Miniaturas con selectedCardId. Nunca toca cursor/vista. */
+  if(ui.entryPanel && !findTicket(ui.entryPanel.ticketId)){ ui.entryPanel = null; ui.entryPanelPicking = false; }
+  var entriesByDate = calendarEntriesByDate(calendarEntriesFiltered());
+  var body;
+  if(ui.view === "week") body = renderCalendarWeek(entriesByDate);
+  else if(ui.view === "agenda") body = renderCalendarAgenda(entriesByDate);
+  else body = renderCalendarMonth(entriesByDate);
+  return (
+    '<div class="home-header"><h1>Calendario</h1></div>' +
+    '<div class="calendar-view' + (ui.view==="agenda"?" calendar-view-agenda":"") + '">' +
+      renderCalendarToolbar() +
+      '<div class="calendar-scroll" id="calendar-scroll">' + body + "</div>" +
+    "</div>" +
+    renderCalendarDayPanel(entriesByDate) +
+    renderCalendarEntryPopover() +
+    renderCalendarProgramarPanel()
+  );
+}
+
+/* ---- mutaciones — SIEMPRE updateTicketFieldCore, nunca una función
+   paralela (§30). Deshacer (§32/§100) es literalmente "volver a llamar a
+   la misma función con el valor anterior" — el resultado final queda bien
+   registrado en bitácora porque pasa otra vez por el mismo camino, nunca
+   un "revert" de bajo nivel que solo toque STATE/CSS. ---- */
+async function calendarQuickSetDate(t, type, value){
+  var elId = CALENDAR_TYPE_ELID[type];
+  if(!elId || !t) return;
+  var def = HEADER_FIELDS[elId];
+  var prev = t[def.key];
+  UI.calendar.entryPanel = null;
+  UI.calendar.entryPanelPicking = false;
+  if((prev||"") === (value||"")){ render(); return; }
+  /* §98: si Supabase rechaza el cambio (fecha fuera de rango, red caída),
+     updateTicketFieldCore ya deja STATE intacto (nunca aplica el patch
+     optimista si isSaneDateOnly falla) y muestra su propio toast de error
+     — aquí solo se decide si hay confirmación/Deshacer que mostrar. */
+  var applied = await updateTicketFieldCore(t, elId, value, { refocus:false });
+  render();
+  if(!applied) return;
+  var label = CALENDAR_TYPE_LABEL[type];
+  var msg = value ? ("✓ " + label + " movida al " + fmtDateOnlyShort(value)) : ("✓ " + label + " eliminada");
+  var undoBtn = '<button type="button" class="toast-action-btn" data-action="calendar-undo-date" data-ticket="' + escapeHtml(t.id) + '" data-type="' + type + '" data-prev="' + escapeHtml(prev||"") + '">Deshacer</button>';
+  showActionToast(msg, undoBtn);
+}
+function calendarUndoDate(ticketId, type, prevValue){
+  var t = findTicket(ticketId);
+  if(!t) return;
+  var elId = CALENDAR_TYPE_ELID[type];
+  updateTicketFieldCore(t, elId, prevValue || "", { refocus:false });
+}
+/* §28-30: drag&drop — SIEMPRE llama esto, sea cual sea la vista (Mes o
+   Semana) o el origen del drag; nunca una segunda mutación "de calendario"
+   distinta a la del date-picker/Deshacer de arriba. */
+function calendarHandleDrop(ticketId, type, newDate){
+  var t = findTicket(ticketId);
+  if(!t) return;
+  calendarQuickSetDate(t, type, newDate);
+}
+function openCalendarProgramar(type, initialDate){
+  UI.calendar.programar = { step: "search", query: "", type: type || "attention", ticketId: null, initialDate: initialDate || null };
+  render();
+}
+function closeCalendarProgramar(){ UI.calendar.programar = null; render(); }
+function calendarProgramarPick(ticketId){
+  var st = UI.calendar.programar;
+  if(!st) return;
+  st.step = "pick"; st.ticketId = ticketId;
+  render();
+}
+async function calendarProgramarSave(){
+  var st = UI.calendar.programar;
+  if(!st || !st.ticketId) return;
+  var t = findTicket(st.ticketId);
+  if(!t) return;
+  var inp = document.getElementById("calendar-programar-date");
+  var value = inp ? inp.value : "";
+  if(!value){ showToast("Elige una fecha."); return; }
+  var type = st.type;
+  closeCalendarProgramar();
+  await calendarQuickSetDate(t, type, value);
+}
+/* §52-53: "Crear ticket nuevo" reutiliza LITERALMENTE createTicketCore —
+   el mismo creador central que "+ Nuevo ticket"/Quick Create//nuevo —
+   nunca un formulario de alta paralelo. El ticket nace casi vacío (§53:
+   sin cliente/producto/responsable obligados); si se abrió desde un día
+   específico, esa fecha se aplica DESPUÉS de esperar refreshFromServer()
+   (a diferencia de createTicketFromNuevo, que encadena sub-operaciones
+   antes de refrescar — aquí se espera a propósito: STATE recién insertado
+   solo existe después del refresh, así que findTicket(newId) antes de eso
+   podría no encontrarlo; esperar primero es más simple y más seguro). */
+async function calendarProgramarCreateNew(){
+  var st = UI.calendar.programar;
+  if(!st) return;
+  var type = st.type, initialDate = st.initialDate || todayLocalYYYYMMDD();
+  closeCalendarProgramar();
+  var newId = await createTicketCore({});
+  if(!newId) return;
+  openTicketById(newId);
+  await refreshFromServer({ refocus:true });
+  var t = findTicket(newId);
+  if(t){
+    var elId = CALENDAR_TYPE_ELID[type];
+    await updateTicketFieldCore(t, elId, initialDate, { refocus:false });
+  }
+  showTicketCreatedToast(newId);
+}
+
 /* ================= BIBLIOTECA — memoria visual (Findability: FIND →
    RECOGNIZE → CONTEXT → OPEN ORIGIN) =================
    Sin modelo de datos paralelo ni migración nueva: cada foto ya vive en
@@ -7719,6 +8589,7 @@ function renderMain(){
   if(UI.mainView === "cxc" && !UI.selectedTicketId) return renderCxcPlaceholderView();
   if(UI.mainView === "tickets" && !UI.selectedTicketId) return renderTicketsExplorerView();
   if(UI.mainView === "biblioteca" && !UI.selectedTicketId) return renderBibliotecaView();
+  if(UI.mainView === "calendario" && !UI.selectedTicketId) return renderCalendarView();
   var t = UI.selectedTicketId ? findTicket(UI.selectedTicketId) : null;
   /* §127: un deep link (?t=UUID) que no resolvió a ningún ticket visible —
      copy exacto pedido por el addendum, nunca una pantalla en blanco ni un
@@ -10524,13 +11395,27 @@ async function updateTicketFieldCore(t, elId, value, opts){
     /* §"BITÁCORA": "Alexia cambió Responsable de Jonathan a Martín" — solo
        Responsable recibe esta redacción más humana (actor = currentActorName(),
        nunca UI.whoami; responsable = el valor del campo, dos conceptos
-       distintos — ver comentario de la especificación). Cliente/fechas
-       conservan su mensaje genérico de siempre, sin cambios. */
+       distintos — ver comentario de la especificación). Cliente conserva su
+       mensaje genérico de siempre.
+       Calendar Workbench §54: Atención/Compromiso reciben el MISMO
+       tratamiento humano que Responsable ya tenía (mismo estilo: "→" para
+       un cambio, "agregada/removida" para aparecer/desaparecer) — el actor
+       real ya viaja aparte en `autor` (currentActorName(), nunca UI.whoami)
+       y el renderer del hilo (renderThreadItem) ya lo muestra como
+       metadata junto al texto, exactamente como ya pasaba con Responsable;
+       nunca se concatena "Alexia cambió..." dentro del texto mismo, para
+       no duplicar quién lo hizo. Las fechas se formatean con
+       fmtDateOnlyShort (date-only correcto, nunca new Date(iso) crudo). */
     var bitacoraText = def.label + ": " + (value || "(vacío)");
     if(def.key === "responsable"){
       if(value && prevValue) bitacoraText = "Responsable: " + prevValue + " → " + value;
       else if(value) bitacoraText = "Ticket asignado a " + value;
       else bitacoraText = "Responsable removido (antes: " + prevValue + ")";
+    } else if(def.key === "fechaAtencion" || def.key === "fechaCompromiso"){
+      var fLabel = def.key === "fechaAtencion" ? "Atención" : "Compromiso";
+      if(value && prevValue) bitacoraText = fLabel + ": " + fmtDateOnlyShort(prevValue) + " → " + fmtDateOnlyShort(value);
+      else if(value) bitacoraText = fLabel + " agregada para el " + fmtDateOnlyShort(value);
+      else bitacoraText = fLabel + " removida (antes: " + fmtDateOnlyShort(prevValue) + ")";
     }
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: bitacoraText } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
@@ -12278,6 +13163,133 @@ function wireEvents(){
     });
   }
 
+  /* ================= Calendar Workbench: toolbar + filtros + drag&drop
+     ================= */
+  root.querySelectorAll('[data-action="calendar-view-pick"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.calendar.view = b.getAttribute("data-view");
+      saveUi(); render();
+    });
+  });
+  root.querySelectorAll('[data-action="calendar-today"]').forEach(function(b){
+    b.addEventListener("click", function(){ calendarGoToday(); render(); });
+  });
+  root.querySelectorAll('[data-action="calendar-step"]').forEach(function(b){
+    b.addEventListener("click", function(){ calendarStepPeriod(Number(b.getAttribute("data-dir"))); render(); });
+  });
+  root.querySelectorAll('[data-action="calendar-toggle-mios"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.calendar.mios = !UI.calendar.mios;
+      /* Míos y el <select> de Responsable comparten un solo eje (§39-43:
+         "los filtros deben combinarse", nunca quedar en conflicto) —
+         activar Míos no borra el responsable elegido, solo lo deja
+         inactivo (disabled) mientras Míos esté prendido; apagar Míos lo
+         vuelve a aplicar tal cual estaba, sin que la persona tenga que
+         reelegirlo. */
+      saveUi(); render();
+    });
+  });
+  root.querySelectorAll('[data-action="calendar-filters-toggle"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.calendar.filtersOpen = !UI.calendar.filtersOpen; render(); });
+  });
+  var calFilterResp = root.querySelector('[data-action="calendar-filter-responsable"]');
+  if(calFilterResp){
+    calFilterResp.addEventListener("change", function(){ UI.calendar.responsable = calFilterResp.value || ""; render(); });
+  }
+  var calFilterTipo = root.querySelector('[data-action="calendar-filter-tipo"]');
+  if(calFilterTipo){
+    calFilterTipo.addEventListener("change", function(){ UI.calendar.tipo = calFilterTipo.value || "todos"; render(); });
+  }
+  var calFilterCerrados = document.getElementById("calendar-filter-cerrados");
+  if(calFilterCerrados){
+    calFilterCerrados.addEventListener("change", function(){ UI.calendar.incluirCerrados = calFilterCerrados.checked; render(); });
+  }
+  root.querySelectorAll('[data-action="calendar-search-clear"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.calendar.search = "";
+      render();
+      var again = document.getElementById("calendar-search-input");
+      if(again) again.focus();
+    });
+  });
+  var calSearchInput = document.getElementById("calendar-search-input");
+  if(calSearchInput){
+    calSearchInput.addEventListener("input", function(){
+      UI.calendar.search = calSearchInput.value;
+      render();
+      var again = document.getElementById("calendar-search-input");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
+  var calProgramarSearch = document.getElementById("calendar-programar-search");
+  if(calProgramarSearch){
+    calProgramarSearch.addEventListener("input", function(){
+      UI.calendar.programar.query = calProgramarSearch.value;
+      render();
+      var again = document.getElementById("calendar-programar-search");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
+  /* Drag&drop entre días — SOLO dentro del mismo tipo (§19/§89: la tarjeta
+     nunca cambia de Atención a Compromiso al arrastrarla, solo de fecha).
+     Mismo contrato exacto que el Kanban de arriba: dragover/dragenter/
+     dragleave/dragstart NUNCA llaman a render() (classList directo); solo
+     "drop" llama a la mutación real (calendarHandleDrop ->
+     calendarQuickSetDate -> updateTicketFieldCore, la MISMA función
+     central de siempre — §30 "caminos diferentes, misma lógica"). §33: en
+     mobile el drag nativo no siempre es confiable — nunca es el ÚNICO
+     camino, el "⋯" de cada tarjeta (calendar-entry-more) abre el mismo
+     date-picker de respaldo sin importar el dispositivo. */
+  var calendarScroll = document.getElementById("calendar-scroll");
+  if(calendarScroll){
+    calendarScroll.querySelectorAll("[data-calendar-entry]").forEach(function(card){
+      card.addEventListener("dragstart", function(e){
+        var payload = card.getAttribute("data-calendar-entry") + "|" + card.getAttribute("data-calendar-entry-type");
+        try{ e.dataTransfer.setData("text/plain", payload); }catch(err){}
+        if(e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+        card.classList.add("calendar-entry-dragging");
+      });
+      card.addEventListener("dragend", function(){
+        card.classList.remove("calendar-entry-dragging");
+        calendarScroll.querySelectorAll(".calendar-dropzone-over").forEach(function(z){ z.classList.remove("calendar-dropzone-over"); });
+      });
+    });
+    calendarScroll.querySelectorAll("[data-calendar-column]").forEach(function(zone){
+      zone.addEventListener("dragover", function(e){
+        e.preventDefault(); // requerido para que el navegador permita soltar aquí
+        if(e.dataTransfer) e.dataTransfer.dropEffect = "move";
+        zone.classList.add("calendar-dropzone-over");
+      });
+      zone.addEventListener("dragleave", function(e){
+        if(e.target === zone) zone.classList.remove("calendar-dropzone-over");
+      });
+      zone.addEventListener("drop", function(e){
+        e.preventDefault();
+        zone.classList.remove("calendar-dropzone-over");
+        var raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+        var parts = raw.split("|");
+        var ticketId = parts[0], draggedType = parts[1];
+        var zoneDate = zone.getAttribute("data-calendar-column");
+        var zoneType = zone.getAttribute("data-calendar-column-type");
+        if(!ticketId || !draggedType || !zoneDate || !zoneType) return;
+        if(draggedType !== zoneType){
+          showToast("Atención y Compromiso son fechas distintas — usa el ⋯ de la tarjeta para cambiar esa.");
+          return;
+        }
+        calendarHandleDrop(ticketId, draggedType, zoneDate);
+      });
+    });
+  }
+  var calQuickdateInput = document.getElementById("calendar-quickdate-input");
+  if(calQuickdateInput){
+    /* Enter dentro del <input type=date> aplica directo — igual de rápido
+       que tocar "Guardar" (§96: "sin modal/siguiente/confirmar/cerrar para
+       cada pequeña acción"). */
+    calQuickdateInput.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); var b = document.querySelector('[data-action="calendar-quickdate-apply"]'); if(b) b.click(); }
+    });
+  }
+
   /* §23: hover en desktop — el clic/tap (data-action="sidebar-marker-icon",
      manejado en el listener delegado) ya cubre mobile/tablet (§24) y sirve
      como respaldo en desktop; esto SOLO agrega el hover real. Se ignora en
@@ -12318,6 +13330,9 @@ function wireEvents(){
   });
   root.querySelectorAll('[data-action="go-biblioteca"]').forEach(function(b){
     b.addEventListener("click", function(){ goToBiblioteca(); });
+  });
+  root.querySelectorAll('[data-action="go-calendario"]').forEach(function(b){
+    b.addEventListener("click", function(){ goToCalendario(); });
   });
   root.querySelectorAll('[data-action="cerrados-filter"]').forEach(function(b){
     b.addEventListener("click", function(){ UI.cerradosFilter = b.getAttribute("data-filter"); render(); });
@@ -13399,6 +14414,77 @@ document.addEventListener("click", function(e){
     UI.productoMenuOpenId = null;
     renderKeepingLiveInputs();
   }
+  /* ================= Calendar Workbench — día/entrada/"+ Programar" ================= */
+  var calOpenDayBtn = e.target.closest && e.target.closest('[data-action="calendar-open-day"]');
+  if(calOpenDayBtn){ UI.calendar.dayPanel = calOpenDayBtn.getAttribute("data-date"); render(); return; }
+  var calDayPanelCloseBtn = e.target.closest && e.target.closest('[data-action="calendar-day-panel-close"]');
+  if(calDayPanelCloseBtn){ UI.calendar.dayPanel = null; render(); return; }
+  /* Clic en el FONDO del overlay (nunca dentro de .cierre-modal, que ya
+     capturó el clic antes de burbujear hasta aquí) lo cierra — mismo
+     contrato que el resto de los overlays .cierre-modal-overlay de esta
+     app (ej. cierre de ticket, confirmar eliminar). */
+  if(e.target && e.target.id === "calendar-day-panel-overlay"){ UI.calendar.dayPanel = null; render(); return; }
+  var calEntryMoreBtn = e.target.closest && e.target.closest('[data-action="calendar-entry-more"]');
+  if(calEntryMoreBtn){
+    UI.calendar.entryPanel = { ticketId: calEntryMoreBtn.getAttribute("data-ticket"), type: calEntryMoreBtn.getAttribute("data-type") };
+    UI.calendar.entryPanelPicking = false;
+    render();
+    return;
+  }
+  if(e.target && e.target.id === "calendar-entry-popover-overlay"){ UI.calendar.entryPanel = null; UI.calendar.entryPanelPicking = false; render(); return; }
+  var calQuickOpenPickerBtn = e.target.closest && e.target.closest('[data-action="calendar-quickdate-open-picker"]');
+  if(calQuickOpenPickerBtn){ UI.calendar.entryPanelPicking = true; render(); return; }
+  var calQuickSetBtn = e.target.closest && e.target.closest('[data-action="calendar-quickdate-set"]');
+  if(calQuickSetBtn){
+    var qp = UI.calendar.entryPanel;
+    if(qp){ var qt = findTicket(qp.ticketId); if(qt) calendarQuickSetDate(qt, qp.type, calQuickSetBtn.getAttribute("data-value")); }
+    return;
+  }
+  var calQuickApplyBtn = e.target.closest && e.target.closest('[data-action="calendar-quickdate-apply"]');
+  if(calQuickApplyBtn){
+    var ap = UI.calendar.entryPanel;
+    if(ap){
+      var at = findTicket(ap.ticketId);
+      var inp = document.getElementById("calendar-quickdate-input");
+      if(at) calendarQuickSetDate(at, ap.type, inp ? inp.value : "");
+    }
+    return;
+  }
+  var calQuickClearBtn = e.target.closest && e.target.closest('[data-action="calendar-quickdate-clear"]');
+  if(calQuickClearBtn){
+    var cp = UI.calendar.entryPanel;
+    if(cp){ var ct = findTicket(cp.ticketId); if(ct) calendarQuickSetDate(ct, cp.type, ""); }
+    return;
+  }
+  var calUndoBtn = e.target.closest && e.target.closest('[data-action="calendar-undo-date"]');
+  if(calUndoBtn){
+    calendarUndoDate(calUndoBtn.getAttribute("data-ticket"), calUndoBtn.getAttribute("data-type"), calUndoBtn.getAttribute("data-prev"));
+    return;
+  }
+  var calProgramarOpenBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-open"]');
+  if(calProgramarOpenBtn){
+    openCalendarProgramar(calProgramarOpenBtn.getAttribute("data-type") || "attention", calProgramarOpenBtn.getAttribute("data-date"));
+    return;
+  }
+  if(e.target && e.target.id === "calendar-programar-overlay"){ closeCalendarProgramar(); return; }
+  var calProgramarCancelBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-cancel"]');
+  if(calProgramarCancelBtn){ closeCalendarProgramar(); return; }
+  var calProgramarBackBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-back"]');
+  if(calProgramarBackBtn){
+    if(UI.calendar.programar){ UI.calendar.programar.step = "search"; UI.calendar.programar.ticketId = null; render(); }
+    return;
+  }
+  var calProgramarTypeBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-type"]');
+  if(calProgramarTypeBtn){
+    if(UI.calendar.programar){ UI.calendar.programar.type = calProgramarTypeBtn.getAttribute("data-type"); render(); }
+    return;
+  }
+  var calProgramarPickBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-pick"]');
+  if(calProgramarPickBtn){ calendarProgramarPick(calProgramarPickBtn.getAttribute("data-ticket")); return; }
+  var calProgramarSaveBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-save"]');
+  if(calProgramarSaveBtn){ calendarProgramarSave(); return; }
+  var calProgramarNewBtn = e.target.closest && e.target.closest('[data-action="calendar-programar-new"]');
+  if(calProgramarNewBtn){ calendarProgramarCreateNew(); return; }
   if(UI.composer){
     var pop = document.getElementById("composer-popover");
     var plus = document.querySelector('[data-action="toggle-menu"]');
@@ -13431,7 +14517,8 @@ document.addEventListener("click", function(e){
      la persona por fin cierre ese overlay. */
   var hasLayeredOverlay = !!(UI.ticketGallery || UI.cellEditor || UI.markerPicker ||
     (UI.photoBatch && UI.photoBatch.ticketId) || UI.contactPanel || UI.viewingDocId || UI.cierreModal ||
-    UI.deletePhotoConfirm || UI.bibliotecaViewer || UI.productoDeleteConfirm);
+    UI.deletePhotoConfirm || UI.bibliotecaViewer || UI.productoDeleteConfirm ||
+    UI.calendar.dayPanel || UI.calendar.entryPanel || UI.calendar.programar);
   if(UI.mainView === "tickets" && !UI.selectedTicketId && (UI.ticketsView || "thumbnails") === "thumbnails" &&
      (UI.ticketsExplorer.selectedCardId || UI.ticketsExplorer.thumbMoreTicketId) &&
      !hasLayeredOverlay &&
@@ -13513,6 +14600,21 @@ document.addEventListener("keydown", function(e){
   if(e.key === "Escape" && UI.totalDraft){ closeTotalPedidoEditor(); return; }
   if(e.key === "Escape" && UI.bibliotecaViewer){ closeBibliotecaViewer(); return; }
   if(e.key === "Escape" && UI.contactPanel){ closeContactPanel(); return; }
+  /* Calendar Workbench §81-82: "si una UI emergente nació por teclado, debe
+     poder terminarse por teclado" — mismo contrato de Escape que el resto
+     de los overlays .cierre-modal-overlay de esta app. Orden de capas:
+     "+Programar" y el popover de entrada pueden abrirse encima del panel
+     de día (ej. "+ Programar este día" desde dentro de él), así que se
+     revisan ANTES que dayPanel — Escape cierra la capa más alta primero,
+     mismo criterio que deletePhotoConfirm arriba. */
+  if(e.key === "Escape" && UI.calendar.programar){ closeCalendarProgramar(); return; }
+  if(e.key === "Escape" && UI.calendar.entryPanel){
+    if(UI.calendar.entryPanelPicking){ UI.calendar.entryPanelPicking = false; render(); }
+    else { UI.calendar.entryPanel = null; render(); }
+    return;
+  }
+  if(e.key === "Escape" && UI.calendar.dayPanel){ UI.calendar.dayPanel = null; render(); return; }
+  if(e.key === "Escape" && UI.calendar.filtersOpen){ UI.calendar.filtersOpen = false; render(); return; }
   if(e.key === "Escape" && UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return; }
   if(e.key === "Escape" && UI.ticketsExplorer.quickCreateOpen){ UI.ticketsExplorer.quickCreateOpen = false; render(); return; }
   if(e.key === "Escape" && UI.cellEditor){ closeCellEditor(); return; }
