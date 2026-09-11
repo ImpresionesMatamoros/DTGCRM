@@ -912,10 +912,19 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-column-cards{display:flex; flex-direction:column; gap:8px;}
 .kanban-column-empty{font-size:11.5px; color:var(--text-faint); padding:10px 4px; text-align:center; border:1px dashed var(--border); border-radius:var(--radius-s);}
 .kanban-card{
-  display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--border);
-  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-m); padding:6px; cursor:grab;
+  position:relative; display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--border);
+  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-m); padding:6px 22px 6px 6px; cursor:grab;
 }
 .kanban-card-dragging{opacity:.4;}
+/* Manija opcional de arrastre (ADDENDUM "Qué sigue editable" — permitida
+   explícitamente por la spec "si hace la interacción más predecible"):
+   NUNCA lleva draggable="false" ni ningún data-action — es solo una zona
+   visual dentro del padding, ya parte del área arrastrable de .kanban-card
+   (ningún ancestro/descendiente aquí la excluye del drag nativo). */
+.kanban-card-draghandle{
+  position:absolute; top:4px; right:2px; width:16px; height:20px; display:flex; align-items:center; justify-content:center;
+  font-size:12px; line-height:1; color:var(--text-faint); opacity:.55; cursor:grab; user-select:none;
+}
 .kanban-card-open{
   display:flex; flex-direction:column; gap:3px; text-align:left; background:none; border:none; padding:2px; width:100%;
 }
@@ -924,7 +933,22 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-card-markers{display:flex; gap:2px;}
 .kanban-card-cliente{font-size:13px; font-weight:600; color:var(--text); overflow-wrap:break-word;}
 .kanban-card-work{font-size:12px; color:var(--text-muted); overflow-wrap:break-word;}
-.kanban-card-quesigue{font-size:11.5px; color:var(--accent-ink); background:var(--accent-soft); border-radius:var(--radius-s); padding:2px 6px; width:fit-content;}
+/* Bloque "Qué sigue" — acentuado y distinguido de productos/contexto
+   (ADDENDUM §visual), y editable: reusa .tickets-details-cell-btn tal cual
+   (mismo botón que Detalles/Quick Edit), solo reestilizado aquí para verse
+   como su propio bloque de acento en vez de una celda de tabla. */
+.kanban-card-quesigue-cell{width:100%;}
+.kanban-card-quesigue-cell .tickets-details-cell-btn{
+  display:flex; align-items:center; gap:4px; width:100%; text-align:left; font-size:11.5px; color:var(--accent-ink);
+  background:var(--accent-soft); border:none; border-radius:var(--radius-s); padding:3px 6px;
+}
+.kanban-card-quesigue-cell .tickets-details-cell-btn:hover, .kanban-card-quesigue-cell .tickets-details-cell-btn:focus-visible{filter:brightness(0.97);}
+.kanban-card-quesigue-arrow{opacity:.7;}
+.kanban-card-quesigue-text{overflow-wrap:break-word;}
+.kanban-card-quesigue-cell-empty .tickets-details-cell-btn{color:var(--text-faint); background:var(--surface-2); font-style:italic;}
+.kanban-card-quesigue-cell .comanda-edit-inline{width:100%;}
+.kanban-card-quesigue-cell .comanda-edit-inline select{font-size:11.5px; width:100%;}
+.kanban-card-markers-row{display:flex; gap:3px; flex-wrap:wrap;}
 .kanban-card-resp-select{
   font-size:11px; color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-s);
   padding:3px 4px; background:var(--surface-2); width:100%;
@@ -2312,8 +2336,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.13.0";
-var APP_BUILD = "2026.09.11.1";
+var APP_VERSION = "0.14.0";
+var APP_BUILD = "2026.09.11.2";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -6353,17 +6377,60 @@ function renderKanbanColumn(col){
     "</div>"
   );
 }
+/* ADDENDUM "QUÉ SIGUE EDITABLE DESDE KANBAN":
+   Orden de la tarjeta ahora sigue explícitamente QUIÉN(columna)/QUÉ
+   (productos-contexto)/QUÉ SIGUE(próxima acción, distinguida)/metadata
+   (marcadores) — folio+cliente arriba, productos debajo, Qué sigue como su
+   propio bloque acentuado justo después (nunca escondido dentro de
+   productos ni al revés), marcadores como metadata AL FINAL.
+
+   Edición inline: reutiliza EXACTAMENTE detailsInlineCell(t,"quesigue",...)
+   — la MISMA celda que ya usan Detalles y Quick Edit (línea ~6227), que a
+   su vez abre el MISMO <select id="field-quesigue"> (renderQueSigueSelect)
+   ya cableado por bindField/wireEvents (click "details-cell-inline" ->
+   openDetailsCellEdit, change -> commitQueSigue -> updateQueSigueCore,
+   blur -> closeHeaderEdit, Escape global ya cierra UI.headerEditField —
+   ver keydown listener). CERO función/mutación/wiring nuevo: la única
+   novedad real es este nuevo PUNTO DE MONTAJE dentro de la tarjeta Kanban.
+   Por eso "Enter guarda" de la spec se resuelve distinto a un input de
+   texto libre: elegir una opción del <select> YA guarda al instante (cambia
+   -> commitQueSigue), no hace falta una tecla de confirmación aparte; Esc
+   cancela igual que en Detalles/cabecera (cierra sin tocar nada). Ver
+   "DECISIONES QUE CAMBIÉ" en el reporte final: la spec sugería un input de
+   texto libre, pero Qué sigue YA es un catálogo con "+ Nueva opción…"
+   (resolveQueSigueCustomValue) en TODA la app — un input de texto aquí
+   fragmentaría la edición en dos paradigmas distintos, exactamente lo que
+   "no duplicar lógica" pide evitar.
+
+   Drag vs. edición (§ "MUY IMPORTANTE — CONFLICTO DE PUNTERO"): la celda de
+   Qué sigue y la fila de marcadores son hermanas de kanban-card-open, NUNCA
+   anidadas dentro de un <button> (el <select>/<button> de detailsInlineCell
+   sería HTML inválido ahí), y llevan draggable="false" explícito — mismo
+   técnica ya probada en kanban-card-resp-select — así que tocar/hacer clic
+   en ellas SIEMPRE edita, nunca inicia un drag. El área de arrastre real
+   sigue siendo el padding de .kanban-card (ya la única zona "libre" desde
+   la ronda anterior, con kanban-card-open+select ya cubriendo casi toda la
+   tarjeta) — se agrega además una pequeña manija "⋮⋮" opcional (permitida
+   explícitamente por la spec) para que arrastrar siga siendo predecible
+   aunque la tarjeta ahora tenga más superficie interactiva. */
 function renderKanbanCard(t){
   var markersHtml = renderSidebarMarkerIcons(t);
   var themeClass = responsibleThemeClass(t.responsable);
+  var queSigueValueHtml = t.queSigue
+    ? '<span class="kanban-card-quesigue-arrow" aria-hidden="true">&rarr;</span><span class="kanban-card-quesigue-text">' + escapeHtml(t.queSigue) + "</span>"
+    : '<span class="kanban-card-quesigue-empty">+ Agregar Qué sigue</span>';
   return (
     '<div class="kanban-card' + themeClass + '" draggable="true" data-kanban-card="' + t.id + '">' +
+      '<div class="kanban-card-draghandle" aria-hidden="true" title="Arrastrar para cambiar responsable">&#8942;&#8942;</div>' +
       '<button type="button" class="kanban-card-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
-        '<div class="kanban-card-top"><span class="kanban-card-folio">#' + t.seq + "</span>" + (markersHtml ? '<span class="kanban-card-markers">' + markersHtml + "</span>" : "") + "</div>" +
+        '<div class="kanban-card-top"><span class="kanban-card-folio">#' + t.seq + "</span></div>" +
         '<div class="kanban-card-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
         (t.productos.length ? '<div class="kanban-card-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" : "") +
-        (t.queSigue ? '<div class="kanban-card-quesigue">' + escapeHtml(t.queSigue) + "</div>" : "") +
       "</button>" +
+      '<div class="kanban-card-quesigue-cell' + (t.queSigue ? "" : " kanban-card-quesigue-cell-empty") + '" draggable="false">' +
+        detailsInlineCell(t, "quesigue", queSigueValueHtml) +
+      "</div>" +
+      (markersHtml ? '<div class="kanban-card-markers-row" draggable="false">' + markersHtml + "</div>" : "") +
       /* Camino seguro/keyboard (§ "KEYBOARD / ACCESIBILIDAD" — "drag es el
          camino rápido, dropdown es el camino seguro"): el MISMO roster que
          el <select> de la cabecera (responsableOptionsHtml), en cada
@@ -11463,12 +11530,25 @@ function resolveQueSigueCustomValue(){
 async function updateQueSigueCore(t, value, opts){
   if(!t) return false;
   if(t.queSigue === value) return false;
+  /* ADDENDUM "Qué sigue editable desde Kanban" §bitácora: redacción humana,
+     mismo estilo ya establecido para Responsable/Atención/Compromiso en
+     updateTicketFieldCore (ver comentario ahí) — el actor real viaja aparte
+     en `autor` (currentActorName(), nunca UI.whoami) y renderThreadItem YA
+     lo muestra como metadata junto al texto (ev.autor, línea ~3999), así
+     que el texto NUNCA repite "Alexia cambió…" (eso duplicaría quién lo
+     hizo). Esta es la MISMA función central que ya usaban Ticket/Detalles/
+     Quick Edit — Kanban la reutiliza tal cual, cero función paralela. */
+  var prevValue = t.queSigue;
   t.queSigue = value;
   render();
   try{
     var r1 = await sb.from("tickets").update({ que_sigue: value }).eq("id", t.id);
     if(r1.error) throw r1.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Qué sigue: " + (value || "(vacío)") } });
+    var bitacoraText;
+    if(value && prevValue) bitacoraText = 'Qué sigue: "' + prevValue + '" → "' + value + '"';
+    else if(value) bitacoraText = 'Qué sigue establecido: "' + value + '"';
+    else bitacoraText = 'Qué sigue removido (antes: "' + prevValue + '")';
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: bitacoraText } });
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
   return true;
