@@ -538,6 +538,16 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .comanda-cliente-chevron{font-size:16px; color:var(--text-faint); font-weight:500;}
 .comanda-cliente-plain{color:var(--text-muted); font-style:italic; font-size:21px;}
 .comanda-cliente-plain:hover, .comanda-cliente-plain:active{color:var(--text);}
+/* ADDENDUM "Cliente editable": fila que agrupa el botón de identidad
+   (abre la ficha) y el lápiz "✎" (edita el nombre aquí mismo) como
+   HERMANOS — nunca el mismo control hace las dos cosas. */
+.comanda-identity-cliente-row{display:inline-flex; align-items:center; gap:2px;}
+.comanda-clientename-edit-btn{
+  border:none; background:none; color:var(--text-faint); cursor:pointer; font-size:15px;
+  padding:6px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.comanda-clientename-edit-btn:hover, .comanda-clientename-edit-btn:focus-visible{color:var(--accent-ink); background:var(--surface-3);}
+.comanda-clientename-edit input{font-size:21px; font-weight:700; padding:2px 4px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface-2); min-width:180px;}
 /* §13-16: "[+]" discreto de Contacto rápido — deliberadamente chico junto al
    nombre (nunca un botón grande que convierta la cabecera en otro
    formulario), pero con área táctil cómoda (§66: el área tocable puede
@@ -931,7 +941,28 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-card-top{display:flex; align-items:center; justify-content:space-between; gap:6px;}
 .kanban-card-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint);}
 .kanban-card-markers{display:flex; gap:2px;}
-.kanban-card-cliente{font-size:13px; font-weight:600; color:var(--text); overflow-wrap:break-word;}
+/* ADDENDUM "Cliente editable" §C: nombre de cliente, su propia celda entre
+   el folio y el trabajo (antes vivía como texto plano dentro de
+   kanban-card-open). ".kanban-card-cliente-link" (abre ficha) y
+   ".kanban-card-cliente-edit-btn" (edita aquí) son botones HERMANOS —
+   nunca el mismo control hace las dos cosas (spec, literal). */
+.kanban-card-cliente-cell{display:flex; align-items:center; gap:2px; width:100%;}
+.kanban-card-cliente-link{
+  background:none; border:none; padding:1px 2px; font:inherit; text-align:left; cursor:pointer;
+  font-size:13px; font-weight:600; color:var(--text); overflow-wrap:break-word; flex:1; min-width:0;
+  display:inline-flex; align-items:baseline; gap:2px;
+}
+.kanban-card-cliente-link:hover, .kanban-card-cliente-link:focus-visible{color:var(--accent-ink);}
+.kanban-card-cliente-chevron{font-size:11px; color:var(--text-faint); font-weight:500;}
+.kanban-card-cliente-edit-btn{
+  background:none; border:none; padding:1px 4px; font:inherit; cursor:pointer; color:var(--text-faint);
+  font-size:12px; border-radius:var(--radius-s); flex-shrink:0;
+}
+.kanban-card-cliente-edit-btn:hover, .kanban-card-cliente-edit-btn:focus-visible{color:var(--accent-ink); background:var(--surface-2);}
+.kanban-card-cliente-text{font-size:13px; font-weight:600; color:var(--text); text-align:left; flex:1; min-width:0; overflow-wrap:break-word;}
+.kanban-card-cliente-empty{font-size:12px; color:var(--text-faint); font-style:italic; text-align:left; flex:1; min-width:0;}
+.kanban-card-cliente-cell .comanda-edit-inline{width:100%;}
+.kanban-card-cliente-cell .comanda-edit-inline input{font-size:13px; font-weight:600; width:100%; padding:2px 4px; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface-2);}
 .kanban-card-work{font-size:12px; color:var(--text-muted); overflow-wrap:break-word;}
 /* Bloque "Qué sigue" — acentuado y distinguido de productos/contexto
    (ADDENDUM §visual), y editable: reusa .tickets-details-cell-btn tal cual
@@ -2336,8 +2367,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.14.0";
-var APP_BUILD = "2026.09.11.2";
+var APP_VERSION = "0.15.0";
+var APP_BUILD = "2026.09.11.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -4242,7 +4273,7 @@ function renderTasksPanel(t){
    visibles (sección 4): un solo campo se revela a la vez, con el mismo
    input/select y el mismo commitHeaderField/commitQueSigue de siempre —
    nunca una segunda lógica de guardado por abrir/cerrar la vista. */
-var HEADER_EDIT_FOCUS_EL = { cliente:"field-cliente", quesigue:"field-quesigue", responsable:"field-responsable", atencion:"field-fecha-atencion", compromiso:"field-fecha-compromiso" };
+var HEADER_EDIT_FOCUS_EL = { cliente:"field-cliente", clientename:"field-clientename", quesigue:"field-quesigue", responsable:"field-responsable", atencion:"field-fecha-atencion", compromiso:"field-fecha-compromiso" };
 function openHeaderEdit(field){
   UI.headerEditField = field;
   /* Token que cambia en cada apertura: el blur de un input de comanda agenda
@@ -4364,12 +4395,28 @@ function renderTicketHeader(t){
   if(t.clienteId){
     var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
     identityC = c || null;
+    /* ADDENDUM "Cliente editable" §B: antes de esta ronda, un cliente YA
+       vinculado (rama con más jerarquía visual, avatar+nombre+chevron) no
+       tenía NINGUNA forma de corregir su nombre desde aquí — solo se podía
+       "ir a otra superficie" (abrir la ficha completa, que tampoco lo
+       ofrecía). Ahora hay un botón "✎" HERMANO del botón de identidad
+       (nunca anidado — dos <button> anidados serían HTML inválido, igual
+       que ya pasa con comanda-contact-btn más abajo), que revela el MISMO
+       <input id="field-clientename"> que también usa Kanban — nunca un
+       editor paralelo. "Top Builders ↗" (abre la ficha) y "✎" (edita el
+       nombre aquí mismo) son dos acciones DISTINTAS a propósito (spec:
+       "no sacrificar navegación para poder editar"). */
     identityMain = c
-      ? '<button class="comanda-identity-btn comanda-cliente-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '" data-ticket="' + t.id + '">' +
-          clientAvatar(c, {size:"sm"}) +
-          '<span class="comanda-cliente-name' + clienteIdentityClasses(c, "full") + '">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</span>" +
-          ' <span class="comanda-cliente-chevron">&rsaquo;</span>' +
-        "</button>"
+      ? (editing === "clientename"
+          ? '<span class="comanda-identity-cliente-row"><div class="comanda-edit-inline comanda-clientename-edit">' + clientAvatar(c, {size:"sm"}) + renderClienteNombreInput(t) + "</div></span>"
+          : '<span class="comanda-identity-cliente-row">' +
+              '<button class="comanda-identity-btn comanda-cliente-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '" data-ticket="' + t.id + '">' +
+                clientAvatar(c, {size:"sm"}) +
+                '<span class="comanda-cliente-name' + clienteIdentityClasses(c, "full") + '">' + escapeHtml(c.nombre) + (c.empresa ? ' <span class="cliente-chip-empresa">· ' + escapeHtml(c.empresa) + "</span>" : "") + "</span>" +
+                ' <span class="comanda-cliente-chevron">&rsaquo;</span>' +
+              "</button>" +
+              '<button type="button" class="btn-plain comanda-clientename-edit-btn" data-action="header-edit" data-field="clientename" title="Editar nombre del cliente" aria-label="Editar nombre del cliente">&#9998;</button>' +
+            "</span>")
       : "";
   } else if(editing === "cliente"){
     identityMain = '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "cliente") + "</div>";
@@ -6413,6 +6460,53 @@ function renderKanbanColumn(col){
    tarjeta) — se agrega además una pequeña manija "⋮⋮" opcional (permitida
    explícitamente por la spec) para que arrastrar siga siendo predecible
    aunque la tarjeta ahora tenga más superficie interactiva. */
+/* ADDENDUM "Cliente editable + bug crítico teléfono → nombre" §C: el
+   nombre del cliente ahora también es editable directamente desde la
+   tarjeta, siguiendo el orden explícito de la spec (folio -> CLIENTE ->
+   productos/contexto -> Qué sigue -> marcadores) — por eso el nombre ya
+   NO vive dentro de kanban-card-open (que antes cubría folio+cliente+
+   trabajo de un tirón): ahora es su PROPIA celda, hermana, entre el folio
+   y el trabajo, con el mismo draggable="false" que ya usan Qué sigue/
+   marcadores/select (nunca inicia un drag al tocarla).
+   "CLIENTE LINK VS EDIT" (spec, literal): si el ticket tiene un cliente
+   real vinculado, "Nombre ↗" (abre la ficha, data-action="open-cliente-
+   ficha" ya wireado globalmente) y "✎" (edita aquí mismo) son DOS botones
+   HERMANOS — nunca el mismo control hace las dos cosas. La edición reusa
+   EXACTAMENTE data-action="details-cell-inline" (el mismo mecanismo que
+   ya abre Qué sigue desde esta tarjeta) apuntando a field="clientename" —
+   cero click-handler nuevo. "El nombre pertenece al CLIENTE, no al
+   ticket": el commit (commitClienteNombre, cerca de updateClienteCore)
+   decide solo, mirando t.clienteId, si actualiza el cliente real
+   (propagando a TODOS sus tickets) o el texto libre de este ticket —
+   Kanban no necesita saberlo, solo abre el mismo editor. */
+function renderKanbanClienteCell(t){
+  var isEditingThis = UI.headerEditField === "clientename" && UI.headerEditTicketId === t.id;
+  if(isEditingThis){
+    return '<div class="kanban-card-cliente-cell" draggable="false"><div class="comanda-edit-inline">' + renderClienteNombreInput(t) + "</div></div>";
+  }
+  var inner;
+  if(t.clienteId){
+    var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
+    var nombreHtml = escapeHtml(c ? c.nombre : (t.cliente || ""));
+    inner =
+      '<button type="button" class="kanban-card-cliente-link" draggable="false" data-action="open-cliente-ficha" data-client-id="' + t.clienteId + '" data-ticket="' + t.id + '">' + nombreHtml + ' <span class="kanban-card-cliente-chevron" aria-hidden="true">&rsaquo;</span></button>' +
+      '<button type="button" class="kanban-card-cliente-edit-btn" draggable="false" data-action="details-cell-inline" data-field="clientename" data-ticket="' + t.id + '" title="Editar nombre del cliente" aria-label="Editar nombre del cliente">&#9998;</button>';
+  } else if(t.cliente && t.cliente.trim()){
+    /* Texto libre, sin clienteId todavía (ej. "/nuevo Top Builders ..." o
+       Quick Create) — un solo botón, igual que Qué sigue: tocar el nombre
+       ya edita (no hay ficha real que abrir todavía). */
+    inner = '<button type="button" class="kanban-card-cliente-edit-btn kanban-card-cliente-text" draggable="false" data-action="details-cell-inline" data-field="clientename" data-ticket="' + t.id + '">' + escapeHtml(t.cliente) + "</button>";
+  } else {
+    /* Vacío de verdad (spec: "NO mostrar campo editable falso llamado Sin
+       cliente"): affordance discreta "+ Agregar cliente", nunca un
+       placeholder que simule ser un nombre real. Abre el MISMO editor
+       liviano (nunca un formulario nuevo) — el nombre que se escriba
+       queda como texto libre del ticket hasta que de verdad se vincule a
+       un cliente real (vía /cliente, sin tocar aquí). */
+    inner = '<button type="button" class="kanban-card-cliente-edit-btn kanban-card-cliente-empty" draggable="false" data-action="details-cell-inline" data-field="clientename" data-ticket="' + t.id + '">+ Agregar cliente</button>';
+  }
+  return '<div class="kanban-card-cliente-cell" draggable="false">' + inner + "</div>";
+}
 function renderKanbanCard(t){
   var markersHtml = renderSidebarMarkerIcons(t);
   var themeClass = responsibleThemeClass(t.responsable);
@@ -6422,11 +6516,13 @@ function renderKanbanCard(t){
   return (
     '<div class="kanban-card' + themeClass + '" draggable="true" data-kanban-card="' + t.id + '">' +
       '<div class="kanban-card-draghandle" aria-hidden="true" title="Arrastrar para cambiar responsable">&#8942;&#8942;</div>' +
-      '<button type="button" class="kanban-card-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
+      '<button type="button" class="kanban-card-open kanban-card-open-top" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
         '<div class="kanban-card-top"><span class="kanban-card-folio">#' + t.seq + "</span></div>" +
-        '<div class="kanban-card-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
-        (t.productos.length ? '<div class="kanban-card-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" : "") +
       "</button>" +
+      renderKanbanClienteCell(t) +
+      (t.productos.length
+        ? '<button type="button" class="kanban-card-open kanban-card-open-work" draggable="false" data-action="open-ticket" data-id="' + t.id + '"><div class="kanban-card-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div></button>"
+        : "") +
       '<div class="kanban-card-quesigue-cell' + (t.queSigue ? "" : " kanban-card-quesigue-cell-empty") + '" draggable="false">' +
         detailsInlineCell(t, "quesigue", queSigueValueHtml) +
       "</div>" +
@@ -9140,7 +9236,7 @@ function render(){
    están siempre en el DOM, así que un fallback como "/atender 15" (fecha
    ambigua) necesita abrir la edición en línea antes de poder enfocar el
    selector de fecha nativo. */
-var HEADER_EDIT_FIELD_BY_EL = { "field-cliente":"cliente", "field-quesigue":"quesigue", "field-responsable":"responsable", "field-fecha-atencion":"atencion", "field-fecha-compromiso":"compromiso" };
+var HEADER_EDIT_FIELD_BY_EL = { "field-cliente":"cliente", "field-clientename":"clientename", "field-quesigue":"quesigue", "field-responsable":"responsable", "field-fecha-atencion":"atencion", "field-fecha-compromiso":"compromiso" };
 /* Mobile Reading Mode (Ronda "Refinamiento operativo" §3-5): un solo punto
    decide si el teclado puede aparecer solo. Cambiar de pantalla, volver de
    una acción, cerrar un overlay o cambiar de vista dentro de Tickets NUNCA
@@ -9637,6 +9733,32 @@ function applyDetectedPhoneToTicket(t, phone){
        /nuevo: un ticket recién creado nunca trae clienteId). */
     return Promise.resolve(false);
   }
+  /* ADDENDUM "Cliente editable + bug crítico teléfono → nombre" — CAUSA
+     RAÍZ del bug real reportado ("956-475-6204" terminó siendo el NOMBRE
+     del cliente después de solo agregar el teléfono): esta función SOLO
+     miraba t.clienteId para decidir si "no había cliente todavía". Pero
+     un ticket puede mostrar un nombre de cliente en texto libre
+     (t.cliente, ej. "Top Builders") SIN tener clienteId — pasa en /nuevo
+     ("/nuevo Top Builders 956-475-6204" crea el ticket con cliente="Top
+     Builders" vía createTicketCore, clienteId sigue null), en Quick
+     Create (submitTicketQuickCreate, mismo patrón) y en cualquier edición
+     manual del campo Cliente de la cabecera — los tres casos llegan aquí
+     con t.clienteId=null PERO t.cliente ya con un nombre real. Antes de
+     este fix, ese "sin clienteId" se interpretaba como "sin ningún
+     cliente" y se creaba uno NUEVO usando el propio teléfono como nombre
+     (D1, ver abajo) — pisando el nombre que YA se veía. Ahora, si ya hay
+     un nombre visible, se usa ESE nombre (nunca el teléfono) para crear/
+     vincular el cliente real — el ticket "sana" a un cliente de verdad sin
+     perder su identidad. D1 (teléfono como nombre provisional, ya
+     aprobado con el dueño del producto) sigue aplicando tal cual, pero
+     SOLO cuando de verdad no hay ninguna identidad todavía (ni clienteId
+     ni texto) — el último caso real de "ticket sin cliente". */
+  if(t.cliente && t.cliente.trim()){
+    return createClienteCore(t.cliente.trim(), { telefono: phone.formatted }).then(function(c){
+      if(c) return linkClienteToTicket(t, c);
+      return false;
+    });
+  }
   return createClienteCore(phone.formatted, { telefono: phone.formatted }).then(function(c){
     if(c) return linkClienteToTicket(t, c);
     return false;
@@ -9829,6 +9951,10 @@ async function createClienteCore(nombre, extra){
 async function updateClienteCore(clientId, patch, ticketIdForLog){
   var c = STATE.clientes.filter(function(x){ return x.id === clientId; })[0];
   if(!c) return false;
+  /* ADDENDUM "Cliente editable" §bitácora: se guarda el nombre ANTERIOR
+     antes de mutar `c` para poder redactar "de X a Y" cuando el único
+     cambio es el nombre (ver más abajo, cerca del insert en `bitacora`). */
+  var prevNombre = c.nombre;
   Object.assign(c, patch);
   render();
   try{
@@ -9870,7 +9996,22 @@ async function updateClienteCore(clientId, patch, ticketIdForLog){
       }
     }
     if(ticketIdForLog){
-      await sb.from("bitacora").insert({ ticket_id: ticketIdForLog, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Cliente editado: " + Object.keys(patch).join(", ") } });
+      /* ADDENDUM "Cliente editable" — redacción humana cuando el ÚNICO
+         campo que cambió es el nombre (el caso que este addendum agrega:
+         corregir una errata desde el ticket/Kanban), mismo estilo/mismo
+         motivo que Qué sigue/Responsable/Atención/Compromiso (ver
+         updateQueSigueCore/updateTicketFieldCore): el actor real viaja
+         aparte en `autor` (currentActorName(), nunca UI.whoami) y
+         renderThreadItem YA lo muestra como metadata junto al texto — el
+         texto NUNCA repite "Alexia cambió…" para no duplicar quién lo
+         hizo. Combinaciones de varios campos a la vez (ej. /editarcliente
+         con nombre+teléfono+email juntos) conservan el resumen genérico de
+         siempre — nunca se mezclan los dos estilos en una sola línea. */
+      var patchKeys = Object.keys(patch);
+      var bitacoraText = (patchKeys.length === 1 && patchKeys[0] === "nombre")
+        ? 'Nombre del cliente: "' + (prevNombre || "") + '" → "' + patch.nombre + '"'
+        : "Cliente editado: " + patchKeys.join(", ");
+      await sb.from("bitacora").insert({ ticket_id: ticketIdForLog, tipo: "sistema", autor: currentActorName() || null, payload: { text: bitacoraText } });
     }
   }catch(e){
     showToast("No se pudo actualizar el cliente: " + (e.message || "error"));
@@ -9878,6 +10019,47 @@ async function updateClienteCore(clientId, patch, ticketIdForLog){
   }
   await refreshFromServer({refocus:true});
   return true;
+}
+
+/* ADDENDUM "Cliente editable" §B: editar el NOMBRE del cliente, distinto
+   de "cambiar cliente" (ese ya existe vía openCellEditor("cliente",...)/
+   /cliente — un ticket pasa a OTRO cliente existente/nuevo; operación
+   totalmente aparte, sin tocar aquí). "El nombre pertenece al CLIENTE, no
+   al ticket" (spec, literal): si el ticket YA está vinculado a un cliente
+   real (t.clienteId), corregir el nombre llama a updateClienteCore(...,
+   {nombre}, t.id) — la MISMA función que ya usan /editarcliente y la
+   ficha de cliente (commitClienteFichaField) — que ya propaga el nombre
+   nuevo a TODOS los tickets vinculados a ese cliente (línea ~9890) y a
+   Realtime "gratis" (tickets/clientes ya viven en subscribeRealtime()).
+   Si el ticket NO tiene cliente vinculado (todavía es solo texto libre —
+   el modo ya existente desde /nuevo, Quick Create o edición manual), el
+   nombre sigue siendo del TICKET — mismo updateTicketFieldCore/
+   "field-cliente" de siempre, nunca crea un cliente nuevo solo por
+   corregir una errata de texto (eso sería una operación distinta:
+   "vincular cliente", no "editar nombre").
+   UN SOLO editor para las dos superficies nuevas (cabecera del ticket y
+   Kanban): ambas abren esto vía openHeaderEdit("clientename")/
+   openDetailsCellEdit(ticketId,"clientename") — la MISMA infraestructura
+   que ya usaba Qué sigue (UI.headerEditField/headerEditTicketId,
+   HEADER_EDIT_FOCUS_EL, blur-cierra, Escape global YA cierra
+   UI.headerEditField — cero wiring nuevo ahí). */
+function renderClienteNombreInput(t){
+  return '<input type="text" id="field-clientename" value="' + escapeHtml(t.cliente || "") + '">';
+}
+async function commitClienteNombre(value){
+  var t = findTicket(UI.headerEditTicketId || UI.selectedTicketId);
+  UI.headerEditField = null;
+  UI.headerEditTicketId = null;
+  if(!t){ render(); return; }
+  value = (value || "").trim();
+  /* Una errata rápida no necesita modal pesado (spec: "Enter y listo"),
+     pero un nombre de cliente vacío no es un estado válido — nunca se
+     guarda en silencio, simplemente no se aplica el cambio. */
+  if(!value){ render(); showToast("El nombre del cliente no puede quedar vacío."); return; }
+  if(value === (t.cliente || "")){ render(); return; }
+  render();
+  if(t.clienteId) await updateClienteCore(t.clienteId, { nombre: value }, t.id);
+  else await updateTicketFieldCore(t, "field-cliente", value, {});
 }
 
 async function addTareaCore(t, tipo, desc, responsable, fechaAtencion){
@@ -11478,6 +11660,17 @@ async function updateTicketFieldCore(t, elId, value, opts){
       if(value && prevValue) bitacoraText = "Responsable: " + prevValue + " → " + value;
       else if(value) bitacoraText = "Ticket asignado a " + value;
       else bitacoraText = "Responsable removido (antes: " + prevValue + ")";
+    } else if(def.key === "cliente"){
+      /* ADDENDUM "Cliente editable" §bitácora: mismo tratamiento humano que
+         Responsable/Atención/Compromiso — cubre el caso en que el ticket
+         TODAVÍA no tiene un cliente real vinculado (commitClienteNombre cae
+         aquí cuando t.clienteId es null). Cuando SÍ hay cliente vinculado,
+         este branch nunca se ejecuta — ese caso pasa por updateClienteCore,
+         que ya tiene su propia redacción "Nombre del cliente: X → Y" y
+         además propaga el cambio a todos los tickets vinculados. */
+      if(value && prevValue) bitacoraText = "Cliente: " + prevValue + " → " + value;
+      else if(value) bitacoraText = "Cliente agregado: " + value;
+      else bitacoraText = "Cliente removido (antes: " + prevValue + ")";
     } else if(def.key === "fechaAtencion" || def.key === "fechaCompromiso"){
       var fLabel = def.key === "fechaAtencion" ? "Atención" : "Compromiso";
       if(value && prevValue) bitacoraText = fLabel + ": " + fmtDateOnlyShort(prevValue) + " → " + fmtDateOnlyShort(value);
@@ -13733,6 +13926,19 @@ function wireEvents(){
   bindField("field-fecha-compromiso", "change");
   var qsEl = document.getElementById("field-quesigue");
   if(qsEl) qsEl.addEventListener("change", function(){ commitQueSigue(qsEl.value); });
+  /* ADDENDUM "Cliente editable" §B: "Enter -> guardar, Esc -> cancelar"
+     explícito (spec, literal) — mismo patrón ya usado por accountNameInput/
+     photoCaptionInput (Enter llama directo a la acción, sin esperar el
+     "change" del blur). Esc ya lo resuelve el keydown global de siempre
+     (UI.headerEditField truthy -> closeHeaderEdit(), ver más abajo en este
+     archivo) — nada nuevo que agregar ahí. */
+  var cnEl = document.getElementById("field-clientename");
+  if(cnEl){
+    cnEl.addEventListener("change", function(){ commitClienteNombre(cnEl.value); });
+    cnEl.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); commitClienteNombre(cnEl.value); }
+    });
+  }
   /* Campos de la comanda que se revelan al hacer clic (sección 4): al
      perder el foco vuelven a su forma compacta de lectura, se haya
      guardado un cambio o no — commitHeaderField/commitQueSigue ya cierran
@@ -13747,7 +13953,7 @@ function wireEvents(){
      DOM vía render() si el valor terminó siendo válido — en ese caso
      UI.headerEditField ya es null y closeHeaderEdit() no hace nada. */
   var DATE_HEADER_FIELD_IDS = { "field-fecha-atencion": true, "field-fecha-compromiso": true };
-  ["field-cliente","field-responsable","field-fecha-atencion","field-fecha-compromiso","field-quesigue"].forEach(function(id){
+  ["field-cliente","field-clientename","field-responsable","field-fecha-atencion","field-fecha-compromiso","field-quesigue"].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.addEventListener("blur", function(){
       /* Ver comentario en openHeaderEdit: un cierre agendado por un blur
