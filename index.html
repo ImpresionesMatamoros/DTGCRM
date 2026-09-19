@@ -1482,6 +1482,25 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 }
 .tickets-quickcreate-actions{display:flex; align-items:center; justify-content:flex-end; gap:8px;}
 
+/* ---- RONDA SHORTCUTS+AUTOCOMPLETE §B: dropdown de autocomplete de cliente,
+   reutilizable — position:relative en el campo que lo hospeda (hoy solo
+   cliente-ac-field de Quick Create) es lo único que un futuro call-site
+   necesita agregar para que el dropdown se ancle correctamente. ---- */
+.cliente-ac-field{position:relative;}
+.cliente-ac-dropdown{
+  position:absolute; left:0; right:0; top:100%; margin-top:3px; z-index:40;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-s);
+  box-shadow:0 6px 18px rgba(0,0,0,.14); max-height:220px; overflow-y:auto; padding:4px;
+}
+.cliente-ac-item{
+  display:flex; flex-direction:column; align-items:flex-start; gap:1px; width:100%; text-align:left;
+  border:none; background:transparent; padding:6px 8px; border-radius:var(--radius-s); cursor:pointer;
+  font-size:12.5px; color:var(--text); font-weight:600;
+}
+.cliente-ac-item:hover, .cliente-ac-item-active{background:var(--surface-2);}
+.cliente-ac-item-empresa{font-size:11px; font-weight:500; color:var(--text-muted);}
+.cliente-ac-empty{padding:7px 8px; font-size:11.5px; color:var(--text-muted); font-weight:500;}
+
 /* ---- §19: Filtros — segundo nivel "Más filtros" + resumen de chips ---- */
 .tickets-more-filters-toggle{
   align-self:flex-start; display:inline-flex; align-items:center; gap:5px; background:none; border:none;
@@ -2367,8 +2386,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.15.0";
-var APP_BUILD = "2026.09.11.3";
+var APP_VERSION = "0.16.0";
+var APP_BUILD = "2026.09.19.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2464,6 +2483,18 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      casos, donde el valor es tel:/mailto: y el ✎ es la única forma de
      entrar aquí. */
   clienteFichaEditField: null,
+  /* RONDA SHORTCUTS+AUTOCOMPLETE §B: dropdown de autocomplete de cliente,
+     reutilizable por cualquier campo de texto que capture cliente al crear
+     un ticket. `key` identifica qué campo lo tiene abierto (null = cerrado
+     para todos) — un solo slot porque nunca hay dos abiertos a la vez.
+     `clienteAutocompletePicked` guarda, por key, el cliente EXISTENTE que
+     el usuario ya seleccionó explícitamente de la lista (id+nombre) — se
+     limpia en cuanto el usuario vuelve a escribir, así el submit de cada
+     formulario sabe con certeza si debe vincular ese cliente o resolverlo
+     como texto libre. */
+  clienteAutocomplete: null,
+  clienteAutocompletePicked: {},
+  clienteAcBlurToken: 0,
   /* Sección Clientes (vista visual persistente, no efímera): mainView es
      null cuando estamos en un ticket o en Inicio, y "clientes" cuando se ve
      la lista o la ficha completa de un cliente. clienteReturnTicketId solo
@@ -5465,6 +5496,74 @@ function findClienteMatches(query){
   if(!q) return [];
   return rankClientes(q);
 }
+/* ---------------- Autocomplete de cliente (reutilizable) ----------------
+   RONDA SHORTCUTS+AUTOCOMPLETE §B: componente único para cualquier campo de
+   texto donde se captura un cliente al crear un ticket (hoy: Quick Create;
+   pensado para reutilizarse en cualquier otro punto futuro sin duplicar
+   lógica). Usa el MISMO rankClientes/normalizeWord que ya usan /cliente y
+   /editarcliente para "varias coincidencias" — cero matching nuevo, solo la
+   UI de dropdown + su wiring. Deliberadamente NO usa render() global: los
+   call-sites lo actualizan con una escritura de DOM quirúrgica (mismo
+   criterio que updateProductoPreview/updateTotalPedidoSummary) para no
+   perder foco/cursor del campo ni pisar el valor de OTROS campos sin guardar
+   todavía en el mismo formulario (Quick Create tiene 4 campos hermanos que
+   solo viven en el DOM hasta el submit). */
+function clienteAutocompleteMatches(query){
+  var q = (query || "").trim();
+  return q ? rankClientes(q).slice(0, 8) : [];
+}
+function clienteAutocompleteDropdownHtml(key, inputId){
+  var ac = UI.clienteAutocomplete;
+  if(!ac || ac.key !== key) return "";
+  var q = ac.query || "";
+  if(!q.trim()) return "";
+  var matches = clienteAutocompleteMatches(q);
+  var activeIndex = ac.activeIndex || 0;
+  if(activeIndex >= matches.length) activeIndex = matches.length ? matches.length - 1 : 0;
+  var itemsHtml;
+  if(matches.length){
+    itemsHtml = matches.map(function(c, i){
+      return '<button type="button" class="cliente-ac-item' + (i===activeIndex?" cliente-ac-item-active":"") + '" role="option" aria-selected="' + (i===activeIndex?"true":"false") + '" data-action="cliente-ac-pick" data-ac-key="' + key + '" data-ac-input="' + inputId + '" data-client-id="' + c.id + '" data-client-name="' + escapeHtml(c.nombre) + '">' +
+        '<span class="cliente-ac-item-name">' + escapeHtml(c.nombre) + '</span>' +
+        (c.empresa ? '<span class="cliente-ac-item-empresa">' + escapeHtml(c.empresa) + '</span>' : "") +
+      "</button>";
+    }).join("");
+  } else {
+    itemsHtml = '<div class="cliente-ac-empty">Sin coincidencias — se creará "' + escapeHtml(q.trim()) + '" como cliente nuevo</div>';
+  }
+  return '<div class="cliente-ac-dropdown" id="cliente-ac-dropdown-' + key + '" role="listbox">' + itemsHtml + "</div>";
+}
+/* Reescribe SOLO el contenedor del dropdown (búscalo por id; si todavía no
+   existe en el DOM porque esta es la primera tecla, lo inserta justo
+   después del input) — nunca toca el resto del formulario. */
+function refreshClienteAutocompleteDom(key, inputId){
+  var wrap = document.getElementById(inputId);
+  if(!wrap || !wrap.parentNode) return;
+  var existing = document.getElementById("cliente-ac-dropdown-" + key);
+  var html = clienteAutocompleteDropdownHtml(key, inputId);
+  if(!html){ if(existing) existing.remove(); return; }
+  if(existing){ existing.outerHTML = html; return; }
+  wrap.insertAdjacentHTML("afterend", html);
+}
+function closeClienteAutocomplete(key){
+  if(UI.clienteAutocomplete && UI.clienteAutocomplete.key === key){
+    UI.clienteAutocomplete = null;
+    var existing = document.getElementById("cliente-ac-dropdown-" + key);
+    if(existing) existing.remove();
+  }
+}
+/* Seleccionar una sugerencia (click o Enter, mismo camino): pone el nombre
+   canónico en el input, recuerda el cliente EXISTENTE elegido (para que el
+   submit de cada formulario vincule en vez de crear un duplicado) y cierra
+   el dropdown — sin pasar por render(), mismo criterio que el resto de este
+   componente. */
+function pickClienteAutocomplete(key, inputId, client){
+  var el = document.getElementById(inputId);
+  if(el) el.value = client.nombre;
+  UI.clienteAutocompletePicked[key] = { id: client.id, nombre: client.nombre };
+  closeClienteAutocomplete(key);
+  if(el) el.focus();
+}
 /* ---------------- Auditoría keyboard-first: navegar con flechas la lista
    de "varias coincidencias" de /cliente y /editarcliente ----------------
    Antes de esta ronda, esa lista SOLO podía resolverse tocándola (el propio
@@ -5952,7 +6051,7 @@ function renderTicketsQuickCreatePanel(){
         '<button type="button" class="btn-plain" data-action="tickets-quickcreate-toggle" aria-label="Cerrar">&times;</button>' +
       "</div>" +
       '<div class="tickets-quickcreate-fields">' +
-        '<label class="tickets-quickcreate-field"><span>Cliente</span><input type="text" id="quickcreate-cliente" placeholder="Nombre o empresa"></label>' +
+        '<label class="tickets-quickcreate-field cliente-ac-field"><span>Cliente</span><input type="text" id="quickcreate-cliente" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="Nombre o empresa">' + clienteAutocompleteDropdownHtml("quickcreate", "quickcreate-cliente") + "</label>" +
         '<label class="tickets-quickcreate-field"><span>Teléfono</span><input type="tel" id="quickcreate-telefono" placeholder="956 561 2970"></label>' +
         '<label class="tickets-quickcreate-field"><span>Trabajo</span><input type="text" id="quickcreate-trabajo" placeholder="Qué se va a hacer"></label>' +
         '<label class="tickets-quickcreate-field"><span>Qué sigue</span>' + renderQuickCreateQueSigueSelect() + "</label>" +
@@ -9545,6 +9644,7 @@ async function submitTicketQuickCreate(fields){
   var telefono = (fields.telefono || "").trim();
   var trabajo = (fields.trabajo || "").trim();
   var quesigue = (fields.quesigue || "").trim();
+  var pickedClienteId = fields.clienteId || null;
   var newId = await createTicketCore({ cliente: cliente });
   if(!newId) return;
   var failures = [];
@@ -9561,6 +9661,56 @@ async function submitTicketQuickCreate(fields){
       failures.push('teléfono "' + telefono + '" (no se reconoció como número válido)');
     }
   }
+  /* RONDA SHORTCUTS+AUTOCOMPLETE §B: objetivo explícito de la ronda —
+     "reducir tickets que tienen texto de cliente pero no un cliente_id
+     real". Se resuelve DESPUÉS del teléfono, y SOLO si el ticket sigue sin
+     clienteId a estas alturas (si ya tiene uno, es porque la rama de
+     teléfono de arriba — D1, applyDetectedPhoneToTicket — ya lo creó/
+     vinculó usando exactamente este mismo `cliente` como nombre; repetir la
+     vinculación aquí sería redundante, y forzar el orden al revés metería
+     este flujo por la rama "cliente ya vinculado" de applyDetectedPhoneToTicket,
+     que dispara /editarcliente vía dispatchCommand() — un camino que depende
+     de UI.selectedTicketId ya apuntando a este ticket, algo que aquí todavía
+     no es cierto porque openTicketById(newId) corre más abajo; ese camino
+     está pensado y probado para tickets ya abiertos, no para el instante de
+     creación, así que no se reutiliza aquí). Tres caminos, un solo objetivo:
+     1) el usuario ya eligió un cliente real del autocomplete → vincular ESE
+        (nunca crear uno nuevo con el mismo nombre);
+     2) si no eligió nada pero el texto coincide EXACTO (mismo rankClientes/
+        normalizeWord que ya usan /cliente y /editarcliente) con un cliente
+        ya existente → vincular ese, como red de seguridad contra duplicados
+        silenciosos aunque el usuario haya ignorado el dropdown;
+     3) si de verdad no existe → crearlo (createClienteCore, el mismo core
+        de siempre) y vincularlo — nunca dejarlo como texto libre suelto
+        pudiendo evitarse.
+     Límite conocido, documentado y no resuelto en esta ronda: si el usuario
+     ELIGE un cliente existente del autocomplete Y ADEMÁS escribe un
+     teléfono, la rama de teléfono de arriba (que no conoce pickedClienteId)
+     puede crear un cliente nuevo con ese mismo nombre en vez de reusar el
+     elegido — mismo comportamiento D1 que ya existía antes de esta ronda,
+     no una regresión nueva, pero tampoco lo que idealmente debería pasar;
+     ver reporte de cierre de ronda. */
+  if(cliente){
+    t = findTicket(newId);
+    if(t && !t.clienteId){
+      var cliObj = null;
+      if(pickedClienteId) cliObj = STATE.clientes.filter(function(c){ return c.id === pickedClienteId; })[0] || null;
+      if(!cliObj){
+        var exact = rankClientes(cliente).filter(function(c){ return normalizeWord(c.nombre) === normalizeWord(cliente); })[0];
+        if(exact) cliObj = exact;
+      }
+      if(!cliObj) cliObj = await createClienteCore(cliente);
+      if(cliObj){
+        t = findTicket(newId);
+        if(t){
+          var linkOk = await linkClienteToTicket(t, cliObj);
+          if(!linkOk) failures.push('cliente "' + cliente + '"');
+        }
+      } else {
+        failures.push('cliente "' + cliente + '"');
+      }
+    }
+  }
   if(trabajo){
     t = findTicket(newId);
     if(t){
@@ -9573,6 +9723,8 @@ async function submitTicketQuickCreate(fields){
     if(t) await updateQueSigueCore(t, quesigue);
   }
   UI.ticketsExplorer.quickCreateOpen = false;
+  UI.clienteAutocomplete = null;
+  UI.clienteAutocompletePicked.quickcreate = null;
   openTicketById(newId);
   await refreshFromServer({refocus:true});
   /* §132: disponible para Copiar de inmediato, sin recargar manualmente —
@@ -13707,6 +13859,12 @@ function wireEvents(){
     b.addEventListener("click", function(){
       UI.ticketsExplorer.quickCreateOpen = !UI.ticketsExplorer.quickCreateOpen;
       if(UI.ticketsExplorer.quickCreateOpen) UI.ticketsExplorer.optionsOpen = false;
+      /* Cerrar el panel también cierra/limpia el autocomplete de cliente —
+         reabrirlo debe empezar de cero, nunca con un dropdown fantasma de
+         la vez anterior o una selección vieja que ya no corresponde a lo
+         que se vaya a escribir ahora. */
+      UI.clienteAutocomplete = null;
+      UI.clienteAutocompletePicked.quickcreate = null;
       render();
     });
   });
@@ -13715,10 +13873,61 @@ function wireEvents(){
       var g = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
       submitTicketQuickCreate({
         cliente: g("quickcreate-cliente"), telefono: g("quickcreate-telefono"),
-        trabajo: g("quickcreate-trabajo"), quesigue: g("quickcreate-quesigue")
+        trabajo: g("quickcreate-trabajo"), quesigue: g("quickcreate-quesigue"),
+        clienteId: (UI.clienteAutocompletePicked.quickcreate || {}).id || null
       });
     });
   });
+  /* RONDA SHORTCUTS+AUTOCOMPLETE §B: wiring del autocomplete de cliente de
+     Quick Create — input/keydown/blur. Deliberadamente fuera del patrón
+     "root.querySelectorAll(...)" de arriba para las actualizaciones del
+     propio dropdown (usa refreshClienteAutocompleteDom, sin render()), pero
+     el listener en sí se re-liga en cada wireEvents() como cualquier otro
+     porque el <input> SÍ viene del render() normal del panel. */
+  var quickCreateClienteInput = document.getElementById("quickcreate-cliente");
+  if(quickCreateClienteInput){
+    quickCreateClienteInput.addEventListener("input", function(){
+      UI.clienteAutocompletePicked.quickcreate = null;
+      var v = quickCreateClienteInput.value;
+      UI.clienteAutocomplete = v.trim() ? { key: "quickcreate", query: v, activeIndex: 0 } : null;
+      refreshClienteAutocompleteDom("quickcreate", "quickcreate-cliente");
+    });
+    quickCreateClienteInput.addEventListener("keydown", function(e){
+      if(!UI.clienteAutocomplete || UI.clienteAutocomplete.key !== "quickcreate") return;
+      var matches = clienteAutocompleteMatches(UI.clienteAutocomplete.query);
+      if(e.key === "ArrowDown" && matches.length){
+        e.preventDefault();
+        UI.clienteAutocomplete.activeIndex = (UI.clienteAutocomplete.activeIndex + 1) % matches.length;
+        refreshClienteAutocompleteDom("quickcreate", "quickcreate-cliente");
+      } else if(e.key === "ArrowUp" && matches.length){
+        e.preventDefault();
+        UI.clienteAutocomplete.activeIndex = (UI.clienteAutocomplete.activeIndex - 1 + matches.length) % matches.length;
+        refreshClienteAutocompleteDom("quickcreate", "quickcreate-cliente");
+      } else if(e.key === "Enter" && matches.length){
+        /* Sin coincidencias: Enter no hace nada especial aquí — el campo no
+           está dentro de un <form>, así que no dispara un submit accidental;
+           "cliente nuevo" se resuelve normalmente al tocar "Crear". */
+        e.preventDefault();
+        var idx = UI.clienteAutocomplete.activeIndex || 0;
+        pickClienteAutocomplete("quickcreate", "quickcreate-cliente", matches[idx] || matches[0]);
+      } else if(e.key === "Escape"){
+        e.preventDefault();
+        closeClienteAutocomplete("quickcreate");
+      }
+    });
+    quickCreateClienteInput.addEventListener("blur", function(){
+      /* Mismo patrón que el resto de la app para "blur real vs. clic en un
+         control hermano que también reacciona" (ver blur de field-cliente/
+         field-quesigue/etc.): un pequeño delay + token, así un clic en una
+         sugerencia (que ya cerró el dropdown de forma síncrona) no se pisa
+         con un cierre programado de un blur anterior. */
+      var tok = ++UI.clienteAcBlurToken;
+      setTimeout(function(){
+        if(UI.clienteAcBlurToken !== tok) return;
+        closeClienteAutocomplete("quickcreate");
+      }, 150);
+    });
+  }
   var ticketsFilterCliente = root.querySelector('[data-action="tickets-filter-cliente"]');
   if(ticketsFilterCliente){
     ticketsFilterCliente.addEventListener("change", function(){
@@ -14390,6 +14599,21 @@ document.addEventListener("click", function(e){
   if(showDocsBtn){ pushEphemeral("documentos", showDocsBtn.getAttribute("data-ticket"), {}); return; }
   var showDineroBtn = e.target.closest && e.target.closest('[data-action="show-dinero"]');
   if(showDineroBtn){ pushEphemeral("dinero", showDineroBtn.getAttribute("data-ticket"), {}); return; }
+  /* RONDA SHORTCUTS+AUTOCOMPLETE §B: click en una sugerencia del dropdown de
+     autocomplete de cliente. Delegado a nivel documento (como el resto de
+     este listener) porque el dropdown se inserta con una escritura de DOM
+     quirúrgica (refreshClienteAutocompleteDom), no por render() — un
+     listener atado solo a los elementos recién renderizados de wireEvents()
+     nunca lo vería. */
+  var clienteAcPickBtn = e.target.closest && e.target.closest('[data-action="cliente-ac-pick"]');
+  if(clienteAcPickBtn){
+    pickClienteAutocomplete(
+      clienteAcPickBtn.getAttribute("data-ac-key"),
+      clienteAcPickBtn.getAttribute("data-ac-input"),
+      { id: clienteAcPickBtn.getAttribute("data-client-id"), nombre: clienteAcPickBtn.getAttribute("data-client-name") }
+    );
+    return;
+  }
   var clienteSelectBtn = e.target.closest && e.target.closest('[data-action="cliente-select"]');
   if(clienteSelectBtn){
     pushEphemeral("cliente", clienteSelectBtn.getAttribute("data-ticket") || null, { mode: clienteSelectBtn.getAttribute("data-mode"), resolvedId: clienteSelectBtn.getAttribute("data-client-id") });
@@ -14855,18 +15079,19 @@ document.addEventListener("input", function(e){
 });
 
 /* true si el evento viene de algo donde escribir es normal (campo de texto,
-   select, contenteditable) — ahí J/K deben comportarse como letras, nunca
-   como navegación. Caso especial: el compositor VACÍO es el estado de
-   "listo para el siguiente comando" (foco continuo, sección 1) — justo
-   después de cambiar de ticket el foco vuelve ahí, así que si contara como
-   "escribiendo" la navegación consecutiva (J, J, J…) sería imposible sin
-   hacer clic para quitarle el foco. En cuanto el compositor tiene contenido
-   (una letra, "/", lo que sea) vuelve a comportarse como cualquier campo de
-   texto normal y J/K dejan de interceptarse. */
+   select, contenteditable, Composer) — ahí un shortcut GLOBAL nunca debe
+   robarle una tecla a un control LOCAL (RONDA SHORTCUTS+AUTOCOMPLETE §A):
+   si el Composer/input/textarea/contenteditable tiene foco, escribir SIEMPRE
+   gana, incluso con el Composer vacío. Antes había una excepción aquí para
+   permitir navegación J/J/J con el compositor vacío-pero-enfocado; se quitó
+   a propósito porque el costo real era peor: la PRIMERA letra de un mensaje
+   que empezara con "j"/"k" se perdía (navegaba en vez de escribirse) — bug
+   confirmado y reportado. Único guard central, sin excepciones dispersas:
+   los 5 call-sites de este archivo (J/K, Home, Galería, Biblioteca) heredan
+   el mismo criterio sin cambios propios. */
 function isTypingTarget(el){
   if(!el) return false;
   var tag = (el.tagName || "").toLowerCase();
-  if(el.id === "composer-input") return !!el.value;
   if(tag === "input" || tag === "textarea" || tag === "select") return true;
   if(el.isContentEditable) return true;
   return false;
@@ -14982,11 +15207,15 @@ document.addEventListener("keydown", function(e){
      el usuario en el sidebar (visualTicketOrder — pinneados, luego
      agrupados por fecha, o el resultado de una búsqueda activa). No debe
      interferir con la navegación estándar de formularios: se ignora por
-     completo mientras se escribe en cualquier campo, dentro de un modal de
-     documento, con el menú de "/" abierto, con una confirmación pendiente,
-     con un popover del compositor abierto, o con Ctrl/Cmd/Alt presionados. */
+     completo mientras se escribe en cualquier campo (incluido el Composer
+     vacío — RONDA SHORTCUTS+AUTOCOMPLETE §A, escribir siempre gana), dentro
+     de un modal de documento, con el menú de "/" abierto, con una
+     confirmación pendiente, con un popover del compositor abierto, con
+     Ctrl/Cmd/Alt presionados, o mientras un IME está componiendo texto
+     (e.isComposing — evita robar la tecla que confirma/cambia un carácter
+     compuesto, p. ej. en español con teclados que usan composición). */
   if((e.key === "j" || e.key === "k" || e.key === "J" || e.key === "K") &&
-     !e.ctrlKey && !e.metaKey && !e.altKey &&
+     !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing &&
      !isTypingTarget(e.target) &&
      !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer && !UI.smartActions && !UI.markerPicker && !UI.totalDraft){
     var order = visualTicketOrder();
@@ -15006,17 +15235,17 @@ document.addEventListener("keydown", function(e){
   /* Composer Intelligence §5: Cmd+H (Mac/PWA) / Ctrl+Shift+H (Windows/
      Linux) → goHome() directo, sin lógica de navegación duplicada — mismo
      criterio exacto que J/K arriba (no dispara escribiendo en un campo, con
-     un modal/menú/popover abierto, o con el compositor vacío-pero-con-foco
-     tratado igual que cualquier otro campo). Ctrl+H solo, en Windows/Linux,
-     es "Historial" reservado por Chrome/Firefox — no se puede interceptar
-     de forma confiable, así que ahí se usa Ctrl+Shift+H en su lugar (ver
+     un modal/menú/popover abierto, o con el compositor vacío tratado igual
+     que cualquier otro campo con foco). Ctrl+H solo, en Windows/Linux, es
+     "Historial" reservado por Chrome/Firefox — no se puede interceptar de
+     forma confiable, así que ahí se usa Ctrl+Shift+H en su lugar (ver
      NOTES-TO-ARCHITECT-COMPOSER-INTELLIGENCE.md §3); Cmd+H en Mac no tiene
      ese conflicto dentro de una PWA instalada. */
   var isHomeShortcut =
     (e.key === "h" || e.key === "H") &&
     ((e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) ||
      (e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey));
-  if(isHomeShortcut &&
+  if(isHomeShortcut && !e.isComposing &&
      !isTypingTarget(e.target) &&
      !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer && !UI.smartActions && !UI.markerPicker && !UI.totalDraft){
     e.preventDefault();
