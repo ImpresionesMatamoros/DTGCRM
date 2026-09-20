@@ -268,6 +268,10 @@ button{cursor:pointer;}
 }
 .pill-neutral{background:var(--surface-3); color:var(--text-muted);}
 .pill-accent{background:var(--accent-soft); color:var(--accent-ink);}
+/* Privacidad real §9: mismo lenguaje visual que status-pill (misma clase
+   base .pill), un acento propio para diferenciarse a simple vista de un
+   estado operativo. Solo lectura — ver comentario en renderTicketHeader. */
+.privacy-pill{background:#3a2a10; color:#f5c869;}
 .empty-list{color:var(--text-faint); font-size:12.5px; padding:16px 10px; text-align:center;}
 /* Identity Foundation §6: reemplaza la vieja .whoami-bar (un input de texto
    libre permanente) por un affordance discreto — botón compacto de cuenta +
@@ -923,24 +927,51 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-column-empty{font-size:11.5px; color:var(--text-faint); padding:10px 4px; text-align:center; border:1px dashed var(--border); border-radius:var(--radius-s);}
 .kanban-card{
   position:relative; display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--border);
-  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-m); padding:6px 22px 6px 6px; cursor:grab;
+  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-m); padding:6px 6px 6px 22px;
 }
 .kanban-card-dragging{opacity:.4;}
-/* Manija opcional de arrastre (ADDENDUM "Qué sigue editable" — permitida
-   explícitamente por la spec "si hace la interacción más predecible"):
-   NUNCA lleva draggable="false" ni ningún data-action — es solo una zona
-   visual dentro del padding, ya parte del área arrastrable de .kanban-card
-   (ningún ancestro/descendiente aquí la excluye del drag nativo). */
+/* ADDENDUM KANBAN OPERACIONAL: el handle "⋮⋮" es AHORA el único elemento
+   draggable="true" de la tarjeta (antes lo era .kanban-card completa) —
+   por eso se movió de top-right a top-LEFT, dejando top-right libre para
+   la miniatura de foto + el menú "⋯" (ver kanban-card-top-row abajo). El
+   padding de .kanban-card se invirtió a juego (22px a la izquierda). */
 .kanban-card-draghandle{
-  position:absolute; top:4px; right:2px; width:16px; height:20px; display:flex; align-items:center; justify-content:center;
+  position:absolute; top:4px; left:2px; width:16px; height:20px; display:flex; align-items:center; justify-content:center;
   font-size:12px; line-height:1; color:var(--text-faint); opacity:.55; cursor:grab; user-select:none;
 }
 .kanban-card-open{
   display:flex; flex-direction:column; gap:3px; text-align:left; background:none; border:none; padding:2px; width:100%;
 }
+.kanban-card-top-row{display:flex; align-items:center; gap:4px;}
 .kanban-card-top{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.kanban-card-top-row .kanban-card-open-top{flex:1; min-width:0; padding:2px;}
 .kanban-card-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint);}
 .kanban-card-markers{display:flex; gap:2px;}
+/* Miniatura de foto (spec §14): 48-64px, top-right, sin placeholder cuando
+   no hay foto (ver kanbanCardProductosContext/renderKanbanCard — el botón
+   simplemente no se renderiza). draggable="false" explícito para que
+   tocarla nunca inicie un drag; abre EXACTAMENTE openTicketGallery (mismo
+   data-action que Miniaturas de Tickets, cero viewer nuevo). */
+.kanban-card-thumb-btn{
+  position:relative; flex-shrink:0; width:44px; height:44px; border-radius:var(--radius-s); overflow:hidden;
+  border:1px solid var(--border); padding:0; background:var(--surface-2); cursor:pointer;
+}
+.kanban-card-thumb-photo{width:100%; height:100%; object-fit:cover; display:block;}
+.kanban-card-thumb-count{
+  position:absolute; bottom:2px; right:2px; background:rgba(0,0,0,.65); color:#fff; font-size:9px; line-height:1;
+  padding:2px 3px; border-radius:6px; font-family:var(--font-mono);
+}
+.kanban-card-more-wrap{position:relative; flex-shrink:0;}
+.kanban-card-more-btn{color:var(--text-faint);}
+.kanban-card-menu{width:160px;}
+.kanban-card-menu-item{
+  background:none; border:none; text-align:left; font:inherit; font-size:12px; padding:6px 8px; border-radius:var(--radius-s);
+  cursor:pointer; color:var(--text); width:100%;
+}
+.kanban-card-menu-item:hover, .kanban-card-menu-item:focus-visible{background:var(--surface-2);}
+.kanban-card-menu-back{color:var(--text-faint); font-size:11px;}
+.kanban-card-menu-danger{color:var(--danger);}
+.kanban-card-open-work-empty .kanban-card-work-muted{color:var(--text-faint); font-style:italic;}
 /* ADDENDUM "Cliente editable" §C: nombre de cliente, su propia celda entre
    el folio y el trabajo (antes vivía como texto plano dentro de
    kanban-card-open). ".kanban-card-cliente-link" (abre ficha) y
@@ -980,10 +1011,6 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-card-quesigue-cell .comanda-edit-inline{width:100%;}
 .kanban-card-quesigue-cell .comanda-edit-inline select{font-size:11.5px; width:100%;}
 .kanban-card-markers-row{display:flex; gap:3px; flex-wrap:wrap;}
-.kanban-card-resp-select{
-  font-size:11px; color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-s);
-  padding:3px 4px; background:var(--surface-2); width:100%;
-}
 @media(max-width:640px){
   .kanban-board{padding:10px 14px; gap:10px;}
   .kanban-column{width:200px;}
@@ -1011,6 +1038,13 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .calendar-mios-btn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
 .calendar-filters-toggle{border:1px solid var(--border); border-radius:999px; padding:5px 12px; font-size:12px; font-weight:600; background:var(--surface); color:var(--text-muted);}
 .calendar-filters-toggle.active{background:var(--surface-2); color:var(--text);}
+/* §94: toggle Ambas/Atender/Compromiso — mismo lenguaje visual que
+   .calendar-view-switch (segmented control), presentación pura. */
+.calendar-toolbar-tipo-row{justify-content:flex-start;}
+.calendar-tipo-switch{display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; flex-shrink:0;}
+.calendar-tipo-btn{border:none; background:var(--surface); padding:5px 12px; font-size:12px; color:var(--text-muted); font-weight:600;}
+.calendar-tipo-btn+.calendar-tipo-btn{border-left:1px solid var(--border);}
+.calendar-tipo-btn.active{background:var(--accent-soft); color:var(--accent-ink);}
 .calendar-programar-btn{padding:5px 14px; font-size:12.5px; margin-left:auto;}
 .calendar-filters-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-top:4px; border-top:1px dashed var(--border);}
 .calendar-search-wrap{max-width:260px;}
@@ -1039,6 +1073,17 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .calendar-month-cell-entries{display:flex; flex-direction:column; gap:3px; min-height:0;}
 .calendar-month-dropzone{display:flex; flex-direction:column; gap:3px; min-height:6px;}
 .calendar-month-cell-more{font-size:10.5px; color:var(--text-faint); text-align:left; padding:1px 4px; font-weight:600;}
+/* §98: handle de resize entre filas de semana — SOLO desktop (ver
+   renderCalendarMonth, que en mobile ni siquiera genera este elemento). */
+.calendar-month-resize-handle{
+  grid-column:1/-1; display:flex; align-items:center; justify-content:center; cursor:row-resize; user-select:none;
+}
+.calendar-month-resize-grip{width:36px; height:3px; border-radius:2px; background:var(--border);}
+.calendar-month-resize-handle:hover .calendar-month-resize-grip,
+.calendar-month-resize-handle.calendar-month-resize-dragging .calendar-month-resize-grip{background:var(--accent);}
+.calendar-month-reset-row{display:flex; justify-content:flex-end; padding:0 0 4px;}
+.calendar-month-reset-heights{font-size:11px; color:var(--text-faint);}
+.calendar-month-reset-heights:hover{color:var(--text);}
 
 /* ---- Semana ---- */
 .calendar-week{display:flex; gap:0; min-height:100%; overflow-x:auto;}
@@ -1074,12 +1119,23 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .calendar-entry-type-label{font-size:9.5px; font-weight:700; letter-spacing:.04em; color:var(--text-faint);}
 .calendar-entry-attention .calendar-entry-type-label{color:var(--cyan);}
 .calendar-entry-commitment .calendar-entry-type-label{color:var(--accent-ink);}
+/* Pre-existente sin regla CSS (gap detectado en esta ronda al auditar el
+   módulo): .calendar-entry-past marca visualmente una fecha ya pasada
+   (§47 pide algo discreto, NUNCA pintar la tarjeta de rojo — solo atenuar). */
+.calendar-entry-past{opacity:.75;}
+/* Tarjeta combinada (§94 "mismo día, misma tarjeta"): dos etiquetas de tipo
+   en vez de una, cada una con su color de siempre (nunca un color nuevo). */
+.calendar-entry-combined .calendar-entry-top{flex-wrap:wrap;}
+.calendar-entry-type-combined-a{color:var(--cyan);}
+.calendar-entry-type-combined-c{color:var(--accent-ink);}
+.calendar-entrypanel-choose{flex-wrap:wrap;}
 .calendar-entry-overdue{font-size:11px; color:var(--gold); margin-left:auto;}
 .calendar-entry-folio-row{display:flex; align-items:center; gap:5px;}
 .calendar-entry-folio{font-family:var(--font-mono); font-size:11px; color:var(--text-faint);}
 .calendar-entry-markers{display:flex; gap:2px;}
 .calendar-entry-cliente{font-size:12.5px; font-weight:600; color:var(--text); overflow-wrap:break-word;}
 .calendar-entry-work{font-size:11.5px; color:var(--text-muted); overflow-wrap:break-word;}
+.calendar-entry-work-muted{color:var(--text-faint); font-style:italic;}
 .calendar-entry-quesigue{font-size:11px; color:var(--accent-ink); background:var(--accent-soft); border-radius:var(--radius-s); padding:1px 6px; width:fit-content;}
 .calendar-entry-resp{font-size:11px; color:var(--text-muted); display:flex; align-items:center;}
 .calendar-entry-more{flex-shrink:0; align-self:flex-start; padding:4px 6px; color:var(--text-faint); background:none; border:none;}
@@ -1128,6 +1184,35 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .calendar-entry-work, .calendar-entry-quesigue{display:none;} /* Mes en pantalla muy angosta: mantener la celda legible (§12 "nunca celdas gigantes") */
   .calendar-week-day{min-width:130px;}
   .calendar-agenda{padding:6px 14px 24px;}
+}
+
+/* ---- Drawer "Sin fecha" (§4 pedido integral) — desktop: panel lateral
+   derecho fijo; mobile: pantalla completa (mismo criterio responsive que
+   .cierre-modal ya usa en otros overlays de esta app, pero anclado al
+   borde en vez de centrado, porque es una lista larga de scroll, no un
+   formulario corto). */
+.calendar-sinfecha-toggle{position:relative;}
+.calendar-sinfecha-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:60;
+  display:flex; justify-content:flex-end;
+}
+.calendar-sinfecha-drawer{
+  background:var(--surface); width:100%; max-width:360px; height:100%; display:flex; flex-direction:column;
+  padding:calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) 14px;
+  gap:10px; box-shadow:var(--shadow); overflow:hidden;
+}
+.calendar-sinfecha-head{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.calendar-sinfecha-title{font-size:15px; font-weight:700; color:var(--text);}
+.calendar-sinfecha-mode-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.calendar-sinfecha-mode-label{font-size:11.5px; color:var(--text-faint); font-weight:600;}
+.calendar-sinfecha-list{display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex:1; min-height:0;}
+.calendar-sinfecha-card{
+  display:flex; align-items:stretch; gap:2px; background:var(--surface-2); border:1px solid var(--border);
+  border-left:3px solid var(--resp-color, var(--border)); border-radius:var(--radius-s); cursor:grab;
+}
+.calendar-sinfecha-thumb{width:28px; height:28px; border-radius:var(--radius-s); object-fit:cover; flex-shrink:0; margin-right:4px;}
+@media(max-width:640px){
+  .calendar-sinfecha-drawer{max-width:100%;}
 }
 
 .prod-toggle{
@@ -2386,8 +2471,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.16.0";
-var APP_BUILD = "2026.09.19.1";
+var APP_VERSION = "0.17.0";
+var APP_BUILD = "2026.09.19.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2648,6 +2733,16 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   productoEditingId: null,
   productoMenuOpenId: null,
   productoDeleteConfirm: null, // { productoId, ticketId } | null
+  /* ADDENDUM KANBAN OPERACIONAL (esta ronda): menú "⋯" de cada tarjeta —
+     mismo patrón efímero/single-slot que productoMenuOpenId de arriba.
+     mode "menu" = lista [Mover a…, Cerrar ticket…]; mode "move" = roster de
+     responsables (mismo roster que el <select> retirado, vía
+     responsableOptionsHtml/activeAssignableProfiles) como submenú. Nunca
+     una segunda lógica de mutación: "Mover a X" llama exactamente
+     updateTicketFieldCore(t,"field-responsable",X,...), el mismo core que
+     ya usa el drag&drop; "Cerrar ticket…" llama exactamente
+     openCierreModalForTicket(ticketId), el mismo core que ya usa Miniaturas. */
+  kanbanCardMenu: null, // { ticketId, mode: "menu" | "move" } | null
   /* Calendar Workbench (§ "CALENDARIO"): estado 100% de presentación —
      nunca una copia de tickets/fechas (§116: entradas se DERIVAN de
      STATE.tickets en cada render, esto solo recuerda qué está viendo/
@@ -2679,7 +2774,21 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
     dayPanel: null,            // "YYYY-MM-DD" del día cuyo detalle completo ("+N más") está abierto | null
     entryPanel: null,          // { ticketId, type } — quick view + cambiar fecha de UNA entrada | null
     entryPanelPicking: false,  // dentro de entryPanel: false = quick view, true = mostrando el date-picker rápido
-    programar: null            // { step:"search"|"pick", query, type } — flujo "+ Programar" | null
+    programar: null,           // { step:"search"|"pick", query, type } — flujo "+ Programar" | null
+    /* ADDENDUM DRAWER "SIN FECHA" (pedido integral §4): tickets abiertos
+       con AMBAS fechas null — nunca un campo de estado nuevo, se deriva de
+       STATE.tickets en cada render (calendarSinFechaTickets), mismo
+       criterio que el resto del módulo (§116 "nunca una segunda verdad").
+       "mode" es la selección "PROGRAMAR COMO" (default Atender) — solo
+       afecta el camino táctil (tap -> reusa "+ Programar" pick-step); el
+       drag&drop de escritorio siempre usa el tipo de la zona donde se
+       suelta (nunca depende de este toggle, evita ambigüedad). */
+    sinFecha: { open: false, mode: "attention", search: "" },
+    /* §98: alturas manuales de las 6 filas de semana de la vista Mes,
+       SOLO desktop — 6 slots, null = altura automática razonable (default).
+       Nunca toca fechas; loadUi() puede sobrescribir esto con lo persistido
+       (ver arriba). */
+    monthRowHeights: [null, null, null, null, null, null]
   } };
 /* Kanban de Responsables — el feedback visual de "arrastrando"/"columna
    activa" se maneja con classList directo sobre el DOM (ver wireEvents,
@@ -2881,13 +2990,23 @@ function loadUi(){
         UI.calendar.view = parsed.calendarView;
       }
       UI.calendar.mios = !!parsed.calendarMios;
+      /* §98 (resize de semanas, Mes/desktop): alturas manuales por fila —
+         persistencia local simple (spec, literal: "si es fácil"), nunca en
+         Supabase (es una preferencia visual de ESTE dispositivo, no un dato
+         de negocio). Se valida que sea un array de 6 números/null antes de
+         confiar en él — un valor corrupto en localStorage cae a "auto"
+         (nunca revienta el render). */
+      if(Array.isArray(parsed.calendarMonthRowHeights) && parsed.calendarMonthRowHeights.length === 6){
+        UI.calendar.monthRowHeights = parsed.calendarMonthRowHeights.map(function(h){ return (typeof h === "number" && h > 0) ? h : null; });
+      }
     }
   }catch(e){}
 }
 function saveUi(){
   try{ localStorage.setItem("dtg_ui", JSON.stringify({selectedTicketId:UI.selectedTicketId, search:UI.search,
     mainView:UI.mainView, selectedClienteId:UI.selectedClienteId, clienteReturnTicketId:UI.clienteReturnTicketId,
-    ticketsView:UI.ticketsView, calendarView:UI.calendar.view, calendarMios:UI.calendar.mios})); }catch(e){}
+    ticketsView:UI.ticketsView, calendarView:UI.calendar.view, calendarMios:UI.calendar.mios,
+    calendarMonthRowHeights:UI.calendar.monthRowHeights})); }catch(e){}
 }
 /* ---------------- Identity Foundation: currentActor() ----------------
    Punto ÚNICO de identidad de la app — nada más debe leer AUTH_SESSION/
@@ -3143,6 +3262,23 @@ async function fetchProfiles(){
     return { rows: [], missing: true };
   }
 }
+/* Privacidad real (sección 8): mismo criterio tolerante que
+   fetchTicketMarkers()/fetchTeamPosts() — ticket_access es una tabla NUEVA
+   (0015_v05_privacidad_tickets.sql), así que hasta que esa migración se
+   corra en la base real, esta llamada falla y devuelve missing:true en vez
+   de tumbar fetchAllState()/el arranque completo. Mientras tanto ningún
+   ticket puede ser realmente "privado" (tickets.visibility, leída más abajo,
+   también cae en su default tolerante "team"), que es exactamente el estado
+   actual de la app — ver DECISIONES TÉCNICAS del reporte final. */
+async function fetchTicketAccess(){
+  try{
+    var res = await sb.from("ticket_access").select("*");
+    if(res.error) throw res.error;
+    return { rows: res.data || [], missing: false };
+  }catch(e){
+    return { rows: [], missing: true };
+  }
+}
 async function fetchAllState(){
   var results = await Promise.all([
     sb.from("tickets").select("*"),
@@ -3162,6 +3298,7 @@ async function fetchAllState(){
   var teamPostsInfo = await fetchTeamPosts();
   var feedReactionsInfo = await fetchFeedReactions();
   var profilesInfo = await fetchProfiles();
+  var ticketAccessInfo = await fetchTicketAccess();
 
   var byTicket = {};
   ticketsRows.forEach(function(row){
@@ -3172,7 +3309,14 @@ async function fetchAllState(){
       entregadoAt: row.entregado_at || null, entregadoPor: row.entregado_por || "",
       cierreTipo: row.cierre_tipo || null, cerradoAt: row.cerrado_at || null,
       razonCierre: row.razon_cierre || "", cerradoPor: row.cerrado_por || "",
-      productos: [], tareas: [], pagos: [], documentos: [], thread: [], markers: []
+      /* Privacidad real (sección 8): columna real de la fila, leída tolerante
+         igual que deleted_at/pricing_snapshot arriba en este mismo archivo —
+         si 0015 todavía no se corrió, row.visibility es undefined y el
+         ticket se trata como "team" (visible para cualquier miembro activo),
+         que es EXACTAMENTE el comportamiento de hoy — nunca rompe el
+         arranque por una columna opcional que aún no existe. */
+      visibility: row.visibility || "team",
+      productos: [], tareas: [], pagos: [], documentos: [], thread: [], markers: [], accessProfileIds: []
     };
   });
   productosRows.forEach(function(row){
@@ -3217,6 +3361,12 @@ async function fetchAllState(){
       resolvedAt: row.resolved_at || null, resolvedBy: row.resolved_by || ""
     });
   });
+  /* §84 (mismo criterio de "un solo fetch central, nunca uno por ticket"),
+     aplicado ahora a ticket_access. */
+  ticketAccessInfo.rows.forEach(function(row){
+    var t = byTicket[row.ticket_id]; if(!t) return;
+    t.accessProfileIds.push(row.profile_id);
+  });
   var settings = { queSigueOptions: [], teamNames: [] };
   settingsRows.forEach(function(row){
     if(row.key === "que_sigue_options") settings.queSigueOptions = row.values || [];
@@ -3250,7 +3400,8 @@ async function fetchAllState(){
     teamPosts: teamPosts,
     feedReactions: feedReactions,
     profiles: profiles,
-    teamPostsTableMissing: teamPostsInfo.missing
+    teamPostsTableMissing: teamPostsInfo.missing,
+    ticketAccessTableMissing: ticketAccessInfo.missing
   };
 }
 
@@ -3303,7 +3454,22 @@ async function refreshFromServer(opts){
       try{
         var fresh = await fetchAllState();
         STATE = fresh;
-        if(UI.selectedTicketId && !findTicket(UI.selectedTicketId)) UI.selectedTicketId = null;
+        /* Privacidad real §9 — restricción en vivo: un refresh (manual o de
+           Realtime) puede hacer que el ticket que se estaba viendo YA NO
+           aparezca en STATE — ya sea porque alguien lo restringió con
+           /privado y quien está viendo ya no está en la lista de acceso, o
+           porque se eliminó. El mismo copy exacto que ya usa un deep link
+           roto ("No se pudo abrir este ticket.") — nunca se revela CUÁL de
+           las dos razones fue (mismo criterio que resolveDeepLinkIfNeeded:
+           "el permiso real ya lo decidió RLS, nunca se distingue 'no
+           existe' de 'sin acceso'"). Silencioso en el caso normal
+           (navegación explícita, opts.background=false, selectedTicketId ya
+           null) — el toast solo tiene sentido cuando alguien estaba
+           viéndolo y desapareció debajo de él. */
+        if(UI.selectedTicketId && !findTicket(UI.selectedTicketId)){
+          UI.selectedTicketId = null;
+          if(background) showToast("No se pudo abrir este ticket.");
+        }
         if(background) renderKeepingLiveInputs(); else render();
       }catch(e){
         showToast("No se pudo sincronizar: " + (e.message || "error de red"));
@@ -3343,7 +3509,14 @@ function resolveDeepLinkIfNeeded(){
      acceso), nunca se revela nada distinto de "no se pudo abrir". */
   var t = findTicket(wantId);
   if(t){
-    openTicketById(t.id);
+    /* §99: un link abierto directo (sin historia interna previa) nunca debe
+       hacer que el PRIMER Atrás salga de la SPA hacia lo que sea que haya
+       antes en el historial real del navegador (WhatsApp, Google, login).
+       leavingContextOverride fuerza qué queda "debajo" de este ticket en
+       nuestro propio historial: Tickets, no Kanban/Inicio (que es lo que
+       dtgCaptureNavContext() leería por defecto en este punto del arranque,
+       ya que UI.mainView todavía no se tocó). */
+    openTicketById(t.id, { leavingContextOverride: { dtgNav:"view", mainView:"tickets" } });
   } else {
     UI.deepLinkNotFound = true;
     render();
@@ -3371,6 +3544,166 @@ function syncDeepLinkUrl(ticketOrNull){
    sesión en el mismo tab (dispositivo compartido) puede volver a llamarla
    — sin quitar el canal anterior quedarían dos suscripciones activas
    disparando scheduleRefresh() por duplicado en cada cambio. */
+/* ================= Parte U — Navegación interna (Back/pushState) =================
+   §99: el addendum pidió explícitamente NO usar un hack de
+   window.history.back() ni un router completo. La idea central: la app ya
+   distingue perfectamente "qué se está mostrando" a través de UI (selectedTicketId,
+   selectedClienteId+mainView==="clientes", o mainView solo) — y ya existe un
+   único punto que mantiene la URL sincronizada con eso (syncDeepLinkUrl,
+   llamado desde CADA render()). Este módulo no duplica esa idea: solo AÑADE,
+   en los dos puntos donde de verdad nace un "paso hacia adelante" que merece
+   un escalón de Atrás (abrir un ticket, abrir una ficha de cliente), un
+   history.pushState() con un `state` que describe exactamente qué restaurar.
+   Cambiar de vista con el sidebar (Kanban<->Calendario<->Tickets, etc.) NO
+   empuja historial nuevo (no lo pidió el addendum, y ya es reversible via los
+   propios botones del sidebar) — solo syncDeepLinkUrl's replaceState() de
+   siempre corre ahí, sin cambios.
+
+   DTG_NAV_RESTORING=true mientras dtgRestoreNavContext() está aplicando un
+   estado que YA vino del navegador (popstate) — evita que openTicketById/
+   openClienteFicha vuelvan a empujar un escalón nuevo por la misma apertura
+   que el propio Atrás disparó (eso sí sería el bucle que el addendum pidió
+   evitar). */
+var DTG_NAV_RESTORING = false;
+var DTG_NAV_SUPPRESS_NEXT_POP = false;
+
+/* Qué se está mostrando AHORA MISMO, en la forma que este módulo necesita
+   para poder restaurarlo más tarde. Se llama SIEMPRE antes de mutar UI (en
+   openTicketById/openClienteFicha), para capturar "adónde vuelve Atrás". */
+function dtgCaptureNavContext(){
+  if(UI.selectedTicketId) return { dtgNav:"ticket", ticketId: UI.selectedTicketId };
+  if(UI.mainView === "clientes" && UI.selectedClienteId){
+    return { dtgNav:"cliente", clienteId: UI.selectedClienteId, fromTicketId: UI.clienteReturnTicketId || null };
+  }
+  return { dtgNav:"view", mainView: UI.mainView || null };
+}
+
+/* Empuja el escalón "voy a ver el ticket `id`". Si la entrada de historial
+   en la que YA estamos todavía no tiene nuestro propio `state` (p.ej. la
+   entrada original de carga de página, o la primera apertura de un ticket
+   en esta pestaña), la reescribe in-place primero (replaceState) con el
+   contexto que se está dejando — así, si el usuario presiona Atrás lo
+   suficiente para volver a ELLA, ya sabemos qué restaurar, sin necesitar
+   guardar esa info por duplicado dentro de la propia entrada del ticket. */
+function dtgPushTicketNav(id, leavingContextOverride){
+  try{
+    var leaving = leavingContextOverride || dtgCaptureNavContext();
+    if(!window.history.state || !window.history.state.dtgNav){
+      window.history.replaceState(leaving, "", window.location.href);
+    }
+    var base = window.location.origin + window.location.pathname;
+    window.history.pushState({ dtgNav:"ticket", ticketId: id }, "", base + "?t=" + encodeURIComponent(id));
+  }catch(e){ /* algunos contextos niegan History API — nunca bloquea la navegación real */ }
+}
+function dtgPushClienteNav(clienteId, fromTicketId){
+  try{
+    var leaving = dtgCaptureNavContext();
+    if(!window.history.state || !window.history.state.dtgNav){
+      window.history.replaceState(leaving, "", window.location.href);
+    }
+    var base = window.location.origin + window.location.pathname;
+    window.history.pushState({ dtgNav:"cliente", clienteId: clienteId, fromTicketId: fromTicketId || null }, "", base);
+  }catch(e){}
+}
+
+function dtgGoToMainView(mainView){
+  switch(mainView){
+    case "clientes": goToClientes(); break;
+    case "atencion": goToAtencion(); break;
+    case "produccion": goToProduccion(); break;
+    case "cerrados": goToCerrados(); break;
+    case "cxc": goToCxc(); break;
+    case "tickets": goToTickets(); break;
+    case "biblioteca": goToBiblioteca(); break;
+    case "calendario": goToCalendario(); break;
+    default: goHome();
+  }
+}
+
+/* Aplica un `state` que vino de popstate (el navegador YA se movió; esto
+   solo pone la UI de la SPA de acuerdo). Reutiliza los MISMOS puntos de
+   entrada de siempre (openTicketById/openClienteFicha/goTo*) — nunca una
+   segunda copia de "cómo se ve un ticket" o "cómo se ve una ficha de
+   cliente" (redundancia en los caminos, no en la lógica). */
+function dtgRestoreNavContext(state){
+  DTG_NAV_RESTORING = true;
+  try{
+    if(state && state.dtgNav === "ticket" && findTicket(state.ticketId)){
+      openTicketById(state.ticketId, { skipHistory:true });
+    } else if(state && state.dtgNav === "cliente" && STATE.clientes.some(function(c){ return c.id === state.clienteId; })){
+      openClienteFicha(state.clienteId, { fromTicketId: state.fromTicketId, skipHistory:true });
+    } else if(state && state.dtgNav === "view"){
+      dtgGoToMainView(state.mainView);
+    } else {
+      /* Estado desconocido, ticket/cliente ya no visible (eliminado o RLS
+         revocó acceso), o entrada sin nuestro `state` en absoluto -> mismo
+         destino seguro que "no encontrado" en Deep Links: Tickets, nunca
+         una pantalla en blanco. */
+      goToTickets();
+    }
+  } finally {
+    DTG_NAV_RESTORING = false;
+  }
+}
+
+/* Prioridad de "qué overlay se cierra primero" — la MISMA lista y el MISMO
+   orden que ya usa el listener global de teclado para Escape (ver más abajo,
+   "document.addEventListener('keydown', ...)"): un overlay que puede abrirse
+   ENCIMA de otro siempre se revisa antes que el de abajo. Compartida por
+   Escape y por el botón Atrás físico porque ambos son, en esta app, la MISMA
+   idea ("salir de lo que tengo abierto encima") — nunca dos implementaciones
+   del criterio de qué se cierra primero. */
+function dtgCloseTopOverlay(){
+  if(UI.deletePhotoConfirm){ closeDeletePhotoConfirm(); return true; }
+  if(UI.viewingDocId){ closeDocumentViewer(); return true; }
+  if(UI.cierreModal){ closeCierreModal(); return true; }
+  if(UI.headerEditField){ closeHeaderEdit(); return true; }
+  if(UI.bugReportOpen){ closeBugReport(); return true; }
+  if(UI.helpPanelOpen){ closeHelpPanel(); return true; }
+  if(UI.totalDraft){ closeTotalPedidoEditor(); return true; }
+  if(UI.bibliotecaViewer){ closeBibliotecaViewer(); return true; }
+  if(UI.contactPanel){ closeContactPanel(); return true; }
+  if(UI.calendar.programar){ closeCalendarProgramar(); return true; }
+  if(UI.calendar.entryPanel){
+    if(UI.calendar.entryPanelPicking){ UI.calendar.entryPanelPicking = false; render(); }
+    else { UI.calendar.entryPanel = null; render(); }
+    return true;
+  }
+  if(UI.calendar.dayPanel){ UI.calendar.dayPanel = null; render(); return true; }
+  if(UI.calendar.sinFecha && UI.calendar.sinFecha.open){ calendarSinFechaClose(); return true; }
+  if(UI.calendar.filtersOpen){ UI.calendar.filtersOpen = false; render(); return true; }
+  if(UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return true; }
+  if(UI.ticketsExplorer.quickCreateOpen){ UI.ticketsExplorer.quickCreateOpen = false; render(); return true; }
+  if(UI.cellEditor){ closeCellEditor(); return true; }
+  if(UI.editingDisplayName){ closeEditName(); return true; }
+  if(UI.accountMenuOpen){ UI.accountMenuOpen = false; render(); return true; }
+  if(UI.photoBatch && UI.photoBatch.ticketId){ if(closeComposerOverlay()) render(); return true; }
+  if(UI.ticketGallery){ closeTicketGallery(); return true; }
+  if(UI.markerPicker){ closeMarkerPicker(); return true; }
+  if(UI.kanbanCardMenu){ UI.kanbanCardMenu = null; render(); return true; }
+  return false;
+}
+
+/* El botón Atrás físico (o el gesto equivalente en móvil) dispara popstate
+   DESPUÉS de que el navegador ya movió el puntero de historial — no se puede
+   "cancelar" esa parte. Lo que SÍ se puede hacer, para cumplir "Esc/Back debe
+   cerrar overlay PRIMERO, antes de navegar entre vistas": si había un overlay
+   abierto, cerrarlo Y devolver el puntero de historial a donde estaba
+   (history.forward() reutiliza la MISMA entrada de la que se acaba de salir,
+   todavía viva en la sesión) — así Atrás con un overlay abierto se siente
+   como "cerró el overlay", nunca como "encima de cerrar el overlay, también
+   me sacó del ticket". DTG_NAV_SUPPRESS_NEXT_POP evita que el popstate que
+   dispara ese forward() se procese una segunda vez. */
+window.addEventListener("popstate", function(e){
+  if(DTG_NAV_SUPPRESS_NEXT_POP){ DTG_NAV_SUPPRESS_NEXT_POP = false; return; }
+  if(dtgCloseTopOverlay()){
+    DTG_NAV_SUPPRESS_NEXT_POP = true;
+    try{ window.history.forward(); }catch(err){ DTG_NAV_SUPPRESS_NEXT_POP = false; }
+    return;
+  }
+  dtgRestoreNavContext(e.state);
+});
+
 function subscribeRealtime(){
   if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
   var channel = sb.channel("dtg-changes");
@@ -3450,7 +3783,20 @@ function findTicket(id){
    fuera de ticket que decide navegar) — así el reseteo de popovers/estado
    y el foco de vuelta al compositor nunca se hace distinto según quién lo
    dispare. */
-function openTicketById(id){
+function openTicketById(id, opts){
+  opts = opts || {};
+  /* Back/History interno §99: un solo punto decide si esta apertura merece
+     un "escalón" de historial nuevo — nunca si ya estamos viendo ESE mismo
+     ticket (evita duplicar entradas idénticas cuando algo simplemente
+     vuelve a llamar openTicketById para refrescar), nunca durante una
+     restauración disparada por popstate (dtgRestoreNavContext ya puso
+     DTG_NAV_RESTORING=true, porque el navegador YA se movió solo — pushear
+     de nuevo aquí crearía un bucle). Se captura "adónde vuelve Atrás" ANTES
+     de mutar UI: dtgCaptureNavContext() lee el UI actual tal cual estaba
+     antes de abrir este ticket. */
+  var skipHistory = DTG_NAV_RESTORING || opts.skipHistory === true;
+  var sameTicket = UI.selectedTicketId === id;
+  if(!skipHistory && !sameTicket) dtgPushTicketNav(id, opts.leavingContextOverride);
   UI.selectedTicketId = id;
   UI.mainView = null;
   UI.selectedClienteId = null;
@@ -3589,6 +3935,12 @@ function goToCalendario(){
    a lo que volver (la ficha misma es el punto de partida). */
 function openClienteFicha(clienteId, opts){
   opts = opts || {};
+  /* Back/History interno §99: mismo contrato que openTicketById — un único
+     punto decide si esta apertura empuja historial, reutilizando la MISMA
+     función dtgPushClienteNav (no una copia paralela de la lógica). */
+  var skipHistory = DTG_NAV_RESTORING || opts.skipHistory === true;
+  var sameCliente = UI.mainView === "clientes" && UI.selectedClienteId === clienteId;
+  if(!skipHistory && !sameCliente) dtgPushClienteNav(clienteId, opts.fromTicketId || null);
   UI.selectedTicketId = null;
   UI.mainView = "clientes";
   UI.selectedClienteId = clienteId;
@@ -4184,10 +4536,11 @@ function activeAssignableProfiles(){
     .sort(function(a,b){ return new Date(a.createdAt||0).getTime() - new Date(b.createdAt||0).getTime(); });
 }
 /* Fuente única de las <option> de Responsable — usada por el <select> de la
-   cabecera/Detalles (id="field-responsable") Y por el <select> de respaldo
-   de cada tarjeta del Kanban (data-kanban-resp-select): mismo roster, mismo
-   orden, mismo criterio para el valor histórico/inactivo. Nunca dos listas
-   que puedan desincronizarse. */
+   cabecera/Detalles (id="field-responsable"). El Kanban (ronda "KANBAN
+   OPERACIONAL") retiró su <select> de respaldo por tarjeta, pero su menú
+   "⋯ → Mover a…" sigue usando el MISMO roster (activeAssignableProfiles)
+   que esta función, vía renderKanbanCardMenu — mismo orden, mismo criterio,
+   nunca dos listas que puedan desincronizarse. */
 function responsableOptionsHtml(current){
   current = current || "";
   var active = activeAssignableProfiles();
@@ -4403,7 +4756,12 @@ function renderTicketHeader(t){
   var topBar =
     '<div class="ticket-header-top">' +
       '<div class="comanda-meta"><span class="ticket-id">#' + t.seq + " · creado " + fmtDateShort(t.createdAt) + '</span>' +
-        '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span></div>" +
+        '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>" +
+        /* Privacidad real §9: solo lectura a propósito — la ÚNICA forma de
+           cambiar esto son los comandos /privado y /publico (ver COMMANDS),
+           nunca un botón paralelo aquí que duplique esa lógica. */
+        (t.visibility === "private" ? ' <span class="pill privacy-pill" title="Restringido — solo lo ven las personas agregadas con /privado">&#128274; Privado</span>' : "") +
+      "</div>" +
       '<div class="comanda-header-controls">' +
         '<div class="ticket-header-actions">' +
           '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">&#128196; Documentos · ' + t.documentos.length + "</button>" +
@@ -5512,6 +5870,24 @@ function clienteAutocompleteMatches(query){
   var q = (query || "").trim();
   return q ? rankClientes(q).slice(0, 8) : [];
 }
+/* RONDA ACTUALIZACIÓN INTEGRAL §2: resolución EXACTA de identidad cuando el
+   usuario no eligió nada del dropdown (texto tal cual escrito/pegado). Antes
+   solo miraba nombre; ahora también intenta empresa, con la misma cautela
+   en ambos: si hay más de un cliente con exactamente ese nombre, o más de
+   uno con exactamente esa empresa, NO se adivina — se trata como "no hay
+   match seguro" (cae a "cliente nuevo" en el llamador). Un solo lugar para
+   esta regla — cualquier call-site futuro (Quick Create hoy, quizás
+   /nuevo mañana) la reutiliza tal cual, nunca la reimplementa. */
+function resolveClienteExactMatch(text){
+  var q = normalizeWord((text || "").trim());
+  if(!q) return null;
+  var byNombre = STATE.clientes.filter(function(c){ return normalizeWord(c.nombre || "") === q; });
+  if(byNombre.length === 1) return byNombre[0];
+  if(byNombre.length > 1) return null;
+  var byEmpresa = STATE.clientes.filter(function(c){ return c.empresa && normalizeWord(c.empresa) === q; });
+  if(byEmpresa.length === 1) return byEmpresa[0];
+  return null;
+}
 function clienteAutocompleteDropdownHtml(key, inputId){
   var ac = UI.clienteAutocomplete;
   if(!ac || ac.key !== key) return "";
@@ -5523,7 +5899,7 @@ function clienteAutocompleteDropdownHtml(key, inputId){
   var itemsHtml;
   if(matches.length){
     itemsHtml = matches.map(function(c, i){
-      return '<button type="button" class="cliente-ac-item' + (i===activeIndex?" cliente-ac-item-active":"") + '" role="option" aria-selected="' + (i===activeIndex?"true":"false") + '" data-action="cliente-ac-pick" data-ac-key="' + key + '" data-ac-input="' + inputId + '" data-client-id="' + c.id + '" data-client-name="' + escapeHtml(c.nombre) + '">' +
+      return '<button type="button" id="cliente-ac-option-' + key + '-' + i + '" class="cliente-ac-item' + (i===activeIndex?" cliente-ac-item-active":"") + '" role="option" aria-selected="' + (i===activeIndex?"true":"false") + '" data-action="cliente-ac-pick" data-ac-key="' + key + '" data-ac-input="' + inputId + '" data-client-id="' + c.id + '" data-client-name="' + escapeHtml(c.nombre) + '">' +
         '<span class="cliente-ac-item-name">' + escapeHtml(c.nombre) + '</span>' +
         (c.empresa ? '<span class="cliente-ac-item-empresa">' + escapeHtml(c.empresa) + '</span>' : "") +
       "</button>";
@@ -5531,7 +5907,42 @@ function clienteAutocompleteDropdownHtml(key, inputId){
   } else {
     itemsHtml = '<div class="cliente-ac-empty">Sin coincidencias — se creará "' + escapeHtml(q.trim()) + '" como cliente nuevo</div>';
   }
+  /* RONDA ACTUALIZACIÓN INTEGRAL §1: el dropdown ya NO vive dentro del
+     <label> (ver renderTicketsQuickCreatePanel) — es hermano del <input>
+     dentro de un contenedor .cliente-ac-field, así que sus <button> de
+     sugerencia nunca quedan anidados dentro de un control de formulario
+     ajeno. El id de cada opción (cliente-ac-option-<key>-<i>) es lo que
+     permite que el input apunte aria-activedescendant a la sugerencia
+     activa sin moverle el foco real (el foco se queda siempre en el
+     <input>, como pide un combobox accesible). */
   return '<div class="cliente-ac-dropdown" id="cliente-ac-dropdown-' + key + '" role="listbox">' + itemsHtml + "</div>";
+}
+/* RONDA ACTUALIZACIÓN INTEGRAL §1: estado ARIA del combobox, centralizado
+   aquí (no en cada call-site) — mismo criterio "un solo componente" que el
+   resto de este bloque. aria-expanded refleja si el dropdown está abierto
+   para ESTA key; aria-activedescendant apunta al id de la opción activa
+   (o se quita cuando no hay ninguna) SIN mover el foco real, que se queda
+   siempre en el <input> — así un lector de pantalla anuncia la sugerencia
+   resaltada mientras Arriba/Abajo la cambian, igual que cualquier
+   combobox accesible. */
+function syncClienteAcAria(key, inputId){
+  var el = document.getElementById(inputId);
+  if(!el) return;
+  var ac = UI.clienteAutocomplete;
+  var open = !!(ac && ac.key === key);
+  el.setAttribute("aria-expanded", open ? "true" : "false");
+  if(open){
+    var matches = clienteAutocompleteMatches(ac.query);
+    if(matches.length){
+      var idx = ac.activeIndex || 0;
+      if(idx >= matches.length) idx = matches.length - 1;
+      el.setAttribute("aria-activedescendant", "cliente-ac-option-" + key + "-" + idx);
+    } else {
+      el.removeAttribute("aria-activedescendant");
+    }
+  } else {
+    el.removeAttribute("aria-activedescendant");
+  }
 }
 /* Reescribe SOLO el contenedor del dropdown (búscalo por id; si todavía no
    existe en el DOM porque esta es la primera tecla, lo inserta justo
@@ -5541,15 +5952,23 @@ function refreshClienteAutocompleteDom(key, inputId){
   if(!wrap || !wrap.parentNode) return;
   var existing = document.getElementById("cliente-ac-dropdown-" + key);
   var html = clienteAutocompleteDropdownHtml(key, inputId);
-  if(!html){ if(existing) existing.remove(); return; }
-  if(existing){ existing.outerHTML = html; return; }
+  if(!html){ if(existing) existing.remove(); syncClienteAcAria(key, inputId); return; }
+  if(existing){ existing.outerHTML = html; syncClienteAcAria(key, inputId); return; }
   wrap.insertAdjacentHTML("afterend", html);
+  syncClienteAcAria(key, inputId);
 }
 function closeClienteAutocomplete(key){
   if(UI.clienteAutocomplete && UI.clienteAutocomplete.key === key){
-    UI.clienteAutocomplete = null;
+    var inputId = null;
     var existing = document.getElementById("cliente-ac-dropdown-" + key);
-    if(existing) existing.remove();
+    UI.clienteAutocomplete = null;
+    if(existing){ existing.remove(); }
+    /* El id del input no viaja en el estado — se deriva del contenedor del
+       dropdown (mismo prefijo de key) o, en su defecto, del único call-site
+       actual (quickcreate-cliente); cuando se agregue un segundo call-site
+       real, este mapeo pasa a una tabla key→inputId explícita. */
+    inputId = key === "quickcreate" ? "quickcreate-cliente" : null;
+    if(inputId) syncClienteAcAria(key, inputId);
   }
 }
 /* Seleccionar una sugerencia (click o Enter, mismo camino): pone el nombre
@@ -6051,7 +6470,21 @@ function renderTicketsQuickCreatePanel(){
         '<button type="button" class="btn-plain" data-action="tickets-quickcreate-toggle" aria-label="Cerrar">&times;</button>' +
       "</div>" +
       '<div class="tickets-quickcreate-fields">' +
-        '<label class="tickets-quickcreate-field cliente-ac-field"><span>Cliente</span><input type="text" id="quickcreate-cliente" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="Nombre o empresa">' + clienteAutocompleteDropdownHtml("quickcreate", "quickcreate-cliente") + "</label>" +
+        /* RONDA ACTUALIZACIÓN INTEGRAL §1: <div> en vez de <label> como
+           contenedor — antes el dropdown (con <button> reales dentro)
+           quedaba anidado dentro del <label for="…">, un control de
+           formulario que no debería envolver OTROS controles interactivos.
+           Ahora label/input/dropdown son hermanos explícitos dentro de
+           .cliente-ac-field (que ya tenía position:relative para anclar el
+           dropdown — eso no cambia). aria-controls apunta al id real del
+           contenedor del dropdown; aria-expanded/aria-activedescendant se
+           actualizan en vivo desde el wiring (ver wireEvents), nunca aquí
+           en el render inicial donde siempre está cerrado. */
+        '<div class="tickets-quickcreate-field cliente-ac-field">' +
+          '<label for="quickcreate-cliente">Cliente</label>' +
+          '<input type="text" id="quickcreate-cliente" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="cliente-ac-dropdown-quickcreate" placeholder="Nombre o empresa">' +
+          clienteAutocompleteDropdownHtml("quickcreate", "quickcreate-cliente") +
+        "</div>" +
         '<label class="tickets-quickcreate-field"><span>Teléfono</span><input type="tel" id="quickcreate-telefono" placeholder="956 561 2970"></label>' +
         '<label class="tickets-quickcreate-field"><span>Trabajo</span><input type="text" id="quickcreate-trabajo" placeholder="Qué se va a hacer"></label>' +
         '<label class="tickets-quickcreate-field"><span>Qué sigue</span>' + renderQuickCreateQueSigueSelect() + "</label>" +
@@ -6506,6 +6939,17 @@ function kanbanColumns(list){
      (ver renderKanbanColumn/wireEvents): no representa una sola persona, así
      que "mover un ticket a Otros" no tendría un significado real. */
   if(otros.tickets.length) cols.push(otros);
+  /* ADDENDUM KANBAN OPERACIONAL — orden estable por columna (spec: "¿QUIÉN
+     trae cada ticket?", nunca updated_at/última actividad): Urgente activo
+     primero, luego el resto, cada grupo por created_at DESC (más nuevo
+     arriba), con folio/seq como desempate estable cuando createdAt
+     coincide. Editar cliente/Qué sigue/teléfono/producto/nota/foto NUNCA
+     toca createdAt ni el marcador urgente, así que este sort es
+     automáticamente estable frente a esas ediciones — no hace falta guard
+     adicional. Cambiar Responsable/Urgente SÍ puede mover la tarjeta (de
+     columna, o de posición dentro de la columna), que es el comportamiento
+     pedido explícitamente. */
+  cols.forEach(function(col){ col.tickets = col.tickets.slice().sort(compareTicketsOperationalOrder); });
   return cols;
 }
 function renderKanbanColumn(col){
@@ -6551,14 +6995,15 @@ function renderKanbanColumn(col){
    Drag vs. edición (§ "MUY IMPORTANTE — CONFLICTO DE PUNTERO"): la celda de
    Qué sigue y la fila de marcadores son hermanas de kanban-card-open, NUNCA
    anidadas dentro de un <button> (el <select>/<button> de detailsInlineCell
-   sería HTML inválido ahí), y llevan draggable="false" explícito — mismo
-   técnica ya probada en kanban-card-resp-select — así que tocar/hacer clic
-   en ellas SIEMPRE edita, nunca inicia un drag. El área de arrastre real
-   sigue siendo el padding de .kanban-card (ya la única zona "libre" desde
-   la ronda anterior, con kanban-card-open+select ya cubriendo casi toda la
-   tarjeta) — se agrega además una pequeña manija "⋮⋮" opcional (permitida
-   explícitamente por la spec) para que arrastrar siga siendo predecible
-   aunque la tarjeta ahora tenga más superficie interactiva. */
+   sería HTML inválido ahí), y llevan draggable="false" explícito — así que
+   tocar/hacer clic en ellas SIEMPRE edita, nunca inicia un drag.
+   ACTUALIZADO (ronda "KANBAN OPERACIONAL"): la tarjeta ganó AÚN más
+   superficie interactiva (foto, ⋯) que la vuelve definitivamente
+   imposible de arrastrar completa sin conflicto — por eso draggable="true"
+   ya NO vive en .kanban-card, vive EXCLUSIVAMENTE en la manija "⋮⋮"
+   (antes opcional/decorativa, ahora el único punto de partida real del
+   drag; ver renderKanbanCard/wireEvents). "⋯ → Mover a…" es el camino
+   táctil/teclado equivalente, mismo core de mutación. */
 /* ADDENDUM "Cliente editable + bug crítico teléfono → nombre" §C: el
    nombre del cliente ahora también es editable directamente desde la
    tarjeta, siguiendo el orden explícito de la spec (folio -> CLIENTE ->
@@ -6606,33 +7051,118 @@ function renderKanbanClienteCell(t){
   }
   return '<div class="kanban-card-cliente-cell" draggable="false">' + inner + "</div>";
 }
+/* ADDENDUM ROUND KANBAN OPERACIONAL — contexto completo de trabajo (spec:
+   "24 Playeras negras DTF / 2 Banners 3×6 / 100 Stickers", NUNCA "3
+   productos" ni "Playeras +2"). Reusa el mismo formato qty+desc que ya
+   usaba sidebarProductoPrincipal (una sola convención de formato, no dos),
+   pero listando TODOS los productos activos en vez de solo el "principal".
+   t.productos ya es hard-delete (deleteProductoCore borra de verdad tanto
+   en Supabase como del array local) así que no hace falta filtrar
+   eliminados aparte.
+   Fallback SIN productos, en el orden exacto pedido por la spec:
+   1) descripción/contexto humano del trabajo — esta app no tiene un campo
+      "descripción" separado de bitácora, así que la nota humana más
+      reciente EN thread cumple este rol (es literalmente "lo último que un
+      humano escribió sobre este ticket"); 2) coincide por construcción con
+      "nota humana reciente significativa" (misma fuente, se colapsan a un
+      solo paso — no hay dos campos distintos para diferenciar aquí);
+      3) si no hay ninguna nota, pero sí Qué sigue, se usa como único
+      contexto disponible (Qué sigue sigue teniendo además su propio bloque
+      acentuado abajo — mostrarlo aquí también no es "duplicar lógica",
+      es "no dejar la tarjeta sin ningún contexto" cuando es lo único que
+      hay); 4) si no hay nada de lo anterior, "Sin descripción del
+      trabajo" (nunca bitácora técnica, nunca IA). */
+function kanbanCardProductosContext(t){
+  var productos = t.productos || [];
+  if(productos.length){
+    return { text: productos.map(function(p){
+      return ((p.cantidad && p.cantidad !== 1) ? (p.cantidad + " ") : "") + p.desc;
+    }).join(" / "), empty:false };
+  }
+  var notas = (t.thread||[]).filter(function(ev){ return ev.type === "nota" && ev.text && ev.text.trim(); });
+  if(notas.length) return { text: notas[notas.length-1].text.trim(), empty:false };
+  if(t.queSigue) return { text: t.queSigue, empty:false };
+  return { text: "Sin descripción del trabajo", empty:true };
+}
+/* ADDENDUM ROUND KANBAN OPERACIONAL — menú "⋯" de cada tarjeta: mismo
+   patrón single-slot que .producto-more-wrap/UI.productoMenuOpenId (ver
+   CSS/handler de esa función), aplicado aquí a UI.kanbanCardMenu. Nunca
+   una mutación nueva: "Mover a X" llama updateTicketFieldCore igual que el
+   drag&drop; "Cerrar ticket…" llama openCierreModalForTicket igual que
+   Miniaturas/Detalles. */
+function renderKanbanCardMenu(t){
+  var m = UI.kanbanCardMenu;
+  if(!m || m.ticketId !== t.id) return "";
+  if(m.mode === "move"){
+    var active = activeAssignableProfiles();
+    var itemsHtml = '<button type="button" class="kanban-card-menu-item" draggable="false" data-action="kanban-card-move-to" data-ticket="' + t.id + '" data-resp="">Sin responsable' + (!t.responsable ? " &#10003;" : "") + "</button>" +
+      active.map(function(p){
+        return '<button type="button" class="kanban-card-menu-item" draggable="false" data-action="kanban-card-move-to" data-ticket="' + t.id + '" data-resp="' + escapeHtml(p.displayName) + '">' + escapeHtml(p.displayName) + (t.responsable===p.displayName ? " &#10003;" : "") + "</button>";
+      }).join("");
+    return '<div class="kanban-card-menu producto-more-menu" draggable="false" role="menu">' +
+      '<button type="button" class="kanban-card-menu-item kanban-card-menu-back" draggable="false" data-action="kanban-card-menu-back" data-ticket="' + t.id + '">&larr; Atrás</button>' +
+      itemsHtml +
+    "</div>";
+  }
+  return '<div class="kanban-card-menu producto-more-menu" draggable="false" role="menu">' +
+    '<button type="button" class="kanban-card-menu-item" draggable="false" data-action="kanban-card-menu-move" data-ticket="' + t.id + '" role="menuitem">Mover a&hellip;</button>' +
+    '<button type="button" class="kanban-card-menu-item kanban-card-menu-danger producto-more-danger" draggable="false" data-action="kanban-card-menu-cerrar" data-ticket="' + t.id + '" role="menuitem">Cerrar ticket&hellip;</button>' +
+  "</div>";
+}
 function renderKanbanCard(t){
   var markersHtml = renderSidebarMarkerIcons(t);
   var themeClass = responsibleThemeClass(t.responsable);
   var queSigueValueHtml = t.queSigue
     ? '<span class="kanban-card-quesigue-arrow" aria-hidden="true">&rarr;</span><span class="kanban-card-quesigue-text">' + escapeHtml(t.queSigue) + "</span>"
     : '<span class="kanban-card-quesigue-empty">+ Agregar Qué sigue</span>';
+  var ctx = kanbanCardProductosContext(t);
+  /* Miniatura de foto (spec §14): representativa y estable (SIEMPRE la
+     misma vía ticketThumbPhotoPath — última foto activa del thread, nunca
+     aleatoria), lazy (loading="lazy"), badge de cantidad opcional, SIN
+     placeholder grande cuando no hay foto (a diferencia de Miniaturas de
+     Tickets, que sí usa un ícono de respaldo — aquí la spec pide
+     explícitamente "no placeholder grande" así que sin foto simplemente no
+     se renderiza nada en ese espacio). Reusa hydrateImages() tal cual (ya
+     hidrata CUALQUIER img[data-storage-path] del DOM) — cero wiring nuevo.
+     Botón propio (nunca dentro de kanban-card-open-top) + draggable="false"
+     explícito para que tocarla NUNCA inicie un drag ni abra el ticket —
+     abre EXACTAMENTE openTicketGallery, el mismo viewer que ya usa
+     Miniaturas (data-action="tickets-thumb-gallery", ya wireado). */
+  var photoPath = ticketThumbPhotoPath(t);
+  var photoCount = photoPath ? ticketPhotoCount(t) : 0;
+  var thumbHtml = photoPath
+    ? '<button type="button" class="kanban-card-thumb-btn" draggable="false" data-action="tickets-thumb-gallery" data-id="' + t.id + '" aria-label="Ver fotos del ticket">' +
+        '<img class="kanban-card-thumb-photo" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt="">' +
+        (photoCount > 1 ? '<span class="kanban-card-thumb-count" aria-hidden="true">' + photoCount + "</span>" : "") +
+      "</button>"
+    : "";
+  var menuOpen = !!(UI.kanbanCardMenu && UI.kanbanCardMenu.ticketId === t.id);
   return (
-    '<div class="kanban-card' + themeClass + '" draggable="true" data-kanban-card="' + t.id + '">' +
-      '<div class="kanban-card-draghandle" aria-hidden="true" title="Arrastrar para cambiar responsable">&#8942;&#8942;</div>' +
-      '<button type="button" class="kanban-card-open kanban-card-open-top" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
-        '<div class="kanban-card-top"><span class="kanban-card-folio">#' + t.seq + "</span></div>" +
-      "</button>" +
+    '<div class="kanban-card' + themeClass + '" data-kanban-card="' + t.id + '">' +
+      /* Handle "⋮⋮" es el ÚNICO elemento draggable="true" de la tarjeta
+         (spec §"Drag debe iniciar EXCLUSIVAMENTE desde el handle" — la
+         tarjeta tiene demasiados controles interactivos (foto, cliente, Qué
+         sigue, menú, marcadores, links) como para que TODA la tarjeta siga
+         siendo arrastrable sin conflicto). "⋯ → Mover a…" (abajo) es el
+         camino táctil/teclado equivalente para quien no puede/quiere
+         arrastrar — MISMO core de mutación en ambos caminos. */
+      '<div class="kanban-card-draghandle" draggable="true" data-kanban-draghandle="' + t.id + '" title="Arrastrar para cambiar responsable" aria-hidden="true">&#8942;&#8942;</div>' +
+      '<div class="kanban-card-top-row" draggable="false">' +
+        '<button type="button" class="kanban-card-open kanban-card-open-top" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
+          '<span class="kanban-card-folio">#' + t.seq + "</span>" +
+        "</button>" +
+        thumbHtml +
+        '<div class="kanban-card-more-wrap" draggable="false">' +
+          '<button type="button" class="kanban-card-more-btn producto-more-btn" draggable="false" data-action="kanban-card-more" data-ticket="' + t.id + '" aria-label="Más acciones" aria-haspopup="true" aria-expanded="' + (menuOpen?"true":"false") + '">&#8942;</button>' +
+          renderKanbanCardMenu(t) +
+        "</div>" +
+      "</div>" +
       renderKanbanClienteCell(t) +
-      (t.productos.length
-        ? '<button type="button" class="kanban-card-open kanban-card-open-work" draggable="false" data-action="open-ticket" data-id="' + t.id + '"><div class="kanban-card-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div></button>"
-        : "") +
+      '<button type="button" class="kanban-card-open kanban-card-open-work' + (ctx.empty ? " kanban-card-open-work-empty" : "") + '" draggable="false" data-action="open-ticket" data-id="' + t.id + '"><div class="kanban-card-work' + (ctx.empty ? " kanban-card-work-muted" : "") + '">' + escapeHtml(ctx.text) + "</div></button>" +
       '<div class="kanban-card-quesigue-cell' + (t.queSigue ? "" : " kanban-card-quesigue-cell-empty") + '" draggable="false">' +
         detailsInlineCell(t, "quesigue", queSigueValueHtml) +
       "</div>" +
       (markersHtml ? '<div class="kanban-card-markers-row" draggable="false">' + markersHtml + "</div>" : "") +
-      /* Camino seguro/keyboard (§ "KEYBOARD / ACCESIBILIDAD" — "drag es el
-         camino rápido, dropdown es el camino seguro"): el MISMO roster que
-         el <select> de la cabecera (responsableOptionsHtml), en cada
-         tarjeta, siempre visible — nunca condicionado a "si el drag táctil
-         falla" porque no hay forma de detectar eso de antemano; es más
-         simple y más seguro ofrecerlo siempre. */
-      '<select class="kanban-card-resp-select" draggable="false" data-kanban-resp-select="' + t.id + '" aria-label="Cambiar responsable de este ticket">' + responsableOptionsHtml(t.responsable) + "</select>" +
     "</div>"
   );
 }
@@ -6817,7 +7347,11 @@ function calendarStepPeriod(dir){
 }
 function calendarActiveFilterCount(){
   var ui = UI.calendar, n = 0;
-  if(ui.tipo !== "todos") n++;
+  /* §94: el toggle Ambas/Atender/Compromiso AHORA vive como control
+     prominente en la barra (calendar-tipo-switch, ver renderCalendarToolbar)
+     — ya NO cuenta como "filtro escondido" dentro de Filtros, así que se
+     retira de este contador (evita el contador fantasma "Filtros · 1" con
+     el panel de filtros vacío en apariencia). */
   if(!ui.mios && ui.responsable) n++;
   if(ui.incluirCerrados) n++;
   if((ui.search||"").trim()) n++;
@@ -6837,12 +7371,6 @@ function renderCalendarFiltersPanel(){
       '<option value="__sin__"' + (ui.responsable==="__sin__"?" selected":"") + '>Sin responsable</option>' +
       respOpts.map(function(p){ return '<option value="' + escapeHtml(p.displayName) + '"' + (ui.responsable===p.displayName?" selected":"") + '>' + escapeHtml(p.displayName) + "</option>"; }).join("") +
     "</select>";
-  var tipoSelect =
-    '<select class="calendar-filter-select" data-action="calendar-filter-tipo" aria-label="Filtrar por tipo de fecha">' +
-      '<option value="todos"' + (ui.tipo==="todos"?" selected":"") + '>Tipo: todos</option>' +
-      '<option value="atencion"' + (ui.tipo==="atencion"?" selected":"") + '>Solo Atender</option>' +
-      '<option value="compromiso"' + (ui.tipo==="compromiso"?" selected":"") + '>Solo Compromiso</option>' +
-    "</select>";
   return (
     '<div class="calendar-filters-panel" id="calendar-filters-panel">' +
       '<div class="search-wrap calendar-search-wrap">' +
@@ -6850,10 +7378,25 @@ function renderCalendarFiltersPanel(){
         '<input type="text" id="calendar-search-input" placeholder="Folio, cliente o trabajo" value="' + escapeHtml(ui.search||"") + '">' +
         (ui.search ? '<button type="button" class="search-clear-btn" data-action="calendar-search-clear" aria-label="Borrar búsqueda">&times;</button>' : "") +
       "</div>" +
-      '<div class="calendar-filter-selects">' + respSelect + tipoSelect + "</div>" +
+      '<div class="calendar-filter-selects">' + respSelect + "</div>" +
       '<label class="calendar-filter-check"><input type="checkbox" id="calendar-filter-cerrados"' + (ui.incluirCerrados?" checked":"") + '> Incluir cerrados</label>' +
     "</div>"
   );
+}
+/* §94 (pedido integral): toggle [Ambas][Atender][Compromiso], presentación
+   pura — mismo estado UI.calendar.tipo que ya existía (antes enterrado en
+   un <select> dentro del panel de Filtros colapsable), ahora promovido a
+   control siempre visible en la barra, mismo lenguaje visual que
+   calendar-view-switch (segmented control). Nunca toca datos: sigue
+   filtrando `entries` en calendarEntriesFiltered, jamás
+   t.fechaAtencion/t.fechaCompromiso. Default "todos" = "Ambas". */
+var CALENDAR_TIPO_OPTIONS = [["todos","Ambas"],["atencion","Atender"],["compromiso","Compromiso"]];
+function renderCalendarTipoSwitch(){
+  var ui = UI.calendar;
+  var btns = CALENDAR_TIPO_OPTIONS.map(function(v){
+    return '<button type="button" class="calendar-tipo-btn' + (ui.tipo===v[0]?" active":"") + '" data-action="calendar-tipo-pick" data-tipo="' + v[0] + '" aria-pressed="' + (ui.tipo===v[0]?"true":"false") + '">' + v[1] + "</button>";
+  }).join("");
+  return '<div class="calendar-tipo-switch" role="tablist" aria-label="Qué fechas mostrar">' + btns + "</div>";
 }
 function renderCalendarToolbar(){
   var ui = UI.calendar;
@@ -6873,9 +7416,11 @@ function renderCalendarToolbar(){
         "</div>" +
         '<div class="calendar-view-switch" role="tablist" aria-label="Vista de calendario">' + viewBtns + "</div>" +
       "</div>" +
+      '<div class="calendar-toolbar-row calendar-toolbar-tipo-row">' + renderCalendarTipoSwitch() + "</div>" +
       '<div class="calendar-toolbar-row calendar-toolbar-bottom">' +
         '<button type="button" class="calendar-mios-btn' + (miosOn?" active":"") + '" data-action="calendar-toggle-mios" aria-pressed="' + (miosOn?"true":"false") + '">Míos</button>' +
         '<button type="button" class="calendar-filters-toggle' + (ui.filtersOpen?" active":"") + '" data-action="calendar-filters-toggle" aria-expanded="' + (ui.filtersOpen?"true":"false") + '" aria-controls="calendar-filters-panel">Filtros' + (filterCount?" · "+filterCount:"") + "</button>" +
+        '<button type="button" class="calendar-filters-toggle calendar-sinfecha-toggle" data-action="calendar-sinfecha-open">Sin fecha · ' + calendarSinFechaCount() + "</button>" +
         '<button type="button" class="btn btn-primary calendar-programar-btn" data-action="calendar-programar-open" data-type="attention">+ Programar</button>' +
       "</div>" +
       (ui.filtersOpen ? renderCalendarFiltersPanel() : "") +
@@ -6900,7 +7445,16 @@ function renderCalendarEntryCard(entry, opts){
      tarjeta de rojo (eso competiría con el color del responsable — §24). */
   var isPast = calendarIsPastDate(entry.date);
   var typeClass = entry.type === "attention" ? " calendar-entry-attention" : " calendar-entry-commitment";
-  var workLine = (!opts.compact && t.productos && t.productos.length) ? escapeHtml(sidebarProductoPrincipal(t)) : "";
+  /* §95 (pedido integral): "contexto suficiente — folio, cliente, TODOS los
+     productos, Qué sigue, responsable — nunca reducir a '3 productos'".
+     Reusa EXACTAMENTE kanbanCardProductosContext (mismo formato qty+desc,
+     misma cadena de fallback) — cero segunda función de formato paralela.
+     Las tarjetas compactas de Mes (opts.compact, celdas angostas) siguen
+     omitiendo esta línea a propósito, decisión previa ya documentada
+     (folio+cliente+responsable+marcadores siguen visibles ahí). */
+  var workCtx = !opts.compact ? kanbanCardProductosContext(t) : null;
+  var workLine = workCtx ? escapeHtml(workCtx.text) : "";
+  var workLineMuted = !!(workCtx && workCtx.empty);
   var quesigue = (!opts.compact && t.queSigue) ? '<div class="calendar-entry-quesigue">' + escapeHtml(t.queSigue) + "</div>" : "";
   var respHtml = t.responsable ? responsibleChip(t.responsable) : "";
   return (
@@ -6912,7 +7466,7 @@ function renderCalendarEntryCard(entry, opts){
         "</div>" +
         '<div class="calendar-entry-folio-row"><span class="calendar-entry-folio">#' + t.seq + "</span>" + (markersHtml ? '<span class="calendar-entry-markers">' + markersHtml + "</span>" : "") + "</div>" +
         '<div class="calendar-entry-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
-        (workLine ? '<div class="calendar-entry-work">' + workLine + "</div>" : "") +
+        (workLine ? '<div class="calendar-entry-work' + (workLineMuted?" calendar-entry-work-muted":"") + '">' + workLine + "</div>" : "") +
         quesigue +
         (respHtml ? '<div class="calendar-entry-resp">' + respHtml + "</div>" : "") +
       "</button>" +
@@ -6954,15 +7508,53 @@ function renderCalendarMonthCell(dateStr, byDate, cursorStr){
     "</div>"
   );
 }
+/* §98 (pedido integral) — resize de semanas en Mes, SOLO desktop. Auto-
+   altura razonable primero (minmax(72px,1fr), el mismo comportamiento de
+   siempre) y, tras un resize manual, una altura fija en px por fila —
+   UI.calendar.monthRowHeights (6 slots, null = auto). Entre cada par de
+   filas se intercala una fila-handle de 7px (grid-column 1/-1, cursor
+   row-resize) en el MISMO grid — técnica CSS Grid estándar para no
+   necesitar posicionamiento absoluto ni medir nada por JS al montar. */
+var CALENDAR_MONTH_ROW_MIN = 56;
+var CALENDAR_MONTH_ROW_MAX = 420;
+function calendarMonthHasCustomHeights(){
+  return (UI.calendar.monthRowHeights||[]).some(function(h){ return !!h; });
+}
+/* override = { index, heightPx } opcional — usado SOLO durante el drag en
+   vivo (mousemove) para previsualizar sin tocar UI.calendar.monthRowHeights
+   todavía (el commit real es en mouseup, ver wireEvents). */
+function calendarMonthGridTemplateRows(override){
+  var heights = UI.calendar.monthRowHeights || [null,null,null,null,null,null];
+  var tracks = [];
+  for(var i=0;i<6;i++){
+    var h = (override && override.index === i) ? override.heightPx : heights[i];
+    tracks.push(h ? (Math.round(h) + "px") : "minmax(72px,1fr)");
+    if(i<5) tracks.push("7px");
+  }
+  return tracks.join(" ");
+}
 function renderCalendarMonth(byDate){
   var cursor = calendarCursor();
   var dates = calendarMonthGridDates(cursor);
   var header = CALENDAR_WEEKDAY_SHORT.map(function(w){ return '<div class="calendar-month-headcell">' + w + "</div>"; }).join("");
-  var cells = dates.map(function(ds){ return renderCalendarMonthCell(ds, byDate, cursor); }).join("");
+  /* Mobile: exactamente el layout de siempre (6 filas 1fr, sin handles) —
+     spec, literal: "NO implementar resize táctil/mobile". Nunca se genera
+     ni el grid-template-rows con tracks de 7px ni los <div> de handle, para
+     no depender de que una media query "gane" sobre un style= inline. */
+  var desktop = !isMobileViewport();
+  var rowsHtml = "";
+  for(var w=0; w<6; w++){
+    rowsHtml += dates.slice(w*7, w*7+7).map(function(ds){ return renderCalendarMonthCell(ds, byDate, cursor); }).join("");
+    if(desktop && w<5){
+      rowsHtml += '<div class="calendar-month-resize-handle" data-calendar-month-resize="' + w + '" title="Arrastrar para cambiar la altura de esta semana" aria-hidden="true"><span class="calendar-month-resize-grip"></span></div>';
+    }
+  }
+  var gridStyle = desktop ? (' style="grid-template-rows:' + calendarMonthGridTemplateRows() + ';"') : "";
   return (
     '<div class="calendar-month">' +
+      (desktop && calendarMonthHasCustomHeights() ? '<div class="calendar-month-reset-row"><button type="button" class="btn-plain calendar-month-reset-heights" data-action="calendar-month-reset-heights">&#8635; Restablecer alturas de semana</button></div>' : "") +
       '<div class="calendar-month-headrow">' + header + "</div>" +
-      '<div class="calendar-month-grid">' + cells + "</div>" +
+      '<div class="calendar-month-grid" id="calendar-month-grid"' + gridStyle + '>' + rowsHtml + "</div>" +
     "</div>"
   );
 }
@@ -6999,6 +7591,89 @@ function renderCalendarWeek(byDate){
   return '<div class="calendar-week">' + dates.map(function(ds){ return renderCalendarWeekColumn(ds, byDate); }).join("") + "</div>";
 }
 
+/* §94 (pedido integral) — "mismo día, misma tarjeta": cuando Atención y
+   Compromiso de UN MISMO ticket caen el MISMO día Y la vista es "Ambas"
+   (UI.calendar.tipo==="todos"), Agenda/panel de día muestran UNA sola
+   tarjeta visual combinada [ATENDER][COMPROMISO] en vez de dos separadas —
+   pero esto es SOLO presentación: las dos entradas/columnas siguen
+   existiendo por separado (calendarDeriveEntries nunca las fusiona), y
+   calendarEntriesByDate sigue devolviendo ambas entradas del día tal cual.
+   Restringido a Agenda/panel de día a propósito (nunca Mes/Semana): esas
+   dos vistas usan el drag&drop con DOS zonas de drop físicas separadas
+   (Atención/Compromiso) que la spec pide preservar sin ambigüedad — fusionar
+   la tarjeta ahí complicaría justo lo que §19/§89 ya resuelve con cuidado.
+   Agenda nunca depende de drag (§33: "cada tarjeta trae su ⋯"), así que es
+   el lugar seguro para esta fusión visual — el "⋯" de la tarjeta combinada
+   simplemente ofrece elegir CUÁL de las dos fechas cambiar (nunca ambiguo,
+   ver renderCalendarEntryPopover/calendarEntryMoreChoose). */
+function calendarCombineDayEntries(list){
+  if(UI.calendar.tipo !== "todos"){
+    return { combined: [], attention: list.filter(function(e){ return e.type==="attention"; }), commitment: list.filter(function(e){ return e.type==="commitment"; }) };
+  }
+  var byTicket = {}, order = [];
+  list.forEach(function(e){
+    if(!byTicket[e.ticketId]){ byTicket[e.ticketId] = []; order.push(e.ticketId); }
+    byTicket[e.ticketId].push(e);
+  });
+  var combined = [], attention = [], commitment = [];
+  order.forEach(function(tid){
+    var es = byTicket[tid];
+    var a = es.filter(function(e){ return e.type==="attention"; })[0];
+    var c = es.filter(function(e){ return e.type==="commitment"; })[0];
+    if(a && c) combined.push({ ticketId: tid, ticket: a.ticket, attention: a, commitment: c });
+    else es.forEach(function(e){ if(e.type==="attention") attention.push(e); else commitment.push(e); });
+  });
+  return { combined: combined, attention: attention, commitment: commitment };
+}
+/* Tarjeta combinada — MISMO contenido/orden que renderCalendarEntryCard
+   (folio, cliente, productos completos vía kanbanCardProductosContext, Qué
+   sigue, responsable, marcadores), solo con DOS etiquetas de tipo en vez de
+   una. draggable="false" A PROPÓSITO (spec, literal: "nunca ambiguamente
+   cambiar ambas fechas al arrastrar") — el "⋯" es el único camino para
+   cambiar fecha aquí, y obliga a elegir cuál de las dos. */
+function renderCalendarCombinedEntryCard(item){
+  var t = item.ticket;
+  var markersHtml = renderSidebarMarkerIcons(t);
+  var themeClass = responsibleThemeClass(t.responsable);
+  var ctx = kanbanCardProductosContext(t);
+  var quesigue = t.queSigue ? '<div class="calendar-entry-quesigue">' + escapeHtml(t.queSigue) + "</div>" : "";
+  var respHtml = t.responsable ? responsibleChip(t.responsable) : "";
+  var isPast = calendarIsPastDate(item.attention.date) || calendarIsPastDate(item.commitment.date);
+  return (
+    '<div class="calendar-entry-card calendar-entry-combined' + themeClass + (isPast?" calendar-entry-past":"") + '" data-calendar-entry="' + t.id + '" data-calendar-entry-combined="true">' +
+      '<button type="button" class="calendar-entry-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
+        '<div class="calendar-entry-top">' +
+          '<span class="calendar-entry-type-label calendar-entry-type-combined-a">ATENDER</span>' +
+          '<span class="calendar-entry-type-label calendar-entry-type-combined-c">COMPROMISO</span>' +
+          (isPast ? '<span class="calendar-entry-overdue" title="Alguna fecha ya pasó, ticket sigue activo">&#9888;</span>' : "") +
+        "</div>" +
+        '<div class="calendar-entry-folio-row"><span class="calendar-entry-folio">#' + t.seq + "</span>" + (markersHtml ? '<span class="calendar-entry-markers">' + markersHtml + "</span>" : "") + "</div>" +
+        '<div class="calendar-entry-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+        (ctx.text ? '<div class="calendar-entry-work' + (ctx.empty?" calendar-entry-work-muted":"") + '">' + escapeHtml(ctx.text) + "</div>" : "") +
+        quesigue +
+        (respHtml ? '<div class="calendar-entry-resp">' + respHtml + "</div>" : "") +
+      "</button>" +
+      '<button type="button" class="calendar-entry-more" draggable="false" data-action="calendar-entry-more-combined" data-ticket="' + t.id + '" aria-haspopup="true" aria-label="Elegir qué fecha cambiar">&#8942;</button>' +
+    "</div>"
+  );
+}
+/* Punto único de render de "las entradas de un día" — usado por Agenda Y
+   panel de día (§ "redundancia en los caminos, no en la lógica": una sola
+   función que decide combinar o no, nunca dos copias de este criterio). */
+function calendarDayEntriesHtml(list){
+  var g = calendarCombineDayEntries(list);
+  var parts = [];
+  if(g.combined.length){
+    parts.push('<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">ATENDER + COMPROMISO (mismo día)</div>' + g.combined.map(renderCalendarCombinedEntryCard).join("") + "</div>");
+  }
+  if(g.attention.length){
+    parts.push('<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">ATENDER</div>' + g.attention.map(function(e){ return renderCalendarEntryCard(e); }).join("") + "</div>");
+  }
+  if(g.commitment.length){
+    parts.push('<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">COMPROMISO</div>' + g.commitment.map(function(e){ return renderCalendarEntryCard(e); }).join("") + "</div>");
+  }
+  return parts.join("");
+}
 /* ---- vista AGENDA (§14) — lista vertical, la principal en mobile (§15).
    Nunca depende de drag (§33) — cada tarjeta trae su propio "⋯" con el
    date-picker rápido, el mismo camino "seguro" que ya usa Kanban con su
@@ -7011,17 +7686,10 @@ function renderCalendarAgendaDay(dateStr, byDate){
   var tomorrowStr = addDaysToDateOnly(todayStr, 1);
   var prefix = dateStr === todayStr ? "HOY · " : (dateStr === tomorrowStr ? "MAÑANA · " : "");
   var dayLabel = prefix + CALENDAR_WEEKDAY_LONG[d.getDay()].toUpperCase() + " " + d.getDate();
-  var attention = entries.filter(function(e){ return e.type === "attention"; });
-  var commitment = entries.filter(function(e){ return e.type === "commitment"; });
-  function group(list, label){
-    if(!list.length) return "";
-    return '<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">' + label + "</div>" + list.map(function(e){ return renderCalendarEntryCard(e); }).join("") + "</div>";
-  }
   return (
     '<div class="calendar-agenda-day">' +
       '<div class="calendar-agenda-day-head">' + escapeHtml(dayLabel) + "</div>" +
-      group(attention, "ATENDER") +
-      group(commitment, "COMPROMISOS") +
+      calendarDayEntriesHtml(entries) +
     "</div>"
   );
 }
@@ -7058,17 +7726,13 @@ function renderCalendarDayPanel(byDate){
   if(!d) return "";
   var attention = entries.filter(function(e){ return e.type === "attention"; });
   var commitment = entries.filter(function(e){ return e.type === "commitment"; });
-  function group(list, label){
-    if(!list.length) return "";
-    return '<div class="calendar-agenda-group"><div class="calendar-agenda-group-label">' + label + "</div>" + list.map(function(e){ return renderCalendarEntryCard(e); }).join("") + "</div>";
-  }
   return (
     '<div class="cierre-modal-overlay" id="calendar-day-panel-overlay">' +
       '<div class="cierre-modal calendar-day-panel">' +
         '<div class="cierre-modal-title">' + CALENDAR_WEEKDAY_LONG[d.getDay()] + " " + d.getDate() + " de " + CALENDAR_MONTH_LABELS[d.getMonth()].toLowerCase() + "</div>" +
         '<div class="calendar-day-panel-counts">' + attention.length + (attention.length===1?" atención":" atenciones") + " · " + commitment.length + (commitment.length===1?" compromiso":" compromisos") + "</div>" +
         '<div class="calendar-day-panel-body">' +
-          (entries.length ? (group(attention,"ATENDER") + group(commitment,"COMPROMISO")) : '<div class="ephemeral-sub">Sin tickets programados este día.</div>') +
+          (entries.length ? calendarDayEntriesHtml(entries) : '<div class="ephemeral-sub">Sin tickets programados este día.</div>') +
         "</div>" +
         '<div class="popover-actions">' +
           '<button type="button" class="btn-plain" data-action="calendar-programar-open" data-type="attention" data-date="' + dateStr + '">+ Programar este día</button>' +
@@ -7089,6 +7753,34 @@ function renderCalendarEntryPopover(){
   if(!p) return "";
   var t = findTicket(p.ticketId);
   if(!t) return "";
+  /* §ADDENDUM combinada: p.type===null significa "vino de una tarjeta
+     combinada, todavía no se eligió CUÁL de las dos fechas cambiar" —
+     chooser explícito, NUNCA una fecha por default (evita el error de
+     cambiar la que no era). Elegir una la vuelve un p.type normal, y de ahí
+     en adelante es EXACTAMENTE el mismo flujo de siempre (quick view /
+     date-picker) — cero lógica de mutación paralela. */
+  if(p.type == null){
+    var body0 =
+      '<div class="calendar-entrypanel-summary">' +
+        '<div class="calendar-entrypanel-row"><span class="calendar-entrypanel-k">Atender</span><span class="calendar-entrypanel-v">' + (t.fechaAtencion ? fmtDateOnlyShort(t.fechaAtencion) : "Sin fecha") + "</span></div>" +
+        '<div class="calendar-entrypanel-row"><span class="calendar-entrypanel-k">Compromiso</span><span class="calendar-entrypanel-v">' + (t.fechaCompromiso ? fmtDateOnlyShort(t.fechaCompromiso) : "Sin fecha") + "</span></div>" +
+      "</div>" +
+      '<div class="popover-actions calendar-entrypanel-choose">' +
+        '<button type="button" class="btn btn-ghost" data-action="calendar-entrypanel-choose-type" data-type="attention">Cambiar Atender</button>' +
+        '<button type="button" class="btn btn-ghost" data-action="calendar-entrypanel-choose-type" data-type="commitment">Cambiar Compromiso</button>' +
+      "</div>" +
+      '<div class="popover-actions">' +
+        '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' +
+      "</div>";
+    return (
+      '<div class="cierre-modal-overlay" id="calendar-entry-popover-overlay">' +
+        '<div class="cierre-modal calendar-entry-popover">' +
+          '<div class="cierre-modal-title">#' + t.seq + " · " + escapeHtml(sidebarClienteLabel(t)) + " · ¿qué fecha?</div>" +
+          body0 +
+        "</div>" +
+      "</div>"
+    );
+  }
   var elId = CALENDAR_TYPE_ELID[p.type];
   var def = HEADER_FIELDS[elId];
   var currentVal = t[def.key];
@@ -7140,7 +7832,30 @@ function renderCalendarEntryPopover(){
 /* ---- "+ Programar" (§50-53): buscar ticket existente (camino principal) o
    crear uno nuevo casi vacío — reutiliza ticketMatchesExplorerQuery (misma
    búsqueda de siempre) y createTicketCore (el MISMO creador central que
-   "+ Nuevo ticket"/Quick Create/­/nuevo, nunca un formulario paralelo). ---- */
+   "+ Nuevo ticket"/Quick Create/­/nuevo, nunca un formulario paralelo).
+
+   DECISIÓN TÉCNICA (pedido integral §5, "retirar + Programar SOLO si ya no
+   cumple una función distinta al Drawer 'Sin fecha'"): se evaluó y se
+   decidió CONSERVARLO, sin retirarlo, por 3 razones concretas donde SÍ
+   sigue siendo distinto del Drawer:
+   1) Busca CUALQUIER ticket (incluido uno que YA tiene una de las dos
+      fechas) para asignarle la OTRA — el Drawer solo lista tickets con
+      AMBAS fechas null; un ticket con Atención ya puesta pero sin
+      Compromiso jamás aparece en el Drawer, así que sin este flujo no
+      habría forma de agregarle el Compromiso desde Calendario.
+   2) Contexto de DÍA: "+ Programar este día" (desde el panel "+N más") ya
+      trae la fecha pre-llenada — el Drawer es una lista global sin noción
+      de "qué día toqué", así que no puede replicar ese atajo sin
+      convertirse en otra cosa.
+   3) "+ Crear ticket nuevo" con fecha inicial en el mismo paso — crear Y
+      programar de un tirón; el Drawer asume que el ticket YA existe.
+   Ambos flujos quedan, cada uno resolviendo un caso real distinto —
+   exactamente el mismo criterio "redundancia en los caminos, no en la
+   lógica" que el resto de la app: no son dos caminos a la MISMA función
+   (eso sí habría que colapsarlo), son dos funciones distintas que
+   comparten el mismo core de mutación (calendarQuickSetDate/
+   updateTicketFieldCore) y, donde aplica, el mismo paso "pick" de este
+   panel (ver calendarSinFechaProgramarTap arriba). */
 function renderCalendarProgramarPanel(){
   var st = UI.calendar.programar;
   if(!st) return "";
@@ -7215,7 +7930,8 @@ function renderCalendarView(){
     "</div>" +
     renderCalendarDayPanel(entriesByDate) +
     renderCalendarEntryPopover() +
-    renderCalendarProgramarPanel()
+    renderCalendarProgramarPanel() +
+    renderCalendarSinFechaDrawer()
   );
 }
 
@@ -7305,6 +8021,95 @@ async function calendarProgramarCreateNew(){
     await updateTicketFieldCore(t, elId, initialDate, { refocus:false });
   }
   showTicketCreatedToast(newId);
+}
+
+/* ================= DRAWER "SIN FECHA" (pedido integral §4) =================
+   "¿Cuáles NO están programados todavía?" — tickets abiertos con AMBAS
+   fechas null. Cero campo de estado nuevo: se deriva de STATE.tickets en
+   cada render, igual que el resto del módulo Calendar (§116). El conteo
+   NUNCA depende de "Incluir cerrados" del calendario (la definición es
+   literal: "abierto Y sin ninguna fecha" — un cerrado nunca pertenece aquí
+   sea cual sea ese filtro, que es de OTRO módulo). */
+function calendarSinFechaBaseTickets(){
+  return STATE.tickets.filter(function(t){ return !ticketIsCerrado(t) && !t.fechaAtencion && !t.fechaCompromiso; });
+}
+function calendarSinFechaCount(){ return calendarSinFechaBaseTickets().length; }
+function calendarSinFechaTickets(){
+  var list = calendarSinFechaBaseTickets();
+  var st = UI.calendar.sinFecha;
+  var qRaw = ((st && st.search) || "").trim();
+  if(qRaw){
+    var qNorm = normalizeWord(qRaw.replace(/^#/, ""));
+    var qDigits = qRaw.replace(/\D/g, "");
+    list = list.filter(function(t){ return ticketMatchesExplorerQuery(t, qNorm, qDigits); });
+  }
+  return list.slice().sort(compareTicketsOperationalOrder);
+}
+function calendarSinFechaOpen(){ UI.calendar.sinFecha.open = true; render(); }
+function calendarSinFechaClose(){ UI.calendar.sinFecha.open = false; render(); }
+/* Camino táctil/mobile (§4, literal: "sin dependencia de drag — tap ticket
+   -> elegir Atender/Compromiso -> elegir fecha -> guardar"): reusa
+   EXACTAMENTE el flujo "+ Programar" ya existente en su paso "pick" —
+   mismo popover, mismo calendarProgramarSave() -> calendarQuickSetDate() ->
+   updateTicketFieldCore(), cero formulario paralelo. El único dato nuevo es
+   el tipo por default, que toma del toggle "PROGRAMAR COMO" del drawer. */
+function calendarSinFechaProgramarTap(ticketId){
+  var mode = (UI.calendar.sinFecha && UI.calendar.sinFecha.mode) || "attention";
+  UI.calendar.programar = { step: "pick", query: "", type: mode, ticketId: ticketId, initialDate: null };
+  render();
+}
+function renderCalendarSinFechaCard(t){
+  var markersHtml = renderSidebarMarkerIcons(t);
+  var themeClass = responsibleThemeClass(t.responsable);
+  var ctx = kanbanCardProductosContext(t);
+  var quesigue = t.queSigue ? '<div class="calendar-entry-quesigue">' + escapeHtml(t.queSigue) + "</div>" : "";
+  var respHtml = t.responsable ? responsibleChip(t.responsable) : "";
+  /* Miniatura "si es razonable" (§4, literal): mismo criterio que Kanban —
+     SOLO si existe una foto activa, sin placeholder cuando no la hay. */
+  var photoPath = ticketThumbPhotoPath(t);
+  var thumbHtml = photoPath ? '<img class="calendar-sinfecha-thumb" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt="">' : "";
+  return (
+    '<div class="calendar-sinfecha-card' + themeClass + '" draggable="true" data-calendar-sinfecha-card="' + t.id + '">' +
+      '<button type="button" class="calendar-entry-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
+        '<div class="calendar-entry-top">' + thumbHtml + '<span class="calendar-entry-folio">#' + t.seq + "</span>" + (markersHtml ? '<span class="calendar-entry-markers">' + markersHtml + "</span>" : "") + "</div>" +
+        '<div class="calendar-entry-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+        (ctx.text ? '<div class="calendar-entry-work' + (ctx.empty?" calendar-entry-work-muted":"") + '">' + escapeHtml(ctx.text) + "</div>" : "") +
+        quesigue +
+        (respHtml ? '<div class="calendar-entry-resp">' + respHtml + "</div>" : "") +
+      "</button>" +
+      '<button type="button" class="calendar-entry-more" draggable="false" data-action="calendar-sinfecha-programar" data-ticket="' + t.id + '" aria-label="Programar fecha">&#128197;</button>' +
+    "</div>"
+  );
+}
+function renderCalendarSinFechaDrawer(){
+  var st = UI.calendar.sinFecha;
+  if(!st || !st.open) return "";
+  var list = calendarSinFechaTickets();
+  var modeBtns = [["attention","Atender"],["commitment","Compromiso"]].map(function(v){
+    return '<button type="button" class="calendar-programar-type-btn' + (st.mode===v[0]?" active":"") + '" data-action="calendar-sinfecha-mode" data-mode="' + v[0] + '">' + v[1] + "</button>";
+  }).join("");
+  return (
+    '<div class="calendar-sinfecha-overlay" id="calendar-sinfecha-overlay">' +
+      '<div class="calendar-sinfecha-drawer" role="dialog" aria-label="Tickets sin fecha">' +
+        '<div class="calendar-sinfecha-head">' +
+          '<div class="calendar-sinfecha-title">Sin fecha · ' + list.length + "</div>" +
+          '<button type="button" class="btn-plain" data-action="calendar-sinfecha-close" aria-label="Cerrar">&times;</button>' +
+        "</div>" +
+        '<div class="calendar-sinfecha-mode-row">' +
+          '<span class="calendar-sinfecha-mode-label">Programar como</span>' +
+          '<div class="calendar-programar-type">' + modeBtns + "</div>" +
+        "</div>" +
+        '<div class="search-wrap calendar-search-wrap">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+          '<input type="text" id="calendar-sinfecha-search" placeholder="Folio, cliente o trabajo" value="' + escapeHtml(st.search||"") + '">' +
+          (st.search ? '<button type="button" class="search-clear-btn" data-action="calendar-sinfecha-search-clear" aria-label="Borrar búsqueda">&times;</button>' : "") +
+        "</div>" +
+        '<div class="calendar-sinfecha-list">' +
+          (list.length ? list.map(renderCalendarSinFechaCard).join("") : '<div class="ephemeral-sub">Sin tickets pendientes de programar.</div>') +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
 }
 
 /* ================= BIBLIOTECA — memoria visual (Findability: FIND →
@@ -9649,11 +10454,49 @@ async function submitTicketQuickCreate(fields){
   if(!newId) return;
   var failures = [];
   var t;
+  /* RONDA SHORTCUTS+AUTOCOMPLETE §B (corrección post-revisión): "identidad
+     conocida → clienteId explícito → teléfono aplicado a ESE cliente."
+     Si ya sabemos con certeza a qué cliente nos referimos — el usuario lo
+     eligió del autocomplete, o el texto coincide EXACTO (mismo rankClientes/
+     normalizeWord que ya usan /cliente y /editarcliente) con uno existente —
+     se vincula ANTES de tocar el teléfono, para que esa identidad sea
+     autoritativa: nunca se vuelve a inferir desde nombre/teléfono si ya
+     tenemos clienteId. Esto es lo que evita el duplicado que existía antes
+     de esta corrección (elegir un cliente del dropdown Y escribir un
+     teléfono nuevo podía crear un segundo cliente con el mismo nombre,
+     porque la rama de teléfono no conocía la elección ya hecha). */
+  if(cliente){
+    t = findTicket(newId);
+    if(t && !t.clienteId){
+      var knownCli = null;
+      if(pickedClienteId) knownCli = STATE.clientes.filter(function(c){ return c.id === pickedClienteId; })[0] || null;
+      if(!knownCli) knownCli = resolveClienteExactMatch(cliente);
+      if(knownCli){
+        var linkKnownOk = await linkClienteToTicket(t, knownCli);
+        if(!linkKnownOk) failures.push('cliente "' + cliente + '"');
+      }
+    }
+  }
+  /* Teléfono: si a estas alturas YA hay un cliente vinculado (recién
+     resuelto arriba, o por cualquier otra razón), el teléfono se aplica
+     DIRECTO a ESE cliente vía updateClienteCore — la misma función que ya
+     usa /editarcliente y la ficha de cliente, que solo toca el campo
+     telefono (nunca nombre/email: la regla "actualizar teléfono SOLO
+     modifica teléfono" sigue intacta) y no depende de UI.selectedTicketId
+     ni de dispatchCommand (a diferencia de la rama "cliente ya vinculado"
+     de applyDetectedPhoneToTicket, pensada para un ticket ya abierto, no
+     para el instante de creación). Si TODAVÍA no hay cliente vinculado
+     (nombre vacío, o un nombre que de verdad no existe todavía), se sigue
+     usando applyDetectedPhoneToTicket — el mismo D1 de siempre, que crea el
+     cliente y le pone el teléfono en una sola escritura atómica. */
   if(telefono){
     var phone = detectPhone(telefono);
     if(phone){
       t = findTicket(newId);
-      if(t){
+      if(t && t.clienteId){
+        var phoneOnKnownOk = await updateClienteCore(t.clienteId, { telefono: phone.formatted }, newId);
+        if(!phoneOnKnownOk) failures.push("teléfono " + phone.formatted);
+      } else if(t){
         var phoneOk = await applyDetectedPhoneToTicket(t, phone);
         if(!phoneOk) failures.push("teléfono " + phone.formatted);
       }
@@ -9661,50 +10504,19 @@ async function submitTicketQuickCreate(fields){
       failures.push('teléfono "' + telefono + '" (no se reconoció como número válido)');
     }
   }
-  /* RONDA SHORTCUTS+AUTOCOMPLETE §B: objetivo explícito de la ronda —
-     "reducir tickets que tienen texto de cliente pero no un cliente_id
-     real". Se resuelve DESPUÉS del teléfono, y SOLO si el ticket sigue sin
-     clienteId a estas alturas (si ya tiene uno, es porque la rama de
-     teléfono de arriba — D1, applyDetectedPhoneToTicket — ya lo creó/
-     vinculó usando exactamente este mismo `cliente` como nombre; repetir la
-     vinculación aquí sería redundante, y forzar el orden al revés metería
-     este flujo por la rama "cliente ya vinculado" de applyDetectedPhoneToTicket,
-     que dispara /editarcliente vía dispatchCommand() — un camino que depende
-     de UI.selectedTicketId ya apuntando a este ticket, algo que aquí todavía
-     no es cierto porque openTicketById(newId) corre más abajo; ese camino
-     está pensado y probado para tickets ya abiertos, no para el instante de
-     creación, así que no se reutiliza aquí). Tres caminos, un solo objetivo:
-     1) el usuario ya eligió un cliente real del autocomplete → vincular ESE
-        (nunca crear uno nuevo con el mismo nombre);
-     2) si no eligió nada pero el texto coincide EXACTO (mismo rankClientes/
-        normalizeWord que ya usan /cliente y /editarcliente) con un cliente
-        ya existente → vincular ese, como red de seguridad contra duplicados
-        silenciosos aunque el usuario haya ignorado el dropdown;
-     3) si de verdad no existe → crearlo (createClienteCore, el mismo core
-        de siempre) y vincularlo — nunca dejarlo como texto libre suelto
-        pudiendo evitarse.
-     Límite conocido, documentado y no resuelto en esta ronda: si el usuario
-     ELIGE un cliente existente del autocomplete Y ADEMÁS escribe un
-     teléfono, la rama de teléfono de arriba (que no conoce pickedClienteId)
-     puede crear un cliente nuevo con ese mismo nombre en vez de reusar el
-     elegido — mismo comportamiento D1 que ya existía antes de esta ronda,
-     no una regresión nueva, pero tampoco lo que idealmente debería pasar;
-     ver reporte de cierre de ronda. */
+  /* Objetivo de la ronda, remanente: nombre escrito que de verdad no
+     coincide con nadie (ni elegido ni exacto) Y sin teléfono que lo hubiera
+     resuelto arriba vía D1 → se crea el cliente real aquí y se vincula.
+     Nunca se deja como texto libre suelto pudiendo evitarse. */
   if(cliente){
     t = findTicket(newId);
     if(t && !t.clienteId){
-      var cliObj = null;
-      if(pickedClienteId) cliObj = STATE.clientes.filter(function(c){ return c.id === pickedClienteId; })[0] || null;
-      if(!cliObj){
-        var exact = rankClientes(cliente).filter(function(c){ return normalizeWord(c.nombre) === normalizeWord(cliente); })[0];
-        if(exact) cliObj = exact;
-      }
-      if(!cliObj) cliObj = await createClienteCore(cliente);
-      if(cliObj){
+      var newCli = await createClienteCore(cliente);
+      if(newCli){
         t = findTicket(newId);
         if(t){
-          var linkOk = await linkClienteToTicket(t, cliObj);
-          if(!linkOk) failures.push('cliente "' + cliente + '"');
+          var linkNewOk = await linkClienteToTicket(t, newCli);
+          if(!linkNewOk) failures.push('cliente "' + cliente + '"');
         }
       } else {
         failures.push('cliente "' + cliente + '"');
@@ -10240,6 +11052,125 @@ async function addPagoCore(t, monto, fecha, metodo, concepto){
   }catch(e){ showToast("No se pudo guardar el pago: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
   return ok;
+}
+
+/* ================= Privacidad real (sección 8/9) =================
+   §100/§101: "restringir" un ticket a un puñado de personas nunca existió
+   antes de esta ronda — el modelo de siempre es "cualquier miembro activo
+   ve todo" (0011_v05_rls_harden_base_tables.sql). Esta capa agrega la ÚNICA
+   excepción: tickets.visibility ('team'|'private') + ticket_access (quién,
+   además de todo el equipo, puede ver un ticket 'private') — nunca un
+   sistema de roles/permisos jerárquico (fuera de alcance a propósito, ver
+   0010 §"QUÉ NO HACE"). Migración: 0015_v05_privacidad_tickets.sql.
+
+   joinNaturalList: enumeración COMPLETA en español ("A", "A y B", "A, B y
+   C") — a propósito nunca trunca (a diferencia de buildReactionMicrocopy,
+   que sí trunca a "X y N más" porque es una etiqueta de UI con espacio
+   limitado; una línea de bitácora es un registro permanente, tiene que
+   nombrar a TODOS — spec: "Martín restringió el ticket a Martín y
+   Cecilia."). */
+function joinNaturalList(names){
+  var list = (names||[]).filter(Boolean);
+  if(!list.length) return "";
+  if(list.length === 1) return list[0];
+  return list.slice(0,-1).join(", ") + " y " + list[list.length-1];
+}
+
+/* resolveTeamNamesArg: mismo criterio de "nunca guardar nada ambiguo" que
+   ya usa el resto del Composer (ver /cliente) — reusa activeAssignableProfiles(),
+   la MISMA fuente que el selector de Responsable, nunca una lista paralela
+   de "quién es del equipo". Separadores humanos: coma o " y ". */
+function resolveTeamNamesArg(raw){
+  var frags = (raw||"").split(/\s*(?:,|\by\b)\s*/i).map(function(s){ return s.trim(); }).filter(Boolean);
+  var profiles = activeAssignableProfiles();
+  var resolved = [], unmatched = [];
+  frags.forEach(function(frag){
+    var fl = frag.toLowerCase();
+    var exact = profiles.filter(function(p){ return p.displayName.toLowerCase() === fl; });
+    var candidates = exact.length ? exact : profiles.filter(function(p){ return p.displayName.toLowerCase().indexOf(fl) !== -1; });
+    if(candidates.length === 1) resolved.push(candidates[0]);
+    else unmatched.push(frag);
+  });
+  return { resolved: resolved, unmatched: unmatched };
+}
+
+/* setTicketPrivacyCore: restringe el ticket a currentActorName() + las
+   personas ya resueltas a perfiles reales por /privado (nunca texto libre).
+   Orden de escritura DELIBERADO, dictado por la RLS de 0015 (ticket_access):
+   1) upsert de la lista NUEVA completa (todavía con el ticket visible para
+      todo el equipo si es la primera vez, o con el propio actor ya
+      teniendo una fila previa si es una re-restricción — en ambos casos la
+      policy de ticket_access lo permite sin excepción);
+   2) delete de accesos de una restricción ANTERIOR que ya no aplican —
+      seguro en este punto porque la fila del propio actor para la lista
+      NUEVA ya existe desde el paso 1, así que ticket_is_visible_to_me()
+      nunca se vuelve false para él a medio camino;
+   3) SOLO AL FINAL, tickets.visibility = 'private'.
+   Invertir este orden (visibility primero) dejaría al propio actor sin
+   acceso durante la ventana entre ambos pasos, porque el WITH CHECK de la
+   policy de UPDATE de tickets ya exigiría ticket_is_visible_to_me() contra
+   la fila NUEVA (ver 0015, comentario de la policy de tickets). */
+async function setTicketPrivacyCore(t, extraProfiles){
+  var actorId = currentActorId();
+  var actorName = currentActorName() || "Alguien";
+  if(!actorId){ showToast("No se pudo identificar tu sesión — recarga e intenta de nuevo."); return false; }
+  var profiles = (extraProfiles||[]).filter(function(p){ return p.id !== actorId; });
+  var allNames = [actorName].concat(profiles.map(function(p){ return p.displayName; }));
+  var profileIds = [actorId].concat(profiles.map(function(p){ return p.id; }));
+
+  var prevVisibility = t.visibility;
+  var prevAccess = t.accessProfileIds.slice();
+  t.visibility = "private";
+  t.accessProfileIds = profileIds;
+  render();
+  try{
+    var rows = profileIds.map(function(pid){ return { ticket_id: t.id, profile_id: pid }; });
+    var r1 = await sb.from("ticket_access").upsert(rows, { onConflict: "ticket_id,profile_id" });
+    if(r1.error) throw r1.error;
+    var r2 = await sb.from("ticket_access").delete().eq("ticket_id", t.id).not("profile_id", "in", "(" + profileIds.join(",") + ")");
+    if(r2.error) throw r2.error;
+    var r3 = await sb.from("tickets").update({ visibility: "private" }).eq("id", t.id);
+    if(r3.error) throw r3.error;
+    var bitacoraText = actorName + " restringió el ticket a " + joinNaturalList(allNames) + ".";
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: actorName, payload: { text: bitacoraText } });
+    showToast("🔒 Ticket ahora es privado");
+  }catch(e){
+    t.visibility = prevVisibility; t.accessProfileIds = prevAccess; render();
+    showToast("No se pudo restringir el ticket: " + (e.message || "error"));
+    return false;
+  }
+  refreshFromServer({refocus:true});
+  return true;
+}
+
+/* setTicketPublicCore: /publico — el camino inverso. Orden inverso también
+   deliberado (visibility primero, ticket_access después): en cuanto
+   visibility vuelve a 'team', ticket_is_visible_to_me() es true para
+   CUALQUIER miembro activo sin importar ticket_access, así que borrar esas
+   filas después es seguro y deja el ticket listo para una restricción
+   futura sin arrastrar accesos viejos. */
+async function setTicketPublicCore(t){
+  if(t.visibility !== "private"){ showToast("Este ticket ya es público."); return false; }
+  var actorName = currentActorName() || "Alguien";
+  var prevVisibility = t.visibility;
+  var prevAccess = t.accessProfileIds.slice();
+  t.visibility = "team";
+  t.accessProfileIds = [];
+  render();
+  try{
+    var r1 = await sb.from("tickets").update({ visibility: "team" }).eq("id", t.id);
+    if(r1.error) throw r1.error;
+    var r2 = await sb.from("ticket_access").delete().eq("ticket_id", t.id);
+    if(r2.error) throw r2.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: actorName, payload: { text: actorName + " hizo público el ticket (antes: restringido)." } });
+    showToast("🔓 Ticket ahora es público");
+  }catch(e){
+    t.visibility = prevVisibility; t.accessProfileIds = prevAccess; render();
+    showToast("No se pudo hacer público el ticket: " + (e.message || "error"));
+    return false;
+  }
+  refreshFromServer({refocus:true});
+  return true;
 }
 
 /* markerType (opcional, SIGUIENTE ACTUALIZACIÓN §25): cuando el icono "[!]"
@@ -11830,6 +12761,19 @@ async function updateTicketFieldCore(t, elId, value, opts){
       else bitacoraText = fLabel + " removida (antes: " + fmtDateOnlyShort(prevValue) + ")";
     }
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: bitacoraText } });
+    /* Privacidad real §9 — "Responsable externo": el ticket sigue "vivo" (el
+       addendum prohíbe imponer campos obligatorios nuevos), así que esto
+       NUNCA bloquea la asignación — solo avisa. Asignar un ticket privado a
+       alguien fuera de su lista de acceso lo dejaría "responsable de algo
+       que no puede ver", justo la sorpresa silenciosa que este aviso evita;
+       agregarlo a la lista sigue siendo un /privado aparte, deliberado,
+       nunca automático desde aquí. */
+    if(def.key === "responsable" && t.visibility === "private" && value){
+      var respProfile = STATE.profiles.filter(function(p){ return p.displayName === value; })[0];
+      if(respProfile && t.accessProfileIds.indexOf(respProfile.id) === -1){
+        showToast("⚠️ " + value + " no tiene acceso a este ticket privado — no podrá verlo hasta que lo agregues con /privado.");
+      }
+    }
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
   refreshFromServer(opts);
   return true;
@@ -12865,6 +13809,23 @@ MARKER_TYPES.forEach(function(m){ MARKER_META[m.type] = m; });
 function markerIcon(type){ return (MARKER_META[type]||{}).icon || "•"; }
 function markerLabel(type){ return (MARKER_META[type]||{}).label || type; }
 function activeMarkers(t){ return (t.markers||[]).filter(function(m){ return !m.resolvedAt; }); }
+/* ADDENDUM KANBAN OPERACIONAL: helper compartido para el sort "Urgentes
+   arriba" del Kanban (y reutilizable después por Calendar/Drawer, que piden
+   el mismo criterio) — nunca un segundo cálculo de "¿es urgente?" en otro
+   lado; siempre activeMarkers() + MARKER_TYPES, la misma fuente de verdad
+   de arriba. */
+function ticketIsUrgente(t){ return activeMarkers(t).some(function(m){ return m.type === "urgente"; }); }
+/* Comparador operacional compartido: Urgente activo primero, luego
+   created_at DESC, folio/seq como desempate estable — usado por
+   kanbanColumns (§89) Y por el Drawer "Sin fecha" (§96, "Urgentes-first
+   then created_at DESC"), nunca dos copias del mismo criterio de orden. */
+function compareTicketsOperationalOrder(a, b){
+  var au = ticketIsUrgente(a), bu = ticketIsUrgente(b);
+  if(au !== bu) return au ? -1 : 1;
+  var ad = a.createdAt || "", bd = b.createdAt || "";
+  if(ad !== bd) return ad > bd ? -1 : 1;
+  return (a.seq||0) - (b.seq||0);
+}
 /* Reporte de layout roto tras marcar "Urgente" (§ investigación de esta
    ronda): ticket_markers.text nunca tuvo un límite de longitud — la barra
    .markers-bar/.marker-row se diseñó para una anotación corta ("cliente
@@ -13245,6 +14206,38 @@ var COMMANDS = [
     run: function(data){ return commitHeaderField("field-fecha-compromiso", data.iso, {refocus:true}); }
   },
   {
+    /* Privacidad real §101: comando EXPLÍCITO, nunca detección de palabra
+       clave — a diferencia de /nuevo (NUEVO_SEGMENT_KEYWORDS más abajo),
+       "privado"/"publico" NUNCA se agregan a ningún parser de texto libre;
+       la ÚNICA forma de restringir un ticket es escribir literalmente este
+       comando. Una nota que solo MENCIONE la palabra "privado" (ej. "el
+       cliente pidió que esto quede privado") nunca activa nada — sigue
+       siendo una nota normal, guardada tal cual por /nota. */
+    key: "privado", aliases: ["privado","private"], type: "write", requiresTicket: true, confirm: true,
+    confirmTitle: "Restringir ticket",
+    confirmSummary: function(data){
+      var names = [currentActorName() || "tú"].concat(data.profiles.map(function(p){ return p.displayName; }));
+      return "Solo " + joinNaturalList(names) + " podrán verlo.";
+    },
+    syntax: "/privado [nombre[, nombre...]]", summary: "Restringir el ticket a ti mismo + las personas que menciones — nadie más del equipo lo ve",
+    examples: ["/privado", "/privado Cecilia", "/privado Martín, Cecilia"],
+    parse: function(arg){
+      var raw = (arg||"").trim();
+      if(!raw) return { ok:true, data: { profiles: [] } };
+      var r = resolveTeamNamesArg(raw);
+      if(r.unmatched.length) return { ok:false, error: 'No encontré a "' + r.unmatched[0] + '" entre el equipo activo — revisa el nombre.' };
+      return { ok:true, data: { profiles: r.resolved } };
+    },
+    run: function(data, ctx){ return setTicketPrivacyCore(ctx.ticket, data.profiles); }
+  },
+  {
+    key: "publico", aliases: ["publico","público","public"], type: "write", requiresTicket: true,
+    syntax: "/publico", summary: "Quitar la restricción — vuelve a ser visible para todo el equipo",
+    examples: ["/publico"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(data, ctx){ return setTicketPublicCore(ctx.ticket); }
+  },
+  {
     key: "estado", aliases: ["estado","resumen","status","summary"], type: "read", requiresTicket: true,
     syntax: "/estado", summary: "Ver un resumen del ticket (no guarda nada)",
     examples: ["/estado"],
@@ -13550,14 +14543,29 @@ function wireEvents(){
      el <select> de la cabecera del ticket — nunca una mutación paralela). */
   var kanbanBoard = document.getElementById("kanban-board");
   if(kanbanBoard){
-    kanbanBoard.querySelectorAll("[data-kanban-card]").forEach(function(card){
-      card.addEventListener("dragstart", function(e){
-        try{ e.dataTransfer.setData("text/plain", card.getAttribute("data-kanban-card")); }catch(err){}
-        if(e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-        card.classList.add("kanban-card-dragging");
+    /* ADDENDUM KANBAN OPERACIONAL: draggable="true" vive AHORA solo en el
+       handle "⋮⋮" (kanban-card-draghandle), nunca en .kanban-card completa
+       — la tarjeta ganó demasiados controles interactivos (foto, cliente,
+       Qué sigue, ⋯, marcadores) para seguir siendo 100% arrastrable sin
+       robarle el gesto a esos controles. El id arrastrado sigue viajando
+       igual (dataTransfer), y setDragImage(card,...) hace que la vista
+       previa del drag siga mostrando la tarjeta completa, no solo el
+       handle de 16px, para que la experiencia visual no cambie. */
+    kanbanBoard.querySelectorAll("[data-kanban-draghandle]").forEach(function(handle){
+      var card = handle.closest(".kanban-card");
+      handle.addEventListener("dragstart", function(e){
+        var id = handle.getAttribute("data-kanban-draghandle");
+        try{ e.dataTransfer.setData("text/plain", id); }catch(err){}
+        if(e.dataTransfer){
+          e.dataTransfer.effectAllowed = "move";
+          if(card && e.dataTransfer.setDragImage){
+            try{ e.dataTransfer.setDragImage(card, 10, 10); }catch(err){}
+          }
+        }
+        if(card) card.classList.add("kanban-card-dragging");
       });
-      card.addEventListener("dragend", function(){
-        card.classList.remove("kanban-card-dragging");
+      handle.addEventListener("dragend", function(){
+        if(card) card.classList.remove("kanban-card-dragging");
         kanbanBoard.querySelectorAll(".kanban-column-dragover").forEach(function(c){ c.classList.remove("kanban-column-dragover"); });
       });
     });
@@ -13578,12 +14586,6 @@ function wireEvents(){
         if(!t) return;
         var newResp = col.getAttribute("data-kanban-column") || "";
         if(t.responsable !== newResp) updateTicketFieldCore(t, "field-responsable", newResp, { refocus:false });
-      });
-    });
-    kanbanBoard.querySelectorAll("[data-kanban-resp-select]").forEach(function(sel){
-      sel.addEventListener("change", function(){
-        var t = findTicket(sel.getAttribute("data-kanban-resp-select"));
-        if(t && t.responsable !== sel.value) updateTicketFieldCore(t, "field-responsable", sel.value, { refocus:false });
       });
     });
   }
@@ -13621,10 +14623,14 @@ function wireEvents(){
   if(calFilterResp){
     calFilterResp.addEventListener("change", function(){ UI.calendar.responsable = calFilterResp.value || ""; render(); });
   }
-  var calFilterTipo = root.querySelector('[data-action="calendar-filter-tipo"]');
-  if(calFilterTipo){
-    calFilterTipo.addEventListener("change", function(){ UI.calendar.tipo = calFilterTipo.value || "todos"; render(); });
-  }
+  /* §94: toggle Ambas/Atender/Compromiso — mismo control segmentado que
+     calendar-view-pick arriba, ya NO es un <select> dentro de Filtros. */
+  root.querySelectorAll('[data-action="calendar-tipo-pick"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.calendar.tipo = b.getAttribute("data-tipo") || "todos";
+      render();
+    });
+  });
   var calFilterCerrados = document.getElementById("calendar-filter-cerrados");
   if(calFilterCerrados){
     calFilterCerrados.addEventListener("change", function(){ UI.calendar.incluirCerrados = calFilterCerrados.checked; render(); });
@@ -13655,6 +14661,51 @@ function wireEvents(){
       if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
     });
   }
+  /* Drawer "Sin fecha" — toggle abrir/cerrar, "PROGRAMAR COMO", búsqueda. */
+  root.querySelectorAll('[data-action="calendar-sinfecha-open"]').forEach(function(b){
+    b.addEventListener("click", function(){ calendarSinFechaOpen(); });
+  });
+  root.querySelectorAll('[data-action="calendar-sinfecha-close"]').forEach(function(b){
+    b.addEventListener("click", function(){ calendarSinFechaClose(); });
+  });
+  root.querySelectorAll('[data-action="calendar-sinfecha-mode"]').forEach(function(b){
+    b.addEventListener("click", function(){ UI.calendar.sinFecha.mode = b.getAttribute("data-mode") || "attention"; render(); });
+  });
+  root.querySelectorAll('[data-action="calendar-sinfecha-search-clear"]').forEach(function(b){
+    b.addEventListener("click", function(){
+      UI.calendar.sinFecha.search = "";
+      render();
+      var again = document.getElementById("calendar-sinfecha-search");
+      if(again) again.focus();
+    });
+  });
+  var calSinFechaSearch = document.getElementById("calendar-sinfecha-search");
+  if(calSinFechaSearch){
+    calSinFechaSearch.addEventListener("input", function(){
+      UI.calendar.sinFecha.search = calSinFechaSearch.value;
+      render();
+      var again = document.getElementById("calendar-sinfecha-search");
+      if(again){ again.focus(); again.selectionStart = again.selectionEnd = again.value.length; }
+    });
+  }
+  /* Drag desde el Drawer hacia un día del calendario — mismo contrato de
+     abajo (dragstart/dragend classList directo, nunca render()), pero con
+     un tipo "sentinela" (__sinfecha__) porque estos tickets no tienen
+     NINGUNA fecha todavía: el tipo real lo decide la zona donde se suelta
+     (Atención o Compromiso), nunca este toggle — ver el handler de "drop"
+     más abajo, que ya sabe distinguir este caso. */
+  root.querySelectorAll("[data-calendar-sinfecha-card]").forEach(function(card){
+    card.addEventListener("dragstart", function(e){
+      var payload = card.getAttribute("data-calendar-sinfecha-card") + "|__sinfecha__";
+      try{ e.dataTransfer.setData("text/plain", payload); }catch(err){}
+      if(e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+      card.classList.add("calendar-entry-dragging");
+    });
+    card.addEventListener("dragend", function(){
+      card.classList.remove("calendar-entry-dragging");
+      document.querySelectorAll(".calendar-dropzone-over").forEach(function(z){ z.classList.remove("calendar-dropzone-over"); });
+    });
+  });
   /* Drag&drop entre días — SOLO dentro del mismo tipo (§19/§89: la tarjeta
      nunca cambia de Atención a Compromiso al arrastrarla, solo de fecha).
      Mismo contrato exacto que el Kanban de arriba: dragover/dragenter/
@@ -13697,6 +14748,11 @@ function wireEvents(){
         var zoneDate = zone.getAttribute("data-calendar-column");
         var zoneType = zone.getAttribute("data-calendar-column-type");
         if(!ticketId || !draggedType || !zoneDate || !zoneType) return;
+        /* Drawer "Sin fecha" (§4): el ticket arrastrado no tiene NINGUNA
+           fecha todavía, así que no hay tipo "equivocado" que rechazar —
+           la zona donde se suelta decide directamente si se vuelve
+           Atención o Compromiso. */
+        if(draggedType === "__sinfecha__"){ calendarHandleDrop(ticketId, zoneType, zoneDate); return; }
         if(draggedType !== zoneType){
           showToast("Atención y Compromiso son fechas distintas — usa el ⋯ de la tarjeta para cambiar esa.");
           return;
@@ -13714,6 +14770,43 @@ function wireEvents(){
       if(e.key === "Enter"){ e.preventDefault(); var b = document.querySelector('[data-action="calendar-quickdate-apply"]'); if(b) b.click(); }
     });
   }
+
+  /* §98: resize de semanas en Mes — SOLO estos handles existen en desktop
+     (renderCalendarMonth ni siquiera los genera en mobile). Mousedown/move/
+     up nativos (nunca HTML5 drag&drop, que aquí no aporta nada) — mismo
+     principio que el resto de la app: NUNCA render() durante el gesto en
+     vivo (solo manipulación directa de grid.style.gridTemplateRows), el
+     commit real a UI.calendar.monthRowHeights + saveUi() + render() ocurre
+     UNA vez, en mouseup. Nunca toca fechas ni ningún dato de ticket. */
+  root.querySelectorAll("[data-calendar-month-resize]").forEach(function(handle){
+    handle.addEventListener("mousedown", function(e){
+      e.preventDefault();
+      var rowIndex = parseInt(handle.getAttribute("data-calendar-month-resize"), 10);
+      var grid = document.getElementById("calendar-month-grid");
+      if(!grid) return;
+      var rowCells = grid.querySelectorAll(".calendar-month-cell");
+      var firstCellOfRow = rowCells[rowIndex*7];
+      var startHeight = firstCellOfRow ? firstCellOfRow.offsetHeight : 90;
+      var startY = e.clientY;
+      handle.classList.add("calendar-month-resize-dragging");
+      function clamp(h){ return Math.max(CALENDAR_MONTH_ROW_MIN, Math.min(CALENDAR_MONTH_ROW_MAX, h)); }
+      function onMove(ev){
+        var newH = clamp(startHeight + (ev.clientY - startY));
+        grid.style.gridTemplateRows = calendarMonthGridTemplateRows({ index: rowIndex, heightPx: newH });
+      }
+      function onUp(ev){
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        handle.classList.remove("calendar-month-resize-dragging");
+        var newH = clamp(startHeight + (ev.clientY - startY));
+        UI.calendar.monthRowHeights[rowIndex] = Math.round(newH);
+        saveUi();
+        render();
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+  });
 
   /* §23: hover en desktop — el clic/tap (data-action="sidebar-marker-icon",
      manejado en el listener delegado) ya cubre mobile/tablet (§24) y sirve
@@ -14924,6 +16017,55 @@ document.addEventListener("click", function(e){
     UI.productoMenuOpenId = null;
     renderKeepingLiveInputs();
   }
+  /* ADDENDUM KANBAN OPERACIONAL — menú "⋯" de cada tarjeta (§17/§90-91):
+     "Mover a…" (camino táctil/teclado equivalente al drag) y "Cerrar
+     ticket…" (invocando EXACTAMENTE el flujo central existente). Mismo
+     patrón delegado single-slot que producto-menu-toggle arriba. */
+  var kanbanMoreBtn = e.target.closest && e.target.closest('[data-action="kanban-card-more"]');
+  if(kanbanMoreBtn){
+    var kmId = kanbanMoreBtn.getAttribute("data-ticket");
+    UI.kanbanCardMenu = (UI.kanbanCardMenu && UI.kanbanCardMenu.ticketId === kmId) ? null : { ticketId: kmId, mode: "menu" };
+    renderKeepingLiveInputs();
+    return;
+  }
+  var kanbanMenuMoveBtn = e.target.closest && e.target.closest('[data-action="kanban-card-menu-move"]');
+  if(kanbanMenuMoveBtn){
+    UI.kanbanCardMenu = { ticketId: kanbanMenuMoveBtn.getAttribute("data-ticket"), mode: "move" };
+    renderKeepingLiveInputs();
+    return;
+  }
+  var kanbanMenuBackBtn = e.target.closest && e.target.closest('[data-action="kanban-card-menu-back"]');
+  if(kanbanMenuBackBtn){
+    UI.kanbanCardMenu = { ticketId: kanbanMenuBackBtn.getAttribute("data-ticket"), mode: "menu" };
+    renderKeepingLiveInputs();
+    return;
+  }
+  var kanbanMoveToBtn = e.target.closest && e.target.closest('[data-action="kanban-card-move-to"]');
+  if(kanbanMoveToBtn){
+    var moveT = findTicket(kanbanMoveToBtn.getAttribute("data-ticket"));
+    var moveResp = kanbanMoveToBtn.getAttribute("data-resp") || "";
+    UI.kanbanCardMenu = null;
+    /* MISMO core de mutación que el drop del drag&drop — "redundancia en
+       los caminos, no en la lógica" (spec, literal). */
+    if(moveT && moveT.responsable !== moveResp) updateTicketFieldCore(moveT, "field-responsable", moveResp, { refocus:false });
+    else renderKeepingLiveInputs();
+    return;
+  }
+  var kanbanMenuCerrarBtn = e.target.closest && e.target.closest('[data-action="kanban-card-menu-cerrar"]');
+  if(kanbanMenuCerrarBtn){
+    var cerrarId = kanbanMenuCerrarBtn.getAttribute("data-ticket");
+    UI.kanbanCardMenu = null;
+    /* MISMO flujo central que "Cerrar ticket" desde Miniaturas/Detalles —
+       openCierreModalForTicket ya no depende de UI.selectedTicketId. */
+    openCierreModalForTicket(cerrarId);
+    return;
+  }
+  /* Clic fuera del menú "⋯" de Kanban lo cierra — mismo patrón que el de
+     producto, arriba. */
+  if(UI.kanbanCardMenu && !(e.target.closest && e.target.closest(".kanban-card-more-wrap"))){
+    UI.kanbanCardMenu = null;
+    renderKeepingLiveInputs();
+  }
   /* ================= Calendar Workbench — día/entrada/"+ Programar" ================= */
   var calOpenDayBtn = e.target.closest && e.target.closest('[data-action="calendar-open-day"]');
   if(calOpenDayBtn){ UI.calendar.dayPanel = calOpenDayBtn.getAttribute("data-date"); render(); return; }
@@ -14938,6 +16080,33 @@ document.addEventListener("click", function(e){
   if(calEntryMoreBtn){
     UI.calendar.entryPanel = { ticketId: calEntryMoreBtn.getAttribute("data-ticket"), type: calEntryMoreBtn.getAttribute("data-type") };
     UI.calendar.entryPanelPicking = false;
+    render();
+    return;
+  }
+  /* Tarjeta COMBINADA (mismo día, Ambas): el "⋯" abre el chooser
+     (p.type===null) en vez de asumir una fecha — ver renderCalendarEntryPopover. */
+  var calEntryMoreCombinedBtn = e.target.closest && e.target.closest('[data-action="calendar-entry-more-combined"]');
+  if(calEntryMoreCombinedBtn){
+    UI.calendar.entryPanel = { ticketId: calEntryMoreCombinedBtn.getAttribute("data-ticket"), type: null };
+    UI.calendar.entryPanelPicking = false;
+    render();
+    return;
+  }
+  var calEntrypanelChooseBtn = e.target.closest && e.target.closest('[data-action="calendar-entrypanel-choose-type"]');
+  if(calEntrypanelChooseBtn){
+    var ep = UI.calendar.entryPanel;
+    if(ep){ ep.type = calEntrypanelChooseBtn.getAttribute("data-type"); UI.calendar.entryPanelPicking = true; render(); }
+    return;
+  }
+  /* Drawer "Sin fecha" — camino táctil/mobile: tap "📅" reusa el paso
+     "pick" de "+ Programar" (mismo popover, misma mutación central). */
+  var calSinFechaProgramarBtn = e.target.closest && e.target.closest('[data-action="calendar-sinfecha-programar"]');
+  if(calSinFechaProgramarBtn){ calendarSinFechaProgramarTap(calSinFechaProgramarBtn.getAttribute("data-ticket")); return; }
+  if(e.target && e.target.id === "calendar-sinfecha-overlay"){ calendarSinFechaClose(); return; }
+  var calMonthResetBtn = e.target.closest && e.target.closest('[data-action="calendar-month-reset-heights"]');
+  if(calMonthResetBtn){
+    UI.calendar.monthRowHeights = [null, null, null, null, null, null];
+    saveUi();
     render();
     return;
   }
@@ -15102,38 +16271,13 @@ document.addEventListener("keydown", function(e){
      abrirse encima de Galería o de Biblioteca) — Escape debe cerrarla a
      ELLA primero, nunca saltarse un paso y cerrar el viewer de abajo de un
      solo Escape. */
-  if(e.key === "Escape" && UI.deletePhotoConfirm){ closeDeletePhotoConfirm(); return; }
-  if(e.key === "Escape" && UI.viewingDocId){ closeDocumentViewer(); return; }
-  if(e.key === "Escape" && UI.cierreModal){ closeCierreModal(); return; }
-  if(e.key === "Escape" && UI.headerEditField){ closeHeaderEdit(); return; }
-  if(e.key === "Escape" && UI.bugReportOpen){ closeBugReport(); return; }
-  if(e.key === "Escape" && UI.helpPanelOpen){ closeHelpPanel(); return; }
-  if(e.key === "Escape" && UI.totalDraft){ closeTotalPedidoEditor(); return; }
-  if(e.key === "Escape" && UI.bibliotecaViewer){ closeBibliotecaViewer(); return; }
-  if(e.key === "Escape" && UI.contactPanel){ closeContactPanel(); return; }
-  /* Calendar Workbench §81-82: "si una UI emergente nació por teclado, debe
-     poder terminarse por teclado" — mismo contrato de Escape que el resto
-     de los overlays .cierre-modal-overlay de esta app. Orden de capas:
-     "+Programar" y el popover de entrada pueden abrirse encima del panel
-     de día (ej. "+ Programar este día" desde dentro de él), así que se
-     revisan ANTES que dayPanel — Escape cierra la capa más alta primero,
-     mismo criterio que deletePhotoConfirm arriba. */
-  if(e.key === "Escape" && UI.calendar.programar){ closeCalendarProgramar(); return; }
-  if(e.key === "Escape" && UI.calendar.entryPanel){
-    if(UI.calendar.entryPanelPicking){ UI.calendar.entryPanelPicking = false; render(); }
-    else { UI.calendar.entryPanel = null; render(); }
-    return;
-  }
-  if(e.key === "Escape" && UI.calendar.dayPanel){ UI.calendar.dayPanel = null; render(); return; }
-  if(e.key === "Escape" && UI.calendar.filtersOpen){ UI.calendar.filtersOpen = false; render(); return; }
-  if(e.key === "Escape" && UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return; }
-  if(e.key === "Escape" && UI.ticketsExplorer.quickCreateOpen){ UI.ticketsExplorer.quickCreateOpen = false; render(); return; }
-  if(e.key === "Escape" && UI.cellEditor){ closeCellEditor(); return; }
-  if(e.key === "Escape" && UI.editingDisplayName){ closeEditName(); return; }
-  if(e.key === "Escape" && UI.accountMenuOpen){ UI.accountMenuOpen = false; render(); return; }
-  /* §51-52: overlay standalone de foto de Miniaturas — mismo criterio que
-     el botón de cerrar (nunca a medio subir). */
-  if(e.key === "Escape" && UI.photoBatch && UI.photoBatch.ticketId){ if(closeComposerOverlay()) render(); return; }
+  /* Calendar Workbench §81-82 / Back-History §99: "si una UI emergente nació
+     por teclado, debe poder terminarse por teclado" — dtgCloseTopOverlay()
+     ES este contrato (la MISMA función que usa el botón Atrás físico para
+     "cierra el overlay de encima antes de navegar"), así que Escape solo
+     necesita invocarla — nunca una segunda copia de la lista de capas ni de
+     su orden de prioridad. */
+  if(e.key === "Escape" && dtgCloseTopOverlay()) return;
   /* §22-24: contrato de teclado de la Galería del ticket — Escape cierra
      (con prioridad sobre "Escape deselecciona la tarjeta" de abajo, mismo
      criterio de capas que el guard de clic-afuera más arriba: un overlay
