@@ -3030,6 +3030,19 @@ function currentActorName(){
   if(AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.email) return AUTH_SESSION.user.email;
   return "";
 }
+/* Privacidad real — auditoría de seguridad (ver AUDITORIA-SEGURIDAD-PRIVACIDAD.md
+   punto 1): quién administra privacidad es profiles.can_manage_privacy=true,
+   NUNCA un nombre hardcodeado en el frontend. CURRENT_PROFILE es la fila
+   cruda de profiles (select("*")), así que este campo llega tal cual en
+   cuanto 0015_v05_privacidad_tickets.sql está aplicada; antes de eso (o sin
+   perfil cargado) es undefined/falsy, tratado como "no administra" — el
+   mismo criterio tolerante que el resto de esta función. IMPORTANTE: esto es
+   SOLO para UX inmediata (evitar un roundtrip que el servidor va a rechazar
+   de todos modos) — la autorización REAL vive en el servidor (RLS + los
+   RPC ticket_set_private/ticket_set_public, SECURITY DEFINER), nunca aquí. */
+function currentActorCanManagePrivacy(){
+  return !!(CURRENT_PROFILE && CURRENT_PROFILE.can_manage_privacy);
+}
 function currentActor(){
   return { id: currentActorId(), name: currentActorName() };
 }
@@ -3389,7 +3402,7 @@ async function fetchAllState(){
     };
   });
   var profiles = profilesInfo.rows.map(function(row){
-    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active, createdAt: row.created_at || null };
+    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active, createdAt: row.created_at || null, canManagePrivacy: !!row.can_manage_privacy };
   });
   return {
     meta: settings,
@@ -11063,12 +11076,26 @@ async function addPagoCore(t, monto, fecha, metodo, concepto){
    sistema de roles/permisos jerárquico (fuera de alcance a propósito, ver
    0010 §"QUÉ NO HACE"). Migración: 0015_v05_privacidad_tickets.sql.
 
+   REDISEÑO tras la auditoría de seguridad (ver
+   AUDITORIA-SEGURIDAD-PRIVACIDAD.md): "quién puede restringir/hacer público
+   un ticket" y "a quién queda restringido" YA NO son cosas que el frontend
+   decide o construye — ambas son SIEMPRE "el conjunto actual de
+   profiles.can_manage_privacy=true" (hoy Martín y Cecilia, configurado por
+   SQL directo, nunca hardcodeado por nombre ni elegible desde el Composer).
+   /privado dejó de aceptar una lista de nombres (antes: "/privado Nombre,
+   Nombre") — eso era exactamente la superficie que la auditoría pidió
+   cerrar: cualquier miembro con acceso de lectura a un ticket podía, en el
+   diseño anterior, decidir a mano quién más lo veía. resolveTeamNamesArg()
+   (el parser de esa lista) se eliminó por completo junto con ese caso de uso.
+
    joinNaturalList: enumeración COMPLETA en español ("A", "A y B", "A, B y
    C") — a propósito nunca trunca (a diferencia de buildReactionMicrocopy,
    que sí trunca a "X y N más" porque es una etiqueta de UI con espacio
    limitado; una línea de bitácora es un registro permanente, tiene que
    nombrar a TODOS — spec: "Martín restringió el ticket a Martín y
-   Cecilia."). */
+   Cecilia."). Se mantiene: la usa confirmSummary de /privado para mostrar
+   la lista de managers antes de confirmar, y el propio servidor la
+   reproduce en SQL (join_natural_list) para el texto real de bitácora. */
 function joinNaturalList(names){
   var list = (names||[]).filter(Boolean);
   if(!list.length) return "";
@@ -11076,63 +11103,33 @@ function joinNaturalList(names){
   return list.slice(0,-1).join(", ") + " y " + list[list.length-1];
 }
 
-/* resolveTeamNamesArg: mismo criterio de "nunca guardar nada ambiguo" que
-   ya usa el resto del Composer (ver /cliente) — reusa activeAssignableProfiles(),
-   la MISMA fuente que el selector de Responsable, nunca una lista paralela
-   de "quién es del equipo". Separadores humanos: coma o " y ". */
-function resolveTeamNamesArg(raw){
-  var frags = (raw||"").split(/\s*(?:,|\by\b)\s*/i).map(function(s){ return s.trim(); }).filter(Boolean);
-  var profiles = activeAssignableProfiles();
-  var resolved = [], unmatched = [];
-  frags.forEach(function(frag){
-    var fl = frag.toLowerCase();
-    var exact = profiles.filter(function(p){ return p.displayName.toLowerCase() === fl; });
-    var candidates = exact.length ? exact : profiles.filter(function(p){ return p.displayName.toLowerCase().indexOf(fl) !== -1; });
-    if(candidates.length === 1) resolved.push(candidates[0]);
-    else unmatched.push(frag);
-  });
-  return { resolved: resolved, unmatched: unmatched };
-}
-
-/* setTicketPrivacyCore: restringe el ticket a currentActorName() + las
-   personas ya resueltas a perfiles reales por /privado (nunca texto libre).
-   Orden de escritura DELIBERADO, dictado por la RLS de 0015 (ticket_access):
-   1) upsert de la lista NUEVA completa (todavía con el ticket visible para
-      todo el equipo si es la primera vez, o con el propio actor ya
-      teniendo una fila previa si es una re-restricción — en ambos casos la
-      policy de ticket_access lo permite sin excepción);
-   2) delete de accesos de una restricción ANTERIOR que ya no aplican —
-      seguro en este punto porque la fila del propio actor para la lista
-      NUEVA ya existe desde el paso 1, así que ticket_is_visible_to_me()
-      nunca se vuelve false para él a medio camino;
-   3) SOLO AL FINAL, tickets.visibility = 'private'.
-   Invertir este orden (visibility primero) dejaría al propio actor sin
-   acceso durante la ventana entre ambos pasos, porque el WITH CHECK de la
-   policy de UPDATE de tickets ya exigiría ticket_is_visible_to_me() contra
-   la fila NUEVA (ver 0015, comentario de la policy de tickets). */
-async function setTicketPrivacyCore(t, extraProfiles){
-  var actorId = currentActorId();
-  var actorName = currentActorName() || "Alguien";
-  if(!actorId){ showToast("No se pudo identificar tu sesión — recarga e intenta de nuevo."); return false; }
-  var profiles = (extraProfiles||[]).filter(function(p){ return p.id !== actorId; });
-  var allNames = [actorName].concat(profiles.map(function(p){ return p.displayName; }));
-  var profileIds = [actorId].concat(profiles.map(function(p){ return p.id; }));
-
+/* setTicketPrivacyCore / setTicketPublicCore: tras la auditoría de
+   seguridad, esto YA NO hace 3-4 escrituras secuenciales desde el
+   navegador (upsert de ticket_access, delete de accesos viejos, update de
+   visibility, insert de bitácora) — ese diseño anterior dependía de que el
+   frontend ejecutara los pasos en el orden exacto para no dejar al propio
+   actor sin acceso a medio camino, y de que ningún fallo de red partiera la
+   secuencia dejando el ticket en un estado inconsistente (ej. visibility ya
+   en 'private' pero ticket_access todavía sin escribir). Ahora es UNA sola
+   llamada RPC a una función de Postgres (SECURITY DEFINER, EXECUTE
+   restringido a 'authenticated', search_path fijo — ver 0015
+   §SECURITY DEFINER) que valida autorización (solo
+   profiles.can_manage_privacy=true) y hace TODA la escritura — access,
+   visibility, bitácora — en una sola transacción de Postgres: todo o nada.
+   El texto exacto de bitácora también lo genera el servidor. La app nunca
+   vuelve a decidir "a quién" restringir ni "quién" puede ejecutar el
+   comando — eso vive enteramente en la base de datos. */
+async function setTicketPrivacyCore(t){
+  if(!currentActorId()){ showToast("No se pudo identificar tu sesión — recarga e intenta de nuevo."); return false; }
   var prevVisibility = t.visibility;
   var prevAccess = t.accessProfileIds.slice();
+  var managerIds = STATE.profiles.filter(function(p){ return p.canManagePrivacy && p.active; }).map(function(p){ return p.id; });
   t.visibility = "private";
-  t.accessProfileIds = profileIds;
+  t.accessProfileIds = managerIds;
   render();
   try{
-    var rows = profileIds.map(function(pid){ return { ticket_id: t.id, profile_id: pid }; });
-    var r1 = await sb.from("ticket_access").upsert(rows, { onConflict: "ticket_id,profile_id" });
-    if(r1.error) throw r1.error;
-    var r2 = await sb.from("ticket_access").delete().eq("ticket_id", t.id).not("profile_id", "in", "(" + profileIds.join(",") + ")");
-    if(r2.error) throw r2.error;
-    var r3 = await sb.from("tickets").update({ visibility: "private" }).eq("id", t.id);
-    if(r3.error) throw r3.error;
-    var bitacoraText = actorName + " restringió el ticket a " + joinNaturalList(allNames) + ".";
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: actorName, payload: { text: bitacoraText } });
+    var res = await sb.rpc("ticket_set_private", { p_ticket_id: t.id });
+    if(res.error) throw res.error;
     showToast("🔒 Ticket ahora es privado");
   }catch(e){
     t.visibility = prevVisibility; t.accessProfileIds = prevAccess; render();
@@ -11143,26 +11140,17 @@ async function setTicketPrivacyCore(t, extraProfiles){
   return true;
 }
 
-/* setTicketPublicCore: /publico — el camino inverso. Orden inverso también
-   deliberado (visibility primero, ticket_access después): en cuanto
-   visibility vuelve a 'team', ticket_is_visible_to_me() es true para
-   CUALQUIER miembro activo sin importar ticket_access, así que borrar esas
-   filas después es seguro y deja el ticket listo para una restricción
-   futura sin arrastrar accesos viejos. */
 async function setTicketPublicCore(t){
   if(t.visibility !== "private"){ showToast("Este ticket ya es público."); return false; }
-  var actorName = currentActorName() || "Alguien";
+  if(!currentActorId()){ showToast("No se pudo identificar tu sesión — recarga e intenta de nuevo."); return false; }
   var prevVisibility = t.visibility;
   var prevAccess = t.accessProfileIds.slice();
   t.visibility = "team";
   t.accessProfileIds = [];
   render();
   try{
-    var r1 = await sb.from("tickets").update({ visibility: "team" }).eq("id", t.id);
-    if(r1.error) throw r1.error;
-    var r2 = await sb.from("ticket_access").delete().eq("ticket_id", t.id);
-    if(r2.error) throw r2.error;
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: actorName, payload: { text: actorName + " hizo público el ticket (antes: restringido)." } });
+    var res = await sb.rpc("ticket_set_public", { p_ticket_id: t.id });
+    if(res.error) throw res.error;
     showToast("🔓 Ticket ahora es público");
   }catch(e){
     t.visibility = prevVisibility; t.accessProfileIds = prevAccess; render();
@@ -12765,13 +12753,17 @@ async function updateTicketFieldCore(t, elId, value, opts){
        addendum prohíbe imponer campos obligatorios nuevos), así que esto
        NUNCA bloquea la asignación — solo avisa. Asignar un ticket privado a
        alguien fuera de su lista de acceso lo dejaría "responsable de algo
-       que no puede ver", justo la sorpresa silenciosa que este aviso evita;
-       agregarlo a la lista sigue siendo un /privado aparte, deliberado,
-       nunca automático desde aquí. */
+       que no puede ver", justo la sorpresa silenciosa que este aviso evita.
+       Tras la auditoría de seguridad, el acceso a un ticket privado ya NO es
+       una lista editable desde aquí (era "agrégalo con /privado" — ese
+       comando ya no acepta nombres, ver COMMANDS más abajo): quien no
+       administra privacidad simplemente no puede verlo mientras el ticket
+       siga restringido; la única salida es que alguien con
+       can_manage_privacy lo haga público con /publico. */
     if(def.key === "responsable" && t.visibility === "private" && value){
       var respProfile = STATE.profiles.filter(function(p){ return p.displayName === value; })[0];
       if(respProfile && t.accessProfileIds.indexOf(respProfile.id) === -1){
-        showToast("⚠️ " + value + " no tiene acceso a este ticket privado — no podrá verlo hasta que lo agregues con /privado.");
+        showToast("⚠️ " + value + " no tiene acceso a este ticket privado — no podrá verlo mientras siga restringido.");
       }
     }
   }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
@@ -14206,35 +14198,49 @@ var COMMANDS = [
     run: function(data){ return commitHeaderField("field-fecha-compromiso", data.iso, {refocus:true}); }
   },
   {
-    /* Privacidad real §101: comando EXPLÍCITO, nunca detección de palabra
-       clave — a diferencia de /nuevo (NUEVO_SEGMENT_KEYWORDS más abajo),
-       "privado"/"publico" NUNCA se agregan a ningún parser de texto libre;
-       la ÚNICA forma de restringir un ticket es escribir literalmente este
-       comando. Una nota que solo MENCIONE la palabra "privado" (ej. "el
-       cliente pidió que esto quede privado") nunca activa nada — sigue
-       siendo una nota normal, guardada tal cual por /nota. */
+    /* Privacidad real §101 (auditoría de seguridad, ver
+       AUDITORIA-SEGURIDAD-PRIVACIDAD.md): comando EXPLÍCITO, nunca
+       detección de palabra clave — a diferencia de /nuevo
+       (NUEVO_SEGMENT_KEYWORDS más abajo), "privado"/"publico" NUNCA se
+       agregan a ningún parser de texto libre; la ÚNICA forma de restringir
+       un ticket es escribir literalmente este comando. Una nota que solo
+       MENCIONE la palabra "privado" (ej. "el cliente pidió que esto quede
+       privado") nunca activa nada — sigue siendo una nota normal, guardada
+       tal cual por /nota.
+
+       YA NO acepta nombres (antes: "/privado Nombre, Nombre"): tras la
+       auditoría, "quién administra privacidad" dejó de ser una lista que
+       cualquiera con acceso de lectura pudiera escribir a mano — es
+       siempre y exactamente el conjunto de profiles.can_manage_privacy=true
+       (configurado por SQL directo, nunca por la app). Este comando
+       restringe SIEMPRE a ese conjunto completo. El check de
+       currentActorCanManagePrivacy() de aquí es solo UX (mensaje
+       inmediato en vez de esperar el roundtrip); la autorización real
+       vive en el servidor (RPC ticket_set_private, SECURITY DEFINER). */
     key: "privado", aliases: ["privado","private"], type: "write", requiresTicket: true, confirm: true,
     confirmTitle: "Restringir ticket",
-    confirmSummary: function(data){
-      var names = [currentActorName() || "tú"].concat(data.profiles.map(function(p){ return p.displayName; }));
+    confirmSummary: function(){
+      var names = STATE.profiles.filter(function(p){ return p.canManagePrivacy && p.active; }).map(function(p){ return p.displayName; });
       return "Solo " + joinNaturalList(names) + " podrán verlo.";
     },
-    syntax: "/privado [nombre[, nombre...]]", summary: "Restringir el ticket a ti mismo + las personas que menciones — nadie más del equipo lo ve",
-    examples: ["/privado", "/privado Cecilia", "/privado Martín, Cecilia"],
-    parse: function(arg){
-      var raw = (arg||"").trim();
-      if(!raw) return { ok:true, data: { profiles: [] } };
-      var r = resolveTeamNamesArg(raw);
-      if(r.unmatched.length) return { ok:false, error: 'No encontré a "' + r.unmatched[0] + '" entre el equipo activo — revisa el nombre.' };
-      return { ok:true, data: { profiles: r.resolved } };
+    syntax: "/privado", summary: "Restringir el ticket a quienes administran privacidad — nadie más del equipo lo ve",
+    examples: ["/privado"],
+    parse: function(){
+      if(!currentActorCanManagePrivacy()) return { ok:false, error: "Solo quien administra la privacidad puede restringir un ticket." };
+      return { ok:true, data:{} };
     },
-    run: function(data, ctx){ return setTicketPrivacyCore(ctx.ticket, data.profiles); }
+    run: function(data, ctx){ return setTicketPrivacyCore(ctx.ticket); }
   },
   {
-    key: "publico", aliases: ["publico","público","public"], type: "write", requiresTicket: true,
+    key: "publico", aliases: ["publico","público","public"], type: "write", requiresTicket: true, confirm: true,
+    confirmTitle: "Hacer público el ticket",
+    confirmSummary: function(){ return "Todo el equipo activo podrá verlo de nuevo."; },
     syntax: "/publico", summary: "Quitar la restricción — vuelve a ser visible para todo el equipo",
     examples: ["/publico"],
-    parse: function(){ return { ok:true, data:{} }; },
+    parse: function(){
+      if(!currentActorCanManagePrivacy()) return { ok:false, error: "Solo quien administra la privacidad puede hacer público un ticket." };
+      return { ok:true, data:{} };
+    },
     run: function(data, ctx){ return setTicketPublicCore(ctx.ticket); }
   },
   {
