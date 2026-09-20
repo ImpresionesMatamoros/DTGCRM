@@ -1340,6 +1340,29 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   position:absolute; bottom:100%; left:20px; margin-bottom:8px; background:var(--surface); border:1px solid var(--border);
   border-radius:var(--radius-m); box-shadow:var(--shadow); padding:10px; width:280px; z-index:20;
 }
+/* AI BRIDGE — DTG_STATE/DTG_PATCH (ver el bloque JS "AI BRIDGE" antes de
+   COMMANDS): el popover de patch necesita más ancho que el resto (lista de
+   varios tickets con varios campos cada uno) y scroll vertical propio —
+   nunca empuja el resto del layout. width usa min() por el mismo criterio
+   mobile-first que el resto de la app (Ronda C, PWA). */
+.dtg-patch-popover{ width:min(92vw, 460px); max-height:60vh; overflow-y:auto; }
+.dtg-patch-ticket{ border-top:1px solid var(--border); padding:8px 4px; }
+.dtg-patch-ticket:first-child{ border-top:none; }
+.dtg-patch-ticket-title{ font-weight:600; font-size:12.5px; margin-bottom:4px; }
+.dtg-patch-row{ display:flex; flex-wrap:wrap; gap:6px; align-items:baseline; font-size:12.5px; padding:2px 0; }
+.dtg-patch-row-sensitive{ background:var(--danger-soft); border-radius:var(--radius-s); padding:3px 6px; margin:2px 0; }
+.dtg-patch-field{ color:var(--text-muted); min-width:76px; }
+.dtg-patch-old{ color:var(--text-faint); text-decoration:line-through; }
+.dtg-patch-new{ color:var(--success-ink); font-weight:600; }
+.dtg-patch-warning{ background:var(--danger-soft); color:var(--danger); border-radius:var(--radius-s); padding:6px 8px; font-size:12px; margin-bottom:6px; }
+.dtg-patch-errors{ display:flex; flex-direction:column; gap:4px; }
+.dtg-patch-error-line{ font-family:var(--font-mono); font-size:12px; color:var(--danger); }
+.dtg-copy-pre{
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word;
+  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-s); padding:8px;
+  max-height:340px; overflow-y:auto; margin:0 0 8px;
+}
+.dtg-copy-actions{ display:flex; gap:6px; flex-wrap:wrap; }
 .popover-menu-item{
   display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:8px 8px; border:none;
   background:none; border-radius:var(--radius-s); font-size:13px;
@@ -2471,8 +2494,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.17.0";
-var APP_BUILD = "2026.09.19.3";
+var APP_VERSION = "0.18.0";
+var APP_BUILD = "2026.09.20.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2541,6 +2564,11 @@ var AUTH_ERROR = "";
    permite leerlo completo. */
 var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, accountMenuOpen: false,
+  /* AI Bridge (DTG_PATCH v1): preview pendiente de un patch ya parseado y
+     validado, esperando confirmación humana — null cuando no hay ninguno.
+     Estado propio, separado de UI.pendingConfirm, porque un patch cubre
+     varios tickets con varios cambios cada uno (ver dtgPatchPreviewPopover). */
+  dtgPatchPreview: null,
   /* Cuenta — "Editar nombre": true mientras el menú de cuenta muestra el
      campo de edición de display_name en vez de "Cerrar sesión". Vive
      anidado dentro del mismo menú (nunca un overlay aparte) porque es una
@@ -5325,6 +5353,7 @@ function renderComposer(){
   else if(UI.composer === "doc_choice") pop = docChoiceMenu();
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.markerPicker && UI.markerPicker.source === "composer") pop = renderMarkerPickerPopover();
+  else if(UI.dtgPatchPreview) pop = dtgPatchPreviewPopover();
   else if(UI.pendingConfirm) pop = slashConfirmBanner();
   else if(UI.smartActions) pop = renderSmartActions();
   else if(UI.slashMenuOpen) pop = slashMenu();
@@ -6131,8 +6160,13 @@ function buildTicketCopyText(t){
    rechazan; el fallback de textarea+execCommand cubre esos casos sin pedirle
    nada nuevo al usuario. Siempre termina en el mismo toast discreto, nunca
    un modal. */
-function copyTicketSummary(t){
-  var text = buildTicketCopyText(t);
+/* copyPlainText: generalización de lo que antes era el cuerpo de
+   copyTicketSummary — mismo mecanismo (clipboard API + fallback de
+   textarea/execCommand), ahora reusable para cualquier texto plano, no
+   solo el resumen de un ticket. AI Bridge (/state, /legend, /bootstrap, y
+   "Copiar" dentro del preview de un DTG_PATCH) reusa esta MISMA función en
+   vez de reimplementar el copy-to-clipboard una segunda vez. */
+function copyPlainText(text){
   function ok(){ showToast("✓ Copiado"); }
   function fail(){ showToast("No se pudo copiar. Selecciona y copia manualmente."); }
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -6142,6 +6176,9 @@ function copyTicketSummary(t){
   } else {
     if(copyTicketSummaryFallback(text)) ok(); else fail();
   }
+}
+function copyTicketSummary(t){
+  copyPlainText(buildTicketCopyText(t));
 }
 function copyTicketSummaryFallback(text){
   try{
@@ -8922,6 +8959,22 @@ function renderEphemeralEntry(entry){
     var dc = documentosEntryContent(entry);
     title = dc.title;
     bodyHtml = dc.html;
+  } else if(entry.kind === "dtgstate"){
+    var dsc = dtgStateEntryContent(entry);
+    title = dsc.title;
+    bodyHtml = dsc.html;
+  } else if(entry.kind === "dtglegend"){
+    var dlc = dtgLegendEntryContent(entry);
+    title = dlc.title;
+    bodyHtml = dlc.html;
+  } else if(entry.kind === "dtgbootstrap"){
+    var dbc = dtgBootstrapEntryContent(entry);
+    title = dbc.title;
+    bodyHtml = dbc.html;
+  } else if(entry.kind === "dtgpatcherror"){
+    var dpe = dtgPatchErrorEntryContent(entry);
+    title = dpe.title;
+    bodyHtml = dpe.html;
   } else {
     return "";
   }
@@ -10775,6 +10828,15 @@ async function submitNote(){
     input.value = "";
     UI.slashMenuOpen = false;
     dispatchCommand(normalized);
+    return;
+  }
+  /* AI Bridge (Parte 9/17): detección EXPLÍCITA, nunca heurística — antes
+     de caer en Smart Actions (que trataría esto como una nota candidata),
+     si el texto pegado/escrito es literalmente un DTG_PATCH v1 se enruta
+     al parser. Igual de estricto que el check de "/"/"-" de arriba. */
+  if(dtgLooksLikePatch(text)){
+    input.value = "";
+    handleDtgPatchPaste(text);
     return;
   }
   /* Composer Intelligence §1: texto plano ya no se rechaza con un solo
@@ -14017,6 +14079,617 @@ function parseHumanDate(raw, now){
    comando completo escrito de un jalón, y elegirlo del menú de "/" terminan
    siempre en el mismo run(). */
 
+/* ============================================================================
+   AI BRIDGE — DTG_STATE v1 / DTG_PATCH v1
+   ============================================================================
+   Objetivo: que DTG CRM pueda intercambiar contexto y acciones con CUALQUIER
+   IA externa (ChatGPT, Claude, Gemini u otra) por copy/paste, sin integrar
+   ninguna API de IA dentro de la aplicación. La IA externa interpreta — el
+   CRM sigue siendo el único que valida y ejecuta.
+
+   Flujo: CRM → /state (texto) → humano copia → IA externa interpreta →
+   IA devuelve un DTG_PATCH → humano lo pega en el Composer → CRM lo detecta,
+   parsea, valida y muestra un preview → humano confirma → CRM ejecuta usando
+   los MISMOS cores que cualquier edición manual (updateTicketFieldCore,
+   updateQueSigueCore, createMarkerCore/resolveMarkerCore, addNotaCore,
+   cerrarTicketCore) → misma bitácora, mismo Realtime, mismo RLS de siempre.
+
+   Principio central: el CRM sigue siendo determinista. La IA nunca toca la
+   base directamente — el patch es SOLO texto, y el texto no es autoridad:
+   el CRM decide qué de ese texto es válido, quién puede ejecutarlo y con
+   qué datos reales.
+
+   Por qué NO es JSON: un humano tiene que poder leer /state de un vistazo
+   en el celular y pegar un DTG_PATCH escrito a mano si hace falta — JSON
+   de la tabla completa sería más ruidoso, más caro en tokens, y una IA
+   tendría que inventar qué campos importan. La notación de aquí es la
+   MISMA idea que ya usa el resto del Composer (comandos cortos, texto
+   plano, nunca una pantalla técnica nueva) aplicada a un protocolo.
+
+   RLS (Parte 15 del pedido): STATE.tickets YA es exactamente lo que Postgres
+   RLS dejó pasar para el actor actual (fetchAllState no aplica ningún
+   filtro de privacidad adicional — ver auditoría de privacidad). /state
+   lee SIEMPRE de STATE.tickets, nunca de una fuente distinta, así que un
+   ticket privado invisible para el actor no aparece en el snapshot — ni
+   como fila, ni como parte de un conteo, ni como pista indirecta. Un
+   DTG_PATCH resuelve tickets exactamente de la misma fuente (STATE.tickets
+   por folio) — un ticket que el actor no puede ver da el MISMO error que
+   uno que no existe ("no encontrado o no tienes acceso"), nunca una
+   distinción que confirme su existencia.
+
+   Seguridad de contenido (Parte 16): todo texto que este bloque muestra en
+   el DOM pasa por escapeHtml() antes de insertarse — el protocolo solo
+   expresa un puñado cerrado de acciones de dominio (ver
+   DTG_PATCH_SET_FIELDS + verbos NOTA/CERRAR más abajo), nunca código,
+   SQL, HTML ni JS arbitrario. No existe ningún eval ni construcción
+   dinámica de queries en todo este bloque.
+   ============================================================================ */
+
+var DTG_PROTOCOL_VERSION = "v1";
+var DTG_STATE_MAX_TICKETS = 80; /* tope defensivo — un export sin límite en un
+  CRM con cientos de tickets abiertos sería tan ruidoso como el JSON que este
+  protocolo existe para evitar; /state avisa cuántos quedaron fuera y sugiere
+  un scope más angosto en vez de fallar o truncar en silencio. */
+
+/* ---- timestamps / timezone (Parte 6, FRESHNESS) ----
+   No existe ninguna constante de timezone en esta app (todo el resto del
+   código usa la hora local del navegador vía getFullYear/getMonth/getDate,
+   nunca UTC, para fechas-sin-hora — ver dateOnlyFromDate/todayLocalYYYYMMDD).
+   Este bloque hace lo mismo para "hora local de generación", y además
+   reporta el nombre IANA real de la zona (Intl, con fallback silencioso a
+   solo el offset numérico) y el timestamp UTC exacto — para que la IA
+   externa pueda calcular "hace cuánto se generó esto" sin ambigüedad. */
+function dtgTimezoneInfo(){
+  var offsetMin = -new Date().getTimezoneOffset();
+  var sign = offsetMin >= 0 ? "+" : "-";
+  var abs = Math.abs(offsetMin);
+  var offsetStr = "UTC" + sign + pad2(Math.floor(abs / 60)) + ":" + pad2(abs % 60);
+  var iana = "";
+  try{ iana = (Intl.DateTimeFormat().resolvedOptions().timeZone) || ""; }catch(e){ iana = ""; }
+  return { offset: offsetStr, iana: iana };
+}
+function dtgLocalTimestamp(d){
+  d = d || new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+}
+function dtgShortDate(iso){
+  try{ var d = new Date(iso); return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1); }catch(e){ return ""; }
+}
+function dtgTruncate(s, n){
+  /* replace(/\s+/g," ") ANTES de truncar: una nota con saltos de línea
+     reales (pegada desde otro lado, por ejemplo) nunca debe partir un
+     bloque de DTG_STATE en líneas de más — cada "Nota:" es SIEMPRE una
+     sola línea, sin excepción. */
+  s = (s || "").replace(/\s+/g, " ").trim();
+  if(s.length <= n) return s;
+  return s.slice(0, Math.max(0, n-1)).replace(/\s+$/, "") + "…";
+}
+
+/* ---- scopes (Parte 3) ----
+   "" (default) = tickets vivos (sin cerrar). Los demás scopes son
+   deliberadamente pocos y con un propósito claro cada uno — nunca 40
+   alias. rgv NO infiere ciudad/región: esta base hoy NO guarda
+   dirección/ciudad de ningún cliente (auditado el modelo real de
+   `clientes` — solo nombre/empresa/teléfono/email/notas), así que "rgv"
+   filtra por lo único genuinamente disponible y honesto: tickets vivos
+   cuyo cliente SÍ tiene un teléfono real registrado (lo útil "en el
+   camino" es poder llamar, no una geolocalización que esta app no tiene
+   y que este protocolo se niega a inventar — ver "No inventar datos
+   faltantes" en el pedido original). Esto se documenta tal cual en
+   DTG_LEGEND para que la IA externa nunca asuma región por lada
+   telefónica. */
+function dtgIsVivo(t){ return !ticketIsCerrado(t); }
+function dtgSortForState(list){
+  return list.slice().sort(function(a, b){
+    var au = ticketIsUrgente(a) ? 0 : 1, bu = ticketIsUrgente(b) ? 0 : 1;
+    if(au !== bu) return au - bu;
+    var ad = a.fechaCompromiso || a.fechaAtencion || "9999-99-99";
+    var bd = b.fechaCompromiso || b.fechaAtencion || "9999-99-99";
+    if(ad !== bd) return ad < bd ? -1 : 1;
+    return new Date(b.lastActivityAt || b.createdAt || 0) - new Date(a.lastActivityAt || a.createdAt || 0);
+  });
+}
+function dtgScopeTickets(scopeKeyRaw){
+  var scopeKey = (scopeKeyRaw || "").toLowerCase().trim();
+  var all = STATE.tickets; /* ya acotado por RLS — ver comentario del bloque */
+  var todayStr = todayLocalYYYYMMDD();
+  var list, showPhone = false, includesClosed = false, label;
+  if(scopeKey === ""){
+    label = "vivos"; list = all.filter(dtgIsVivo);
+  } else if(scopeKey === "today"){
+    label = "hoy";
+    list = all.filter(function(t){ return dtgIsVivo(t) && (t.fechaAtencion === todayStr || t.fechaCompromiso === todayStr || ticketIsUrgente(t)); });
+  } else if(scopeKey === "overdue"){
+    label = "vencidos";
+    list = all.filter(function(t){ return dtgIsVivo(t) && t.fechaCompromiso && t.fechaCompromiso < todayStr; });
+  } else if(scopeKey === "ytd"){
+    label = "año en curso"; includesClosed = true;
+    var year = new Date().getFullYear();
+    list = all.filter(function(t){ return t.createdAt && new Date(t.createdAt).getFullYear() === year; });
+  } else if(scopeKey === "all"){
+    label = "todos"; includesClosed = true; showPhone = true;
+    list = all.slice();
+  } else if(scopeKey === "rgv"){
+    label = "ruta (solo tickets vivos con teléfono real registrado — DTG no guarda ciudad/dirección hoy)";
+    showPhone = true;
+    list = all.filter(function(t){
+      if(!dtgIsVivo(t)) return false;
+      var c = findCliente(t.clienteId);
+      return !!(c && (c.telefono || "").trim());
+    });
+  } else {
+    return null;
+  }
+  return { key: scopeKey || "default", label: label, tickets: dtgSortForState(list), showPhone: showPhone, includesClosed: includesClosed };
+}
+
+/* ---- formato de un ticket dentro de DTG_STATE (Parte 1) ---- */
+function dtgFieldsLine(t){
+  var parts = ["R:" + (t.responsable || "-")];
+  if(ticketIsUrgente(t)) parts.push("U");
+  parts.push("A:" + (t.fechaAtencion || "-"));
+  parts.push("C:" + (t.fechaCompromiso || "-"));
+  parts.push("N:" + (t.queSigue || "-"));
+  return parts.join("  ");
+}
+function dtgProductosLine(t){
+  if(!t.productos || !t.productos.length) return "";
+  return t.productos.map(function(p){
+    var precioTxt = p.precio === null ? "-" : Number(p.precio).toFixed(2); /* null = sin definir, nunca "$0" inventado */
+    return (p.desc || "(sin descripción)") + " x" + p.cantidad + " @" + precioTxt;
+  }).join(" · ");
+}
+function dtgRecentNotes(t, limit){
+  return (t.thread || [])
+    .filter(function(e){ return e.type === "nota" && !e.deleted_at && (e.text || "").trim(); })
+    .sort(function(a, b){ return new Date(b.ts) - new Date(a.ts); })
+    .slice(0, limit || 2);
+}
+function dtgFormatTicketBlock(t, scope){
+  var lines = ["#" + t.seq + " · " + (t.cliente || "(sin cliente)")];
+  lines.push("  " + dtgFieldsLine(t));
+  if(scope.includesClosed && ticketIsCerrado(t)) lines.push("  Estado:" + ticketEstadoLabel(ticketEstado(t)));
+  var prodLine = dtgProductosLine(t);
+  if(prodLine) lines.push("  Prod: " + prodLine);
+  if(scope.showPhone){
+    var c = findCliente(t.clienteId);
+    var tel = c && c.telefono ? c.telefono : "";
+    var emp = c && c.empresa ? c.empresa : "";
+    if(tel) lines.push("  Tel:" + tel);
+    if(emp && emp !== t.cliente) lines.push("  Emp:" + emp);
+  }
+  dtgRecentNotes(t, 2).forEach(function(n){
+    lines.push('  Nota: "' + dtgTruncate(n.text, 140) + '" —' + (n.autor || "?") + " " + dtgShortDate(n.ts));
+  });
+  return lines.join("\n");
+}
+function dtgFormatTicketLine(t, scope){
+  var line = "#" + t.seq + " " + (t.cliente || "(sin cliente)") + "  " + dtgFieldsLine(t);
+  if(scope.includesClosed && ticketIsCerrado(t)) line += "  Estado:" + ticketEstadoLabel(ticketEstado(t));
+  return line;
+}
+
+/* ---- DTG_STATE v1 (Parte 1/2) ---- */
+function buildDtgState(scopeKeyRaw){
+  var scope = dtgScopeTickets(scopeKeyRaw);
+  if(!scope) return { ok: false, error: 'Scope desconocido: "' + (scopeKeyRaw || "") + '". Usa /state, /state today, /state overdue, /state ytd, /state all o /state rgv.' };
+  var now = new Date();
+  var tz = dtgTimezoneInfo();
+  var actor = currentActorName() || "?";
+  var total = scope.tickets.length;
+  var capped = scope.tickets.slice(0, DTG_STATE_MAX_TICKETS);
+  var header = [
+    "DTG_STATE " + DTG_PROTOCOL_VERSION,
+    "local=" + dtgLocalTimestamp(now) + " | tz=" + (tz.iana ? tz.iana + " (" + tz.offset + ")" : tz.offset) + " | utc=" + now.toISOString(),
+    "scope=" + scope.key + " | actor=" + actor + " | app=DTG CRM v" + APP_VERSION + " | tickets=" + total
+  ].join("\n");
+  var footer = total > capped.length ? "\n… y " + (total - capped.length) + " tickets más — usa un scope más angosto o /state all para verlos todos.\n" : "";
+  var text, compactText;
+  if(!total){
+    text = header + "\n\n(sin tickets en este scope)";
+    compactText = text;
+  } else {
+    text = header + "\n\n" + capped.map(function(t){ return dtgFormatTicketBlock(t, scope); }).join("\n\n") + footer;
+    compactText = header + "\n\n" + capped.map(function(t){ return dtgFormatTicketLine(t, scope); }).join("\n") + footer;
+  }
+  return { ok: true, text: text, compactText: compactText, scope: scope, total: total, generatedAt: now };
+}
+
+/* ---- DTG_LEGEND v1 (Parte 4) ----
+   Mayormente texto estático, pero grounded en datos REALES de esta base
+   (responsables activos, valores sugeridos de Qué sigue) — nunca una lista
+   inventada, exactamente la misma fuente que ya usa el resto del Composer
+   (activeAssignableProfiles / STATE.meta.queSigueOptions). */
+function buildDtgLegend(){
+  var responsables = activeAssignableProfiles().map(function(p){ return p.displayName; });
+  var quesigueOptions = (STATE.meta.queSigueOptions || []).slice(0, 12);
+  var lines = [
+    "DTG_LEGEND " + DTG_PROTOCOL_VERSION,
+    "",
+    "Documentación del protocolo AI Bridge de DTG CRM (Design To Go) — cómo leer un DTG_STATE y cómo devolver un DTG_PATCH. Pégalo junto con un DTG_STATE al inicio de una conversación nueva con cualquier IA (o usa /bootstrap, que ya los combina).",
+    "",
+    "QUÉ ES DTG",
+    "DTG (Design To Go) opera por 'tickets': cada uno es un trabajo con un cliente, uno o más productos, y un flujo simple — se abre, se atiende, se entrega, se cierra (pagado o cancelado).",
+    "",
+    "CAMPOS DE UN TICKET EN DTG_STATE",
+    "#<folio> — identificador estable y humano (ej. #1384). Úsalo tal cual en cualquier DTG_PATCH.",
+    "R: Responsable — quién del equipo lo atiende. '-' = sin asignar.",
+    "U — aparece SOLO si el ticket está marcado Urgente (ausente = no urgente).",
+    "A: Atención — fecha en que se debe trabajar el ticket. '-' = sin definir.",
+    "C: Compromiso — fecha prometida al cliente. '-' = sin definir.",
+    "N: Qué sigue — el siguiente paso operativo, texto libre. '-' = sin definir.",
+    "Prod: — productos como 'descripción xCANTIDAD @PRECIO'. '@-' = precio sin definir (NUNCA asumas $0); '@0' = precio real de cero (cortesía).",
+    "Nota: — hasta 2 notas humanas recientes, con autor y fecha, solo cuando aportan contexto.",
+    "Tel: / Emp: — teléfono/empresa del cliente; solo aparecen en los scopes que los necesitan (all, rgv).",
+    "Estado: — solo aparece si el scope incluye cerrados (ytd/all); si falta, el ticket está abierto.",
+    "",
+    "IMPORTANTE: '-' SIEMPRE significa 'sin dato/no definido'. Nunca lo confundas con un valor real vacío o con $0.",
+    "",
+    "PRIVACIDAD",
+    "DTG_STATE solo exporta lo que el actor actual puede ver (Row Level Security de Postgres, no un filtro de la app) — un ticket privado sin acceso simplemente no aparece, sin excepción ni pista indirecta. Un DTG_PATCH tampoco puede tocar un ticket que el actor no puede ver — el CRM lo rechaza. Un patch NUNCA cambia la privacidad de un ticket (eso solo lo hacen /privado y /publico dentro del CRM).",
+    "",
+    "FRESHNESS",
+    "Todo DTG_STATE lleva 'local=', 'tz=' y 'utc='. Si el usuario pide una decisión sensible al tiempo (ej. 'qué mover a mañana') y el snapshot parece tener varias horas o más, sugiere generar un /state nuevo antes de asumir que sigue vigente — es una sugerencia, no un bloqueo.",
+    "",
+    "CÓMO DEVOLVER UN DTG_PATCH v1",
+    "Texto plano, SIN markdown ni bloques de código con backticks — cópialo tal cual:",
+    "",
+    "DTG_PATCH v1",
+    "TICKET #1384",
+    "SET responsable = Martín",
+    "SET atencion = 2026-09-20",
+    "END",
+    "TICKET #1392",
+    'CERRAR cancelado "Cliente canceló el pedido"',
+    "END",
+    "",
+    "Reglas:",
+    "- La primera línea debe ser exactamente 'DTG_PATCH v1'.",
+    "- Cada ticket es un bloque 'TICKET #<folio>' ... 'END'; puedes incluir varios.",
+    "- Una acción por línea. Acciones disponibles:",
+    "    SET responsable = <nombre EXACTO de un perfil activo, o '-' para quitar>",
+    "    SET atencion = <YYYY-MM-DD o '-'>",
+    "    SET compromiso = <YYYY-MM-DD o '-'>",
+    "    SET quesigue = <texto o '-'>",
+    "    SET urgente = on|off",
+    '    NOTA "<texto de la nota>"',
+    '    CERRAR pagado "<razón>"   (o CERRAR cancelado "<razón>")',
+    "- No repitas el mismo campo SET dos veces en el mismo ticket.",
+    "- Fechas SIEMPRE en YYYY-MM-DD — nunca 'mañana'/'la próxima semana'; calcúlalas tú con el 'local=' del DTG_STATE.",
+    "- No inventes ningún dato que no esté en el DTG_STATE ni te haya dado el usuario explícitamente.",
+    "- No hay ninguna otra acción en v1: no hay pagos, no hay borrar producto, no hay cambiar cliente, no hay público/privado — eso se hace directo en el CRM.",
+    ""
+  ];
+  if(responsables.length) lines.push("RESPONSABLES VÁLIDOS HOY: " + responsables.join(", ") + ".", "");
+  if(quesigueOptions.length) lines.push("VALORES SUGERIDOS DE 'QUÉ SIGUE' (texto libre, estos son solo ejemplos): " + quesigueOptions.join(" · ") + ".", "");
+  lines.push(
+    "REGLAS DE SEGURIDAD",
+    "- El CRM valida TODO antes de ejecutar nada: versión, sintaxis, existencia y acceso al ticket, campos y valores. Si algo falla, no se aplica NADA de ese patch (todo o nada) y se muestra el error exacto, línea por línea.",
+    "- El CRM siempre muestra un preview humano (ticket, campo, valor anterior → valor nuevo) antes de aplicar cualquier cosa.",
+    "- Cerrar/cancelar un ticket se marca como acción sensible en el preview.",
+    "- El patch nunca contiene ni ejecuta SQL, HTML, JavaScript ni código de ningún tipo — solo estas acciones de dominio.",
+    "",
+    "EJEMPLO CORTO",
+    "Usuario pega un DTG_STATE y pregunta '¿qué tengo pendiente hoy?' — lees los tickets con A: o C: de hoy, o con 'U', y respondes en texto normal (sin generar patch).",
+    "Usuario pide 'mueve el ticket 1384 a mañana' — calculas la fecha de mañana con el 'local=' del snapshot y devuelves:",
+    "DTG_PATCH v1",
+    "TICKET #1384",
+    "SET compromiso = <fecha calculada>",
+    "END"
+  );
+  return lines.join("\n");
+}
+
+/* ---- DTG_BOOTSTRAP (Parte 5) ----
+   Legend + snapshot compacto en un solo bloque para una conversación nueva.
+   Usa el /state COMPACTO (no el completo) a propósito — "puede ser más
+   largo que /state, pero no absurdo" (pedido original, Parte 5). */
+function buildDtgBootstrap(){
+  var stateResult = buildDtgState("");
+  return [
+    "=== DTG BOOTSTRAP — pega esto completo al inicio de una conversación nueva ===",
+    "",
+    buildDtgLegend(),
+    "",
+    "=== SNAPSHOT ACTUAL (compacto — pide /state para el detalle completo) ===",
+    stateResult.ok ? stateResult.compactText : "(no se pudo generar el snapshot: " + stateResult.error + ")"
+  ].join("\n");
+}
+
+/* ============================================================================
+   DTG_PATCH v1 — parser + validación (Parte 7/8/9)
+   ============================================================================
+   Whitelist cerrada de acciones — CADA UNA se traduce a un core YA
+   EXISTENTE, nunca a una mutation nueva (Parte 12): patchear responsable
+   es LITERALMENTE el mismo updateTicketFieldCore que usa el <select> de la
+   cabecera; patchear atención/compromiso es el mismo core con otra key;
+   quesigue reusa updateQueSigueCore (Kanban/cabecera/Detalles); urgente
+   reusa createMarkerCore/resolveMarkerCore (el mismo picker de marcadores);
+   nota reusa addNotaCore; cerrar reusa cerrarTicketCore (el mismo modal de
+   cierre/cancelación). El parser SOLO traduce texto a una llamada a uno de
+   estos cores — nunca escribe a Supabase directo. */
+function dtgValidateDateField(raw){
+  var v = (raw || "").trim();
+  if(v === "-") return { ok: true, value: "" };
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v) || !isSaneDateOnly(v)) return { ok: false, error: 'Fecha inválida: "' + raw + '" — usa YYYY-MM-DD o "-" para vaciar.' };
+  return { ok: true, value: v };
+}
+var DTG_PATCH_SET_FIELDS = {
+  responsable: {
+    label: "Responsable",
+    validate: function(raw){
+      var v = (raw || "").trim();
+      if(v === "-") return { ok: true, value: "" };
+      var match = activeAssignableProfiles().filter(function(p){ return p.displayName.toLowerCase() === v.toLowerCase(); });
+      if(!match.length) return { ok: false, error: 'Responsable desconocido: "' + v + '" — debe ser el nombre exacto de un perfil activo (ver /legend).' };
+      return { ok: true, value: match[0].displayName };
+    },
+    apply: function(t, value, opts){ return updateTicketFieldCore(t, "field-responsable", value, opts); },
+    oldValue: function(t){ return t.responsable || ""; },
+    displayValue: function(v){ return v || "-"; }
+  },
+  atencion: {
+    label: "Atención",
+    validate: dtgValidateDateField,
+    apply: function(t, value, opts){ return updateTicketFieldCore(t, "field-fecha-atencion", value, opts); },
+    oldValue: function(t){ return t.fechaAtencion || ""; },
+    displayValue: function(v){ return v || "-"; }
+  },
+  compromiso: {
+    label: "Compromiso",
+    validate: dtgValidateDateField,
+    apply: function(t, value, opts){ return updateTicketFieldCore(t, "field-fecha-compromiso", value, opts); },
+    oldValue: function(t){ return t.fechaCompromiso || ""; },
+    displayValue: function(v){ return v || "-"; }
+  },
+  quesigue: {
+    label: "Qué sigue",
+    validate: function(raw){
+      var v = (raw || "").trim();
+      if(v === "-") return { ok: true, value: "" };
+      if(!v) return { ok: false, error: "Qué sigue no puede quedar vacío sin usar '-' explícito." };
+      return { ok: true, value: v };
+    },
+    apply: function(t, value, opts){ return updateQueSigueCore(t, value, opts); },
+    oldValue: function(t){ return t.queSigue || ""; },
+    displayValue: function(v){ return v || "-"; }
+  },
+  urgente: {
+    label: "Urgente",
+    validate: function(raw){
+      var v = (raw || "").trim().toLowerCase();
+      if(v === "on") return { ok: true, value: true };
+      if(v === "off") return { ok: true, value: false };
+      return { ok: false, error: 'Valor inválido para urgente: "' + raw + '" — usa "on" u "off".' };
+    },
+    apply: function(t, value){
+      if(value){
+        if(!ticketIsUrgente(t)) return createMarkerCore(t, "urgente", null, null);
+        return Promise.resolve(true);
+      }
+      var m = (t.markers || []).filter(function(x){ return x.type === "urgente" && !x.resolvedAt; })[0];
+      if(m) return resolveMarkerCore(t, m.id);
+      return Promise.resolve(true);
+    },
+    oldValue: function(t){ return ticketIsUrgente(t); },
+    displayValue: function(v){ return v ? "on" : "off"; }
+  }
+};
+
+function parseDtgPatch(raw){
+  var lines = (raw || "").split(/\r\n|\r|\n/);
+  var errors = [];
+  var headerIdx = -1;
+  for(var k = 0; k < lines.length; k++){ if(lines[k].trim()){ headerIdx = k; break; } }
+  if(headerIdx === -1) return { ok: false, errors: [{ line: 1, message: "Patch vacío." }] };
+  var headerLine = lines[headerIdx].trim();
+  if(headerLine !== "DTG_PATCH v1"){
+    return { ok: false, errors: [{ line: headerIdx + 1, message: 'Encabezado inválido: se esperaba exactamente "DTG_PATCH v1", se encontró "' + headerLine + '".' }] };
+  }
+  var blocks = [], currentBlock = null;
+  for(var i = headerIdx + 1; i < lines.length; i++){
+    var lineNo = i + 1;
+    var line = lines[i].trim();
+    if(!line) continue;
+    if(line.indexOf("//") === 0 || line.indexOf("--") === 0) continue; /* comentario, ignorado */
+    var ticketMatch = /^TICKET\s+#?(\d+)\s*$/i.exec(line);
+    if(ticketMatch){
+      if(currentBlock){ errors.push({ line: lineNo, message: 'Se abrió "TICKET #' + ticketMatch[1] + '" antes de cerrar el bloque anterior con END.' }); continue; }
+      var folioNum = parseInt(ticketMatch[1], 10);
+      var ticketObj = STATE.tickets.filter(function(x){ return x.seq === folioNum; })[0] || null;
+      currentBlock = { folio: folioNum, ticket: ticketObj, actions: [], startLine: lineNo };
+      continue;
+    }
+    if(/^END\s*$/i.test(line)){
+      if(!currentBlock){ errors.push({ line: lineNo, message: '"END" sin un "TICKET #..." abierto.' }); continue; }
+      blocks.push(currentBlock); currentBlock = null;
+      continue;
+    }
+    if(!currentBlock){ errors.push({ line: lineNo, message: 'Línea fuera de cualquier bloque TICKET: "' + line + '".' }); continue; }
+    var setMatch = /^SET\s+([a-zA-Z_]+)\s*=\s*(.+)$/i.exec(line);
+    var notaMatch = /^NOTA\s+"([\s\S]*)"\s*$/i.exec(line);
+    var cerrarMatch = /^CERRAR\s+(pagado|cancelado)\s+"([\s\S]*)"\s*$/i.exec(line);
+    if(setMatch){
+      var fieldKey = setMatch[1].toLowerCase();
+      if(!DTG_PATCH_SET_FIELDS[fieldKey]){ errors.push({ line: lineNo, message: 'Campo desconocido: "' + setMatch[1] + '". Campos válidos: ' + Object.keys(DTG_PATCH_SET_FIELDS).join(", ") + "." }); continue; }
+      if(currentBlock.actions.some(function(a){ return a.verb === "SET" && a.field === fieldKey; })){ errors.push({ line: lineNo, message: 'Campo "' + fieldKey + '" repetido dos veces en el mismo TICKET #' + currentBlock.folio + '.' }); continue; }
+      currentBlock.actions.push({ verb: "SET", field: fieldKey, rawValue: setMatch[2].trim(), lineNo: lineNo });
+      continue;
+    }
+    if(notaMatch){ currentBlock.actions.push({ verb: "NOTA", rawValue: notaMatch[1], lineNo: lineNo }); continue; }
+    if(cerrarMatch){
+      if(currentBlock.actions.some(function(a){ return a.verb === "CERRAR"; })){ errors.push({ line: lineNo, message: "Más de un CERRAR en el mismo TICKET #" + currentBlock.folio + " — solo se puede cerrar una vez." }); continue; }
+      currentBlock.actions.push({ verb: "CERRAR", tipo: cerrarMatch[1].toLowerCase(), rawValue: cerrarMatch[2], lineNo: lineNo });
+      continue;
+    }
+    errors.push({ line: lineNo, message: 'Línea no reconocida: "' + line + '". Acciones válidas: SET campo = valor · NOTA "texto" · CERRAR pagado|cancelado "razón".' });
+  }
+  if(currentBlock) errors.push({ line: currentBlock.startLine, message: "TICKET #" + currentBlock.folio + " nunca se cerró con END." });
+  if(!blocks.length && !errors.length) errors.push({ line: headerIdx + 1, message: "El patch no contiene ningún bloque TICKET." });
+
+  var resultBlocks = [];
+  blocks.forEach(function(b){
+    if(!b.ticket){ errors.push({ line: b.startLine, message: "Ticket #" + b.folio + " no encontrado o no tienes acceso a él." }); return; }
+    var resolvedActions = [];
+    b.actions.forEach(function(a){
+      if(a.verb === "SET"){
+        var fieldDef = DTG_PATCH_SET_FIELDS[a.field];
+        var v = fieldDef.validate(a.rawValue);
+        if(!v.ok){ errors.push({ line: a.lineNo, message: v.error }); return; }
+        var oldValue = fieldDef.oldValue(b.ticket), newValue = v.value;
+        var noop = fieldDef.displayValue(oldValue) === fieldDef.displayValue(newValue);
+        resolvedActions.push({ verb: "SET", field: a.field, label: fieldDef.label, oldValue: oldValue, newValue: newValue, oldDisplay: fieldDef.displayValue(oldValue), newDisplay: fieldDef.displayValue(newValue), noop: noop, apply: fieldDef.apply, sensitive: false, lineNo: a.lineNo });
+      } else if(a.verb === "NOTA"){
+        var text = (a.rawValue || "").trim();
+        if(!text){ errors.push({ line: a.lineNo, message: "NOTA no puede tener texto vacío." }); return; }
+        resolvedActions.push({ verb: "NOTA", label: "Nota", text: text, noop: false, sensitive: false, lineNo: a.lineNo });
+      } else if(a.verb === "CERRAR"){
+        var razon = (a.rawValue || "").trim();
+        if(!razon){ errors.push({ line: a.lineNo, message: "CERRAR requiere una razón entre comillas, no puede estar vacía." }); return; }
+        if(ticketIsCerrado(b.ticket)){ errors.push({ line: a.lineNo, message: "Ticket #" + b.folio + " ya está cerrado — no se puede volver a cerrar." }); return; }
+        resolvedActions.push({ verb: "CERRAR", label: a.tipo === "pagado" ? "Cerrar · Pagado" : "Cerrar · Cancelado", tipo: a.tipo, razon: razon, noop: false, sensitive: true, lineNo: a.lineNo });
+      }
+    });
+    resultBlocks.push({ folio: b.folio, ticketId: b.ticket.id, ticket: b.ticket, actions: resolvedActions });
+  });
+
+  if(errors.length){ errors.sort(function(x, y){ return x.line - y.line; }); return { ok: false, errors: errors }; }
+  var realBlocks = resultBlocks.filter(function(b){ return b.actions.some(function(a){ return !a.noop; }); });
+  if(!realBlocks.length) return { ok: false, errors: [{ line: headerIdx + 1, message: "Todas las acciones del patch ya están aplicadas (sin cambios reales) — nada que confirmar." }] };
+  return { ok: true, blocks: realBlocks };
+}
+
+/* ---- preview humano (Parte 10) ----
+   Reusa el sistema de popover ya existente (UI.composer/UI.pendingConfirm)
+   con un estado propio (UI.dtgPatchPreview) en vez de forzar el patch
+   dentro de confirmSummary()/slashConfirmBanner() de un solo ticket — un
+   patch toca N tickets con M campos cada uno, y ese mecanismo asume un
+   único resumen de texto por comando. Misma familia visual (.popover,
+   .popover-actions), estado y wiring separados para no complicar el
+   mecanismo existente de un solo ticket. */
+function dtgPatchPreviewPopover(){
+  var p = UI.dtgPatchPreview;
+  if(!p) return "";
+  var totalChanges = 0, sensitiveCount = 0;
+  var rows = p.blocks.map(function(b){
+    var changeRows = b.actions.filter(function(a){ return !a.noop; }).map(function(a){
+      totalChanges++;
+      if(a.sensitive) sensitiveCount++;
+      var valueHtml;
+      if(a.verb === "SET") valueHtml = '<span class="dtg-patch-old">' + escapeHtml(a.oldDisplay) + '</span> → <span class="dtg-patch-new">' + escapeHtml(a.newDisplay) + "</span>";
+      else if(a.verb === "NOTA") valueHtml = '+ "' + escapeHtml(dtgTruncate(a.text, 160)) + '"';
+      else valueHtml = '<span class="dtg-patch-old">Abierto</span> → <span class="dtg-patch-new">' + escapeHtml(a.label) + '</span> — "' + escapeHtml(a.razon) + '"';
+      return '<div class="dtg-patch-row' + (a.sensitive ? " dtg-patch-row-sensitive" : "") + '"><span class="dtg-patch-field">' + escapeHtml(a.label) + "</span>" + valueHtml + "</div>";
+    }).join("");
+    return '<div class="dtg-patch-ticket"><div class="dtg-patch-ticket-title">#' + b.folio + " · " + escapeHtml(b.ticket.cliente || "(sin cliente)") + "</div>" + changeRows + "</div>";
+  }).join("");
+  var warn = sensitiveCount ? '<div class="dtg-patch-warning">⚠️ Incluye ' + sensitiveCount + " acción(es) sensible(s) (cierre/cancelación) — revisa con cuidado antes de aplicar.</div>" : "";
+  return (
+    '<div class="popover dtg-patch-popover" id="dtg-patch-popover">' +
+      '<div class="popover-title">Patch propuesto — ' + totalChanges + " cambio(s) en " + p.blocks.length + " ticket(s)</div>" +
+      warn +
+      '<div class="dtg-patch-list">' + rows + "</div>" +
+      '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="dtg-patch-cancel">Cancelar</button><button type="button" class="btn btn-primary" data-action="dtg-patch-apply">Aplicar ' + totalChanges + " cambio(s)</button></div>" +
+    "</div>"
+  );
+}
+
+/* ---- ejecución (Parte 12/13/14) ----
+   Solo llama a los cores existentes — cada uno ya hace su propio update
+   optimista + escritura a Supabase + bitácora + refreshFromServer (que ya
+   trae Realtime/Kanban/Calendar al día, con el mismo dedup que cualquier
+   otra mutation de esta app — nunca un reload completo). Re-resuelve cada
+   ticket por id EN EL MOMENTO de aplicar (findTicket), nunca usa la
+   referencia capturada al momento del preview: si algo cambió entre pegar
+   el patch y confirmarlo (otra sesión, Realtime), se opera sobre el estado
+   real más reciente, o se omite con un aviso si el ticket ya no está
+   disponible — nunca sobre una copia obsoleta. */
+async function applyDtgPatch(){
+  var p = UI.dtgPatchPreview;
+  if(!p) return;
+  UI.dtgPatchPreview = null;
+  render();
+  var actor = currentActorName() || "Alguien";
+  var touchedCount = 0;
+  for(var bi = 0; bi < p.blocks.length; bi++){
+    var b = p.blocks[bi];
+    var liveTicket = findTicket(b.ticketId);
+    if(!liveTicket){ showToast("Patch: #" + b.folio + " ya no está disponible — se omitió."); continue; }
+    var realActions = b.actions.filter(function(a){ return !a.noop; });
+    var appliedCount = 0;
+    for(var ai = 0; ai < realActions.length; ai++){
+      var a = realActions[ai];
+      try{
+        if(a.verb === "SET") await a.apply(liveTicket, a.newValue, { refocus: false });
+        else if(a.verb === "NOTA") await addNotaCore(liveTicket, a.text);
+        else if(a.verb === "CERRAR") await cerrarTicketCore(liveTicket, a.tipo, a.razon);
+        appliedCount++;
+      }catch(e){ showToast('Patch: no se pudo aplicar "' + a.label + '" en #' + b.folio + " — " + (e.message || "error")); }
+    }
+    if(appliedCount > 1){
+      /* Línea discreta adicional (Parte 13) — SOLO cuando hay más de un
+         cambio real en el mismo ticket; cada core de arriba YA escribió su
+         propia línea de bitácora idéntica a una edición manual, esto no
+         la duplica, solo aclara que vinieron juntas de un patch externo. */
+      try{ await sb.from("bitacora").insert({ ticket_id: liveTicket.id, tipo: "sistema", autor: actor, payload: { text: "Patch externo aplicado por " + actor + " · " + appliedCount + " cambio(s)." } }); }catch(e){ /* best-effort */ }
+    }
+    if(appliedCount > 0) touchedCount++;
+  }
+  showToast(touchedCount ? ("✓ Patch aplicado — " + touchedCount + " ticket(s) actualizados") : "No se aplicó ningún cambio.");
+  refreshFromServer({ refocus: true });
+}
+
+/* ---- detección en el Composer (Parte 9/17) ----
+   Explícita, nunca heurística: la primera línea no vacía debe ser
+   EXACTAMENTE "DTG_PATCH v1", igual de estricto que "/" para un comando —
+   un texto que solo MENCIONE esas palabras nunca dispara nada. */
+function dtgLooksLikePatch(text){
+  var firstLine = (text.split(/\r\n|\r|\n/).filter(function(l){ return l.trim(); })[0] || "").trim();
+  return firstLine === "DTG_PATCH v1";
+}
+function handleDtgPatchPaste(text){
+  var parsed = parseDtgPatch(text);
+  if(!parsed.ok){
+    showToast("Patch inválido — línea " + parsed.errors[0].line + ": " + parsed.errors[0].message + (parsed.errors.length > 1 ? " (+" + (parsed.errors.length - 1) + " más, ver detalle abajo)" : ""));
+    pushEphemeral("dtgpatcherror", findTicket(UI.selectedTicketId) ? UI.selectedTicketId : null, { errors: parsed.errors });
+    return;
+  }
+  UI.dtgPatchPreview = { blocks: parsed.blocks };
+  render();
+}
+
+/* ---- contenido efímero /state /legend /bootstrap + errores de patch
+   (Parte 2/4/5/17) — reusa pushEphemeral/renderEphemeralEntry tal cual
+   (mismo mecanismo que /estado, /pendientes, /dinero), nunca un popover
+   nuevo: aparece como un mensaje más dentro del hilo, con su propio botón
+   Copiar (y "Copiar compacto" cuando aplica) en vez de obligar a
+   seleccionar a mano cientos de líneas. */
+function dtgCopyableBlock(entryId, fullText, compactText){
+  return (
+    '<pre class="dtg-copy-pre">' + escapeHtml(fullText) + "</pre>" +
+    '<div class="dtg-copy-actions">' +
+      '<button type="button" class="btn btn-primary" data-action="copy-dtg-text" data-entry="' + entryId + '" data-variant="full">Copiar</button>' +
+      (compactText && compactText !== fullText ? '<button type="button" class="btn btn-ghost" data-action="copy-dtg-text" data-entry="' + entryId + '" data-variant="compact">Copiar compacto</button>' : "") +
+    "</div>"
+  );
+}
+function dtgStateEntryContent(entry){
+  var p = entry.params || {};
+  return { title: "DTG_STATE — " + (p.scopeLabel || "") + " (" + (p.total || 0) + " tickets)", html: dtgCopyableBlock(entry.id, p.text || "", p.compactText || "") };
+}
+function dtgLegendEntryContent(entry){
+  var p = entry.params || {};
+  return { title: "DTG_LEGEND v1", html: dtgCopyableBlock(entry.id, p.text || "", null) };
+}
+function dtgBootstrapEntryContent(entry){
+  var p = entry.params || {};
+  return { title: "DTG_BOOTSTRAP", html: dtgCopyableBlock(entry.id, p.text || "", null) };
+}
+function dtgPatchErrorEntryContent(entry){
+  var errs = (entry.params && entry.params.errors) || [];
+  return { title: "Patch inválido — " + errs.length + " error(es)", html: '<div class="dtg-patch-errors">' + errs.map(function(e){ return '<div class="dtg-patch-error-line">Línea ' + e.line + ": " + escapeHtml(e.message) + "</div>"; }).join("") + "</div>" };
+}
+
 var COMMANDS = [
   {
     key: "nota", aliases: ["nota","note"], type: "write", requiresTicket: true,
@@ -14399,6 +15072,36 @@ var COMMANDS = [
     examples: ["/help", "/help producto", "/help attention"],
     parse: function(){ return { ok:true, data:{} }; },
     run: function(){ /* manejado directo en dispatchCommand */ }
+  },
+  /* AI BRIDGE (DTG_STATE/DTG_PATCH v1) — ver el bloque grande de comentario
+     y funciones justo antes de este array. type:"read" + pushEphemeral,
+     mismo mecanismo que /estado, /pendientes, /dinero — nunca un popover ni
+     una pantalla técnica nueva; el texto vive como un mensaje más del hilo,
+     con su propio botón Copiar. */
+  {
+    key: "state", aliases: ["state","estadocompleto"], type: "read", requiresTicket: false,
+    syntax: "/state [today|overdue|ytd|all|rgv]", summary: "Generar un snapshot DTG_STATE v1 para copiar y pegar en una IA externa",
+    examples: ["/state", "/state today", "/state overdue", "/state ytd", "/state all", "/state rgv"],
+    parse: function(arg){
+      var result = buildDtgState((arg||"").trim().toLowerCase());
+      if(!result.ok) return { ok:false, error: result.error };
+      return { ok:true, data: result };
+    },
+    run: function(data, ctx){ pushEphemeral("dtgstate", ctx.ticket ? ctx.ticket.id : null, { text: data.text, compactText: data.compactText, total: data.total, scopeLabel: data.scope.label }); }
+  },
+  {
+    key: "legend", aliases: ["legend","leyenda"], type: "read", requiresTicket: false,
+    syntax: "/legend", summary: "Copiar la documentación DTG_LEGEND v1 para que una IA nueva entienda el protocolo",
+    examples: ["/legend"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(data, ctx){ pushEphemeral("dtglegend", ctx.ticket ? ctx.ticket.id : null, { text: buildDtgLegend() }); }
+  },
+  {
+    key: "bootstrap", aliases: ["bootstrap"], type: "read", requiresTicket: false,
+    syntax: "/bootstrap", summary: "Copiar leyenda + protocolo + snapshot actual en un solo bloque, listo para una conversación nueva",
+    examples: ["/bootstrap"],
+    parse: function(){ return { ok:true, data:{} }; },
+    run: function(data, ctx){ pushEphemeral("dtgbootstrap", ctx.ticket ? ctx.ticket.id : null, { text: buildDtgBootstrap() }); }
   }
 ];
 
@@ -15692,6 +16395,23 @@ document.addEventListener("click", function(e){
   if(slashConfirmOkBtn){ confirmPendingSlash(); return; }
   var slashConfirmCancelBtn = e.target.closest && e.target.closest('[data-action="slash-confirm-cancel"]');
   if(slashConfirmCancelBtn){ UI.pendingConfirm = null; render(); return; }
+  /* AI Bridge (DTG_PATCH v1) — preview/aplicar/cancelar, mismo criterio de
+     wiring que slash-confirm-ok/cancel arriba. */
+  var dtgPatchApplyBtn = e.target.closest && e.target.closest('[data-action="dtg-patch-apply"]');
+  if(dtgPatchApplyBtn){ applyDtgPatch(); return; }
+  var dtgPatchCancelBtn = e.target.closest && e.target.closest('[data-action="dtg-patch-cancel"]');
+  if(dtgPatchCancelBtn){ UI.dtgPatchPreview = null; render(); return; }
+  var copyDtgBtn = e.target.closest && e.target.closest('[data-action="copy-dtg-text"]');
+  if(copyDtgBtn){
+    var dtgEntryId = copyDtgBtn.getAttribute("data-entry");
+    var dtgVariant = copyDtgBtn.getAttribute("data-variant");
+    var dtgEntry = UI.ephemeralLog.filter(function(x){ return x.id === dtgEntryId; })[0];
+    if(dtgEntry){
+      var dtgText = (dtgVariant === "compact" && dtgEntry.params.compactText) ? dtgEntry.params.compactText : dtgEntry.params.text;
+      copyPlainText(dtgText);
+    }
+    return;
+  }
   var showProdBtn = e.target.closest && e.target.closest('[data-action="show-productos"]');
   if(showProdBtn){ pushEphemeral("productos", showProdBtn.getAttribute("data-ticket"), { filter: showProdBtn.getAttribute("data-filter") }); return; }
   var showDocsBtn = e.target.closest && e.target.closest('[data-action="show-documentos"]');
