@@ -127,6 +127,22 @@ img{max-width:100%;}
 [hidden]{display:none!important;}
 button,input,select,textarea{font:inherit; color:inherit;}
 input,select,textarea{background:transparent;}
+/* UX Flow Patch §14: raíz real del "gris sobre gris/blanco sobre blanco"
+   reportado en dark mode. El <select> CERRADO ya hereda color/background
+   correctos (color:inherit + background:transparent arriba, dentro de un
+   :root con color-scheme:dark) — el problema vivía en la LISTA NATIVA de
+   <option> que el navegador despliega al abrirlo: ese popup es pintado por
+   el sistema operativo, no por el layout de la página, y "transparent"/
+   "inherit" no le dan un color real con el que pintarse — algunos
+   navegadores caían entonces a su tema claro por default para ese popup
+   específico, aunque el resto de la página ya estuviera en dark mode. Dar
+   un color/background EXPLÍCITO (no heredado) a <option> es lo que
+   corrige esto — confirmado que no existía NINGUNA regla option{} en todo
+   el archivo antes de este patch. Global, agnóstico al componente: aplica
+   a CUALQUIER <select> reusado (dropdowns/popovers/menús ya comparten
+   estos mismos elementos nativos), nunca un arreglo por componente
+   individual. */
+option{background-color:var(--surface); color:var(--text);}
 button{cursor:pointer;}
 ::selection{background:var(--accent-soft);}
 .app{display:flex; height:100vh; height:100dvh; width:100vw;}
@@ -923,6 +939,10 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-column-count{font-size:11px; color:var(--text-faint); font-family:var(--font-mono);}
 .kanban-column-readonly .kanban-column-header{opacity:.7;}
 .kanban-column-dragover{outline:2px dashed var(--accent); outline-offset:2px; border-radius:var(--radius-m);}
+/* UX Flow Patch §17: handle de reordenar columna — mismo criterio visual
+   que .kanban-card-draghandle (icono discreto, cursor:grab). */
+.kanban-column-draghandle{font-size:11px; line-height:1; color:var(--text-faint); opacity:.55; cursor:grab; user-select:none; flex-shrink:0;}
+.kanban-column-dragging{opacity:.4;}
 .kanban-column-cards{display:flex; flex-direction:column; gap:8px;}
 .kanban-column-empty{font-size:11.5px; color:var(--text-faint); padding:10px 4px; text-align:center; border:1px dashed var(--border); border-radius:var(--radius-s);}
 .kanban-card{
@@ -1009,7 +1029,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .kanban-card-quesigue-text{overflow-wrap:break-word;}
 .kanban-card-quesigue-cell-empty .tickets-details-cell-btn{color:var(--text-faint); background:var(--surface-2); font-style:italic;}
 .kanban-card-quesigue-cell .comanda-edit-inline{width:100%;}
-.kanban-card-quesigue-cell .comanda-edit-inline select{font-size:11.5px; width:100%;}
+.kanban-card-quesigue-cell .comanda-edit-inline select{font-size:11.5px; width:100%; color:var(--text); background:var(--surface-2);}
 .kanban-card-markers-row{display:flex; gap:3px; flex-wrap:wrap;}
 @media(max-width:640px){
   .kanban-board{padding:10px 14px; gap:10px;}
@@ -1068,6 +1088,14 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .calendar-month-cell-outside{background:var(--surface-2); opacity:.55;}
 .calendar-day-weekend{background:var(--surface-2);}
 .calendar-month-cell-today{background:var(--accent-soft);}
+/* UX Flow Patch §19-20: ghost discreto de "la otra fecha" al hacer hover
+   sobre una tarjeta de Atender/Compromiso — SOLO un contorno punteado,
+   nunca background sólido (eso ya lo usa "hoy"/weekend, confundiría). Se
+   agrega/quita vía JS (wireEvents), nunca vía render(). */
+.calendar-day-ghost{outline:2px dashed var(--accent); outline-offset:-2px; position:relative;}
+.calendar-day-ghost::after{
+  content:"◆"; position:absolute; top:2px; right:4px; font-size:9px; color:var(--accent); pointer-events:none;
+}
 .calendar-month-cell-daynum{align-self:flex-start; font-size:11.5px; font-weight:700; color:var(--text-muted); padding:2px 5px; border-radius:999px;}
 .calendar-month-cell-today .calendar-month-cell-daynum{background:var(--accent); color:#fff;}
 .calendar-month-cell-entries{display:flex; flex-direction:column; gap:3px; min-height:0;}
@@ -1290,6 +1318,16 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .feed-item-img{max-width:280px; max-height:280px; border-radius:var(--radius-s); border:1px solid var(--border); object-fit:cover; display:block;}
 .feed-ticket-chip{border:1px solid var(--border); background:var(--surface-2); color:var(--text-muted); border-radius:999px; padding:2px 9px; font-size:11.5px; cursor:pointer;}
 .feed-ticket-chip:hover{border-color:var(--accent); color:var(--accent-ink);}
+/* Sección 1 UX Flow Patch: eventos automáticos = línea discreta, no tarjeta.
+   Sobrescribe .feed-item (tarjeta) para este caso específico sin tocar la
+   tarjeta de publicaciones humanas (.feed-item sin -event). */
+.feed-item-event{display:flex; align-items:baseline; flex-wrap:wrap; gap:0; padding:3px 2px; border:none; background:transparent; border-radius:0; font-size:12px; column-gap:0;}
+.feed-item-event-autor{color:var(--text-faint); font-weight:500;}
+.feed-item-event-text{color:var(--text-faint);}
+.feed-item-event-time{color:var(--text-faint);}
+.feed-item-event-sep{color:var(--text-faint); padding:0 2px;}
+.feed-item-event .feed-ticket-chip{padding:1px 7px; font-size:11px; border-color:transparent; background:transparent;}
+.feed-item-event .feed-ticket-chip:hover{border-color:var(--accent);}
 .feed-pin-badge{font-size:11px; font-weight:600; color:var(--accent-ink); background:var(--accent-soft); border-radius:999px; padding:2px 8px;}
 .feed-pin-badge-mega{color:var(--gold, #9a7a12);}
 .feed-post-resolution{display:flex; gap:6px; flex-wrap:wrap;}
@@ -1320,9 +1358,27 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .feed-composer-actions{display:flex; align-items:center; gap:8px; justify-content:flex-end;}
 .biblioteca-sin-relacionar{display:flex; flex-direction:column; gap:8px; padding:12px; margin-bottom:14px; border:1px dashed var(--accent); border-radius:var(--radius); background:var(--accent-soft);}
 .biblioteca-sin-relacionar-title{font-weight:700; color:var(--accent-ink); font-size:13px;}
+/* UX Flow Patch §3-5: pestaña AI Bridge de Inicio. */
+.aibridge-panel{display:flex; flex-direction:column; gap:12px; padding:4px;}
+.aibridge-hint{font-size:12.5px; color:var(--text-muted); max-width:52ch;}
+.aibridge-menu-actions{display:flex; gap:12px; flex-wrap:wrap;}
+.aibridge-menu-btn{display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:14px 18px; min-width:200px; font-size:14px;}
+.aibridge-menu-btn-sub{font-size:11.5px; font-weight:400; opacity:.85;}
+.aibridge-panel-header{display:flex; align-items:center; gap:10px;}
+.aibridge-panel-header h2{font-size:15px; margin:0;}
+.aibridge-textarea{width:100%; resize:vertical; border:1px solid var(--border); border-radius:var(--radius-s); background:var(--surface); color:var(--text); font:inherit; font-family:var(--font-mono); font-size:12.5px; padding:8px;}
+.aibridge-panel-actions{display:flex; justify-content:flex-end;}
+.aibridge-scope-bar{display:flex; gap:6px; flex-wrap:wrap;}
+.aibridge-scope-btn{border:1px solid var(--border); background:var(--surface); color:var(--text-muted); border-radius:999px; padding:4px 12px; font-size:12px; cursor:pointer;}
+.aibridge-scope-btn.active{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
+.aibridge-block{max-height:420px;}
+.aibridge-block-actions{display:flex; gap:6px; flex-wrap:wrap;}
+.aibridge-error{background:var(--danger-soft); color:var(--danger); border-radius:var(--radius-s); padding:8px 10px; font-size:12.5px;}
 @media(max-width:640px){
   .feed-scroll, .feed-composer, .feed-filter-bar{padding-left:14px; padding-right:14px;}
   .feed-item-img, .feed-composer-preview img{max-width:100%;}
+  .aibridge-menu-actions{flex-direction:column;}
+  .aibridge-menu-btn{width:100%;}
 }
 
 .composer-wrap{border-top:1px solid var(--border); background:var(--surface); flex-shrink:0; position:relative;}
@@ -1754,6 +1810,17 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   position:absolute; top:-4px; right:-6px; display:inline-flex; gap:1px; background:var(--surface);
   border-radius:999px; padding:1px 2px; box-shadow:var(--shadow);
 }
+/* UX Flow Patch §7-9: badge de imagen disponible — esquina superior
+   derecha del avatar (mismo rincón que .tickets-icon-markers, pero abajo
+   de ese porque rara vez coinciden ambos a la vez; si coinciden, el badge
+   de imagen queda un poco más abajo/afuera, nunca superpuesto). */
+.tickets-icon-imgbadge{
+  position:absolute; bottom:-4px; right:-6px; display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; border-radius:50%; background:var(--surface); box-shadow:var(--shadow);
+  font-size:10px; line-height:1; color:var(--text-faint); opacity:.55; cursor:pointer;
+}
+.tickets-icon-imgbadge.has-photos{ color:var(--accent-ink); background:var(--accent-soft); opacity:1; }
+.tickets-icon-imgbadge:hover, .tickets-icon-imgbadge:focus-visible{ opacity:1; outline:2px solid var(--accent); outline-offset:1px; }
 .tickets-icon-cliente{font-size:11px; font-weight:600; max-width:78px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .tickets-icon-meta{display:flex; align-items:center; justify-content:center; gap:4px; font-size:10px; color:var(--text-faint);}
 
@@ -1777,6 +1844,41 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-list-row:hover, .tickets-list-row:focus-visible{background:var(--surface-2); outline:none;}
 .tickets-list-row td{padding:7px 10px; vertical-align:middle; white-space:nowrap;}
 .tickets-list-cliente-cell{display:inline-flex; align-items:center; gap:6px;}
+/* UX Flow Patch §10-12: fila seleccionada (llena el preview de la derecha) —
+   acento sutil, nunca tan fuerte como para confundirse con "abierto". */
+.tickets-list-row-selected{background:var(--accent-soft);}
+.tickets-list-row-selected:hover, .tickets-list-row-selected:focus-visible{background:var(--accent-soft);}
+/* Explorador split-view: panel izquierdo (lista, con su propio scroll) +
+   panel derecho (preview, fijo, su propio scroll) — mismo criterio que un
+   explorador de archivos de escritorio. En mobile se apilan (media query
+   abajo) para no forzar dos columnas angostas en pantallas chicas. */
+.tickets-list-splitview{display:flex; gap:14px; align-items:flex-start; height:100%;}
+.tickets-list-splitview .tickets-list-wrap{flex:1 1 60%; min-width:0; max-height:100%;}
+.tickets-list-preview{
+  flex:1 1 40%; min-width:260px; max-width:420px; border:1px solid var(--border); border-radius:var(--radius-m);
+  background:var(--surface); padding:14px; display:flex; flex-direction:column; gap:10px;
+  position:sticky; top:0; max-height:calc(100vh - 220px); overflow-y:auto;
+}
+.tickets-list-preview-empty{color:var(--text-muted); font-size:13px; padding:24px 14px; text-align:center;}
+.tickets-list-preview-header{display:flex; align-items:center; gap:10px;}
+.tickets-list-preview-headtext{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.tickets-list-preview-cliente{font-weight:700; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tickets-list-preview-row{display:flex; flex-direction:column; gap:2px; border-top:1px solid var(--border); padding-top:8px;}
+.tickets-list-preview-row:first-of-type{border-top:none; padding-top:0;}
+.tickets-list-preview-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); font-weight:600;}
+.tickets-list-preview-value{font-size:13px; color:var(--text);}
+.tickets-list-preview-productos{margin:0; padding-left:16px; display:flex; flex-direction:column; gap:2px;}
+.tickets-list-preview-nota{font-size:12.5px; padding:4px 0; border-bottom:1px dashed var(--border);}
+.tickets-list-preview-nota:last-child{border-bottom:none;}
+.tickets-list-preview-nota-meta{display:block; font-size:11px; color:var(--text-faint); margin-top:2px;}
+.tickets-list-preview-photos{display:flex; gap:6px; flex-wrap:wrap;}
+.tickets-list-preview-photos img{width:52px; height:52px; object-fit:cover; border-radius:var(--radius-s); border:1px solid var(--border);}
+.tickets-list-preview-doc{display:block; text-align:left; padding:4px 0; font-size:12.5px;}
+@media(max-width:880px){
+  .tickets-list-splitview{flex-direction:column;}
+  .tickets-list-splitview .tickets-list-wrap{width:100%;}
+  .tickets-list-preview{position:static; max-width:none; width:100%; max-height:none;}
+}
 
 /* ---- Vista Detalles: tabla en desktop, cards en mobile vía data-label
    (ver @media(max-width:880px) abajo) — mismo HTML/datos siempre. ---- */
@@ -1850,6 +1952,17 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
    .biblioteca-viewer-modal (cierre-modal-overlay/cierre-modal), un poco más
    ancha para dar lugar a la tira de miniaturas. ---- */
 .ticket-gallery-modal{max-width:560px; position:relative;}
+/* UX Flow Patch §7-9: popover de asignación rápida de logo — mismo overlay
+   genérico (.cierre-modal-overlay/.cierre-modal) que Galería/Cierre. */
+.quicklogo-modal{max-width:420px; position:relative;}
+.quicklogo-close{position:absolute; top:6px; right:6px;}
+.quicklogo-title{font-size:14px; font-weight:700; padding-right:24px;}
+.quicklogo-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(64px, 1fr)); gap:8px; max-height:320px; overflow-y:auto;}
+.quicklogo-photo-btn{border:1px solid var(--border); border-radius:var(--radius-s); padding:0; overflow:hidden; cursor:pointer; aspect-ratio:1; background:var(--surface-2);}
+.quicklogo-photo-btn:hover, .quicklogo-photo-btn:focus-visible{border-color:var(--accent); outline:none;}
+.quicklogo-photo-btn img{width:100%; height:100%; object-fit:cover; display:block;}
+.quicklogo-empty{font-size:12.5px; color:var(--text-muted); padding:8px 2px;}
+.quicklogo-actions{display:flex; justify-content:flex-end;}
 .ticket-gallery-close{position:absolute; top:8px; right:8px; font-size:20px; line-height:1; z-index:2;}
 .ticket-gallery-media{
   position:relative; width:100%; border-radius:var(--radius-m); overflow:hidden; background:var(--surface-2);
@@ -2494,8 +2607,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.18.0";
-var APP_BUILD = "2026.09.20.1";
+var APP_VERSION = "0.19.0";
+var APP_BUILD = "2026.09.21.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -2710,6 +2823,15 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      ticket_id como única fuente de datos (ver ticketGalleryPhotos) — nunca
      un índice de imágenes paralelo al de Biblioteca. */
   ticketGallery: null,
+  /* UX Flow Patch §7-9: asignación rápida de logo desde la vista Iconos de
+     Tickets — { clienteId } | null. Efímero, mismo criterio que
+     ticketGallery de arriba. Reusa bibliotecaAllPhotos() filtrado por
+     clienteId como fuente de fotos existentes (nunca un índice paralelo),
+     y uploadClienteLogo() tal cual para aplicar el resultado — la única
+     lógica nueva es "copiar una foto ya subida a un path de logo dedicado"
+     (assignExistingPhotoAsLogo), para nunca compartir el mismo Storage
+     path entre el logo del cliente y la foto original del ticket. */
+  quickLogoPicker: null,
   /* Parte P (eliminar fotos ya guardadas): { photoId, ticketId } | null —
      confirmación explícita ANTES de ocultar una foto ya subida (§90: "no es
      instantáneo"). Se abre por encima de la Galería o del visor de
@@ -2752,6 +2874,14 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      persona) | "eventos" (solo automáticos) — nunca cambia qué se guarda,
      solo qué se muestra (spec §108-110 "filtros simples"). */
   feedFilter: "todo",
+  /* UX Flow Patch §3-5: pestaña "AI Bridge" dentro de Inicio — UI nueva
+     sobre el protocolo YA EXISTENTE (DTG_STATE/DTG_PATCH), nunca un segundo
+     protocolo. mode: "menu" | "subir" | "bajar". El textarea de SUBIR no
+     guarda su valor en UI (mismo criterio que feed-composer-text: se lee
+     por id al procesar, renderKeepingLiveInputs() lo protege mientras
+     tanto). bajarScope/bajarBlock = último bloque generado por BAJAR
+     (efímero, se pierde al cambiar de pestaña). */
+  aiBridge: { mode: "menu", bajarScope: "", bajarBlock: null },
   /* Productos del ticket — "EDICIÓN DE PRODUCTOS + KANBAN" (esta ronda):
      estado 100% efímero, mismo patrón que markerPicker/cellEditor. Un solo
      producto a la vez en cada modo (edición/menú "⋯") — "difícil de usar
@@ -2795,7 +2925,13 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
     cursor: null,              // "YYYY-MM-DD" | null (null == hoy, resuelto en calendarCursor())
     mios: false,
     responsable: "",           // "" = todos | "__sin__" = Sin responsable | nombre exacto de un perfil activo
-    tipo: "todos",             // "todos" | "atencion" | "compromiso"
+    /* UX Flow Patch §18: default cambia de "todos" (Ambas) a "compromiso" —
+       confirmado que tipo NUNCA se persiste (ver loadUi/saveUi, solo
+       view/mios/monthRowHeights lo hacen), así que este cambio de default
+       no necesita ninguna migración: simplemente arranca distinto en cada
+       sesión nueva. "Ambas" se conserva como opción (CALENDAR_TIPO_OPTIONS
+       abajo, sin tocar), solo deja de ser la vista inicial. */
+    tipo: "compromiso",        // "todos" | "atencion" | "compromiso"
     incluirCerrados: false,
     search: "",
     filtersOpen: false,
@@ -3720,8 +3856,18 @@ function dtgCloseTopOverlay(){
   if(UI.accountMenuOpen){ UI.accountMenuOpen = false; render(); return true; }
   if(UI.photoBatch && UI.photoBatch.ticketId){ if(closeComposerOverlay()) render(); return true; }
   if(UI.ticketGallery){ closeTicketGallery(); return true; }
+  /* AI BRIDGE — RONDA HARDENING: el preview de un DTG_PATCH es una interfaz
+     emergente real (Parte 3 del pedido de hardening) — Escape (vía el
+     dtgCloseTopOverlay() de más abajo) y el botón Atrás físico (vía
+     popstate, que también llama a esta misma función) deben cerrarlo antes
+     de tocar cualquier otra cosa, exactamente el mismo contrato que ya
+     tienen todos los demás overlays de esta lista. Nunca ejecuta el patch
+     ni lo descarta de forma distinta al botón "Cancelar" del popover
+     (mismo efecto: UI.dtgPatchPreview = null). */
+  if(UI.dtgPatchPreview){ UI.dtgPatchPreview = null; render(); return true; }
   if(UI.markerPicker){ closeMarkerPicker(); return true; }
   if(UI.kanbanCardMenu){ UI.kanbanCardMenu = null; render(); return true; }
+  if(UI.quickLogoPicker){ closeQuickLogoPicker(); return true; }
   return false;
 }
 
@@ -3939,6 +4085,13 @@ function goToCxc(){
 function goToTickets(){
   UI.selectedTicketId = null; UI.mainView = "tickets"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
+  /* UX Flow Patch §6: cada entrada al módulo Tickets abre en Responsables +
+     Abiertos — elimina los 2 clics repetidos que hacía el equipo todos los
+     días. Las demás vistas/filtros siguen existiendo tal cual, solo cambia
+     el punto de partida; se puede cambiar de vista/filtro normalmente
+     después de entrar, eso NO se toca ni se persiste distinto a hoy. */
+  UI.ticketsView = "kanban";
+  UI.ticketsExplorer.estado = "abierto";
   UI.pendingFocus = { elId: "tickets-explorer-search" };
   UI.sidebarOpen = false;
   saveUi(); render();
@@ -6790,6 +6943,21 @@ function renderTicketsThumbMoreMenu(t, estado){
 }
 
 /* ---- Vista Iconos: más densa, avatar/logo grande + folio + marcadores ---- */
+/* UX Flow Patch §7-9: badge de imagen disponible en la esquina superior
+   derecha del avatar — resaltado si el cliente tiene fotos en su historial
+   (mismo dataset que Biblioteca, bibliotecaAllPhotos()), tenue si no. Vive
+   DENTRO del <button data-action="open-ticket"> de la tarjeta, así que es
+   un <span role="button"> (nunca un <button> real anidado — ver el
+   comentario "CAUSA RAÍZ" en renderSidebarMarkerIcons, mismo defecto que
+   ya se arregló ahí) con su propio data-action interceptado en fase de
+   CAPTURA antes de que el clic burbujee hasta abrir el ticket. */
+function ticketIconImageBadge(t, c){
+  if(!c) return "";
+  var hasPhotos = bibliotecaAllPhotos().some(function(p){ return p.clienteId === c.id; });
+  return (
+    '<span class="tickets-icon-imgbadge' + (hasPhotos ? " has-photos" : "") + '" role="button" tabindex="0" data-action="ticket-icon-imgbadge" data-ticket="' + t.id + '" data-cliente-id="' + c.id + '" aria-label="' + (hasPhotos ? "Ver imágenes disponibles" : "Subir imagen") + '" title="' + (hasPhotos ? "Imágenes disponibles" : "Sin imágenes — subir una") + '">&#128247;</span>'
+  );
+}
 function renderTicketsIconCard(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
   var avatarHtml = c ? clientAvatar(c, {size:"lg", degrade:"compact"}) : '<span class="client-avatar client-avatar-initials client-avatar-lg">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
@@ -6797,7 +6965,7 @@ function renderTicketsIconCard(t){
   var markersHtml = renderSidebarMarkerIcons(t);
   return (
     '<button type="button" class="tickets-icon-card" data-action="open-ticket" data-id="' + t.id + '">' +
-      '<div class="tickets-icon-avatar-wrap">' + avatarHtml + (markersHtml ? '<span class="tickets-icon-markers">'+markersHtml+"</span>" : "") + "</div>" +
+      '<div class="tickets-icon-avatar-wrap">' + avatarHtml + (markersHtml ? '<span class="tickets-icon-markers">'+markersHtml+"</span>" : "") + ticketIconImageBadge(t, c) + "</div>" +
       '<div class="tickets-icon-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
       '<div class="tickets-icon-meta"><span class="tickets-icon-folio">#' + t.seq + "</span>" + (estado!=="abierto" ? ' <span class="pill status-pill status-'+estado+'">'+ticketEstadoLabel(estado)+"</span>" : "") + "</div>" +
     "</button>"
@@ -6844,6 +7012,12 @@ function ticketOperationalCellValues(t){
    para editar, así que "tocar cualquier parte de la fila para entrar" es
    consistente con su rol — la distinción real con Detalles es que aquí
    ninguna celda es individualmente accionable. */
+/* UX Flow Patch §10-12: la fila YA NO abre el ticket con un solo clic —
+   Lista pasó a ser el panel izquierdo de un explorador (inspiración
+   Windows Explorer/preview pane): clic/Enter en flechas SELECCIONA (llena
+   el panel derecho, ver renderTicketsListPreview), Enter o doble clic
+   ABRE el ticket completo. selectedCardId es el MISMO campo que ya usa
+   Miniaturas (nunca un segundo estado de selección paralelo). */
 function renderTicketsListRow(t){
   var v = ticketOperationalCellValues(t);
   var avatarHtml = v.c ? clientAvatar(v.c, {size:"sm", degrade:"reduced"}) : '<span class="client-avatar client-avatar-initials client-avatar-sm">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
@@ -6856,9 +7030,69 @@ function renderTicketsListRow(t){
     v.trabajoHtml, v.estadoHtml, v.queSigueHtml, v.responsableHtml, v.atenderHtml, v.compromisoHtml,
     v.totalConocidoHtml, v.cobradoHtml, v.marcadoresHtml, v.ultimaActividadHtml
   ];
-  return '<tr class="tickets-list-row" data-id="' + t.id + '" tabindex="0" role="button" aria-label="Abrir Ticket #' + t.seq + '">' + cells.map(function(html, idx){
+  var isSelected = UI.ticketsExplorer.selectedCardId === t.id;
+  return '<tr class="tickets-list-row' + (isSelected ? " tickets-list-row-selected" : "") + '" data-id="' + t.id + '" tabindex="0" role="button" aria-selected="' + (isSelected?"true":"false") + '" aria-label="Ticket #' + t.seq + " — Enter para abrir\">" + cells.map(function(html, idx){
     return '<td data-label="' + TICKETS_OPERATIONAL_COLS[idx] + '">' + html + "</td>";
   }).join("") + "</tr>";
+}
+
+/* UX Flow Patch §10-12: panel derecho del explorador — preview de la fila
+   seleccionada, SIN duplicar el formulario de edición completo (eso sigue
+   siendo exclusivo del ticket abierto). Reusa ticketOperationalCellValues
+   (mismo cálculo que ya usa cada fila) más lo que esa función no cubre:
+   productos completos, notas recientes, imágenes (ticketGalleryPhotos,
+   mismo dataset que la Galería) y documentos comerciales (mismos
+   doc-card/data-action="open-doc" que /documentos). */
+function renderTicketsListPreview(){
+  var id = UI.ticketsExplorer.selectedCardId;
+  var t = id ? findTicket(id) : null;
+  if(!t) return '<div class="tickets-list-preview tickets-list-preview-empty">Selecciona un ticket de la lista para ver su detalle aquí.</div>';
+  var v = ticketOperationalCellValues(t);
+  var avatarHtml = v.c ? clientAvatar(v.c, {size:"lg", degrade:"compact"}) : '<span class="client-avatar client-avatar-initials client-avatar-lg">' + escapeHtml(initialsForName(t.cliente||"?")) + "</span>";
+  var productosHtml = (t.productos && t.productos.length)
+    ? '<ul class="tickets-list-preview-productos">' + t.productos.map(function(p){
+        var precioTxt = p.precio === null ? "sin precio" : fmtMoney(p.precio);
+        return "<li>" + escapeHtml(p.desc || "(sin descripción)") + " &times; " + p.cantidad + " — " + precioTxt + "</li>";
+      }).join("") + "</ul>"
+    : v.muted;
+  var notas = dtgRecentNotes(t, 3);
+  var notasHtml = notas.length
+    ? notas.map(function(n){ return '<div class="tickets-list-preview-nota">' + escapeHtml(n.text) + '<span class="tickets-list-preview-nota-meta">' + escapeHtml(n.autor||"?") + " · " + fmtDateShort(n.ts) + "</span></div>"; }).join("")
+    : v.muted;
+  var photos = ticketGalleryPhotos(t.id).slice(0, 6);
+  var photosHtml = photos.length
+    ? '<div class="tickets-list-preview-photos">' + photos.map(function(p){ return '<img data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">'; }).join("") + "</div>"
+    : v.muted;
+  var docs = t.documentos.slice().sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+  var docsHtml = docs.length
+    ? docs.map(function(d){
+        var docLabel = d.tipo === "invoice" ? "Invoice" : "Cotización";
+        return '<button type="button" class="btn-plain tickets-list-preview-doc" data-action="open-doc" data-id="' + escapeHtml(d.id) + '">' + docLabel + " #" + escapeHtml(d.numero||"") + " · " + fmtMoney(d.total) + "</button>";
+      }).join("")
+    : v.muted;
+  function row(label, html){ return '<div class="tickets-list-preview-row"><div class="tickets-list-preview-label">' + label + '</div><div class="tickets-list-preview-value">' + html + "</div></div>"; }
+  return (
+    '<div class="tickets-list-preview">' +
+      '<div class="tickets-list-preview-header">' +
+        avatarHtml +
+        '<div class="tickets-list-preview-headtext">' +
+          '<div class="tickets-list-preview-cliente">' + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+          '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + " — abrir ticket completo &#8599;</button>" +
+        "</div>" +
+      "</div>" +
+      row("Estado", v.estadoHtml) +
+      row("Qué sigue", v.queSigueHtml) +
+      row("Responsable", v.responsableHtml) +
+      row("Atender", v.atenderHtml) +
+      row("Compromiso", v.compromisoHtml) +
+      row("Total conocido", v.totalConocidoHtml) +
+      row("Cobrado", v.cobradoHtml) +
+      row("Productos", productosHtml) +
+      row("Notas recientes", notasHtml) +
+      row("Imágenes", photosHtml) +
+      row("Documentos", docsHtml) +
+    "</div>"
+  );
 }
 
 /* ---- Vista Detalles: tabla en desktop, mismas filas se leen como cards en
@@ -6933,11 +7167,17 @@ function renderTicketsExplorerView(){
   } else if(view === "icons"){
     body = '<div class="tickets-grid-icons">' + list.map(renderTicketsIconCard).join("") + "</div>";
   } else if(view === "list"){
+    /* UX Flow Patch §10-12: Lista = explorador split-view (panel izquierdo
+       compacto + preview a la derecha, inspiración Windows Explorer).
+       Detalles (abajo) se queda exactamente igual, sin tocar. */
     body =
-      '<div class="tickets-list-wrap"><table class="tickets-list-table">' +
-        "<thead><tr>" + TICKETS_OPERATIONAL_COLS.map(function(cn){ return "<th>" + cn + "</th>"; }).join("") + "</tr></thead>" +
-        "<tbody>" + list.map(renderTicketsListRow).join("") + "</tbody>" +
-      "</table></div>";
+      '<div class="tickets-list-splitview">' +
+        '<div class="tickets-list-wrap"><table class="tickets-list-table">' +
+          "<thead><tr>" + TICKETS_OPERATIONAL_COLS.map(function(cn){ return "<th>" + cn + "</th>"; }).join("") + "</tr></thead>" +
+          "<tbody>" + list.map(renderTicketsListRow).join("") + "</tbody>" +
+        "</table></div>" +
+        renderTicketsListPreview() +
+      "</div>";
   } else if(view === "details"){
     body =
       '<div class="tickets-details-wrap"><table class="tickets-details">' +
@@ -6971,6 +7211,73 @@ function renderTicketsExplorerView(){
    updateTicketFieldCore(t, "field-responsable", nuevoValor, ...) — la MISMA
    función que usa el <select> de la cabecera del ticket (nunca una segunda
    mutación kanbanResponsibleMutation() paralela). */
+/* UX Flow Patch §16-17: orden de columnas.
+   - "Sin responsable" SIEMPRE primero — fijo, nunca se reordena.
+   - Sin un orden guardado todavía, el resto arranca con la columna del
+     usuario actualmente logueado justo después (elimina el scrolleo/
+     búsqueda diario de "¿dónde está mi columna?"), luego el resto tal como
+     ya venía (activeAssignableProfiles, por createdAt).
+   - Si la persona ya reordenó "el resto" por drag&drop (§17), ese orden
+     persistido GANA sobre el default de arriba. Persistido POR USUARIO
+     (nunca compartido entre Martin/Jonathan) en localStorage — mismo
+     mecanismo de preferencias que loadUi/saveUi, sin tabla ni columna SQL
+     nueva porque esto es puramente cosmético/por-dispositivo, igual que
+     UI.ticketsView. Un perfil nuevo que no está en el orden guardado se
+     agrega al final; uno que ya no es asignable simplemente desaparece. */
+function kanbanOrderStorageKey(){
+  var actorId = currentActorId();
+  return actorId ? ("dtg_kanban_order_" + actorId) : null;
+}
+function loadKanbanColumnOrder(){
+  var key = kanbanOrderStorageKey();
+  if(!key) return null;
+  try{
+    var raw = localStorage.getItem(key);
+    if(!raw) return null;
+    var arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : null;
+  }catch(e){ return null; }
+}
+function saveKanbanColumnOrder(namesInOrder){
+  var key = kanbanOrderStorageKey();
+  if(!key) return;
+  try{ localStorage.setItem(key, JSON.stringify(namesInOrder)); }catch(e){ /* best-effort, cosmético */ }
+}
+/* Único cálculo de "en qué orden van las columnas de responsables reales"
+   — kanbanColumns() lo usa para construir las columnas, kanbanReorderColumn
+   (drag&drop, más abajo) lo usa para calcular el nuevo orden a persistir.
+   Nunca dos copias de este criterio. */
+function kanbanCurrentColumnOrder(){
+  var names = activeAssignableProfiles().map(function(p){ return p.displayName; });
+  var persisted = loadKanbanColumnOrder();
+  if(persisted){
+    var orderedNames = persisted.filter(function(n){ return names.indexOf(n) !== -1; });
+    names.forEach(function(n){ if(orderedNames.indexOf(n) === -1) orderedNames.push(n); });
+    return orderedNames;
+  }
+  var defaultOrder = names.slice();
+  var meName = currentActorName();
+  if(meName){
+    var meIdx = defaultOrder.indexOf(meName);
+    if(meIdx > 0){ defaultOrder.splice(meIdx, 1); defaultOrder.unshift(meName); }
+  }
+  return defaultOrder;
+}
+/* §17: soltar el handle "⋮⋮" de una columna sobre otra reordena "el resto"
+   y persiste el resultado — mismo storage key por usuario que
+   loadKanbanColumnOrder/saveKanbanColumnOrder de arriba. */
+function kanbanReorderColumn(draggedKey, targetKey){
+  if(!draggedKey || !targetKey || draggedKey === targetKey) return;
+  var order = kanbanCurrentColumnOrder();
+  var fromIdx = order.indexOf(draggedKey);
+  if(fromIdx === -1) return;
+  order.splice(fromIdx, 1);
+  var toIdx = order.indexOf(targetKey);
+  if(toIdx === -1) return; // soltar sobre "Sin responsable"/algo fuera del orden reordenable: no-op
+  order.splice(toIdx, 0, draggedKey);
+  saveKanbanColumnOrder(order);
+  render();
+}
 function kanbanColumns(list){
   var active = activeAssignableProfiles();
   var byName = {};
@@ -6983,18 +7290,20 @@ function kanbanColumns(list){
     else if(byName[r]) byName[r].tickets.push(t);
     else otros.tickets.push(t);
   });
-  var cols = [sinResponsable].concat(active.map(function(p){ return byName[p.displayName]; }));
+  var orderedNames = kanbanCurrentColumnOrder();
+  var cols = [sinResponsable].concat(orderedNames.map(function(n){ return byName[n]; }));
   /* "Otros" solo aparece si de verdad hay algo que mostrar ahí — nunca una
      columna vacía y confusa por default. No es un destino de drop válido
      (ver renderKanbanColumn/wireEvents): no representa una sola persona, así
-     que "mover un ticket a Otros" no tendría un significado real. */
+     que "mover un ticket a Otros" no tendría un significado real. Tampoco
+     participa del reordenamiento por drag&drop (§17): siempre al final. */
   if(otros.tickets.length) cols.push(otros);
-  /* ADDENDUM KANBAN OPERACIONAL — orden estable por columna (spec: "¿QUIÉN
-     trae cada ticket?", nunca updated_at/última actividad): Urgente activo
-     primero, luego el resto, cada grupo por created_at DESC (más nuevo
-     arriba), con folio/seq como desempate estable cuando createdAt
-     coincide. Editar cliente/Qué sigue/teléfono/producto/nota/foto NUNCA
-     toca createdAt ni el marcador urgente, así que este sort es
+  /* ADDENDUM KANBAN OPERACIONAL — orden estable DENTRO de cada columna
+     (spec: "¿QUIÉN trae cada ticket?", nunca updated_at/última actividad):
+     Urgente activo primero, luego el resto, cada grupo por created_at DESC
+     (más nuevo arriba), con folio/seq como desempate estable cuando
+     createdAt coincide. Editar cliente/Qué sigue/teléfono/producto/nota/
+     foto NUNCA toca createdAt ni el marcador urgente, así que este sort es
      automáticamente estable frente a esas ediciones — no hace falta guard
      adicional. Cambiar Responsable/Urgente SÍ puede mover la tarjeta (de
      columna, o de posición dentro de la columna), que es el comportamiento
@@ -7002,12 +7311,23 @@ function kanbanColumns(list){
   cols.forEach(function(col){ col.tickets = col.tickets.slice().sort(compareTicketsOperationalOrder); });
   return cols;
 }
+/* UX Flow Patch §17: solo las columnas de un responsable real (no "Sin
+   responsable" — fija arriba por §16 — ni "Otros" — ni siquiera es un
+   drop-target válido, ver comentario en kanbanColumns) son reordenables.
+   Handle "⠿" propio (mismo criterio que el handle "⋮⋮" de arrastrar una
+   tarjeta: draggable="true" vive SOLO en el handle, nunca en la columna
+   completa, para no robarle el gesto de scroll horizontal/otros controles
+   de la cabecera). */
 function renderKanbanColumn(col){
   var themeClass = col.key && !col.readOnly ? responsibleThemeClass(col.key) : "";
+  var reorderable = !!col.key && !col.readOnly;
+  var dragHandle = reorderable
+    ? '<span class="kanban-column-draghandle" draggable="true" data-kanban-col-handle="' + escapeHtml(col.key) + '" title="Arrastrar para reordenar" aria-hidden="true">&#8942;&#8942;</span>'
+    : "";
   return (
     '<div class="kanban-column' + themeClass + (col.readOnly?" kanban-column-readonly":"") + '"' +
       (col.readOnly ? "" : ' data-kanban-column="' + escapeHtml(col.key) + '"') + '>' +
-      '<div class="kanban-column-header"><span class="kanban-column-dot" aria-hidden="true"></span>' +
+      '<div class="kanban-column-header">' + dragHandle + '<span class="kanban-column-dot" aria-hidden="true"></span>' +
         '<span class="kanban-column-label">' + escapeHtml(col.label) + '</span>' +
         '<span class="kanban-column-count">' + col.tickets.length + "</span></div>" +
       '<div class="kanban-column-cards">' +
@@ -7203,7 +7523,12 @@ function renderKanbanCard(t){
         "</button>" +
         thumbHtml +
         '<div class="kanban-card-more-wrap" draggable="false">' +
-          '<button type="button" class="kanban-card-more-btn producto-more-btn" draggable="false" data-action="kanban-card-more" data-ticket="' + t.id + '" aria-label="Más acciones" aria-haspopup="true" aria-expanded="' + (menuOpen?"true":"false") + '">&#8942;</button>' +
+          /* UX Flow Patch §15: "⋯" (poco contraste, ver addendum) reemplazado
+             por 🏃 (persona en movimiento — misma familia de íconos emoji
+             que ya usa el resto de la app: markerIcon(), 📷, ⭐, etc., nunca
+             un set de SVG nuevo), mismo botón/mismo menú/mismo data-action
+             de siempre, solo cambia el glifo + el tooltip. */
+          '<button type="button" class="kanban-card-more-btn producto-more-btn" draggable="false" data-action="kanban-card-more" data-ticket="' + t.id + '" aria-label="Mover o cerrar ticket" title="Mover o cerrar ticket" aria-haspopup="true" aria-expanded="' + (menuOpen?"true":"false") + '">&#127939;</button>' +
           renderKanbanCardMenu(t) +
         "</div>" +
       "</div>" +
@@ -7485,6 +7810,20 @@ function renderCalendarToolbar(){
    un <div>, "abrir ticket" y "⋯" son dos <button> HERMANOS — nunca uno
    anidado en el otro, aunque renderSidebarMarkerIcons() (safe: <span
    role="button">) quede dentro del botón de abrir. */
+/* UX Flow Patch §19-20: hover en una tarjeta de Atender muestra un ghost
+   discreto de su Compromiso (y viceversa) — SOLO cuando la vista está
+   filtrada a un solo tipo (tipo!=="todos"): en "Ambas" las dos fechas ya
+   están siempre visibles, así que no hay nada que fantasmear (además,
+   ahí las tarjetas se combinan en una sola, ver calendarCombineDayEntries,
+   ni siquiera tienen data-calendar-entry-type). Nunca se muestran ambas
+   fechas permanentemente — el ghost desaparece al quitar el mouse (ver
+   wireEvents, DOM-only, sin render()). */
+function calendarGhostOtherDate(ticketId, shownType){
+  if(UI.calendar.tipo === "todos") return null;
+  var t = findTicket(ticketId);
+  if(!t) return null;
+  return (shownType === "attention" ? t.fechaCompromiso : t.fechaAtencion) || null;
+}
 function calendarEntryTypeLabel(type){ return type === "attention" ? "ATENDER" : "COMPROMISO"; }
 function renderCalendarEntryCard(entry, opts){
   opts = opts || {};
@@ -7548,7 +7887,11 @@ function renderCalendarMonthCell(dateStr, byDate, cursorStr){
     "</div>";
   }
   return (
-    '<div class="calendar-month-cell' + (inMonth?"":" calendar-month-cell-outside") + weekendClass + (calendarIsToday(dateStr)?" calendar-month-cell-today":"") + '">' +
+    /* UX Flow Patch §19-20: data-date en la celda misma (no solo en el
+       botón del día) — ancla directa para el hover-ghost de la otra fecha,
+       sin tener que subir desde un hijo. Puramente un atributo extra, no
+       cambia nada del comportamiento existente de la celda. */
+    '<div class="calendar-month-cell' + (inMonth?"":" calendar-month-cell-outside") + weekendClass + (calendarIsToday(dateStr)?" calendar-month-cell-today":"") + '" data-date="' + dateStr + '">' +
       '<button type="button" class="calendar-month-cell-daynum" data-action="calendar-open-day" data-date="' + dateStr + '">' + d.getDate() + "</button>" +
       '<div class="calendar-month-cell-entries">' +
         dropzone("attention", attentionShown) +
@@ -7627,7 +7970,9 @@ function renderCalendarWeekColumn(dateStr, byDate){
   var attention = entries.filter(function(e){ return e.type === "attention"; });
   var commitment = entries.filter(function(e){ return e.type === "commitment"; });
   return (
-    '<div class="calendar-week-day' + weekendClass + (calendarIsToday(dateStr)?" calendar-week-day-today":"") + '">' +
+    /* UX Flow Patch §19-20: mismo motivo que .calendar-month-cell arriba —
+       data-date directo en el contenedor para el hover-ghost. */
+    '<div class="calendar-week-day' + weekendClass + (calendarIsToday(dateStr)?" calendar-week-day-today":"") + '" data-date="' + dateStr + '">' +
       '<button type="button" class="calendar-week-day-head" data-action="calendar-open-day" data-date="' + dateStr + '">' + label + "</button>" +
       '<div class="calendar-week-day-body">' +
         renderCalendarWeekDropzone(dateStr, "attention", attention) +
@@ -9555,22 +9900,20 @@ function renderFeedTicketChip(t){
 }
 
 function renderFeedEventItem(item){
+  // Sección 1 del UX Flow Patch: eventos automáticos son una sola línea
+  // discreta (gris, sin tarjeta/borde/background/ícono/imagen), NO el
+  // tratamiento de tarjeta grande que usan las publicaciones humanas
+  // (renderFeedPostItem, sin tocar). El folio sigue siendo clickable via
+  // renderFeedTicketChip.
   var t = findTicket(item.ticketId);
-  var img = item.hasImage && item.storagePath ? '<img class="feed-item-img" data-storage-path="' + escapeHtml(item.storagePath) + '" alt="">' : "";
-  return (
-    '<div class="feed-item feed-item-event">' +
-      '<div class="feed-item-icon" aria-hidden="true">' + item.icon + "</div>" +
-      '<div class="feed-item-body">' +
-        '<div class="feed-item-meta">' +
-          (item.autor ? '<span class="feed-item-autor">' + escapeHtml(item.autor) + "</span>" : "") +
-          '<span class="feed-item-time">' + fmtFeedRelative(item.ts) + "</span>" +
-          renderFeedTicketChip(t) +
-        "</div>" +
-        '<div class="feed-item-text">' + escapeHtml(item.text) + "</div>" +
-        img +
-      "</div>" +
-    "</div>"
-  );
+  var sep = '<span class="feed-item-event-sep" aria-hidden="true"> · </span>';
+  var parts = [];
+  if(item.autor) parts.push('<span class="feed-item-event-autor">' + escapeHtml(item.autor) + "</span>");
+  var chip = renderFeedTicketChip(t);
+  if(chip) parts.push(chip);
+  parts.push('<span class="feed-item-event-text">' + escapeHtml(item.text) + "</span>");
+  parts.push('<span class="feed-item-event-time">' + fmtFeedRelative(item.ts) + "</span>");
+  return '<div class="feed-item feed-item-event">' + parts.join(sep) + "</div>";
 }
 
 function renderFeedPostPinControls(p){
@@ -9644,7 +9987,7 @@ function renderFeedPostItem(item){
 }
 
 function renderFeedFilterBar(){
-  var opts = [["todo","Todo"],["posts","Publicaciones"],["eventos","Automático"]];
+  var opts = [["todo","Todo"],["posts","Publicaciones"],["eventos","Automático"],["aibridge","AI Bridge"]];
   return '<div class="feed-filter-bar">' + opts.map(function(o){
     return '<button type="button" class="feed-filter-btn' + (UI.feedFilter===o[0]?" active":"") + '" data-action="feed-filter" data-value="' + o[0] + '">' + o[1] + "</button>";
   }).join("") + "</div>";
@@ -9677,11 +10020,79 @@ function renderFeedComposer(){
   );
 }
 
+/* UX Flow Patch §3-5: pestaña AI Bridge de Inicio. Solo UI sobre el
+   protocolo DTG_STATE/DTG_PATCH ya existente — SUBIR reusa
+   handleDtgPatchPaste (mismo parseDtgPatch + mismo popover de preview
+   dtgPatchPreviewPopover que ya usa /state en el compositor: si el patch
+   es inválido, el error aparece igual que con /state, como mensaje
+   efímero en la consola de Inicio); BAJAR reusa buildDtgState tal cual. */
+var AIBRIDGE_SCOPES = [["","Vivos"],["today","Hoy"],["overdue","Vencidos"],["ytd","Año en curso"],["all","Todos"]];
+
+function renderAiBridgePanel(){
+  var mode = UI.aiBridge.mode;
+  if(mode === "subir") return renderAiBridgeSubir();
+  if(mode === "bajar") return renderAiBridgeBajar();
+  return renderAiBridgeMenu();
+}
+
+function renderAiBridgeMenu(){
+  return (
+    '<div class="aibridge-panel aibridge-menu">' +
+      '<div class="aibridge-hint">Comparte el estado del CRM con una IA externa, o aplica los cambios que te devuelva — mismo protocolo que /state y /legend.</div>' +
+      '<div class="aibridge-menu-actions">' +
+        '<button type="button" class="btn btn-primary aibridge-menu-btn" data-action="aibridge-mode" data-value="bajar">⬇ Bajar<span class="aibridge-menu-btn-sub">Generar un bloque con el estado actual</span></button>' +
+        '<button type="button" class="btn btn-primary aibridge-menu-btn" data-action="aibridge-mode" data-value="subir">⬆ Subir<span class="aibridge-menu-btn-sub">Pegar un bloque de una IA externa</span></button>' +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function renderAiBridgeSubir(){
+  return (
+    '<div class="aibridge-panel">' +
+      '<div class="aibridge-panel-header"><button type="button" class="btn-plain" data-action="aibridge-mode" data-value="menu">&larr; AI Bridge</button><h2>Subir bloque</h2></div>' +
+      '<div class="aibridge-hint">Pega aquí el bloque DTG_PATCH v1 que te dio la IA externa y procésalo — se te mostrará qué va a cambiar antes de aplicar nada.</div>' +
+      '<textarea id="aibridge-paste-text" class="aibridge-textarea" placeholder="DTG_PATCH v1&#10;TICKET #1234&#10;SET quesigue = ...&#10;END" rows="10"></textarea>' +
+      '<div class="aibridge-panel-actions"><button type="button" class="btn btn-primary" data-action="aibridge-process-patch">Procesar bloque</button></div>' +
+    "</div>"
+  );
+}
+
+function renderAiBridgeBajar(){
+  var ab = UI.aiBridge;
+  var scopeBtns = AIBRIDGE_SCOPES.map(function(s){
+    return '<button type="button" class="aibridge-scope-btn' + (ab.bajarScope === s[0] && ab.bajarBlock ? " active" : "") + '" data-action="aibridge-scope" data-value="' + s[0] + '">' + s[1] + "</button>";
+  }).join("");
+  var blockHtml = "";
+  if(ab.bajarBlock){
+    blockHtml = ab.bajarBlock.ok
+      ? (
+          '<pre class="dtg-copy-pre aibridge-block">' + escapeHtml(ab.bajarBlock.text) + "</pre>" +
+          '<div class="aibridge-block-actions">' +
+            '<button type="button" class="btn btn-primary" data-action="aibridge-copy">Copiar bloque</button>' +
+            '<button type="button" class="btn btn-ghost" data-action="aibridge-regenerate">Regenerar bloque</button>' +
+          "</div>"
+        )
+      : '<div class="aibridge-error">' + escapeHtml(ab.bajarBlock.error) + "</div>";
+  }
+  return (
+    '<div class="aibridge-panel">' +
+      '<div class="aibridge-panel-header"><button type="button" class="btn-plain" data-action="aibridge-mode" data-value="menu">&larr; AI Bridge</button><h2>Bajar estado</h2></div>' +
+      '<div class="aibridge-hint">Elige qué tickets incluir — se genera un bloque DTG_STATE listo para copiar y pegar en una IA externa.</div>' +
+      '<div class="aibridge-scope-bar">' + scopeBtns + "</div>" +
+      blockHtml +
+    "</div>"
+  );
+}
+
 function renderInicioFeed(){
-  var built = buildActivityFeed();
   var header = '<div class="home-header feed-header"><h1>Actividad reciente</h1><button type="button" class="btn btn-primary" data-action="feed-open-composer">+ Publicar</button></div>';
   var composer = UI.feedComposerOpen ? renderFeedComposer() : "";
   var filterBar = renderFeedFilterBar();
+  if(UI.feedFilter === "aibridge"){
+    return header + composer + filterBar + '<div class="feed-scroll" id="feed-scroll">' + renderAiBridgePanel() + "</div>";
+  }
+  var built = buildActivityFeed();
   var pinnedHtml = built.pinned.length ? '<div class="feed-pinned-section">' + built.pinned.map(renderFeedPostItem).join("") + "</div>" : "";
   var listHtml = built.items.length
     ? built.items.map(function(item){ return item.kind === "post" ? renderFeedPostItem(item) : renderFeedEventItem(item); }).join("")
@@ -9845,6 +10256,7 @@ function render(){
     renderMarkerPickerOverlay() +
     renderTicketsThumbPhotoOverlay() +
     renderTicketGalleryOverlay() +
+    renderQuickLogoPickerOverlay() +
     renderDeletePhotoConfirmOverlay() +
     renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast"></div>';
@@ -10238,7 +10650,22 @@ function applyFocus(){
     }
     if(suppressAutoFocus) return;
     var explicitEl = document.getElementById(target.elId);
-    if(explicitEl){ explicitEl.focus(); try{ explicitEl.select(); }catch(e){} return; }
+    if(explicitEl){
+      explicitEl.focus(); try{ explicitEl.select(); }catch(e){}
+      /* UX Flow Patch §13: "Agregar qué sigue" en Responsables tomaba 2
+         clics — el primero solo enfocaba el <select>, el segundo recién
+         abría su lista nativa (comportamiento estándar del navegador: el
+         foco por sí solo no despliega las opciones). showPicker() la abre
+         de una vez, en el mismo clic — mismo <select id="field-quesigue">
+         de siempre (renderQueSigueSelect), sin tocar sus opciones. Falla
+         silenciosamente en navegadores sin soporte (Safari/Firefox
+         antiguos): ahí queda exactamente el comportamiento de hoy, nunca un
+         error visible. */
+      if(target.elId === "field-quesigue" && explicitEl.tagName === "SELECT" && typeof explicitEl.showPicker === "function"){
+        try{ explicitEl.showPicker(); }catch(e){ /* sin soporte o sin activación reciente — degrada a foco simple */ }
+      }
+      return;
+    }
   }
   if(suppressAutoFocus) return;
   var popoverField = document.querySelector('#composer-popover input, #composer-popover select, #composer-popover textarea, #composer-popover button');
@@ -11271,6 +11698,9 @@ async function createMarkerCore(t, type, text, sourceBitacoraId){
   };
   t.markers.push(optimistic);
   render();
+  var ok = true; /* RONDA HARDENING — antes no había return alguno (undefined
+    siempre); un llamador que verificara el resultado (AI Bridge) no podía
+    distinguir éxito de fracaso. Ver comentario en updateTicketFieldCore. */
   try{
     var res = await sb.from("ticket_markers").insert({
       ticket_id: t.id, type: type, text: text || null,
@@ -11285,8 +11715,9 @@ async function createMarkerCore(t, type, text, sourceBitacoraId){
       ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null,
       payload: { text: markerIcon(type) + " " + markerLabel(type) + " activado" + (text ? ": " + text : "") }
     });
-  }catch(e){ showToast("No se pudo guardar el marcador: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo guardar el marcador: " + (e.message || "error")); ok = false; }
   refreshFromServer({ refocus: false });
+  return ok;
 }
 /* Resolver con un clic (§20): sin confirmación adicional, se siente como
    quitar un pin. Conserva la historia (§21) — nunca se borra la fila, solo
@@ -11294,11 +11725,20 @@ async function createMarkerCore(t, type, text, sourceBitacoraId){
    revisa para dejar de mostrarlo como activo. */
 async function resolveMarkerCore(t, markerId){
   var m = (t.markers || []).filter(function(x){ return x.id === markerId; })[0];
-  if(!m || m.resolvedAt) return;
+  /* RONDA HARDENING: antes un solo `if(!m || m.resolvedAt) return;` cubría
+     dos casos muy distintos con el mismo `undefined` de retorno — "el
+     marcador no existe" (fracaso real, no hay nada que resolver) y "ya
+     estaba resuelto" (no-op, el estado deseado ya es el actual). Un
+     llamador que confía en el resultado (AI Bridge) necesita distinguirlos:
+     lo primero es false, lo segundo es true (nada que hacer, no es un
+     error). */
+  if(!m) return false;
+  if(m.resolvedAt) return true;
   var label = markerLabel(m.type), icon = markerIcon(m.type);
   var nowIso = new Date().toISOString();
   m.resolvedAt = nowIso; m.resolvedBy = currentActorName() || "";
   render();
+  var ok = true;
   try{
     var res = await sb.from("ticket_markers").update({ resolved_at: nowIso, resolved_by: currentActorName() || null }).eq("id", markerId);
     if(res.error) throw res.error;
@@ -11306,8 +11746,9 @@ async function resolveMarkerCore(t, markerId){
       ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null,
       payload: { text: "✓ " + icon + " " + label + " resuelto" }
     });
-  }catch(e){ showToast("No se pudo resolver el marcador: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo resolver el marcador: " + (e.message || "error")); ok = false; }
   refreshFromServer({ refocus: false });
+  return ok;
 }
 
 /* Selector "Marcar como…" (§25/§26/§41-43): mismo `UI.markerPicker` sirve
@@ -12688,6 +13129,64 @@ async function removeClienteLogo(cliente){
   return true;
 }
 
+/* UX Flow Patch §7-9: asignar como logo una foto QUE YA EXISTE en el
+   historial del cliente (subida antes a un ticket) — riesgo real detectado
+   antes de implementar: si simplemente apuntáramos logoStoragePath a ESE
+   MISMO storage_path, un cambio de logo posterior (uploadClienteLogo borra
+   el logo anterior) o removeClienteLogo borrarían el archivo de Storage
+   detrás de la foto original del ticket, rompiendo esa referencia en
+   silencio. Por eso esto SIEMPRE descarga el archivo y lo vuelve a subir
+   por uploadClienteLogo() (mismo core que "Agregar/Cambiar logotipo" en la
+   Ficha, mismo orden subir-antes-de-borrar) a un path de logo dedicado —
+   nunca comparte el path con la foto fuente. */
+async function assignExistingPhotoAsLogo(cliente, storagePath){
+  showToast("Asignando logotipo…");
+  var dl;
+  try{
+    dl = await sb.storage.from(FILES_BUCKET).download(storagePath);
+    if(dl.error) throw dl.error;
+  }catch(e){
+    showToast("No se pudo leer esa imagen: " + (e.message || "error"));
+    return false;
+  }
+  var ok = await uploadClienteLogo(cliente, dl.data);
+  if(ok) showToast("✓ Logotipo actualizado.");
+  return ok;
+}
+
+function closeQuickLogoPicker(){ UI.quickLogoPicker = null; render(); }
+
+/* Popover "asignación rápida de logo" (§7-9): mismo criterio visual que el
+   resto de overlays de tarjeta (.cierre-modal-overlay/.cierre-modal, ver
+   renderTicketGalleryOverlay) — sin pasar por la Ficha completa del
+   cliente. Fotos existentes = MISMO dataset de Biblioteca
+   (bibliotecaAllPhotos filtrado por clienteId), nunca un índice paralelo. */
+function renderQuickLogoPickerOverlay(){
+  var qp = UI.quickLogoPicker;
+  if(!qp) return "";
+  var c = findCliente(qp.clienteId);
+  if(!c) return "";
+  var photos = bibliotecaAllPhotos().filter(function(p){ return p.clienteId === qp.clienteId; }).slice(0, 24);
+  var gridHtml = photos.length
+    ? '<div class="quicklogo-grid">' + photos.map(function(p){
+        return '<button type="button" class="quicklogo-photo-btn" data-action="quicklogo-assign-existing" data-storage-path="' + escapeHtml(p.storagePath) + '" title="Usar como logotipo">' +
+          '<img data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
+        "</button>";
+      }).join("") + "</div>"
+    : '<div class="quicklogo-empty">Este cliente todavía no tiene imágenes en su historial.</div>';
+  return (
+    '<div class="cierre-modal-overlay quicklogo-overlay" id="quicklogo-overlay">' +
+      '<div class="cierre-modal quicklogo-modal">' +
+        '<button type="button" class="btn-plain quicklogo-close" data-action="quicklogo-close" aria-label="Cerrar">&times;</button>' +
+        '<div class="quicklogo-title">Logotipo — ' + escapeHtml(clienteLabel(c)) + "</div>" +
+        gridHtml +
+        '<div class="quicklogo-actions"><button type="button" class="btn btn-ghost" data-action="quicklogo-upload">Subir imagen&hellip;</button></div>' +
+        '<input type="file" id="quicklogo-file-input" accept="image/*" data-cliente-id="' + c.id + '" hidden>' +
+      "</div>" +
+    "</div>"
+  );
+}
+
 async function toggleTaskEstado(ticketId, taskId){
   var t = findTicket(ticketId);
   if(!t) return;
@@ -12763,6 +13262,12 @@ async function updateTicketFieldCore(t, elId, value, opts){
   var prevValue = t[def.key];
   t[def.key] = value;
   render();
+  /* RONDA HARDENING: antes esta función devolvía `true` incondicionalmente
+     al final, incluso si el catch de abajo ya había mostrado un toast de
+     error — un llamador que confiara en el valor de retorno (como
+     applyDtgPatch, ver AI Bridge) contaría una escritura rechazada como
+     aplicada. `ok` ahora refleja lo que de verdad pasó contra Supabase. */
+  var ok = true;
   /* rememberName() (agregar a app_settings.team_names, el catálogo de texto
      libre) YA NO aplica aquí — "EDICIÓN DE PRODUCTOS + KANBAN" reemplazó el
      campo libre de Responsable por un <select> de perfiles reales
@@ -12828,9 +13333,9 @@ async function updateTicketFieldCore(t, elId, value, opts){
         showToast("⚠️ " + value + " no tiene acceso a este ticket privado — no podrá verlo mientras siga restringido.");
       }
     }
-  }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); ok = false; }
   refreshFromServer(opts);
-  return true;
+  return ok;
 }
 async function commitHeaderField(elId, value, opts){
   /* §42: headerEditTicketId es null para la cabecera de siempre (el ticket
@@ -12884,6 +13389,7 @@ async function updateQueSigueCore(t, value, opts){
   var prevValue = t.queSigue;
   t.queSigue = value;
   render();
+  var ok = true; /* RONDA HARDENING — ver comentario en updateTicketFieldCore */
   try{
     var r1 = await sb.from("tickets").update({ que_sigue: value }).eq("id", t.id);
     if(r1.error) throw r1.error;
@@ -12892,9 +13398,9 @@ async function updateQueSigueCore(t, value, opts){
     else if(value) bitacoraText = 'Qué sigue establecido: "' + value + '"';
     else bitacoraText = 'Qué sigue removido (antes: "' + prevValue + '")';
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: bitacoraText } });
-  }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo guardar: " + (e.message || "error")); ok = false; }
   refreshFromServer(opts);
-  return true;
+  return ok;
 }
 async function commitQueSigue(value, opts){
   var t = findTicket(UI.headerEditTicketId || UI.selectedTicketId);
@@ -12955,12 +13461,15 @@ async function deshacerEntregaCore(t){
    el ticket pasa a HISTORIA (ticketIsCerrado) en Clientes; el sidebar solo
    lo hunde al fondo de su grupo de fecha, nunca lo oculta. */
 async function cerrarTicketCore(t, tipo, razon){
-  if(!t || (tipo !== "pagado" && tipo !== "cancelado") || !(razon||"").trim()) return;
+  if(!t || (tipo !== "pagado" && tipo !== "cancelado") || !(razon||"").trim()) return false;
   var now = new Date().toISOString();
   razon = razon.trim();
   t.cierreTipo = tipo; t.cerradoAt = now; t.razonCierre = razon; t.cerradoPor = currentActorName() || "";
   UI.composer = null; UI.cierreDraft = null;
   render();
+  var ok = true; /* RONDA HARDENING — antes no había return alguno (siempre
+    undefined, sin distinguir éxito de fracaso). Ver comentario en
+    updateTicketFieldCore. */
   try{
     var r1 = await sb.from("tickets").update({ cierre_tipo: tipo, cerrado_at: now, razon_cierre: razon, cerrado_por: currentActorName() || null }).eq("id", t.id);
     if(r1.error) throw r1.error;
@@ -12969,8 +13478,9 @@ async function cerrarTicketCore(t, tipo, razon){
        (pagado/cancelado) que sí importa distinguir en el timeline. */
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null,
       payload: { text: "Ticket cerrado · " + (tipo==="pagado"?"Pagado":"Cancelado") + " — " + razon, kind: tipo==="pagado" ? "cierre_pagado" : "cierre_cancelado" } });
-  }catch(e){ showToast("No se pudo cerrar el ticket: " + (e.message || "error")); }
+  }catch(e){ showToast("No se pudo cerrar el ticket: " + (e.message || "error")); ok = false; }
   refreshFromServer({refocus:true});
+  return ok;
 }
 
 /* Modal chico y centrado (no el popover del compositor) porque "Cerrar
@@ -14168,16 +14678,19 @@ function dtgTruncate(s, n){
 /* ---- scopes (Parte 3) ----
    "" (default) = tickets vivos (sin cerrar). Los demás scopes son
    deliberadamente pocos y con un propósito claro cada uno — nunca 40
-   alias. rgv NO infiere ciudad/región: esta base hoy NO guarda
-   dirección/ciudad de ningún cliente (auditado el modelo real de
-   `clientes` — solo nombre/empresa/teléfono/email/notas), así que "rgv"
-   filtra por lo único genuinamente disponible y honesto: tickets vivos
-   cuyo cliente SÍ tiene un teléfono real registrado (lo útil "en el
-   camino" es poder llamar, no una geolocalización que esta app no tiene
-   y que este protocolo se niega a inventar — ver "No inventar datos
-   faltantes" en el pedido original). Esto se documenta tal cual en
-   DTG_LEGEND para que la IA externa nunca asuma región por lada
-   telefónica. */
+   alias.
+
+   RONDA HARDENING (post-v1, antes de declarar AI Bridge cerrado): "rgv"
+   quedó DESHABILITADO a propósito — ver DTG_RGV_UNAVAILABLE_MSG más abajo.
+   La versión anterior usaba "el cliente tiene teléfono registrado" como
+   aproximación de ubicación/ruta; eso NO es ubicación real (un cliente sin
+   teléfono cargado podría estar en la ruta, uno con teléfono podría no
+   estarlo) y se retiró explícitamente por instrucción directa: nunca
+   inventar/aproximar geografía — ni por teléfono, ni por lada — mientras
+   `clientes` no tenga un campo real de ciudad/dirección. Preferible un
+   scope honesto y deshabilitado a uno que calla una aproximación poco
+   confiable. */
+var DTG_RGV_UNAVAILABLE_MSG = 'Scope "rgv" no está disponible: DTG hoy no guarda ciudad ni dirección estructurada de ningún cliente (el catálogo de clientes solo tiene nombre/empresa/teléfono/email/notas). Usar "tiene teléfono registrado" como aproximación de ubicación no es preciso ni confiable, y nunca se debe inferir región a partir de la lada telefónica — así que este scope se queda deshabilitado en vez de adivinar. Alternativa mientras tanto: /state all (o /state) y filtrar a mano. Si se agrega ciudad/dirección real al catálogo de clientes, este scope puede reactivarse con un filtro genuino.';
 function dtgIsVivo(t){ return !ticketIsCerrado(t); }
 function dtgSortForState(list){
   return list.slice().sort(function(a, b){
@@ -14188,6 +14701,15 @@ function dtgSortForState(list){
     if(ad !== bd) return ad < bd ? -1 : 1;
     return new Date(b.lastActivityAt || b.createdAt || 0) - new Date(a.lastActivityAt || a.createdAt || 0);
   });
+}
+/* "overdue" (RONDA HARDENING): antes solo miraba Compromiso vencido. Ahora
+   incluye CUALQUIER ticket vivo con Atención vencida Y/O Compromiso vencido
+   — son dos incumplimientos operativos distintos (uno interno: no se
+   trabajó cuando tocaba; otro de cara al cliente: no se cumplió lo
+   prometido) y ambos importan. dtgFieldsLine() marca con "*" cuál de las
+   dos fechas es la vencida para que el snapshot nunca oculte cuál era. */
+function dtgIsOverdueTicket(t, todayStr){
+  return dtgIsVivo(t) && ((t.fechaAtencion && t.fechaAtencion < todayStr) || (t.fechaCompromiso && t.fechaCompromiso < todayStr));
 }
 function dtgScopeTickets(scopeKeyRaw){
   var scopeKey = (scopeKeyRaw || "").toLowerCase().trim();
@@ -14200,8 +14722,8 @@ function dtgScopeTickets(scopeKeyRaw){
     label = "hoy";
     list = all.filter(function(t){ return dtgIsVivo(t) && (t.fechaAtencion === todayStr || t.fechaCompromiso === todayStr || ticketIsUrgente(t)); });
   } else if(scopeKey === "overdue"){
-    label = "vencidos";
-    list = all.filter(function(t){ return dtgIsVivo(t) && t.fechaCompromiso && t.fechaCompromiso < todayStr; });
+    label = "vencidos (Atención y/o Compromiso, ver \"*\" en cada ticket)";
+    list = all.filter(function(t){ return dtgIsOverdueTicket(t, todayStr); });
   } else if(scopeKey === "ytd"){
     label = "año en curso"; includesClosed = true;
     var year = new Date().getFullYear();
@@ -14210,25 +14732,29 @@ function dtgScopeTickets(scopeKeyRaw){
     label = "todos"; includesClosed = true; showPhone = true;
     list = all.slice();
   } else if(scopeKey === "rgv"){
-    label = "ruta (solo tickets vivos con teléfono real registrado — DTG no guarda ciudad/dirección hoy)";
-    showPhone = true;
-    list = all.filter(function(t){
-      if(!dtgIsVivo(t)) return false;
-      var c = findCliente(t.clienteId);
-      return !!(c && (c.telefono || "").trim());
-    });
+    return { key: "rgv", label: "", tickets: [], showPhone: false, includesClosed: false, unavailable: true, unavailableMessage: DTG_RGV_UNAVAILABLE_MSG };
   } else {
     return null;
   }
   return { key: scopeKey || "default", label: label, tickets: dtgSortForState(list), showPhone: showPhone, includesClosed: includesClosed };
 }
 
-/* ---- formato de un ticket dentro de DTG_STATE (Parte 1) ---- */
-function dtgFieldsLine(t){
+/* ---- formato de un ticket dentro de DTG_STATE (Parte 1) ----
+   RONDA HARDENING: dtgFieldsLine ahora recibe `scope` (opcional, retro-
+   compatible — cualquier llamador viejo sin scope se comporta igual que
+   antes, sin marcas). Solo en scope "overdue" marca con un "*" al final de
+   A:/C: la fecha que efectivamente está vencida hoy — puede ser una, la
+   otra, o ambas — para que el snapshot nunca deje a la IA adivinando cuál
+   de las dos incumplió. */
+function dtgFieldsLine(t, scope){
+  var overdueCtx = !!(scope && scope.key === "overdue");
+  var todayStr = overdueCtx ? todayLocalYYYYMMDD() : null;
+  var atVencida = overdueCtx && t.fechaAtencion && t.fechaAtencion < todayStr;
+  var coVencida = overdueCtx && t.fechaCompromiso && t.fechaCompromiso < todayStr;
   var parts = ["R:" + (t.responsable || "-")];
   if(ticketIsUrgente(t)) parts.push("U");
-  parts.push("A:" + (t.fechaAtencion || "-"));
-  parts.push("C:" + (t.fechaCompromiso || "-"));
+  parts.push("A:" + (t.fechaAtencion || "-") + (atVencida ? "*" : ""));
+  parts.push("C:" + (t.fechaCompromiso || "-") + (coVencida ? "*" : ""));
   parts.push("N:" + (t.queSigue || "-"));
   return parts.join("  ");
 }
@@ -14247,7 +14773,7 @@ function dtgRecentNotes(t, limit){
 }
 function dtgFormatTicketBlock(t, scope){
   var lines = ["#" + t.seq + " · " + (t.cliente || "(sin cliente)")];
-  lines.push("  " + dtgFieldsLine(t));
+  lines.push("  " + dtgFieldsLine(t, scope));
   if(scope.includesClosed && ticketIsCerrado(t)) lines.push("  Estado:" + ticketEstadoLabel(ticketEstado(t)));
   var prodLine = dtgProductosLine(t);
   if(prodLine) lines.push("  Prod: " + prodLine);
@@ -14264,35 +14790,72 @@ function dtgFormatTicketBlock(t, scope){
   return lines.join("\n");
 }
 function dtgFormatTicketLine(t, scope){
-  var line = "#" + t.seq + " " + (t.cliente || "(sin cliente)") + "  " + dtgFieldsLine(t);
+  var line = "#" + t.seq + " " + (t.cliente || "(sin cliente)") + "  " + dtgFieldsLine(t, scope);
   if(scope.includesClosed && ticketIsCerrado(t)) line += "  Estado:" + ticketEstadoLabel(ticketEstado(t));
   return line;
 }
 
-/* ---- DTG_STATE v1 (Parte 1/2) ---- */
-function buildDtgState(scopeKeyRaw){
+/* ---- DTG_STATE v1 (Parte 1/2) ----
+   RONDA HARDENING: dos correcciones sobre la versión original.
+   1) "rgv" ya no filtra nada — dtgScopeTickets() lo devuelve como
+      `unavailable:true` y aquí se traduce directo a un error honesto
+      (mismo mecanismo que un scope desconocido: el comando /state ya
+      sabe mostrar result.error tal cual, cero UI nueva).
+   2) "all" ya NO se corta en silencio en DTG_STATE_MAX_TICKETS: "all"
+      significa TODOS los tickets accesibles. Cuando no caben en un solo
+      mensaje, se pagina de forma explícita (page/totalPages en el header,
+      footer con la instrucción exacta para pedir la siguiente) en vez de
+      truncar y decir "todos". Los demás scopes (today/overdue/ytd/default)
+      conservan el cap de siempre — son recortes por relevancia (urgentes y
+      fechas próximas primero), no un intento de representar "todo". */
+function buildDtgState(scopeKeyRaw, pageRaw){
   var scope = dtgScopeTickets(scopeKeyRaw);
-  if(!scope) return { ok: false, error: 'Scope desconocido: "' + (scopeKeyRaw || "") + '". Usa /state, /state today, /state overdue, /state ytd, /state all o /state rgv.' };
+  if(!scope) return { ok: false, error: 'Scope desconocido: "' + (scopeKeyRaw || "") + '". Usa /state, /state today, /state overdue, /state ytd o /state all. ("rgv" existe pero está deshabilitado — ver /legend.)' };
+  if(scope.unavailable) return { ok: false, error: scope.unavailableMessage };
   var now = new Date();
   var tz = dtgTimezoneInfo();
   var actor = currentActorName() || "?";
   var total = scope.tickets.length;
-  var capped = scope.tickets.slice(0, DTG_STATE_MAX_TICKETS);
-  var header = [
+  var isAll = scope.key === "all";
+  var pageSize = DTG_STATE_MAX_TICKETS;
+  var totalPages = Math.max(1, Math.ceil(total / pageSize));
+  var page = 1;
+  if(isAll){
+    page = parseInt(pageRaw, 10);
+    if(!page || page < 1) page = 1;
+    if(page > totalPages) page = totalPages;
+  }
+  var startIdx = isAll ? (page - 1) * pageSize : 0;
+  var pageTickets = isAll ? scope.tickets.slice(startIdx, startIdx + pageSize) : scope.tickets.slice(0, pageSize);
+  var paginated = isAll && totalPages > 1;
+  var headerParts = [
     "DTG_STATE " + DTG_PROTOCOL_VERSION,
     "local=" + dtgLocalTimestamp(now) + " | tz=" + (tz.iana ? tz.iana + " (" + tz.offset + ")" : tz.offset) + " | utc=" + now.toISOString(),
-    "scope=" + scope.key + " | actor=" + actor + " | app=DTG CRM v" + APP_VERSION + " | tickets=" + total
-  ].join("\n");
-  var footer = total > capped.length ? "\n… y " + (total - capped.length) + " tickets más — usa un scope más angosto o /state all para verlos todos.\n" : "";
+    "scope=" + scope.key + (paginated ? " | pagina=" + page + "/" + totalPages : "") + " | actor=" + actor + " | app=DTG CRM v" + APP_VERSION + " | tickets=" + pageTickets.length + (paginated ? " de " + total : "")
+  ];
+  var header = headerParts.join("\n");
+  var footer;
+  if(isAll){
+    /* "all" nunca dice "usa un scope más angosto" — el punto de "all" es
+       precisamente NO angostar nada; la única salida cuando no cabe en un
+       mensaje es pedir la página siguiente, de forma explícita. */
+    footer = paginated
+      ? (page < totalPages
+          ? "\n… página " + page + " de " + totalPages + " (" + total + " tickets en total) — pide /state all " + (page + 1) + " para continuar.\n"
+          : "\n(última página — " + total + " tickets en total en " + totalPages + " páginas.)\n")
+      : "";
+  } else {
+    footer = total > pageTickets.length ? "\n… y " + (total - pageTickets.length) + " tickets más — usa un scope más angosto o /state all para verlos todos.\n" : "";
+  }
   var text, compactText;
   if(!total){
     text = header + "\n\n(sin tickets en este scope)";
     compactText = text;
   } else {
-    text = header + "\n\n" + capped.map(function(t){ return dtgFormatTicketBlock(t, scope); }).join("\n\n") + footer;
-    compactText = header + "\n\n" + capped.map(function(t){ return dtgFormatTicketLine(t, scope); }).join("\n") + footer;
+    text = header + "\n\n" + pageTickets.map(function(t){ return dtgFormatTicketBlock(t, scope); }).join("\n\n") + footer;
+    compactText = header + "\n\n" + pageTickets.map(function(t){ return dtgFormatTicketLine(t, scope); }).join("\n") + footer;
   }
-  return { ok: true, text: text, compactText: compactText, scope: scope, total: total, generatedAt: now };
+  return { ok: true, text: text, compactText: compactText, scope: scope, total: total, page: page, totalPages: totalPages, paginated: paginated, generatedAt: now };
 }
 
 /* ---- DTG_LEGEND v1 (Parte 4) ----
@@ -14320,10 +14883,18 @@ function buildDtgLegend(){
     "N: Qué sigue — el siguiente paso operativo, texto libre. '-' = sin definir.",
     "Prod: — productos como 'descripción xCANTIDAD @PRECIO'. '@-' = precio sin definir (NUNCA asumas $0); '@0' = precio real de cero (cortesía).",
     "Nota: — hasta 2 notas humanas recientes, con autor y fecha, solo cuando aportan contexto.",
-    "Tel: / Emp: — teléfono/empresa del cliente; solo aparecen en los scopes que los necesitan (all, rgv).",
+    "Tel: / Emp: — teléfono/empresa del cliente; solo aparecen en el scope 'all'.",
     "Estado: — solo aparece si el scope incluye cerrados (ytd/all); si falta, el ticket está abierto.",
+    "Un '*' pegado a A: o C: SOLO aparece en el scope 'overdue', y marca cuál de las dos fechas es la que está vencida hoy (puede ser una, la otra, o ambas) — nunca asumas que es Compromiso si no lleva '*'.",
     "",
     "IMPORTANTE: '-' SIEMPRE significa 'sin dato/no definido'. Nunca lo confundas con un valor real vacío o con $0.",
+    "",
+    "SCOPES DISPONIBLES",
+    "(vacío) = tickets vivos. today = Atención o Compromiso de hoy, o urgente. overdue = Atención y/o Compromiso ya vencidos (ver '*' arriba). ytd = creados este año, incluye cerrados. all = TODOS los tickets accesibles, sin excepción (puede venir paginado — ver abajo).",
+    "'rgv' (ruta por región) EXISTE como palabra pero está DESHABILITADO: DTG no guarda ciudad/dirección real de los clientes, y aproximar por 'tiene teléfono' o por lada telefónica no es preciso — así que el CRM prefiere decir 'no disponible' en vez de inventar una ruta. Usa /state all y filtra a mano mientras tanto.",
+    "",
+    "PAGINACIÓN DE /state all",
+    "Si hay más tickets de los que caben en un mensaje, /state all NUNCA los recorta en silencio: reparte en páginas explícitas. El header trae 'pagina=X/Y' cuando aplica, y el pie de página dice exactamente el siguiente comando ('/state all 2', '/state all 3', ...). Solo 'all' pagina así — los demás scopes (today/overdue/ytd/default) sí pueden recortarse por relevancia (urgentes y fechas próximas primero) y avisarlo, porque no prometen ser 'todos'.",
     "",
     "PRIVACIDAD",
     "DTG_STATE solo exporta lo que el actor actual puede ver (Row Level Security de Postgres, no un filtro de la app) — un ticket privado sin acceso simplemente no aparece, sin excepción ni pista indirecta. Un DTG_PATCH tampoco puede tocar un ticket que el actor no puede ver — el CRM lo rechaza. Un patch NUNCA cambia la privacidad de un ticket (eso solo lo hacen /privado y /publico dentro del CRM).",
@@ -14364,7 +14935,8 @@ function buildDtgLegend(){
   if(quesigueOptions.length) lines.push("VALORES SUGERIDOS DE 'QUÉ SIGUE' (texto libre, estos son solo ejemplos): " + quesigueOptions.join(" · ") + ".", "");
   lines.push(
     "REGLAS DE SEGURIDAD",
-    "- El CRM valida TODO antes de ejecutar nada: versión, sintaxis, existencia y acceso al ticket, campos y valores. Si algo falla, no se aplica NADA de ese patch (todo o nada) y se muestra el error exacto, línea por línea.",
+    "- VALIDACIÓN todo-o-nada: el CRM valida TODO antes de ejecutar nada (versión, sintaxis, existencia y acceso al ticket, campos y valores). Si algo falla, no se aplica NADA de ese patch y se muestra el error exacto, línea por línea.",
+    "- EJECUCIÓN no es una transacción atómica: un patch ya validado se aplica acción por acción sobre el CRM real. Si una escritura puntual es rechazada por el servidor (rarísimo — cada acción ya pasó la validación), las acciones anteriores que sí se guardaron quedan aplicadas; el CRM nunca dice '✓ aplicado' si algo se rechazó, y siempre distingue qué se aplicó, qué falló y qué ticket se omitió (por ejemplo si dejó de existir o de ser accesible entre que pegaste el patch y lo confirmaste).",
     "- El CRM siempre muestra un preview humano (ticket, campo, valor anterior → valor nuevo) antes de aplicar cualquier cosa.",
     "- Cerrar/cancelar un ticket se marca como acción sensible en el preview.",
     "- El patch nunca contiene ni ejecuta SQL, HTML, JavaScript ni código de ningún tipo — solo estas acciones de dominio.",
@@ -14603,39 +15175,66 @@ function dtgPatchPreviewPopover(){
    referencia capturada al momento del preview: si algo cambió entre pegar
    el patch y confirmarlo (otra sesión, Realtime), se opera sobre el estado
    real más reciente, o se omite con un aviso si el ticket ya no está
-   disponible — nunca sobre una copia obsoleta. */
+   disponible — nunca sobre una copia obsoleta.
+
+   RONDA HARDENING: antes, `appliedCount++` pasaba simplemente porque el
+   `await` no lanzó excepción — pero updateTicketFieldCore/updateQueSigueCore
+   devolvían `true` incondicionalmente aunque su propio try/catch interno ya
+   hubiera absorbido un error de Supabase (nunca relanzaban), y
+   createMarkerCore/resolveMarkerCore ni siquiera tenían `return`. Resultado:
+   una escritura rechazada por Supabase igual se contaba como aplicada y el
+   toast final podía decir "✓ Patch aplicado" con cambios que en realidad NO
+   quedaron guardados. Los 5 cores reusados aquí ahora devuelven un booleano
+   real (ver sus propios comentarios "RONDA HARDENING"); esta función solo
+   lee ese valor — no valida nada por su cuenta ni llama al core dos veces
+   (evitar una escritura duplicada por intentar "confirmar" el resultado).
+   El resumen final distingue explícitamente cambios aplicados, cambios
+   fallidos y tickets omitidos, y NUNCA dice "✓ aplicado" si algo falló. */
 async function applyDtgPatch(){
   var p = UI.dtgPatchPreview;
   if(!p) return;
   UI.dtgPatchPreview = null;
   render();
   var actor = currentActorName() || "Alguien";
-  var touchedCount = 0;
+  var touchedTickets = 0, appliedTotal = 0, failedTotal = 0, omittedTotal = 0;
   for(var bi = 0; bi < p.blocks.length; bi++){
     var b = p.blocks[bi];
     var liveTicket = findTicket(b.ticketId);
-    if(!liveTicket){ showToast("Patch: #" + b.folio + " ya no está disponible — se omitió."); continue; }
+    if(!liveTicket){ omittedTotal++; showToast("Patch: #" + b.folio + " ya no está disponible — se omitió."); continue; }
     var realActions = b.actions.filter(function(a){ return !a.noop; });
     var appliedCount = 0;
     for(var ai = 0; ai < realActions.length; ai++){
       var a = realActions[ai];
+      var actionOk = false;
       try{
-        if(a.verb === "SET") await a.apply(liveTicket, a.newValue, { refocus: false });
-        else if(a.verb === "NOTA") await addNotaCore(liveTicket, a.text);
-        else if(a.verb === "CERRAR") await cerrarTicketCore(liveTicket, a.tipo, a.razon);
-        appliedCount++;
-      }catch(e){ showToast('Patch: no se pudo aplicar "' + a.label + '" en #' + b.folio + " — " + (e.message || "error")); }
+        var coreResult;
+        if(a.verb === "SET") coreResult = await a.apply(liveTicket, a.newValue, { refocus: false });
+        else if(a.verb === "NOTA") coreResult = await addNotaCore(liveTicket, a.text);
+        else if(a.verb === "CERRAR") coreResult = await cerrarTicketCore(liveTicket, a.tipo, a.razon);
+        actionOk = coreResult !== false; /* los cores devuelven false explícito si la escritura fue rechazada */
+      }catch(e){ actionOk = false; }
+      if(actionOk){ appliedCount++; appliedTotal++; }
+      else { failedTotal++; showToast('Patch: "' + a.label + '" en #' + b.folio + " no se guardó — el CRM rechazó esa escritura."); }
     }
     if(appliedCount > 1){
       /* Línea discreta adicional (Parte 13) — SOLO cuando hay más de un
-         cambio real en el mismo ticket; cada core de arriba YA escribió su
-         propia línea de bitácora idéntica a una edición manual, esto no
-         la duplica, solo aclara que vinieron juntas de un patch externo. */
+         cambio real GUARDADO en el mismo ticket; cada core de arriba YA
+         escribió su propia línea de bitácora idéntica a una edición manual,
+         esto no la duplica, solo aclara que vinieron juntas de un patch
+         externo. Cuenta appliedCount, nunca realActions.length, para no
+         mencionar cambios que en realidad fallaron. */
       try{ await sb.from("bitacora").insert({ ticket_id: liveTicket.id, tipo: "sistema", autor: actor, payload: { text: "Patch externo aplicado por " + actor + " · " + appliedCount + " cambio(s)." } }); }catch(e){ /* best-effort */ }
     }
-    if(appliedCount > 0) touchedCount++;
+    if(appliedCount > 0) touchedTickets++;
   }
-  showToast(touchedCount ? ("✓ Patch aplicado — " + touchedCount + " ticket(s) actualizados") : "No se aplicó ningún cambio.");
+  var parts = [];
+  if(appliedTotal) parts.push(appliedTotal + " cambio(s) aplicados en " + touchedTickets + " ticket(s)");
+  if(failedTotal) parts.push(failedTotal + " cambio(s) fallaron");
+  if(omittedTotal) parts.push(omittedTotal + " ticket(s) omitidos");
+  var summaryMsg;
+  if(!parts.length) summaryMsg = "No se aplicó ningún cambio.";
+  else summaryMsg = (failedTotal || omittedTotal ? (appliedTotal ? "⚠️ Patch parcial — " : "✗ Patch — ") : "✓ Patch aplicado — ") + parts.join(" · ");
+  showToast(summaryMsg);
   refreshFromServer({ refocus: true });
 }
 
@@ -14675,7 +15274,8 @@ function dtgCopyableBlock(entryId, fullText, compactText){
 }
 function dtgStateEntryContent(entry){
   var p = entry.params || {};
-  return { title: "DTG_STATE — " + (p.scopeLabel || "") + " (" + (p.total || 0) + " tickets)", html: dtgCopyableBlock(entry.id, p.text || "", p.compactText || "") };
+  var pageSuffix = p.paginated ? " — página " + p.page + "/" + p.totalPages : "";
+  return { title: "DTG_STATE — " + (p.scopeLabel || "") + " (" + (p.total || 0) + " tickets)" + pageSuffix, html: dtgCopyableBlock(entry.id, p.text || "", p.compactText || "") };
 }
 function dtgLegendEntryContent(entry){
   var p = entry.params || {};
@@ -15080,14 +15680,21 @@ var COMMANDS = [
      con su propio botón Copiar. */
   {
     key: "state", aliases: ["state","estadocompleto"], type: "read", requiresTicket: false,
-    syntax: "/state [today|overdue|ytd|all|rgv]", summary: "Generar un snapshot DTG_STATE v1 para copiar y pegar en una IA externa",
-    examples: ["/state", "/state today", "/state overdue", "/state ytd", "/state all", "/state rgv"],
+    syntax: "/state [today|overdue|ytd|all [página]|rgv]", summary: "Generar un snapshot DTG_STATE v1 para copiar y pegar en una IA externa",
+    examples: ["/state", "/state today", "/state overdue", "/state ytd", "/state all", "/state all 2", "/state rgv"],
     parse: function(arg){
-      var result = buildDtgState((arg||"").trim().toLowerCase());
+      /* "/state all 2" -> scope "all", página 2. El segundo token solo se
+         usa para "all" (buildDtgState lo ignora en cualquier otro scope) —
+         ver comentario de buildDtgState sobre por qué "all" nunca se
+         recorta en silencio. */
+      var tokens = (arg||"").trim().split(/\s+/).filter(Boolean);
+      var scopeArg = (tokens[0] || "").toLowerCase();
+      var pageArg = tokens[1];
+      var result = buildDtgState(scopeArg, pageArg);
       if(!result.ok) return { ok:false, error: result.error };
       return { ok:true, data: result };
     },
-    run: function(data, ctx){ pushEphemeral("dtgstate", ctx.ticket ? ctx.ticket.id : null, { text: data.text, compactText: data.compactText, total: data.total, scopeLabel: data.scope.label }); }
+    run: function(data, ctx){ pushEphemeral("dtgstate", ctx.ticket ? ctx.ticket.id : null, { text: data.text, compactText: data.compactText, total: data.total, scopeLabel: data.scope.label, page: data.page, totalPages: data.totalPages, paginated: data.paginated }); }
   },
   {
     key: "legend", aliases: ["legend","leyenda"], type: "read", requiresTicket: false,
@@ -15287,14 +15894,43 @@ function wireEvents(){
       col.addEventListener("dragleave", function(e){
         if(e.target === col) col.classList.remove("kanban-column-dragover");
       });
+      /* UX Flow Patch §17: MISMA zona de drop que ya usaba mover una
+         tarjeta de responsable — se distingue por el tipo de dato en
+         dataTransfer ("application/x-kanban-col" = reordenar columnas,
+         "text/plain" = mover un ticket, comportamiento de siempre sin
+         cambios). Nunca dos drop-zones superpuestas para la misma
+         columna. */
       col.addEventListener("drop", function(e){
         e.preventDefault();
         col.classList.remove("kanban-column-dragover");
+        var draggedColKey = e.dataTransfer ? e.dataTransfer.getData("application/x-kanban-col") : "";
+        if(draggedColKey){
+          kanbanReorderColumn(draggedColKey, col.getAttribute("data-kanban-column"));
+          return;
+        }
         var draggedId = e.dataTransfer ? e.dataTransfer.getData("text/plain") : null;
         var t = draggedId ? findTicket(draggedId) : null;
         if(!t) return;
         var newResp = col.getAttribute("data-kanban-column") || "";
         if(t.responsable !== newResp) updateTicketFieldCore(t, "field-responsable", newResp, { refocus:false });
+      });
+    });
+    /* UX Flow Patch §17: arrastrar el handle "⋮⋮" de la CABECERA de una
+       columna (nunca la columna completa — mismo motivo que el handle de
+       tarjeta: demasiados controles interactivos adentro) reordena "el
+       resto" — mismo mecanismo dragstart/dragend que ya usa el drag de
+       tarjetas (classList directo, nunca render() hasta soltar). */
+    kanbanBoard.querySelectorAll("[data-kanban-col-handle]").forEach(function(colHandle){
+      var colEl = colHandle.closest(".kanban-column");
+      colHandle.addEventListener("dragstart", function(e){
+        var key = colHandle.getAttribute("data-kanban-col-handle");
+        try{ e.dataTransfer.setData("application/x-kanban-col", key); }catch(err){}
+        if(e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+        if(colEl) colEl.classList.add("kanban-column-dragging");
+      });
+      colHandle.addEventListener("dragend", function(){
+        if(colEl) colEl.classList.remove("kanban-column-dragging");
+        kanbanBoard.querySelectorAll(".kanban-column-dragover").forEach(function(c){ c.classList.remove("kanban-column-dragover"); });
       });
     });
   }
@@ -15438,6 +16074,25 @@ function wireEvents(){
         card.classList.remove("calendar-entry-dragging");
         calendarScroll.querySelectorAll(".calendar-dropzone-over").forEach(function(z){ z.classList.remove("calendar-dropzone-over"); });
       });
+      /* UX Flow Patch §19-20: ghost de la otra fecha al pasar el mouse —
+         mismo criterio que el hover de .ticket-marker-icon (§23, ver más
+         abajo): DOM-only, nunca dispara render(). Silencioso si la otra
+         fecha no está en el mes/semana visible ahora mismo (querySelector
+         simplemente no encuentra nada). Solo tarjetas de un solo tipo
+         (data-calendar-entry-type presente) — las combinadas ("Ambas") ya
+         muestran las dos fechas, no aplica. */
+      var entryType = card.getAttribute("data-calendar-entry-type");
+      if(entryType){
+        card.addEventListener("mouseenter", function(){
+          var otherDate = calendarGhostOtherDate(card.getAttribute("data-calendar-entry"), entryType);
+          if(!otherDate) return;
+          var ghostCell = calendarScroll.querySelector('[data-date="' + otherDate + '"]');
+          if(ghostCell) ghostCell.classList.add("calendar-day-ghost");
+        });
+        card.addEventListener("mouseleave", function(){
+          calendarScroll.querySelectorAll(".calendar-day-ghost").forEach(function(c){ c.classList.remove("calendar-day-ghost"); });
+        });
+      }
     });
     calendarScroll.querySelectorAll("[data-calendar-column]").forEach(function(zone){
       zone.addEventListener("dragover", function(e){
@@ -15781,21 +16436,27 @@ function wireEvents(){
   root.querySelectorAll('[data-action="details-cell-inline"]').forEach(function(b){
     b.addEventListener("click", function(){ openDetailsCellEdit(b.getAttribute("data-ticket"), b.getAttribute("data-field")); });
   });
-  /* Vista Lista (§24-26/§63-65): fila completa abre el ticket — es su rol
-     (supervisar/escanear, no editar), a diferencia de Detalles. tabindex=0 +
-     role="button" en el <tr> (puesto en el render) más Enter/Espacio aquí
-     hacen que sea alcanzable y accionable por teclado igual que un botón
-     nativo, sin construir un sistema de foco aparte. */
+  /* UX Flow Patch §10-12: Lista pasó a ser split-view — clic/Espacio ya NO
+     abre el ticket, SELECCIONA (llena el preview de la derecha); doble
+     clic o Enter SÍ abren, igual que un explorador de archivos real.
+     tabindex=0 + role="button" en el <tr> (puesto en el render) conserva
+     la accesibilidad de teclado de siempre. */
   root.querySelectorAll(".tickets-list-row").forEach(function(tr){
     tr.addEventListener("click", function(e){
+      if(e.target.closest("button")) return;
+      var rowId = tr.getAttribute("data-id");
+      if(UI.ticketsExplorer.selectedCardId === rowId) return; // ya seleccionada, nada que hacer
+      UI.ticketsExplorer.selectedCardId = rowId;
+      render();
+    });
+    tr.addEventListener("dblclick", function(e){
       if(e.target.closest("button")) return;
       openTicketById(tr.getAttribute("data-id"));
     });
     tr.addEventListener("keydown", function(e){
-      if(e.key !== "Enter" && e.key !== " ") return;
       if(e.target !== tr) return;
-      e.preventDefault();
-      openTicketById(tr.getAttribute("data-id"));
+      if(e.key === "Enter"){ e.preventDefault(); openTicketById(tr.getAttribute("data-id")); return; }
+      if(e.key === " "){ e.preventDefault(); UI.ticketsExplorer.selectedCardId = tr.getAttribute("data-id"); render(); }
     });
   });
 
@@ -15807,6 +16468,17 @@ function wireEvents(){
      accesibilidad de teclado. El clic ya lo resuelve el listener delegado
      genérico (data-action="sidebar-marker-icon", agnóstico a la etiqueta),
      así que aquí solo hace falta cubrir el teclado. */
+  /* UX Flow Patch §7-9: mismo motivo/patrón que el bloque de arriba —
+     teclado para el badge de imagen (el clic ya lo resuelve el listener
+     delegado en fase de captura, data-action="ticket-icon-imgbadge"). */
+  root.querySelectorAll('.tickets-icon-imgbadge[role="button"]').forEach(function(el){
+    el.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      UI.quickLogoPicker = { clienteId: el.getAttribute("data-cliente-id") };
+      render();
+    });
+  });
   root.querySelectorAll('.ticket-marker-icon[role="button"]').forEach(function(el){
     el.addEventListener("keydown", function(e){
       if(e.key !== "Enter" && e.key !== " ") return;
@@ -16042,6 +16714,25 @@ function wireEvents(){
       removeClienteLogo(c).then(function(ok){ if(ok) showToast("Logotipo eliminado — vuelve a iniciales."); });
     });
   });
+
+  /* UX Flow Patch §7-9: "Subir imagen" del popover de asignación rápida de
+     logo — mismo patrón que cliente-logo-input de arriba (input escondido,
+     uploadClienteLogo() decide qué hacer), input propio porque este vive en
+     un overlay aparte de la Ficha del cliente. */
+  var quicklogoFileInput = document.getElementById("quicklogo-file-input");
+  if(quicklogoFileInput){
+    quicklogoFileInput.addEventListener("change", function(){
+      var file = quicklogoFileInput.files && quicklogoFileInput.files[0];
+      var clientId = quicklogoFileInput.getAttribute("data-cliente-id");
+      quicklogoFileInput.value = "";
+      if(!file || !clientId) return;
+      var c = STATE.clientes.filter(function(x){ return x.id === clientId; })[0];
+      if(!c) return;
+      closeQuickLogoPicker();
+      showToast("Subiendo logotipo…");
+      uploadClienteLogo(c, file).then(function(ok){ if(ok) showToast("Logotipo actualizado."); });
+    });
+  }
 
   /* Identidad visual del cliente (§14) — un swatch/botón guarda y listo, sin
      confirmación extra (mismo criterio que commitClienteFichaField: es una
@@ -16376,6 +17067,35 @@ document.addEventListener("click", function(e){
     toggleSidebarMarkerPopover(sidebarMarkerIconBtn.getAttribute("data-ticket"), sidebarMarkerIconBtn.getAttribute("data-marker"));
     return;
   }
+  /* UX Flow Patch §7-9: badge de imagen en vista Iconos — mismo motivo y
+     mismo mecanismo que el bloque de arriba (span[role=button] DENTRO de
+     <button data-action="open-ticket">, listener en fase de CAPTURA para
+     que el clic nunca "caiga" al botón contenedor y abra el ticket). */
+  var ticketIconImgBadgeBtn = e.target.closest && e.target.closest('[data-action="ticket-icon-imgbadge"]');
+  if(ticketIconImgBadgeBtn){
+    e.stopPropagation();
+    UI.quickLogoPicker = { clienteId: ticketIconImgBadgeBtn.getAttribute("data-cliente-id") };
+    render();
+    return;
+  }
+  var quicklogoOverlayEl = document.getElementById("quicklogo-overlay");
+  if(quicklogoOverlayEl && e.target === quicklogoOverlayEl){ closeQuickLogoPicker(); return; }
+  var quicklogoCloseBtn = e.target.closest && e.target.closest('[data-action="quicklogo-close"]');
+  if(quicklogoCloseBtn){ closeQuickLogoPicker(); return; }
+  var quicklogoAssignBtn = e.target.closest && e.target.closest('[data-action="quicklogo-assign-existing"]');
+  if(quicklogoAssignBtn){
+    var qlCliente = UI.quickLogoPicker ? findCliente(UI.quickLogoPicker.clienteId) : null;
+    var qlPath = quicklogoAssignBtn.getAttribute("data-storage-path");
+    closeQuickLogoPicker();
+    if(qlCliente && qlPath) assignExistingPhotoAsLogo(qlCliente, qlPath);
+    return;
+  }
+  var quicklogoUploadBtn = e.target.closest && e.target.closest('[data-action="quicklogo-upload"]');
+  if(quicklogoUploadBtn){
+    var qlInput = document.getElementById("quicklogo-file-input");
+    if(qlInput) qlInput.click();
+    return;
+  }
   var smartActionBtn = e.target.closest && e.target.closest('[data-action="smart-action"]');
   if(smartActionBtn){ runSmartAction(smartActionBtn.getAttribute("data-key")); return; }
   var smartActionCancelBtn = e.target.closest && e.target.closest('[data-action="smart-action-cancel"]');
@@ -16675,6 +17395,32 @@ document.addEventListener("click", function(e){
   if(feedSubmitBtn){ publishFeedPost(); return; }
   var feedFilterBtn = e.target.closest && e.target.closest('[data-action="feed-filter"]');
   if(feedFilterBtn){ UI.feedFilter = feedFilterBtn.getAttribute("data-value"); render(); return; }
+  /* UX Flow Patch §3-5: pestaña AI Bridge de Inicio. */
+  var aibridgeModeBtn = e.target.closest && e.target.closest('[data-action="aibridge-mode"]');
+  if(aibridgeModeBtn){ UI.aiBridge.mode = aibridgeModeBtn.getAttribute("data-value"); render(); return; }
+  var aibridgeScopeBtn = e.target.closest && e.target.closest('[data-action="aibridge-scope"]');
+  if(aibridgeScopeBtn){
+    var aibridgeScopeVal = aibridgeScopeBtn.getAttribute("data-value") || "";
+    UI.aiBridge.bajarScope = aibridgeScopeVal;
+    UI.aiBridge.bajarBlock = buildDtgState(aibridgeScopeVal);
+    render();
+    return;
+  }
+  var aibridgeRegenBtn = e.target.closest && e.target.closest('[data-action="aibridge-regenerate"]');
+  if(aibridgeRegenBtn){ UI.aiBridge.bajarBlock = buildDtgState(UI.aiBridge.bajarScope); render(); return; }
+  var aibridgeCopyBtn = e.target.closest && e.target.closest('[data-action="aibridge-copy"]');
+  if(aibridgeCopyBtn){
+    if(UI.aiBridge.bajarBlock && UI.aiBridge.bajarBlock.ok) copyPlainText(UI.aiBridge.bajarBlock.text);
+    return;
+  }
+  var aibridgeProcessBtn = e.target.closest && e.target.closest('[data-action="aibridge-process-patch"]');
+  if(aibridgeProcessBtn){
+    var aibridgePasteEl = document.getElementById("aibridge-paste-text");
+    var aibridgeRaw = aibridgePasteEl ? aibridgePasteEl.value : "";
+    if(!(aibridgeRaw || "").trim()){ showToast("Pega primero el bloque DTG_PATCH v1."); return; }
+    handleDtgPatchPaste(aibridgeRaw);
+    return;
+  }
   var feedReactionBtn = e.target.closest && e.target.closest('[data-action="feed-reaction"]');
   if(feedReactionBtn){
     toggleFeedReaction(feedReactionBtn.getAttribute("data-target-type"), feedReactionBtn.getAttribute("data-target-id"), feedReactionBtn.getAttribute("data-reaction"));
@@ -17004,6 +17750,31 @@ document.addEventListener("keydown", function(e){
      necesita invocarla — nunca una segunda copia de la lista de capas ni de
      su orden de prioridad. */
   if(e.key === "Escape" && dtgCloseTopOverlay()) return;
+  /* AI BRIDGE — RONDA HARDENING (Parte 3 del pedido): el preview de un
+     DTG_PATCH es una interfaz emergente real, con su propio contrato de
+     teclado — "pegar patch → Enter → preview → Enter → aplicado":
+       - Enter (sin modificadores) confirma, exactamente lo que hace el
+         botón "Aplicar" (mismo applyDtgPatch(), nunca una segunda ruta).
+       - Escape ya lo cierra arriba, vía dtgCloseTopOverlay() (Escape
+         también es la MISMA función que usa el botón Atrás físico — no se
+         duplica el criterio de qué se cierra primero); este bloque repite
+         el mismo caso aquí solo por consistencia con el resto del archivo
+         (ver p. ej. el bloque de UI.markerPicker más abajo, que hace lo
+         mismo con su propio overlay).
+       - Mientras el preview está abierto, `return` incondicional al final
+         de este bloque bloquea CUALQUIER otro atajo global (J/K, Cmd+H,
+         y cualquiera que se agregue después) — un popover modal real no
+         debe dejar pasar teclas a la navegación de fondo; es la misma idea
+         de "un overlay encima siempre gana" que ya rige dtgCloseTopOverlay,
+         aplicada a teclas normales y no solo a Escape/Atrás. No se llama
+         preventDefault() salvo en Enter/Escape, así que Tab y el resto del
+         foco del navegador siguen funcionando con normalidad dentro del
+         popover. */
+  if(UI.dtgPatchPreview){
+    if(e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey){ e.preventDefault(); applyDtgPatch(); return; }
+    if(e.key === "Escape"){ e.preventDefault(); UI.dtgPatchPreview = null; render(); return; }
+    return;
+  }
   /* §22-24: contrato de teclado de la Galería del ticket — Escape cierra
      (con prioridad sobre "Escape deselecciona la tarjeta" de abajo, mismo
      criterio de capas que el guard de clic-afuera más arriba: un overlay
@@ -17071,6 +17842,38 @@ document.addEventListener("keydown", function(e){
     if(e.key === "ArrowUp" && mpNoMods){ e.preventDefault(); UI.markerPicker.navIndex = (UI.markerPicker.navIndex-1+MARKER_TYPES.length) % MARKER_TYPES.length; render(); return; }
     if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); chooseMarkerType(UI.markerPicker.navIndex); return; }
     if(e.key === "Escape"){ e.preventDefault(); closeMarkerPicker(); return; }
+  }
+
+  /* UX Flow Patch §10-12: ArrowUp/ArrowDown navegan la selección de la
+     Lista split-view (actualiza el preview de inmediato), Enter abre el
+     ticket completo — mismo guard que J/K de abajo (nunca roba la tecla
+     mientras se escribe o con un overlay encima), acotado además a que
+     realmente estemos viendo Lista sin un ticket abierto encima. Reusa
+     ticketsExplorerFiltered() — el MISMO orden que ya ve la persona en la
+     tabla, nunca un segundo cálculo de "qué está visible ahora". */
+  if(UI.mainView === "tickets" && !UI.selectedTicketId && UI.ticketsView === "list" &&
+     (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") &&
+     !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing &&
+     !isTypingTarget(e.target) &&
+     !UI.viewingDocId && !UI.cierreModal && !UI.slashMenuOpen && !UI.pendingConfirm && !UI.composer && !UI.smartActions && !UI.markerPicker && !UI.totalDraft){
+    var listOrder = ticketsExplorerFiltered();
+    if(listOrder.length){
+      if(e.key === "Enter"){
+        if(UI.ticketsExplorer.selectedCardId){ e.preventDefault(); openTicketById(UI.ticketsExplorer.selectedCardId); }
+      } else {
+        var curListIdx = listOrder.findIndex(function(t){ return t.id === UI.ticketsExplorer.selectedCardId; });
+        var listDir = e.key === "ArrowDown" ? 1 : -1;
+        var nextListIdx = curListIdx === -1 ? (listDir === 1 ? 0 : listOrder.length - 1) : Math.max(0, Math.min(listOrder.length - 1, curListIdx + listDir));
+        if(listOrder[nextListIdx]){
+          e.preventDefault();
+          UI.ticketsExplorer.selectedCardId = listOrder[nextListIdx].id;
+          render();
+          var selRow = document.querySelector('.tickets-list-row[data-id="' + listOrder[nextListIdx].id + '"]');
+          if(selRow && selRow.scrollIntoView) selRow.scrollIntoView({ block: "nearest" });
+        }
+      }
+    }
+    return;
   }
 
   /* Navegación J/K entre tickets, respetando el mismo orden visual que ve
