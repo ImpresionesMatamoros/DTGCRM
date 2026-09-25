@@ -3545,6 +3545,134 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
   .tickets-view-btn{ flex:1 1 auto; }
   .tickets-toolbar-top{ align-items:flex-start; }
 }
+
+/* ================= PANTALLA OPERATIVA (KDS) =================
+   TV de 32" a 1920×1080 vista desde 3-5 metros. Todo en rem contra un
+   :root escalado por vw, así que la misma hoja sirve en 1080p y en 4K. */
+.kds-root{
+  --kds: calc(100vw / 1920);
+  --k-ok:#22C55E; --k-pronto:#F59E0B; --k-urg:#EF4444;
+  --k-proc:#22D3EE; --k-blok:#E879F9; --k-esp:#94A3B8;
+  position:fixed; inset:0; z-index:200; display:flex; flex-direction:column;
+  background:#07090D; color:#F2F5F9; font-family:var(--font-sans);
+  padding:calc(18 * var(--kds)); gap:calc(14 * var(--kds));
+  overflow:hidden; letter-spacing:.01em;
+}
+.kds-head{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  padding-bottom:calc(12 * var(--kds)); border-bottom:calc(3 * var(--kds)) solid #1B2430;
+}
+.kds-head-l{ display:flex; align-items:center; gap:calc(10 * var(--kds)); font-size:calc(26 * var(--kds)); font-weight:800; color:#93A3B8; }
+.kds-head-c{ font-size:calc(46 * var(--kds)); font-weight:900; letter-spacing:calc(6 * var(--kds)); }
+.kds-head-r{ display:flex; align-items:center; justify-content:flex-end; gap:calc(18 * var(--kds)); font-size:calc(26 * var(--kds)); font-weight:700; color:#93A3B8; }
+.kds-clock{ color:#F2F5F9; font-variant-numeric:tabular-nums; }
+.kds-live{
+  padding:calc(4 * var(--kds)) calc(14 * var(--kds)); border-radius:999px;
+  background:rgba(34,197,94,.16); color:var(--k-ok); font-weight:900; letter-spacing:.1em;
+}
+.kds-live-off{ background:rgba(239,68,68,.18); color:var(--k-urg); }
+
+.kds-legend{ display:flex; align-items:center; gap:calc(26 * var(--kds)); font-size:calc(19 * var(--kds)); font-weight:800; color:#8996A8; letter-spacing:.06em; }
+.kds-legend-i{ display:inline-flex; align-items:center; gap:calc(8 * var(--kds)); }
+.kds-dot{ width:calc(16 * var(--kds)); height:calc(16 * var(--kds)); border-radius:50%; background:var(--k-c, #94A3B8); }
+.kds-legend-count{ margin-left:auto; color:#F2F5F9; }
+
+.kds-grid{ flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:calc(14 * var(--kds)); min-height:0; }
+.kds-card{
+  position:relative; display:flex; flex-direction:column; min-height:0; overflow:hidden;
+  background:#0E141C; border:calc(3 * var(--kds)) solid #1F2A38;
+  border-left:calc(14 * var(--kds)) solid var(--k-esp);
+  border-radius:calc(14 * var(--kds)); padding:calc(18 * var(--kds)) calc(22 * var(--kds));
+  gap:calc(6 * var(--kds));
+}
+.kds-card-empty{ align-items:center; justify-content:center; color:#2A3644; font-size:calc(34 * var(--kds)); font-weight:900; border-left-color:#1F2A38; }
+/* Colores de la leyenda — el borde grueso izquierdo es la señal a 5 m.
+   --k-c lleva el color de la prioridad a los hijos: `currentColor` no sirve
+   dentro del propio elemento que redefine su color (el número de posición). */
+.kds-p-atiempo{ --k-c:var(--k-ok); }
+.kds-p-pronto{ --k-c:var(--k-pronto); }
+.kds-p-urgente{ --k-c:var(--k-urg); }
+.kds-p-proceso{ --k-c:var(--k-proc); }
+.kds-p-bloqueado{ --k-c:var(--k-blok); }
+.kds-p-espera{ --k-c:var(--k-esp); }
+.kds-p-atiempo, .kds-p-pronto, .kds-p-urgente,
+.kds-p-proceso, .kds-p-bloqueado, .kds-p-espera{ border-left-color:var(--k-c); color:var(--k-c); }
+.kds-card.kds-p-urgente{ background:#160B0D; }
+.kds-card.kds-p-bloqueado{ background:#150B16; }
+/* Selección: borde blanco grueso, halo y escala — visible desde lejos. */
+.kds-sel{ outline:calc(5 * var(--kds)) solid #FFFFFF; outline-offset:calc(-2 * var(--kds)); box-shadow:0 0 calc(40 * var(--kds)) rgba(255,255,255,.28); transform:scale(1.008); }
+
+.kds-card-top{ display:flex; align-items:center; gap:calc(14 * var(--kds)); font-size:calc(22 * var(--kds)); font-weight:900; letter-spacing:.08em; }
+.kds-slot{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:calc(44 * var(--kds)); height:calc(44 * var(--kds)); border-radius:calc(10 * var(--kds));
+  background:var(--k-c, #94A3B8); color:#07090D; font-size:calc(28 * var(--kds)); font-weight:900;
+}
+.kds-estado{ color:inherit; }
+.kds-folio{ margin-left:auto; color:#6F7F93; font-family:var(--font-mono); }
+.kds-cliente{ font-size:calc(26 * var(--kds)); font-weight:800; color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kds-accion{ font-size:calc(62 * var(--kds)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; }
+.kds-cant{ font-size:calc(40 * var(--kds)); font-weight:800; color:#DCE5F0; line-height:1.1; }
+.kds-notas{
+  margin:calc(4 * var(--kds)) 0 0; padding-left:calc(22 * var(--kds));
+  font-size:calc(21 * var(--kds)); color:#94A3B8; font-weight:600; line-height:1.4;
+  /* Altura de renglones ENTEROS: nunca media línea cortada. */
+  flex-shrink:0; max-height:calc(21 * 1.4 * 2 * var(--kds)); overflow:hidden;
+}
+.kds-notas li{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kds-fechas{ display:flex; gap:calc(34 * var(--kds)); margin-top:auto; padding-top:calc(10 * var(--kds)); }
+.kds-fechas span{ display:block; font-size:calc(16 * var(--kds)); font-weight:800; color:#6F7F93; letter-spacing:.12em; }
+.kds-fechas b{ font-size:calc(30 * var(--kds)); font-weight:900; color:#FFFFFF; }
+.kds-foot{
+  display:flex; align-items:center; justify-content:space-between; gap:calc(12 * var(--kds));
+  margin-top:calc(10 * var(--kds)); padding-top:calc(10 * var(--kds)); border-top:calc(2 * var(--kds)) solid #1F2A38;
+  font-size:calc(20 * var(--kds)); font-weight:800; color:#B6C3D4; letter-spacing:.05em;
+}
+.kds-foot-r{ color:#6F7F93; }
+
+.kds-queue{ display:grid; grid-template-columns:repeat(4, 1fr); gap:calc(10 * var(--kds)); }
+.kds-q{
+  display:flex; align-items:center; gap:calc(10 * var(--kds)); min-width:0;
+  background:#0B1118; border:calc(2 * var(--kds)) solid #1F2A38; border-left:calc(8 * var(--kds)) solid var(--k-esp);
+  border-radius:calc(10 * var(--kds)); padding:calc(9 * var(--kds)) calc(12 * var(--kds)); font-size:calc(19 * var(--kds)); font-weight:800;
+}
+.kds-q-n{ color:#6F7F93; font-family:var(--font-mono); flex-shrink:0; }
+.kds-q-accion{ color:#F2F5F9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kds-q-cant{ color:#94A3B8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kds-q-resp{ margin-left:auto; color:#6F7F93; flex-shrink:0; }
+.kds-empty{ flex:1; display:flex; align-items:center; justify-content:center; font-size:calc(72 * var(--kds)); font-weight:900; color:#1F2A38; }
+
+.kds-overlay{ position:fixed; inset:0; z-index:210; display:flex; align-items:center; justify-content:center; background:rgba(3,6,10,.86); }
+.kds-confirm{
+  width:calc(900 * var(--kds)); background:#0E141C; border:calc(4 * var(--kds)) solid #FFFFFF;
+  border-radius:calc(18 * var(--kds)); padding:calc(40 * var(--kds)); text-align:center;
+}
+.kds-confirm-title{ font-size:calc(52 * var(--kds)); font-weight:900; margin-bottom:calc(22 * var(--kds)); }
+.kds-confirm-folio{ font-size:calc(24 * var(--kds)); font-weight:800; color:#94A3B8; }
+.kds-confirm-accion{ font-size:calc(58 * var(--kds)); font-weight:900; margin:calc(8 * var(--kds)) 0; }
+.kds-confirm-cant{ font-size:calc(34 * var(--kds)); font-weight:800; color:#DCE5F0; }
+.kds-confirm-actions{ display:flex; gap:calc(16 * var(--kds)); margin-top:calc(32 * var(--kds)); }
+.kds-btn{
+  flex:1; border:none; border-radius:calc(12 * var(--kds)); padding:calc(22 * var(--kds));
+  font-size:calc(30 * var(--kds)); font-weight:900; letter-spacing:.06em; cursor:pointer; font-family:inherit;
+}
+.kds-btn-ok{ background:var(--k-ok); color:#07090D; }
+.kds-btn-back{ background:#1F2A38; color:#F2F5F9; }
+
+.kds-detail{ width:calc(1500 * var(--kds)); max-height:calc(900 * var(--kds)); overflow:auto; background:#0E141C; border:calc(4 * var(--kds)) solid #1F2A38; border-radius:calc(18 * var(--kds)); padding:calc(34 * var(--kds)); }
+.kds-detail-head{ display:flex; align-items:center; justify-content:space-between; font-size:calc(28 * var(--kds)); font-weight:800; color:#B6C3D4; }
+.kds-detail-estado{ font-weight:900; letter-spacing:.08em; color:var(--k-c, #94A3B8); }
+.kds-detail-accion{ font-size:calc(64 * var(--kds)); font-weight:900; margin:calc(10 * var(--kds)) 0 calc(24 * var(--kds)); }
+.kds-detail-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:calc(28 * var(--kds)); font-size:calc(22 * var(--kds)); line-height:1.45; }
+.kds-detail-grid h3{ font-size:calc(18 * var(--kds)); letter-spacing:.14em; color:#6F7F93; margin:0 0 calc(10 * var(--kds)); }
+.kds-detail-grid ul{ margin:0; padding-left:calc(22 * var(--kds)); }
+.kds-detail-grid em{ color:#6F7F93; font-style:normal; }
+
+.kds-gate{ position:fixed; inset:0; z-index:200; background:#07090D; color:#F2F5F9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; font-family:var(--font-sans); text-align:center; padding:24px; }
+.kds-gate-brand{ display:flex; align-items:center; gap:14px; font-size:30px; font-weight:800; color:#93A3B8; }
+.kds-gate-title{ font-size:clamp(34px, 6vw, 72px); font-weight:900; letter-spacing:.14em; }
+.kds-gate-btn{ background:#22C55E; color:#07090D; border:none; border-radius:16px; padding:26px 48px; font-size:clamp(20px, 2.6vw, 34px); font-weight:900; letter-spacing:.06em; cursor:pointer; font-family:inherit; min-height:44px; }
+.kds-gate-hint{ font-size:clamp(14px, 1.6vw, 22px); color:#6F7F93; font-weight:600; }
 </style>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
@@ -3568,7 +3696,7 @@ document.documentElement.setAttribute("data-theme", "dark");
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
 var APP_VERSION = "0.22.0";
-var APP_BUILD = "2026.09.25.1";
+var APP_BUILD = "2026.09.25.2";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -3850,6 +3978,10 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* X1.6: último cierre/cancelación y la tarea cuyo estado se está
      eligiendo — ambos de presentación, nunca se persisten. */
   lastCierre: null, taskStateSheet: null,
+  /* Pantalla operativa (KDS): todo de presentación, nada se persiste.
+     ready = ya hubo el gesto que concede pantalla completa y sonido. */
+  displayMode: false,
+  kds: { ready: false, sound: true, selectedId: null, confirm: null, detailId: null, seen: null },
   chatReactFor: null, chatMenuFor: null, chatActiveMsg: null, chatOptionsOpen: false,
   chatPinnedOpen: false, chatStickBottom: false, chatAtBottom: true, chatLastSeenTs: null,
   /* UX Flow Patch §3-5: pestaña "AI Bridge" dentro de Inicio — UI nueva
@@ -4950,6 +5082,7 @@ function resolveDeepLinkIfNeeded(){
 function syncDeepLinkUrl(ticketOrNull){
   try{
     var base = window.location.origin + window.location.pathname;
+    if(UI.displayMode) return;   /* la pantalla operativa conserva su ?display=1 */
     var next = ticketOrNull ? (base + "?t=" + encodeURIComponent(ticketOrNull.id)) : base;
     if(next !== window.location.href) window.history.replaceState(null, "", next);
   }catch(e){ /* algunos contextos (file://, ciertos WebViews) pueden negar History API — nunca bloquea la navegación real de la app por esto */ }
@@ -10371,7 +10504,7 @@ function calendarSortDayEntries(list){
     var ma = activeMarkers(a.ticket).length ? 0 : 1;
     var mb = activeMarkers(b.ticket).length ? 0 : 1;
     if(ma !== mb) return ma - mb;
-    var ra = a.ticket.responsable || " ", rb = b.ticket.responsable || " ";
+    var ra = a.ticket.responsable || "￿", rb = b.ticket.responsable || "￿";
     if(ra !== rb) return ra < rb ? -1 : 1;
     return (a.ticket.seq||0) - (b.ticket.seq||0);
   });
@@ -13244,6 +13377,412 @@ function renderBibliotecaSinRelacionar(){
   );
 }
 
+
+/* ================= PANTALLA OPERATIVA (KDS) =================
+   Otra VISTA de las tareas de producción que ya existen — no un módulo, no
+   una tabla, no estados nuevos. Lee STATE.tickets[].tareas y escribe con el
+   mismo updateTareaCore que el tablero y el ticket.
+   Se entra con ?display=1 (o #display). Pensada para una TV de 32" a
+   1920×1080, manejada solo con teclado o bump bar. */
+
+var KDS_MAIN_SLOTS = 4;          /* tarjetas grandes: 2 columnas × 2 filas */
+var KDS_QUEUE_MAX = 8;           /* cuántas más se anuncian abajo */
+var KDS_PRONTO_DIAS = 1;         /* "próximo a vencer" = hoy o mañana */
+
+/* Prioridad DERIVADA — nunca se guarda. Orden exigido: urgente, bloqueado,
+   por vencer, en proceso, pendiente. */
+function kdsPrioridad(t, task){
+  var ms = activeMarkers(t).map(function(m){ return m.type; });
+  var hoy = todayLocalYYYYMMDD();
+  var comp = t.fechaCompromiso && isSaneDateOnly(t.fechaCompromiso) ? t.fechaCompromiso : "";
+  if(comp && comp < hoy) return { rank: 0, key: "urgente", label: "VENCIDO" };
+  if(ms.indexOf("urgente") !== -1) return { rank: 0, key: "urgente", label: "URGENTE" };
+  if(ms.indexOf("bloqueado") !== -1) return { rank: 1, key: "bloqueado", label: "BLOQUEADO" };
+  if(task.estado === "esperando") return { rank: 1, key: "espera", label: "EN ESPERA" };
+  if(comp && comp <= addDaysToDateOnly(hoy, KDS_PRONTO_DIAS)) return { rank: 2, key: "pronto", label: "PRONTO" };
+  if(task.estado === "en_proceso") return { rank: 3, key: "proceso", label: "EN PROCESO" };
+  return { rank: 4, key: "atiempo", label: "PENDIENTE" };
+}
+/* La cola de la pantalla: pasos de producción sin terminar, de tickets
+   vivos. Lo que el actor no puede ver por RLS, nunca llegó a STATE. */
+function kdsTasks(){
+  var out = [];
+  STATE.tickets.forEach(function(t){
+    if(ticketIsCerrado(t)) return;
+    (t.tareas || []).forEach(function(task){
+      if(!isOpsTask(task) || task.estado === "terminado") return;
+      out.push({ id: task.id, task: task, t: t, prio: kdsPrioridad(t, task) });
+    });
+  });
+  var hoy = todayLocalYYYYMMDD();
+  out.sort(function(a, b){
+    if(a.prio.rank !== b.prio.rank) return a.prio.rank - b.prio.rank;
+    var ca = a.t.fechaCompromiso || "9999-12-31", cb = b.t.fechaCompromiso || "9999-12-31";
+    if(ca !== cb) return ca < cb ? -1 : 1;
+    return (a.t.seq || 0) - (b.t.seq || 0);
+  });
+  void hoy;
+  return out;
+}
+/* La acción y la cantidad se DERIVAN de lo que ya existe: el tipo de
+   operación es la acción; la cantidad sale del producto del ticket. */
+function kdsAccion(it){
+  var tipo = (it.task.tipoOperacion || "").trim();
+  return (tipo || it.task.desc || "Paso de producción").toUpperCase();
+}
+function kdsCantidad(it){
+  var prods = it.t.productos || [];
+  if(!prods.length) return "";
+  var p = prods[0];
+  var txt = ((p.cantidad && p.cantidad !== 1) ? (p.cantidad + " ") : "") + (p.desc || "");
+  if(prods.length > 1) txt += "  +" + (prods.length - 1);
+  return txt.toUpperCase();
+}
+/* Máximo 3 líneas de información secundaria: la descripción del paso si
+   aporta algo más que el tipo, el marcador que más pesa y la última nota. */
+function kdsNotas(it){
+  var lines = [];
+  var desc = (it.task.desc || "").trim();
+  if(desc && desc.toUpperCase() !== kdsAccion(it)) lines.push(desc);
+  var ms = activeMarkers(it.t).filter(function(m){ return m.type !== "urgente"; });
+  if(ms.length) lines.push(markerLabel(ms[0].type) + (ms[0].text ? (" — " + ms[0].text) : ""));
+  var notas = (it.t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; });
+  if(notas.length) lines.push(notas[notas.length - 1].text);
+  /* El máximo son 3, pero en una tarjeta solo caben 2 ENTERAS. Media línea
+     cortada no se lee desde 5 metros: mejor dos completas. */
+  return lines.slice(0, 2);
+}
+function kdsNotasCount(it){
+  return (it.t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).length;
+}
+function kdsFechaCorta(dateOnly){
+  if(!dateOnly || !isSaneDateOnly(dateOnly)) return "—";
+  var hoy = todayLocalYYYYMMDD();
+  if(dateOnly === hoy) return "HOY";
+  if(dateOnly === addDaysToDateOnly(hoy, 1)) return "MAÑANA";
+  return fmtDateOnlyShort(dateOnly).toUpperCase();
+}
+
+/* ---------------- sonidos ----------------
+   WebAudio puro: ningún archivo que descargar, funciona sin internet. El
+   navegador lo mantiene mudo hasta el primer gesto — por eso la pantalla
+   arranca con un botón (ver renderKdsGate). */
+var KDS_AUDIO = null;
+function kdsBeep(kind){
+  if(!UI.kds.sound) return;
+  try{
+    if(!KDS_AUDIO) KDS_AUDIO = new (window.AudioContext || window.webkitAudioContext)();
+    var ctx = KDS_AUDIO;
+    if(ctx.state === "suspended") ctx.resume();
+    var tones = {
+      nueva:     [[660, 0.10]],
+      urgente:   [[880, 0.12], [660, 0.12], [880, 0.16]],
+      bloqueo:   [[300, 0.22], [240, 0.26]],
+      completar: [[520, 0.08], [780, 0.14]]
+    }[kind] || [[660, 0.1]];
+    var vol = kind === "urgente" ? 0.28 : 0.16;
+    var at = ctx.currentTime;
+    tones.forEach(function(tn){
+      var osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = kind === "bloqueo" ? "sawtooth" : "sine";
+      osc.frequency.value = tn[0];
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(vol, at + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + tn[1]);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(at); osc.stop(at + tn[1] + 0.02);
+      at += tn[1];
+    });
+  }catch(e){ /* sin audio, la pantalla sigue sirviendo */ }
+}
+/* Compara la cola contra la anterior para saber qué anunciar. Solo suena lo
+   que ENTRA a la pantalla o lo que se bloquea, nunca en cada refresco. */
+function kdsAnnounce(items){
+  var prev = UI.kds.seen || {};
+  var next = {}, nuevas = 0, urgentes = 0, bloqueos = 0;
+  items.forEach(function(it){
+    next[it.id] = it.prio.key;
+    if(!(it.id in prev)){
+      if(it.prio.key === "urgente") urgentes++; else nuevas++;
+    } else if(prev[it.id] !== "bloqueado" && it.prio.key === "bloqueado"){
+      bloqueos++;
+    }
+  });
+  UI.kds.seen = next;
+  if(!UI.kds.ready) return;              /* el primer pintado no suena */
+  if(urgentes) kdsBeep("urgente");
+  else if(bloqueos) kdsBeep("bloqueo");
+  else if(nuevas) kdsBeep("nueva");
+}
+
+/* ---------------- selección ----------------
+   Atada al id de la tarea, NUNCA a la posición: una tarea nueva que entra
+   con más prioridad no mueve lo que el operador tenía seleccionado. */
+function kdsSelectedIndex(items){
+  var i = -1;
+  if(UI.kds.selectedId) i = items.findIndex(function(x){ return x.id === UI.kds.selectedId; });
+  if(i === -1 && items.length){ i = 0; UI.kds.selectedId = items[0].id; }
+  return i;
+}
+function kdsMove(dx, dy){
+  var items = kdsTasks();
+  if(!items.length) return;
+  var i = kdsSelectedIndex(items);
+  var cols = 2;
+  var n = Math.min(items.length, KDS_MAIN_SLOTS + KDS_QUEUE_MAX);
+  var next = i;
+  if(dx) next = i + dx;
+  if(dy) next = i + dy * cols;
+  if(next < 0) next = 0;
+  if(next > n - 1) next = n - 1;
+  UI.kds.selectedId = items[next].id;
+  render();
+}
+
+/* ---------------- acciones (mismos cores de siempre) ---------------- */
+function kdsAskDone(slotOrNull){
+  var items = kdsTasks();
+  if(!items.length) return;
+  var it = slotOrNull != null ? items[slotOrNull] : items[kdsSelectedIndex(items)];
+  if(!it) return;
+  /* Nunca se termina con una sola pulsación. */
+  UI.kds.confirm = { id: it.id, accion: "terminar" };
+  render();
+}
+function kdsAskWait(){
+  var items = kdsTasks();
+  var it = items[kdsSelectedIndex(items)];
+  if(!it) return;
+  UI.kds.confirm = { id: it.id, accion: "esperar" };
+  render();
+}
+async function kdsConfirm(){
+  var c = UI.kds.confirm;
+  if(!c) return;
+  var items = kdsTasks();
+  var it = items.filter(function(x){ return x.id === c.id; })[0];
+  UI.kds.confirm = null;
+  if(!it){ render(); return; }
+  /* Mismo core que el tablero y el ticket: escritura optimista, reversión
+     si el servidor la rechaza y bitácora con el actor de la sesión. */
+  var ok = await updateTareaCore(it.t, it.id, { estado: c.accion === "terminar" ? "terminado" : "esperando" });
+  if(ok && c.accion === "terminar") kdsBeep("completar");
+  render();
+}
+function kdsCancel(){
+  if(UI.kds.confirm){ UI.kds.confirm = null; render(); return true; }
+  if(UI.kds.detailId){ UI.kds.detailId = null; render(); return true; }
+  return false;
+}
+/* El gesto que el navegador exige para conceder pantalla completa y audio.
+   Si el navegador la niega (o ya viene en kiosco), la pantalla arranca igual. */
+function kdsStart_(){
+  UI.kds.ready = true;
+  try{
+    var el = document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen().catch(function(){});
+    else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  }catch(e){}
+  try{
+    if(!KDS_AUDIO) KDS_AUDIO = new (window.AudioContext || window.webkitAudioContext)();
+    if(KDS_AUDIO.state === "suspended") KDS_AUDIO.resume();
+  }catch(e){}
+  render();
+}
+/* El reloj de la cabecera late solo, sin re-renderizar la pantalla entera
+   (una TV encendida 10 h no puede repintar 4 tarjetas cada segundo). */
+var KDS_CLOCK = null;
+function kdsClockStart(){
+  if(KDS_CLOCK) return;
+  KDS_CLOCK = setInterval(function(){
+    if(!UI.displayMode){ clearInterval(KDS_CLOCK); KDS_CLOCK = null; return; }
+    var el = document.querySelector(".kds-clock");
+    if(el) el.textContent = fmtTime(new Date().toISOString());
+    var live = document.querySelector(".kds-live");
+    if(live){
+      live.textContent = DTG_OFFLINE ? "SIN RED" : "LIVE";
+      live.className = "kds-live" + (DTG_OFFLINE ? " kds-live-off" : "");
+    }
+  }, 1000);
+}
+function kdsOpenDetail(){
+  var items = kdsTasks();
+  var it = items[kdsSelectedIndex(items)];
+  if(!it) return;
+  UI.kds.detailId = it.id;
+  render();
+}
+
+/* ---------------- teclado / bump bar ----------------
+   Un macropad manda teclas normales: las flechas navegan, Enter abre,
+   Escape regresa, 1-4 son los DONE de cada tarjeta, W manda a esperar. */
+function kdsKey(e){
+  if(!UI.displayMode) return false;
+  var k = e.key;
+  if(UI.kds.confirm){
+    if(k === "Enter"){ e.preventDefault(); kdsConfirm(); return true; }
+    if(k === "Escape" || k === "Backspace"){ e.preventDefault(); kdsCancel(); return true; }
+    return true;                         /* con la confirmación abierta, nada más responde */
+  }
+  if(k === "Escape" || k === "Backspace"){ if(kdsCancel()){ e.preventDefault(); return true; } }
+  if(UI.kds.detailId) return false;
+  if(k === "ArrowLeft"){ e.preventDefault(); kdsMove(-1, 0); return true; }
+  if(k === "ArrowRight"){ e.preventDefault(); kdsMove(1, 0); return true; }
+  if(k === "ArrowUp"){ e.preventDefault(); kdsMove(0, -1); return true; }
+  if(k === "ArrowDown"){ e.preventDefault(); kdsMove(0, 1); return true; }
+  if(k === "Enter"){ e.preventDefault(); kdsOpenDetail(); return true; }
+  if(k === "w" || k === "W"){ e.preventDefault(); kdsAskWait(); return true; }
+  if(k >= "1" && k <= "4"){ e.preventDefault(); kdsAskDone(parseInt(k, 10) - 1); return true; }
+  return false;
+}
+
+/* ---------------- render ---------------- */
+function renderKdsGate(){
+  /* El navegador no concede pantalla completa ni sonido sin un gesto: este
+     botón es ese gesto, una vez por encendido de la TV. */
+  return (
+    '<div class="kds-gate">' +
+      '<div class="kds-gate-brand">' + dtgLogoMark(64) + "<span>DTG CRM</span></div>" +
+      '<div class="kds-gate-title">PANTALLA DE OPERACIONES</div>' +
+      '<button type="button" class="kds-gate-btn" data-action="kds-start">ENTRAR A PANTALLA COMPLETA</button>' +
+      '<div class="kds-gate-hint">Flechas para moverse · OK abre el detalle · 1-4 terminan una tarjeta</div>' +
+    "</div>"
+  );
+}
+function renderKdsCard(it, slot, selected){
+  var t = it.t, task = it.task;
+  var notas = kdsNotas(it);
+  var cant = kdsCantidad(it);
+  return (
+    '<div class="kds-card kds-p-' + it.prio.key + (selected ? " kds-sel" : "") + '" data-kds-card="' + escapeHtml(it.id) + '">' +
+      '<div class="kds-card-top">' +
+        '<span class="kds-slot">' + (slot + 1) + "</span>" +
+        '<span class="kds-estado">' + escapeHtml(it.prio.label) + "</span>" +
+        '<span class="kds-folio">#' + t.seq + "</span>" +
+      "</div>" +
+      '<div class="kds-cliente">' + escapeHtml((sidebarClienteLabel(t) || "").toUpperCase()) + "</div>" +
+      '<div class="kds-accion">' + escapeHtml(kdsAccion(it)) + "</div>" +
+      (cant ? '<div class="kds-cant">' + escapeHtml(cant) + "</div>" : "") +
+      (notas.length ? '<ul class="kds-notas">' + notas.map(function(n){ return "<li>" + escapeHtml(n) + "</li>"; }).join("") + "</ul>" : "") +
+      '<div class="kds-fechas">' +
+        '<div><span>PRODUCIR</span><b>' + escapeHtml(kdsFechaCorta(task.fechaAtencion || t.fechaAtencion)) + "</b></div>" +
+        '<div><span>ENTREGA</span><b>' + escapeHtml(kdsFechaCorta(t.fechaCompromiso)) + "</b></div>" +
+      "</div>" +
+      '<div class="kds-foot">' +
+        "<span>" + escapeHtml((task.responsable || "SIN ASIGNAR").toUpperCase()) + "</span>" +
+        '<span class="kds-foot-r">' + kdsNotasCount(it) + " NOTAS · OK</span>" +
+      "</div>" +
+    "</div>"
+  );
+}
+function renderKdsQueue(items, selectedId){
+  if(!items.length) return "";
+  return '<div class="kds-queue">' + items.map(function(it, i){
+    return '<div class="kds-q kds-p-' + it.prio.key + (it.id === selectedId ? " kds-sel" : "") + '">' +
+      '<span class="kds-q-n">' + (KDS_MAIN_SLOTS + i + 1) + "</span>" +
+      '<span class="kds-q-accion">' + escapeHtml(kdsAccion(it)) + "</span>" +
+      '<span class="kds-q-cant">' + escapeHtml(kdsCantidad(it) || ("#" + it.t.seq)) + "</span>" +
+      '<span class="kds-q-resp">' + escapeHtml((it.task.responsable || "—").toUpperCase()) + "</span>" +
+    "</div>";
+  }).join("") + "</div>";
+}
+function renderKdsConfirm(){
+  var c = UI.kds.confirm;
+  if(!c) return "";
+  var it = kdsTasks().filter(function(x){ return x.id === c.id; })[0];
+  if(!it){ UI.kds.confirm = null; return ""; }
+  var verbo = c.accion === "terminar" ? "¿TERMINAR TAREA?" : "¿MANDAR A ESPERAR?";
+  return (
+    '<div class="kds-overlay">' +
+      '<div class="kds-confirm">' +
+        '<div class="kds-confirm-title">' + verbo + "</div>" +
+        '<div class="kds-confirm-body">' +
+          '<div class="kds-confirm-folio">#' + it.t.seq + " · " + escapeHtml(sidebarClienteLabel(it.t)) + "</div>" +
+          '<div class="kds-confirm-accion">' + escapeHtml(kdsAccion(it)) + "</div>" +
+          '<div class="kds-confirm-cant">' + escapeHtml(kdsCantidad(it)) + "</div>" +
+        "</div>" +
+        '<div class="kds-confirm-actions">' +
+          '<button type="button" class="kds-btn kds-btn-ok" data-action="kds-confirm">OK · CONFIRMAR</button>' +
+          '<button type="button" class="kds-btn kds-btn-back" data-action="kds-cancel">BACK · CANCELAR</button>' +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+function renderKdsDetail(){
+  if(!UI.kds.detailId) return "";
+  var it = kdsTasks().filter(function(x){ return x.id === UI.kds.detailId; })[0];
+  if(!it){ UI.kds.detailId = null; return ""; }
+  var t = it.t;
+  var notas = (t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).slice(-8).reverse();
+  var fotos = (t.thread || []).filter(function(ev){ return ev.type === "archivo" && ev.storage_path && !ev.deleted_at; }).length;
+  var prods = (t.productos || []).map(function(p){
+    return "<li>" + escapeHtml(((p.cantidad && p.cantidad !== 1) ? (p.cantidad + " × ") : "") + (p.desc || "")) + "</li>";
+  }).join("");
+  return (
+    '<div class="kds-overlay">' +
+      '<div class="kds-detail">' +
+        '<div class="kds-detail-head">' +
+          "<div><b>#" + t.seq + "</b> · " + escapeHtml(sidebarClienteLabel(t)) + "</div>" +
+          '<div class="kds-detail-estado kds-p-' + it.prio.key + '">' + escapeHtml(it.prio.label) + "</div>" +
+        "</div>" +
+        '<div class="kds-detail-accion">' + escapeHtml(kdsAccion(it)) + "</div>" +
+        '<div class="kds-detail-grid">' +
+          "<div><h3>TRABAJO</h3><ul>" + (prods || "<li>Sin productos capturados</li>") + "</ul></div>" +
+          "<div><h3>PASO</h3><p>" + escapeHtml(it.task.desc || "—") + "</p>" +
+            "<p>Responsable: <b>" + escapeHtml(it.task.responsable || "sin asignar") + "</b></p>" +
+            "<p>Entrega: <b>" + escapeHtml(kdsFechaCorta(t.fechaCompromiso)) + "</b></p></div>" +
+          "<div><h3>NOTAS (" + notas.length + ")</h3><ul>" +
+            (notas.map(function(n){ return "<li>" + escapeHtml(n.text) + " <em>— " + escapeHtml(n.autor || "?") + "</em></li>"; }).join("") || "<li>Sin notas</li>") +
+          "</ul>" + (fotos ? "<p>" + fotos + " foto(s) en el ticket</p>" : "") + "</div>" +
+        "</div>" +
+        '<div class="kds-confirm-actions">' +
+          '<button type="button" class="kds-btn kds-btn-ok" data-action="kds-done-sel">DONE · TERMINAR</button>' +
+          '<button type="button" class="kds-btn kds-btn-back" data-action="kds-cancel">BACK · REGRESAR</button>' +
+        "</div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+var KDS_LEYENDA = [
+  ["atiempo", "A TIEMPO"], ["pronto", "PRÓXIMO A VENCER"], ["urgente", "URGENTE"],
+  ["proceso", "EN PROCESO"], ["bloqueado", "BLOQUEADO"], ["espera", "EN ESPERA"]
+];
+function renderKdsView(){
+  if(!UI.kds.ready) return renderKdsGate();
+  var items = kdsTasks();
+  kdsAnnounce(items);
+  var selIdx = kdsSelectedIndex(items);
+  var selectedId = UI.kds.selectedId;
+  var main = items.slice(0, KDS_MAIN_SLOTS);
+  var queue = items.slice(KDS_MAIN_SLOTS, KDS_MAIN_SLOTS + KDS_QUEUE_MAX);
+  var now = new Date();
+  var cards = main.map(function(it, i){ return renderKdsCard(it, i, it.id === selectedId); }).join("");
+  for(var i = main.length; i < KDS_MAIN_SLOTS; i++) cards += '<div class="kds-card kds-card-empty"><span>LIBRE</span></div>';
+  void selIdx;
+  return (
+    '<div class="kds-root">' +
+      '<header class="kds-head">' +
+        '<div class="kds-head-l">' + dtgLogoMark(30) + "<span>DTG CRM</span></div>" +
+        '<div class="kds-head-c">OPERACIONES</div>' +
+        '<div class="kds-head-r">' +
+          "<span>" + escapeHtml(fmtDateShort(now.toISOString()).toUpperCase()) + "</span>" +
+          '<span class="kds-clock">' + escapeHtml(fmtTime(now.toISOString())) + "</span>" +
+          '<span class="kds-live' + (DTG_OFFLINE ? " kds-live-off" : "") + '">' + (DTG_OFFLINE ? "SIN RED" : "LIVE") + "</span>" +
+        "</div>" +
+      "</header>" +
+      '<div class="kds-legend">' + KDS_LEYENDA.map(function(l){
+        return '<span class="kds-legend-i"><i class="kds-dot kds-p-' + l[0] + '"></i>' + l[1] + "</span>";
+      }).join("") + '<span class="kds-legend-count">' + items.length + " EN PRODUCCIÓN</span></div>" +
+      (items.length
+        ? '<main class="kds-grid">' + cards + "</main>" + renderKdsQueue(queue, selectedId)
+        : '<main class="kds-empty">NADA EN PRODUCCIÓN</main>') +
+      renderKdsConfirm() +
+      renderKdsDetail() +
+    "</div>"
+  );
+}
+
 function renderMain(){
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
     return UI.selectedClienteId ? renderClienteFichaView() : renderClientesListView();
@@ -13374,6 +13913,13 @@ function render(){
      de Realtime nunca se come lo que alguien estaba escribiendo ni lo
      arranca de donde estaba leyendo. */
   var chatSnap = captureChatScroll();
+  /* KDS: modo pantalla. Reemplaza TODO el árbol de la app — sin menú, sin
+     compositor, sin nada administrativo. Sale con ?display= fuera de la URL. */
+  if(UI.displayMode){
+    app.innerHTML = renderKdsView() + '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
+    wireEvents();
+    return;
+  }
   var composerSnap = captureComposerDraft();
   var hScrollSnap = captureHorizontalScrolls();
   app.innerHTML =
@@ -19865,6 +20411,23 @@ async function confirmPendingSlash(){
 function wireEvents(){
   var root = document.getElementById("app");
 
+  /* ---- Pantalla operativa (KDS) ---- */
+  if(UI.displayMode){
+    var kdsStart = root.querySelector('[data-action="kds-start"]');
+    if(kdsStart) kdsStart.addEventListener("click", kdsStart_);
+    var kdsOk = root.querySelector('[data-action="kds-confirm"]');
+    if(kdsOk) kdsOk.addEventListener("click", kdsConfirm);
+    var kdsNo = root.querySelector('[data-action="kds-cancel"]');
+    if(kdsNo) kdsNo.addEventListener("click", kdsCancel);
+    var kdsDs = root.querySelector('[data-action="kds-done-sel"]');
+    if(kdsDs) kdsDs.addEventListener("click", function(){ UI.kds.detailId = null; kdsAskDone(null); });
+    root.querySelectorAll("[data-kds-card]").forEach(function(c){
+      c.addEventListener("click", function(){ UI.kds.selectedId = c.getAttribute("data-kds-card"); render(); });
+    });
+    kdsClockStart();
+    return;   /* nada más de la app existe en esta pantalla */
+  }
+
   /* Identity Foundation §7: único punto que envía el login — nunca
      navegación de página completa (sigue siendo la misma SPA de un solo
      archivo). preventDefault evita el GET/reload nativo del <form>. */
@@ -22078,6 +22641,9 @@ function isTypingTarget(el){
 }
 
 document.addEventListener("keydown", function(e){
+  /* KDS: en modo pantalla, el teclado ES el bump bar. Se atiende primero y
+     ningún atajo del CRM corre detrás. */
+  if(UI.displayMode && kdsKey(e)) return;
   /* Parte P: la confirmación de eliminar es la capa MÁS alta posible (puede
      abrirse encima de Galería o de Biblioteca) — Escape debe cerrarla a
      ELLA primero, nunca saltarse un paso y cerrar el viewer de abajo de un
@@ -22269,6 +22835,11 @@ document.addEventListener("keydown", function(e){
 
 async function boot(){
   loadUi();
+  /* ?display=1 (o #display) enciende la pantalla operativa. Mismo mecanismo
+     de URL que ya usan los deep links de ticket — no hay servidor de rutas. */
+  try{
+    UI.displayMode = /[?&]display=1/.test(window.location.search) || window.location.hash === "#display";
+  }catch(e){ UI.displayMode = false; }
   render();
   if(window.__dtgSupabaseLoadFailed || !window.supabase){
     FATAL_ERROR = "No se pudo cargar la librería de Supabase (revisa tu conexión a internet y recarga).";
