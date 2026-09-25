@@ -3672,6 +3672,8 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-gate-brand{ display:flex; align-items:center; gap:14px; font-size:30px; font-weight:800; color:#93A3B8; }
 .kds-gate-title{ font-size:clamp(34px, 6vw, 72px); font-weight:900; letter-spacing:.14em; }
 .kds-gate-btn{ background:#22C55E; color:#07090D; border:none; border-radius:16px; padding:26px 48px; font-size:clamp(20px, 2.6vw, 34px); font-weight:900; letter-spacing:.06em; cursor:pointer; font-family:inherit; min-height:44px; }
+/* X1.1b: zona no disponible — se ve, no se toca. */
+.zone-chip-off{ opacity:.75; cursor:default; }
 .kds-gate-hint{ font-size:clamp(14px, 1.6vw, 22px); color:#6F7F93; font-weight:600; }
 </style>
 <div id="app"></div>
@@ -3696,7 +3698,7 @@ document.documentElement.setAttribute("data-theme", "dark");
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
 var APP_VERSION = "0.22.0";
-var APP_BUILD = "2026.09.25.2";
+var APP_BUILD = "2026.09.25.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -8379,6 +8381,12 @@ function renderZoneChip(t, opts){
   opts = opts || {};
   var z = t.deliveryZone ? deliveryZoneMeta(t.deliveryZone) : null;
   if(!z && opts.hideEmpty) return "";
+  /* Si la columna no está en la base, se DEJA DE OFRECER el selector en vez
+     de fallar cada vez. Lo ya guardado se sigue mostrando: nada se pierde. */
+  if(schemaGapFor("delivery_zone")){
+    return '<span class="zone-chip zone-chip-off" title="La zona de entrega todavía no está disponible en el sistema">' +
+      icon("map-pin") + "<span>" + escapeHtml(z ? z.short : "Zona no disponible") + "</span></span>";
+  }
   return '<button type="button" class="zone-chip' + (z ? "" : " zone-chip-empty") + '" data-action="zone-picker-open" data-ticket="' + t.id + '" title="' + (z ? "Zona de entrega: " + escapeHtml(z.label) : "Sin zona de entrega") + '" aria-label="' + (z ? "Zona de entrega: " + escapeHtml(z.label) + ". Cambiar" : "Asignar zona de entrega") + '">' +
     icon("map-pin") + "<span>" + escapeHtml(z ? z.short : "Zona") + "</span></button>";
 }
@@ -14597,6 +14605,15 @@ function renderAlerts(){
    a consola (y a Sentry en X3); el empleado nunca ve e.message. */
 function userError(accion, e, retry){
   if(e) try{ console.error("[DTG] " + accion, e); }catch(x){}
+  /* Tres casos, un solo traductor: falta la columna, no hay red, o el
+     servidor dijo que no por otra cosa. Nunca se confunden entre sí. */
+  var gap = schemaGapFrom(e);
+  if(gap){
+    /* Reintentar no puede arreglar una migración que no se ha corrido, así
+       que no se ofrece. El detalle técnico es para quien administra. */
+    adminNote("Falta aplicar la migración " + gap.mig + " en Supabase (columna " + gap.col + "). Supabase respondió " + gap.code + ".", e);
+    return pushAlert({ kind: "error", text: gap.que + " todavía no está disponible en el sistema. Avísale a quien administra." });
+  }
   var net = isNetworkError(e);
   if(net) setOfflineState(true);
   return pushAlert({
@@ -14606,6 +14623,39 @@ function userError(accion, e, retry){
   });
 }
 /* Avisos técnicos (migraciones, esquema): solo para quien administra. */
+/* ================= X1.1b — "todavía no está en la base" =================
+   Un error de esquema NO es un error de conexión. PostgREST contesta
+   PGRST204 ("no encuentro la columna X en el schema cache") y Postgres
+   42703 cuando una migración no se ha aplicado. Antes los dos caían en el
+   mensaje genérico y el empleado leía "revisa la conexión" para siempre.
+   Aquí viven las columnas OPCIONALES que la app escribe y de qué migración
+   vienen — la lectura de todas ellas ya era tolerante desde su ronda. */
+var SCHEMA_REQUIREMENTS = {
+  delivery_zone:  { mig: "0017", que: "La zona de entrega" },
+  progreso:       { mig: "0016", que: "El avance de las operaciones" },
+  tipo_operacion: { mig: "0016", que: "El tipo de operación" },
+  terminado_at:   { mig: "0016", que: "La hora de término de una operación" },
+  client_op_id:   { mig: "0018", que: "El control de pagos repetidos" },
+  visibility:     { mig: "0015", que: "La privacidad por ticket" }
+};
+/* Columnas que esta sesión ya comprobó que faltan. Solo en memoria: al
+   aplicar la migración y recargar, la app vuelve a ofrecerlo todo. */
+var DTG_SCHEMA_GAPS = {};
+function schemaGapFrom(e){
+  if(!e) return null;
+  var code = String(e.code || "");
+  var msg = String(e.message || e.msg || e || "");
+  var esEsquema = code === "PGRST204" || code === "42703" ||
+    /schema cache|does not exist|no existe la columna/i.test(msg);
+  if(!esEsquema) return null;
+  var m = msg.match(/['"`]([a-z0-9_]+)['"`]\s*column|column\s*['"`]([a-z0-9_]+)['"`]/i);
+  var col = m ? (m[1] || m[2]) : null;
+  if(!col) col = Object.keys(SCHEMA_REQUIREMENTS).filter(function(c){ return msg.indexOf(c) !== -1; })[0];
+  if(!col || !SCHEMA_REQUIREMENTS[col]) return null;
+  DTG_SCHEMA_GAPS[col] = { code: code || "sin código", at: Date.now() };
+  return { col: col, code: code || "sin código", mig: SCHEMA_REQUIREMENTS[col].mig, que: SCHEMA_REQUIREMENTS[col].que };
+}
+function schemaGapFor(col){ return DTG_SCHEMA_GAPS[col] || null; }
 function adminNote(msg, e){
   if(e) try{ console.warn("[DTG] " + msg, e); }catch(x){}
   if(CURRENT_PROFILE && (CURRENT_PROFILE.role === "admin" || CURRENT_PROFILE.can_manage_privacy)) pushAlert({ kind: "info", text: msg });
