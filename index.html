@@ -3550,7 +3550,7 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
    TV de 32" a 1920×1080 vista desde 3-5 metros. Todo en rem contra un
    :root escalado por vw, así que la misma hoja sirve en 1080p y en 4K. */
 .kds-root{
-  --kds: calc(100vw / 1920);
+  --kds: calc(100vw / 1920); --kdc:1;   /* --kdc: escala del texto DENTRO de la tarjeta */
   --k-ok:#22C55E; --k-pronto:#F59E0B; --k-urg:#EF4444;
   --k-proc:#22D3EE; --k-blok:#E879F9; --k-esp:#94A3B8;
   position:fixed; inset:0; z-index:200; display:flex; flex-direction:column;
@@ -3571,13 +3571,18 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
   background:rgba(34,197,94,.16); color:var(--k-ok); font-weight:900; letter-spacing:.1em;
 }
 .kds-live-off{ background:rgba(239,68,68,.18); color:var(--k-urg); }
-
+.kds-dens{ position:absolute; top:calc(74 * var(--kds)); right:calc(18 * var(--kds)); display:flex; gap:calc(4 * var(--kds)); }
+.kds-dens-btn{
+  min-width:calc(38 * var(--kds)); padding:calc(4 * var(--kds)) calc(10 * var(--kds));
+  background:#0E141C; border:calc(2 * var(--kds)) solid #1F2A38; color:#6F7F93;
+  border-radius:calc(8 * var(--kds)); font-size:calc(18 * var(--kds)); font-weight:900; cursor:pointer; font-family:inherit;
+}
+.kds-dens-btn.on{ background:#1F2A38; color:#F2F5F9; border-color:#38465A; }
 .kds-legend{ display:flex; align-items:center; gap:calc(26 * var(--kds)); font-size:calc(19 * var(--kds)); font-weight:800; color:#8996A8; letter-spacing:.06em; }
 .kds-legend-i{ display:inline-flex; align-items:center; gap:calc(8 * var(--kds)); }
 .kds-dot{ width:calc(16 * var(--kds)); height:calc(16 * var(--kds)); border-radius:50%; background:var(--k-c, #94A3B8); }
 .kds-legend-count{ margin-left:auto; color:#F2F5F9; }
-
-.kds-grid{ flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:calc(14 * var(--kds)); min-height:0; }
+.kds-grid{ flex:1; display:grid; grid-auto-rows:1fr; gap:calc(14 * var(--kds)); min-height:0; }
 .kds-card{
   position:relative; display:flex; flex-direction:column; min-height:0; overflow:hidden;
   background:#0E141C; border:calc(3 * var(--kds)) solid #1F2A38;
@@ -3601,35 +3606,33 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-card.kds-p-bloqueado{ background:#150B16; }
 /* Selección: borde blanco grueso, halo y escala — visible desde lejos. */
 .kds-sel{ outline:calc(5 * var(--kds)) solid #FFFFFF; outline-offset:calc(-2 * var(--kds)); box-shadow:0 0 calc(40 * var(--kds)) rgba(255,255,255,.28); transform:scale(1.008); }
-
-.kds-card-top{ display:flex; align-items:center; gap:calc(14 * var(--kds)); font-size:calc(22 * var(--kds)); font-weight:900; letter-spacing:.08em; }
+.kds-card-top{ display:flex; align-items:center; gap:calc(14 * var(--kds)); font-size:calc(22 * var(--kds) * var(--kdc)); font-weight:900; letter-spacing:.08em; }
 .kds-slot{
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
   width:calc(44 * var(--kds)); height:calc(44 * var(--kds)); border-radius:calc(10 * var(--kds));
-  background:var(--k-c, #94A3B8); color:#07090D; font-size:calc(28 * var(--kds)); font-weight:900;
+  background:var(--k-c, #94A3B8); color:#07090D; font-size:calc(28 * var(--kds) * var(--kdc)); font-weight:900;
 }
 .kds-estado{ color:inherit; }
 .kds-folio{ margin-left:auto; color:#6F7F93; font-family:var(--font-mono); }
-.kds-cliente{ font-size:calc(26 * var(--kds)); font-weight:800; color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kds-accion{ font-size:calc(62 * var(--kds)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; }
-.kds-cant{ font-size:calc(40 * var(--kds)); font-weight:800; color:#DCE5F0; line-height:1.1; }
+.kds-cliente{ font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:800; color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kds-accion{ font-size:calc(62 * var(--kds) * var(--kdc)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; }
+.kds-cant{ font-size:calc(40 * var(--kds) * var(--kdc)); font-weight:800; color:#DCE5F0; line-height:1.1; }
 .kds-notas{
   margin:calc(4 * var(--kds)) 0 0; padding-left:calc(22 * var(--kds));
-  font-size:calc(21 * var(--kds)); color:#94A3B8; font-weight:600; line-height:1.4;
+  font-size:calc(21 * var(--kds) * var(--kdc)); color:#94A3B8; font-weight:600; line-height:1.4;
   /* Altura de renglones ENTEROS: nunca media línea cortada. */
-  flex-shrink:0; max-height:calc(21 * 1.4 * 2 * var(--kds)); overflow:hidden;
+  flex-shrink:0; max-height:calc(21 * 1.4 * 2 * var(--kds) * var(--kdc)); overflow:hidden;
 }
 .kds-notas li{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .kds-fechas{ display:flex; gap:calc(34 * var(--kds)); margin-top:auto; padding-top:calc(10 * var(--kds)); }
-.kds-fechas span{ display:block; font-size:calc(16 * var(--kds)); font-weight:800; color:#6F7F93; letter-spacing:.12em; }
-.kds-fechas b{ font-size:calc(30 * var(--kds)); font-weight:900; color:#FFFFFF; }
+.kds-fechas span{ display:block; font-size:calc(16 * var(--kds) * var(--kdc)); font-weight:800; color:#6F7F93; letter-spacing:.12em; }
+.kds-fechas b{ font-size:calc(30 * var(--kds) * var(--kdc)); font-weight:900; color:#FFFFFF; }
 .kds-foot{
   display:flex; align-items:center; justify-content:space-between; gap:calc(12 * var(--kds));
   margin-top:calc(10 * var(--kds)); padding-top:calc(10 * var(--kds)); border-top:calc(2 * var(--kds)) solid #1F2A38;
-  font-size:calc(20 * var(--kds)); font-weight:800; color:#B6C3D4; letter-spacing:.05em;
+  font-size:calc(20 * var(--kds) * var(--kdc)); font-weight:800; color:#B6C3D4; letter-spacing:.05em;
 }
 .kds-foot-r{ color:#6F7F93; }
-
 .kds-queue{ display:grid; grid-template-columns:repeat(4, 1fr); gap:calc(10 * var(--kds)); }
 .kds-q{
   display:flex; align-items:center; gap:calc(10 * var(--kds)); min-width:0;
@@ -3641,7 +3644,6 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-q-cant{ color:#94A3B8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .kds-q-resp{ margin-left:auto; color:#6F7F93; flex-shrink:0; }
 .kds-empty{ flex:1; display:flex; align-items:center; justify-content:center; font-size:calc(72 * var(--kds)); font-weight:900; color:#1F2A38; }
-
 .kds-overlay{ position:fixed; inset:0; z-index:210; display:flex; align-items:center; justify-content:center; background:rgba(3,6,10,.86); }
 .kds-confirm{
   width:calc(900 * var(--kds)); background:#0E141C; border:calc(4 * var(--kds)) solid #FFFFFF;
@@ -3658,7 +3660,6 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 }
 .kds-btn-ok{ background:var(--k-ok); color:#07090D; }
 .kds-btn-back{ background:#1F2A38; color:#F2F5F9; }
-
 .kds-detail{ width:calc(1500 * var(--kds)); max-height:calc(900 * var(--kds)); overflow:auto; background:#0E141C; border:calc(4 * var(--kds)) solid #1F2A38; border-radius:calc(18 * var(--kds)); padding:calc(34 * var(--kds)); }
 .kds-detail-head{ display:flex; align-items:center; justify-content:space-between; font-size:calc(28 * var(--kds)); font-weight:800; color:#B6C3D4; }
 .kds-detail-estado{ font-weight:900; letter-spacing:.08em; color:var(--k-c, #94A3B8); }
@@ -3668,10 +3669,15 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-detail-grid ul{ margin:0; padding-left:calc(22 * var(--kds)); }
 .kds-detail-grid em{ color:#6F7F93; font-style:normal; }
 
+/* Con más tarjetas, menos aire por tarjeta: el texto ya encogió con --kdc. */
+.kds-root[style*="--kdc:0.8"] .kds-card{ padding:calc(13 * var(--kds)) calc(15 * var(--kds)); }
+.kds-root[style*="--kdc:0.64"] .kds-card{ padding:calc(10 * var(--kds)) calc(12 * var(--kds)); gap:calc(3 * var(--kds)); }
 .kds-gate{ position:fixed; inset:0; z-index:200; background:#07090D; color:#F2F5F9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; font-family:var(--font-sans); text-align:center; padding:24px; }
 .kds-gate-brand{ display:flex; align-items:center; gap:14px; font-size:30px; font-weight:800; color:#93A3B8; }
 .kds-gate-title{ font-size:clamp(34px, 6vw, 72px); font-weight:900; letter-spacing:.14em; }
 .kds-gate-btn{ background:#22C55E; color:#07090D; border:none; border-radius:16px; padding:26px 48px; font-size:clamp(20px, 2.6vw, 34px); font-weight:900; letter-spacing:.06em; cursor:pointer; font-family:inherit; min-height:44px; }
+.ops-header-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.ops-header-actions .btn{ text-decoration:none; }
 /* X1.1b: zona no disponible — se ve, no se toca. */
 .zone-chip-off{ opacity:.75; cursor:default; }
 .kds-gate-hint{ font-size:clamp(14px, 1.6vw, 22px); color:#6F7F93; font-weight:600; }
@@ -3698,7 +3704,7 @@ document.documentElement.setAttribute("data-theme", "dark");
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
 var APP_VERSION = "0.22.0";
-var APP_BUILD = "2026.09.25.3";
+var APP_BUILD = "2026.09.27.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -3983,7 +3989,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* Pantalla operativa (KDS): todo de presentación, nada se persiste.
      ready = ya hubo el gesto que concede pantalla completa y sonido. */
   displayMode: false,
-  kds: { ready: false, sound: true, selectedId: null, confirm: null, detailId: null, seen: null },
+  kds: { ready: false, sound: true, density: 4, selectedId: null, confirm: null, detailId: null, seen: null },
   chatReactFor: null, chatMenuFor: null, chatActiveMsg: null, chatOptionsOpen: false,
   chatPinnedOpen: false, chatStickBottom: false, chatAtBottom: true, chatLastSeenTs: null,
   /* UX Flow Patch §3-5: pestaña "AI Bridge" dentro de Inicio — UI nueva
@@ -4185,6 +4191,7 @@ var ICON_PATHS = {
   "smile-plus": '<path d="M22 11v1a10 10 0 1 1-9-10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01M16 5h6M19 2v6"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
   palette: '<circle cx="13.5" cy="6.5" r="1" class="i-fill"/><circle cx="17.5" cy="10.5" r="1" class="i-fill"/><circle cx="8.5" cy="7.5" r="1" class="i-fill"/><circle cx="6.5" cy="12.5" r="1" class="i-fill"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.6-1.7h2A5.6 5.6 0 0 0 22 10.9C22 6 17.5 2 12 2z"/>',
   phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>',
@@ -9889,8 +9896,13 @@ function renderOperacionesView(){
       '<button type="button" class="chip-toggle' + (o.urgentes ? " on" : "") + '" data-action="ops-urgentes" aria-pressed="' + (o.urgentes?"true":"false") + '">' + markerIcon("urgente") + "Urgentes</button>" +
       mostrarSeg +
     "</div>";
+  /* La pantalla de la TV se abre desde aquí, que es donde se administra la
+     producción. Pestaña nueva: el CRM sigue vivo en la computadora. */
   var header = '<div class="home-header"><div class="view-title">' + icon("factory", { cls: "view-title-ic" }) + "<h1>Operaciones</h1></div>" +
-    '<button type="button" class="btn btn-primary" data-action="ops-task-new">' + icon("plus") + "Tarea</button></div>";
+    '<div class="ops-header-actions">' +
+      '<a class="btn btn-ghost" href="?display=1" target="_blank" rel="noopener" data-action="open-kds">' + icon("monitor") + "Pantalla de TV</a>" +
+      '<button type="button" class="btn btn-primary" data-action="ops-task-new">' + icon("plus") + "Tarea</button>" +
+    "</div></div>";
   var anyTask = STATE.tickets.some(function(t){ return (t.tareas || []).some(isOpsTask); });
   var body = anyTask
     ? '<div class="board ops-board" id="ops-board">' + cols.map(renderOpsColumn).join("") + "</div>"
@@ -13393,7 +13405,33 @@ function renderBibliotecaSinRelacionar(){
    Se entra con ?display=1 (o #display). Pensada para una TV de 32" a
    1920×1080, manejada solo con teclado o bump bar. */
 
-var KDS_MAIN_SLOTS = 4;          /* tarjetas grandes: 2 columnas × 2 filas */
+/* Cuántas tarjetas grandes caben a la vez. Siempre 2 filas: cambian las
+   columnas y el tamaño del texto, nunca la información de cada tarjeta. */
+var KDS_DENSITIES = [
+  { n: 4, cols: 2, escala: 1 },
+  { n: 6, cols: 3, escala: 0.80 },
+  { n: 8, cols: 4, escala: 0.64 }
+];
+function kdsDensity(){
+  return KDS_DENSITIES.filter(function(d){ return d.n === UI.kds.density; })[0] || KDS_DENSITIES[0];
+}
+/* La TV recuerda su densidad entre encendidos, aparte del resto del CRM. */
+function kdsLoadDensity(){
+  try{
+    var v = parseInt(localStorage.getItem("dtg_kds_density"), 10);
+    if(KDS_DENSITIES.some(function(d){ return d.n === v; })) UI.kds.density = v;
+  }catch(e){}
+}
+function kdsSetDensity(n){
+  if(!KDS_DENSITIES.some(function(d){ return d.n === n; })) return;
+  UI.kds.density = n;
+  try{ localStorage.setItem("dtg_kds_density", String(n)); }catch(e){}
+  render();
+}
+function kdsCycleDensity(){
+  var i = KDS_DENSITIES.findIndex(function(d){ return d.n === UI.kds.density; });
+  kdsSetDensity(KDS_DENSITIES[(i + 1) % KDS_DENSITIES.length].n);
+}
 var KDS_QUEUE_MAX = 8;           /* cuántas más se anuncian abajo */
 var KDS_PRONTO_DIAS = 1;         /* "próximo a vencer" = hoy o mañana */
 
@@ -13536,8 +13574,9 @@ function kdsMove(dx, dy){
   var items = kdsTasks();
   if(!items.length) return;
   var i = kdsSelectedIndex(items);
-  var cols = 2;
-  var n = Math.min(items.length, KDS_MAIN_SLOTS + KDS_QUEUE_MAX);
+  var d = kdsDensity();
+  var cols = d.cols;
+  var n = Math.min(items.length, d.n + KDS_QUEUE_MAX);
   var next = i;
   if(dx) next = i + dx;
   if(dy) next = i + dy * cols;
@@ -13586,6 +13625,7 @@ function kdsCancel(){
    Si el navegador la niega (o ya viene en kiosco), la pantalla arranca igual. */
 function kdsStart_(){
   UI.kds.ready = true;
+  kdsLoadDensity();
   try{
     var el = document.documentElement;
     if(el.requestFullscreen) el.requestFullscreen().catch(function(){});
@@ -13640,7 +13680,13 @@ function kdsKey(e){
   if(k === "ArrowDown"){ e.preventDefault(); kdsMove(0, 1); return true; }
   if(k === "Enter"){ e.preventDefault(); kdsOpenDetail(); return true; }
   if(k === "w" || k === "W"){ e.preventDefault(); kdsAskWait(); return true; }
-  if(k >= "1" && k <= "4"){ e.preventDefault(); kdsAskDone(parseInt(k, 10) - 1); return true; }
+  if(k === "g" || k === "G"){ e.preventDefault(); kdsCycleDensity(); return true; }
+  /* El número de una tarjeta es su DONE. Con 6 u 8 en pantalla, también
+     valen el 5 al 8 — nunca un número que no esté a la vista. */
+  if(k >= "1" && k <= "9"){
+    var slot = parseInt(k, 10) - 1;
+    if(slot < kdsDensity().n){ e.preventDefault(); kdsAskDone(slot); return true; }
+  }
   return false;
 }
 
@@ -13653,7 +13699,7 @@ function renderKdsGate(){
       '<div class="kds-gate-brand">' + dtgLogoMark(64) + "<span>DTG CRM</span></div>" +
       '<div class="kds-gate-title">PANTALLA DE OPERACIONES</div>' +
       '<button type="button" class="kds-gate-btn" data-action="kds-start">ENTRAR A PANTALLA COMPLETA</button>' +
-      '<div class="kds-gate-hint">Flechas para moverse · OK abre el detalle · 1-4 terminan una tarjeta</div>' +
+      '<div class="kds-gate-hint">Flechas para moverse · OK abre el detalle · el número de una tarjeta la termina · G cambia cuántas se ven</div>' +
     "</div>"
   );
 }
@@ -13687,7 +13733,7 @@ function renderKdsQueue(items, selectedId){
   if(!items.length) return "";
   return '<div class="kds-queue">' + items.map(function(it, i){
     return '<div class="kds-q kds-p-' + it.prio.key + (it.id === selectedId ? " kds-sel" : "") + '">' +
-      '<span class="kds-q-n">' + (KDS_MAIN_SLOTS + i + 1) + "</span>" +
+      '<span class="kds-q-n">' + (kdsDensity().n + i + 1) + "</span>" +
       '<span class="kds-q-accion">' + escapeHtml(kdsAccion(it)) + "</span>" +
       '<span class="kds-q-cant">' + escapeHtml(kdsCantidad(it) || ("#" + it.t.seq)) + "</span>" +
       '<span class="kds-q-resp">' + escapeHtml((it.task.responsable || "—").toUpperCase()) + "</span>" +
@@ -13762,14 +13808,20 @@ function renderKdsView(){
   kdsAnnounce(items);
   var selIdx = kdsSelectedIndex(items);
   var selectedId = UI.kds.selectedId;
-  var main = items.slice(0, KDS_MAIN_SLOTS);
-  var queue = items.slice(KDS_MAIN_SLOTS, KDS_MAIN_SLOTS + KDS_QUEUE_MAX);
+  var dens = kdsDensity();
+  var main = items.slice(0, dens.n);
+  var queue = items.slice(dens.n, dens.n + KDS_QUEUE_MAX);
   var now = new Date();
   var cards = main.map(function(it, i){ return renderKdsCard(it, i, it.id === selectedId); }).join("");
-  for(var i = main.length; i < KDS_MAIN_SLOTS; i++) cards += '<div class="kds-card kds-card-empty"><span>LIBRE</span></div>';
+  /* La densidad es un MÁXIMO por pantalla, no una cuadrícula que haya que
+     llenar: con 4 trabajos en modo 8, se ven 4 tarjetas grandes en una sola
+     fila, no 4 huecos ocupando media televisión. Solo se completa la fila
+     empezada para que la última tarjeta no quede estirada. */
+  var resto = main.length % dens.cols;
+  if(main.length && resto) for(var i = 0; i < dens.cols - resto; i++) cards += '<div class="kds-card kds-card-empty"><span>LIBRE</span></div>';
   void selIdx;
   return (
-    '<div class="kds-root">' +
+    '<div class="kds-root" style="--kdc:' + dens.escala + '">' +
       '<header class="kds-head">' +
         '<div class="kds-head-l">' + dtgLogoMark(30) + "<span>DTG CRM</span></div>" +
         '<div class="kds-head-c">OPERACIONES</div>' +
@@ -13779,11 +13831,16 @@ function renderKdsView(){
           '<span class="kds-live' + (DTG_OFFLINE ? " kds-live-off" : "") + '">' + (DTG_OFFLINE ? "SIN RED" : "LIVE") + "</span>" +
         "</div>" +
       "</header>" +
+      '<div class="kds-dens" role="group" aria-label="Cuántas tarjetas a la vez">' +
+        KDS_DENSITIES.map(function(d){
+          return '<button type="button" class="kds-dens-btn' + (d.n === dens.n ? " on" : "") + '" data-action="kds-density" data-n="' + d.n + '" aria-pressed="' + (d.n === dens.n ? "true" : "false") + '">' + d.n + "</button>";
+        }).join("") +
+      "</div>" +
       '<div class="kds-legend">' + KDS_LEYENDA.map(function(l){
         return '<span class="kds-legend-i"><i class="kds-dot kds-p-' + l[0] + '"></i>' + l[1] + "</span>";
       }).join("") + '<span class="kds-legend-count">' + items.length + " EN PRODUCCIÓN</span></div>" +
       (items.length
-        ? '<main class="kds-grid">' + cards + "</main>" + renderKdsQueue(queue, selectedId)
+        ? '<main class="kds-grid" style="grid-template-columns:repeat(' + dens.cols + ',1fr)">' + cards + "</main>" + renderKdsQueue(queue, selectedId)
         : '<main class="kds-empty">NADA EN PRODUCCIÓN</main>') +
       renderKdsConfirm() +
       renderKdsDetail() +
@@ -20471,6 +20528,9 @@ function wireEvents(){
     if(kdsNo) kdsNo.addEventListener("click", kdsCancel);
     var kdsDs = root.querySelector('[data-action="kds-done-sel"]');
     if(kdsDs) kdsDs.addEventListener("click", function(){ UI.kds.detailId = null; kdsAskDone(null); });
+    root.querySelectorAll('[data-action="kds-density"]').forEach(function(b){
+      b.addEventListener("click", function(){ kdsSetDensity(parseInt(b.getAttribute("data-n"), 10)); });
+    });
     root.querySelectorAll("[data-kds-card]").forEach(function(c){
       c.addEventListener("click", function(){ UI.kds.selectedId = c.getAttribute("data-kds-card"); render(); });
     });
