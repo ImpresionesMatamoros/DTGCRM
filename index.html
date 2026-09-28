@@ -3731,6 +3731,29 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .chat-notif-texto{ font-size:13.5px; color:var(--text-muted); line-height:1.4; overflow-wrap:anywhere; }
 @media (max-width:640px){ .chat-notifs{ right:8px; left:8px; width:auto; } }
 
+/* Estado honesto de los mensajes en vivo: solo se ve cuando algo falla. */
+.rt-badge{
+  /* Arriba, NO abajo: abajo vive el compositor y esta franja lo tapaba —
+     la persona no podía ni escribir. Además no intercepta toques salvo en
+     su propio botón. */
+  position:fixed; left:50%; transform:translateX(-50%); top:calc(10px + var(--safe-top)); z-index:160;
+  pointer-events:none;
+  display:flex; align-items:center; gap:9px; max-width:calc(100vw - 24px);
+  background:var(--gold-soft); color:var(--gold); border:1px solid var(--gold);
+  border-radius:999px; padding:7px 14px; font-size:13px; font-weight:700; box-shadow:var(--shadow-pop);
+}
+.rt-badge[hidden]{ display:none; }
+.rt-badge-dot{ width:9px; height:9px; border-radius:50%; background:currentColor; animation:rtPulse 1.4s infinite; flex-shrink:0; }
+@keyframes rtPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+.rt-badge-btn{ pointer-events:auto; border:none; background:transparent; color:inherit; font:inherit; font-weight:800; text-decoration:underline; cursor:pointer; padding:4px; min-height:32px; }
+@media (max-width:880px){ .rt-badge{ top:calc(56px + var(--safe-top)); font-size:12px; padding:6px 12px; } }
+.pref-diag{ display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:10px; background:var(--surface-2); }
+.pref-diag b{ font-size:13.5px; }
+.pref-diag small{ font-size:12.5px; color:var(--text-muted); line-height:1.35; }
+.pref-diag .btn{ align-self:flex-start; margin-top:4px; }
+.pref-diag-ok b{ color:var(--success); }
+.pref-diag-mal b{ color:var(--gold); }
+
 /* Insignias del chat en la navegación. */
 .nav-badge-chat{ background:var(--accent-soft); color:var(--accent-ink); }
 .nav-badge-mention{ background:var(--gold-soft); color:var(--gold); font-weight:800; }
@@ -3770,7 +3793,7 @@ document.documentElement.setAttribute("data-theme", "dark");
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
 var APP_VERSION = "0.23.0";
-var APP_BUILD = "2026.09.27.2";
+var APP_BUILD = "2026.09.27.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -4667,6 +4690,7 @@ async function startAppForSession(session){
   UI.chatLastSeenTs = (STATE.chatState && STATE.chatState.lastSeenAt) || UI.chatLastSeenTs;
   dtgTabsStart();
   wirePushMessages();
+  renderRtBadge();
   /* Si el push ya estaba activo en este dispositivo, se reengancha el
      service worker en silencio (sin volver a pedir permiso). */
   if(chatPrefs().notifPush && pushSoportado() && Notification.permission === "granted") registrarSW();
@@ -5404,7 +5428,23 @@ window.addEventListener("popstate", function(e){
   dtgRestoreNavContext(e.state);
 });
 
+/* ---------------- v0.23.1 — Realtime que DICE si está vivo ----------------
+   Antes se llamaba a subscribe() sin escuchar el resultado: si el canal no
+   conectaba (RLS, publicación faltante, socket bloqueado, token vencido) la
+   app se veía idéntica a cuando sí funcionaba, y no había reconexión. */
+var DTG_RT_STATE = "conectando";   /* conectando | vivo | caido */
+var DTG_RT_DETALLE = "";
+var DTG_RT_INTENTOS = 0;
+var dtgRtRetry = null;
+function dtgRtSet(estado, detalle){
+  if(DTG_RT_STATE === estado) return;
+  DTG_RT_STATE = estado;
+  DTG_RT_DETALLE = detalle || "";
+  try{ if(typeof renderRtBadge === "function") renderRtBadge(); }catch(e){}
+}
+function dtgRtVivo(){ return DTG_RT_STATE === "vivo"; }
 function subscribeRealtime(){
+  clearTimeout(dtgRtRetry);
   if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
   var channel = sb.channel("dtg-changes");
   ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes","ticket_markers","feed_reactions","profiles"].forEach(function(table){
@@ -5415,10 +5455,39 @@ function subscribeRealtime(){
      refresh completo de 300ms+fetch; el refresh de siempre corre igual
      después y reconcilia (misma fuente de verdad, solo llega antes). */
   channel.on("postgres_changes", { event: "*", schema: "public", table: "team_posts" }, function(payload){
-    try{ applyTeamPostRealtime(payload); }catch(e){}
+    /* Ya NO se traga el error: si esto revienta, el mensaje no aparece y
+       antes no quedaba rastro de por qué. */
+    try{ applyTeamPostRealtime(payload); }
+    catch(e){ console.error("[DTG] aplicar mensaje en vivo", e); }
     scheduleRefresh();
   });
-  channel.subscribe();
+  dtgRtSet("conectando");
+  channel.subscribe(function(status, err){
+    if(status === "SUBSCRIBED"){
+      DTG_RT_INTENTOS = 0;
+      dtgRtSet("vivo");
+      /* Al reconectar puede haberse perdido algo: ponerse al día en
+         silencio (los mensajes recuperados no suenan, ver X1/v0.23). */
+      refreshFromServer({ background: true });
+      return;
+    }
+    if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
+      if(err) try{ console.error("[DTG] Realtime " + status, err); }catch(x){}
+      dtgRtSet("caido", status);
+      /* Reintento con espera creciente: 2s, 4s, 8s… tope 30s. Nunca deja
+         de intentar, y nunca satura si el servidor está caído. */
+      DTG_RT_INTENTOS++;
+      var espera = Math.min(30000, 2000 * Math.pow(2, Math.min(DTG_RT_INTENTOS - 1, 4)));
+      clearTimeout(dtgRtRetry);
+      dtgRtRetry = setTimeout(subscribeRealtime, espera);
+      /* Mientras no hay canal, la app se mantiene al día sondeando. Es peor
+         que Realtime, pero es honesto: nada se queda sin llegar. */
+      refreshFromServer({ background: true });
+      if(DTG_RT_INTENTOS === 3){
+        adminNote("Los mensajes en vivo no están conectando (" + status + "). Revisa que team_posts esté en la publicación supabase_realtime y que Realtime esté habilitado en el proyecto.");
+      }
+    }
+  });
   realtimeChannel = channel;
 }
 
@@ -7575,6 +7644,27 @@ function pushChatNotif(post, kind){
     renderChatNotifs();
   }, kind === "mensaje" ? 7000 : 11000);
 }
+/* Señal honesta del estado de los mensajes en vivo. Solo aparece cuando NO
+   está en vivo: si todo funciona, no estorba con un adorno verde. */
+function rtBadgeEl(){
+  var el = document.getElementById("dtg-rt-badge");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "dtg-rt-badge"; el.className = "rt-badge";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function renderRtBadge(){
+  if(typeof document === "undefined") return;
+  var el = rtBadgeEl();
+  if(dtgRtVivo() || AUTH_STATUS !== "signed_in"){ el.hidden = true; el.innerHTML = ""; return; }
+  var texto = DTG_RT_STATE === "conectando" ? "Conectando los mensajes…" : "Mensajes en vivo desconectados — reintentando";
+  el.hidden = false;
+  el.innerHTML = '<span class="rt-badge-dot"></span><span>' + texto + "</span>" +
+    '<button type="button" class="rt-badge-btn" data-action="rt-retry">Reintentar</button>';
+}
 function chatNotifsEl(){
   var el = document.getElementById("dtg-chat-notifs");
   if(!el){
@@ -7864,6 +7954,15 @@ function renderChatPrefsPanel(){
             : (est === "apagado" || est === "sin-configurar"
                 ? '<button type="button" class="btn btn-primary btn-sm" data-action="push-on"' + (est === "sin-configurar" ? " disabled" : "") + ">Activar</button>"
                 : "")) +
+        "</div>" +
+        '<div class="pref-sep"></div>' +
+        '<div class="pref-diag pref-diag-' + (dtgRtVivo() ? "ok" : "mal") + '">' +
+          "<b>" + (dtgRtVivo() ? "Los mensajes llegan en vivo" : "Los mensajes NO están llegando en vivo") + "</b>" +
+          "<small>" + (dtgRtVivo()
+            ? "Lo que escriba el equipo aparece sin recargar."
+            : "Ahora mismo la pantalla se actualiza sola cada pocos segundos, pero no al instante." +
+              (DTG_RT_DETALLE ? " (" + escapeHtml(DTG_RT_DETALLE) + ")" : "")) + "</small>" +
+          '<button type="button" class="btn btn-ghost btn-sm" data-action="rt-retry">Volver a conectar</button>' +
         "</div>" +
         '<div class="pref-sep"></div>' +
         '<div class="pref-sounds"><span>Escuchar:</span>' +
@@ -14408,8 +14507,8 @@ function kdsClockStart(){
     if(el) el.textContent = fmtTime(new Date().toISOString());
     var live = document.querySelector(".kds-live");
     if(live){
-      live.textContent = DTG_OFFLINE ? "SIN RED" : "LIVE";
-      live.className = "kds-live" + (DTG_OFFLINE ? " kds-live-off" : "");
+      live.textContent = DTG_OFFLINE ? "SIN RED" : (dtgRtVivo() ? "LIVE" : "RECONECTANDO");
+      live.className = "kds-live" + (DTG_OFFLINE || !dtgRtVivo() ? " kds-live-off" : "");
     }
   }, 1000);
 }
@@ -14588,7 +14687,8 @@ function renderKdsView(){
         '<div class="kds-head-r">' +
           "<span>" + escapeHtml(fmtDateShort(now.toISOString()).toUpperCase()) + "</span>" +
           '<span class="kds-clock">' + escapeHtml(fmtTime(now.toISOString())) + "</span>" +
-          '<span class="kds-live' + (DTG_OFFLINE ? " kds-live-off" : "") + '">' + (DTG_OFFLINE ? "SIN RED" : "LIVE") + "</span>" +
+          /* v0.23.1: "LIVE" solo si Realtime de verdad está conectado. */
+          '<span class="kds-live' + (DTG_OFFLINE || !dtgRtVivo() ? " kds-live-off" : "") + '">' + (DTG_OFFLINE ? "SIN RED" : (dtgRtVivo() ? "LIVE" : "RECONECTANDO")) + "</span>" +
         "</div>" +
       "</header>" +
       '<div class="kds-dens" role="group" aria-label="Cuántas tarjetas a la vez">' +
@@ -22613,6 +22713,8 @@ document.addEventListener("click", function(e){
   if(mPick){ e.stopPropagation(); mentionPick(mPick.getAttribute("data-id"), mPick.getAttribute("data-name")); return; }
   var mAll = e.target.closest && e.target.closest('[data-action="mention-all-yes"]');
   if(mAll){ e.stopPropagation(); mentionConfirmAll(); return; }
+  var rtRetry = e.target.closest && e.target.closest('[data-action="rt-retry"]');
+  if(rtRetry){ e.stopPropagation(); DTG_RT_INTENTOS = 0; subscribeRealtime(); return; }
   var cNotif = e.target.closest && e.target.closest('[data-action="chat-notif-open"]');
   if(cNotif){ e.stopPropagation(); abrirChatEnMensaje(cNotif.getAttribute("data-post")); return; }
   var cPrefsOpen = e.target.closest && e.target.closest('[data-action="chat-prefs-open"]');
