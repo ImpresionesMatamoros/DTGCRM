@@ -3587,8 +3587,10 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
   position:relative; display:flex; flex-direction:column; min-height:0; overflow:hidden;
   background:#0E141C; border:calc(3 * var(--kds)) solid #1F2A38;
   border-left:calc(14 * var(--kds)) solid var(--k-esp);
-  border-radius:calc(14 * var(--kds)); padding:calc(18 * var(--kds)) calc(22 * var(--kds));
-  gap:calc(6 * var(--kds));
+  /* Relleno justo: cada píxel de aire aquí es un renglón de nota que no
+     cabe adentro y se recorta a media altura. */
+  border-radius:calc(14 * var(--kds)); padding:calc(12 * var(--kds)) calc(22 * var(--kds));
+  gap:calc(5 * var(--kds));
 }
 .kds-card-empty{ align-items:center; justify-content:center; color:#2A3644; font-size:calc(34 * var(--kds)); font-weight:900; border-left-color:#1F2A38; }
 /* Colores de la leyenda — el borde grueso izquierdo es la señal a 5 m.
@@ -3614,34 +3616,73 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 }
 .kds-estado{ color:inherit; }
 .kds-folio{ margin-left:auto; color:#6F7F93; font-family:var(--font-mono); }
-.kds-cliente{ font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:800; color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kds-accion{ font-size:calc(62 * var(--kds) * var(--kdc)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; }
-.kds-cant{ font-size:calc(40 * var(--kds) * var(--kdc)); font-weight:800; color:#DCE5F0; line-height:1.1; }
+.kds-cliente{ font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:800; color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+/* F1 — el cuerpo se queda TODO el espacio sobrante y lo centra. Antes ese
+   sobrante caía como un hueco negro entre las notas y las fechas (que iban
+   empujadas al fondo con margin-top:auto), y la tarjeta se veía vacía
+   aunque llevara encima lo que hay que saber. */
+.kds-body{
+  flex:1 1 auto; min-height:0; overflow:hidden;
+  display:flex; flex-direction:column; gap:calc(6 * var(--kds));
+  /* Centrado cuando sobra sitio; pegado ARRIBA cuando no cabe ("safe").
+     Sin eso, un cuerpo apretado se recorta por los dos extremos y lo
+     primero que se pierde es la acción, que es lo que se lee desde lejos. */
+  justify-content:center;
+  justify-content:safe center;
+}
+/* --ka: la acción crece cuando la tarjeta tiene poco que contar y se
+   encoge cuando el texto es largo (ver kdsEscalaAccion). */
+/* overflow-wrap: la última red. Antes de recortar la palabra más
+   importante de la pantalla, que se parta donde sea. */
+.kds-accion{ font-size:calc(62 * var(--kds) * var(--kdc) * var(--ka, 1)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; overflow-wrap:anywhere; }
+/* UN renglón. Una descripción larga se partía en dos o tres y empujaba las
+   notas fuera de la tarjeta; desde 5 metros lo que cuenta es el número y
+   las primeras palabras. */
+.kds-cant{ font-size:calc(40 * var(--kds) * var(--kdc)); font-weight:800; color:#DCE5F0; line-height:1.1; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .kds-notas{
   margin:calc(4 * var(--kds)) 0 0; padding-left:calc(22 * var(--kds));
   font-size:calc(21 * var(--kds) * var(--kdc)); color:#94A3B8; font-weight:600; line-height:1.4;
-  /* Altura de renglones ENTEROS: nunca media línea cortada. */
-  flex-shrink:0; max-height:calc(21 * 1.4 * 2 * var(--kds) * var(--kdc)); overflow:hidden;
+  /* Altura de renglones ENTEROS: nunca media línea cortada. Hasta 3 — el
+     tope es múltiplo exacto del renglón, así que lo que sobra se recorta
+     por líneas completas, no a media letra. */
+  /* NO se encoge: encogerse significaba enseñar media línea, que a 5 metros
+     no se lee y parece un error de la pantalla. O cabe entera o no está. */
+  flex-shrink:0; max-height:calc(21 * 1.4 * 3 * var(--kds) * var(--kdc)); overflow:hidden;
 }
 .kds-notas li{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kds-fechas{ display:flex; gap:calc(34 * var(--kds)); margin-top:auto; padding-top:calc(10 * var(--kds)); }
-.kds-fechas span{ display:block; font-size:calc(16 * var(--kds) * var(--kdc)); font-weight:800; color:#6F7F93; letter-spacing:.12em; }
+/* Un solo renglón. En dos, esta franja se comía 80 px de la tarjeta —
+   espacio que hacía falta para las notas, que sí dicen algo. */
+.kds-fechas{ display:flex; flex-wrap:wrap; align-items:baseline; gap:calc(6 * var(--kds)) calc(30 * var(--kds)); padding-top:calc(6 * var(--kds)); flex-shrink:0; }
+.kds-fechas > div{ display:flex; align-items:baseline; gap:calc(9 * var(--kds)); min-width:0; }
+.kds-fechas span{ font-size:calc(16 * var(--kds) * var(--kdc)); font-weight:800; color:#6F7F93; letter-spacing:.12em; white-space:nowrap; }
 .kds-fechas b{ font-size:calc(30 * var(--kds) * var(--kdc)); font-weight:900; color:#FFFFFF; }
+/* La ausencia de fecha se DICE, en el color de la prioridad. Antes eran dos
+   rayas ("—") que ocupaban el mismo sitio y no avisaban de nada. */
+.kds-fechas-falta b{ color:var(--k-c, #94A3B8); }
+.kds-sinfecha{
+  flex-shrink:0; padding-top:calc(6 * var(--kds));
+  font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:900; letter-spacing:.08em; color:var(--k-c, #6F7F93);
+}
 .kds-foot{
   display:flex; align-items:center; justify-content:space-between; gap:calc(12 * var(--kds));
-  margin-top:calc(10 * var(--kds)); padding-top:calc(10 * var(--kds)); border-top:calc(2 * var(--kds)) solid #1F2A38;
+  margin-top:calc(6 * var(--kds)); padding-top:calc(6 * var(--kds)); border-top:calc(2 * var(--kds)) solid #1F2A38;
   font-size:calc(20 * var(--kds) * var(--kdc)); font-weight:800; color:#B6C3D4; letter-spacing:.05em;
 }
 .kds-foot-r{ color:#6F7F93; }
-.kds-queue{ display:grid; grid-template-columns:repeat(4, 1fr); gap:calc(10 * var(--kds)); }
+/* Las columnas las pone renderKdsQueue: tantas como pendientes, hasta 4.
+   Con uno solo, el renglón ocupa el ancho entero en vez de estrujarse en
+   una esquina con tres cuartos de televisión en negro. */
+.kds-queue{ display:grid; grid-template-columns:repeat(4, 1fr); gap:calc(10 * var(--kds)); flex-shrink:0; }
 .kds-q{
   display:flex; align-items:center; gap:calc(10 * var(--kds)); min-width:0;
   background:#0B1118; border:calc(2 * var(--kds)) solid #1F2A38; border-left:calc(8 * var(--kds)) solid var(--k-esp);
   border-radius:calc(10 * var(--kds)); padding:calc(9 * var(--kds)) calc(12 * var(--kds)); font-size:calc(19 * var(--kds)); font-weight:800;
 }
 .kds-q-n{ color:#6F7F93; font-family:var(--font-mono); flex-shrink:0; }
-.kds-q-accion{ color:#F2F5F9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kds-q-cant{ color:#94A3B8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kds-q-folio{ color:#6F7F93; font-family:var(--font-mono); flex-shrink:0; }
+.kds-q-cliente{ color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.kds-q-accion{ color:#F2F5F9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.kds-q-cant{ color:#94A3B8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .kds-q-resp{ margin-left:auto; color:#6F7F93; flex-shrink:0; }
 .kds-empty{ flex:1; display:flex; align-items:center; justify-content:center; font-size:calc(72 * var(--kds)); font-weight:900; color:#1F2A38; }
 .kds-overlay{ position:fixed; inset:0; z-index:210; display:flex; align-items:center; justify-content:center; background:rgba(3,6,10,.86); }
@@ -3745,6 +3786,9 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .rt-badge[hidden]{ display:none; }
 .rt-badge-dot{ width:9px; height:9px; border-radius:50%; background:currentColor; animation:rtPulse 1.4s infinite; flex-shrink:0; }
 @keyframes rtPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+/* Degradado parcial: es un AVISO, no una caída. Va en gris, no en ámbar,
+   para que la franja de verdad grave siga destacando cuando aparezca. */
+.rt-badge-parcial{ background:var(--surface-2); color:var(--text-muted); border-color:var(--border-strong); }
 .rt-badge-btn{ pointer-events:auto; border:none; background:transparent; color:inherit; font:inherit; font-weight:800; text-decoration:underline; cursor:pointer; padding:4px; min-height:32px; }
 @media (max-width:880px){ .rt-badge{ top:calc(56px + var(--safe-top)); font-size:12px; padding:6px 12px; } }
 .pref-diag{ display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:10px; background:var(--surface-2); }
@@ -3792,8 +3836,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.23.0";
-var APP_BUILD = "2026.09.27.3";
+var APP_VERSION = "0.24.0";
+var APP_BUILD = "2026.09.28.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -4812,7 +4856,7 @@ async function signOut(){
      que use esta computadora recibiría los avisos de quien se fue. */
   try{ await pushSoltarDispositivo(); }catch(e){}
   try{ DTG_POSTS_AVISADOS = {}; DTG_CHAT_ARRANCADO = false; UI.chatNotifs = []; renderChatNotifs(); }catch(e){}
-  if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
+  try{ unsubscribeRealtime(); }catch(e){}
   try{ await sb.auth.signOut(); }catch(e){}
   AUTH_SESSION = null;
   CURRENT_PROFILE = null;
@@ -5428,67 +5472,167 @@ window.addEventListener("popstate", function(e){
   dtgRestoreNavContext(e.state);
 });
 
-/* ---------------- v0.23.1 — Realtime que DICE si está vivo ----------------
-   Antes se llamaba a subscribe() sin escuchar el resultado: si el canal no
-   conectaba (RLS, publicación faltante, socket bloqueado, token vencido) la
-   app se veía idéntica a cuando sí funcionaba, y no había reconexión. */
-var DTG_RT_STATE = "conectando";   /* conectando | vivo | caido */
+/* ---------------- v0.24 — Realtime por tabla, no "todo o nada" ----------
+   v0.23.1 hizo que Realtime DIJERA si estaba vivo. Faltaba lo otro: que no
+   se cayera entero. Las doce tablas compartían un solo canal
+   ("dtg-changes"). Postgres Realtime valida la suscripción tabla por tabla,
+   pero el error es del CANAL: si UNA tabla no está en la publicación
+   supabase_realtime —o RLS la niega— el canal completo queda en
+   CHANNEL_ERROR y se lleva por delante a las once que sí funcionaban. El
+   CRM entero era tan frágil como su tabla más débil. Eso es un defecto de
+   arquitectura, no de configuración.
+
+   Ahora cada tabla tiene su canal, su reintento y su estado. La que falla
+   se rompe sola, y el estado global es el RESUMEN de las doce, no una
+   variable aparte que pueda contradecirlas. */
+var DTG_RT_TABLAS = [
+  { t: "tickets",        que: "los pedidos" },
+  { t: "productos",      que: "los productos" },
+  { t: "tareas",         que: "las tareas" },
+  { t: "pagos",          que: "los pagos" },
+  { t: "bitacora",       que: "las notas" },
+  { t: "documentos",     que: "los documentos" },
+  { t: "clientes",       que: "los clientes" },
+  { t: "ticket_markers", que: "los marcadores" },
+  { t: "feed_reactions", que: "las reacciones" },
+  { t: "profiles",       que: "los datos del equipo" },
+  { t: "app_settings",   que: "los ajustes" },
+  { t: "team_posts",     que: "los mensajes", chat: true }
+];
+var DTG_RT_CANALES = {};           /* tabla -> { estado, intentos, retry, canal, avisado } */
+var DTG_RT_STATE = "conectando";   /* conectando | vivo | parcial | caido */
 var DTG_RT_DETALLE = "";
-var DTG_RT_INTENTOS = 0;
+var DTG_RT_INTENTOS = 0;           /* el mayor de los doce: lo leen el botón y QA */
 var dtgRtRetry = null;
-function dtgRtSet(estado, detalle){
-  if(DTG_RT_STATE === estado) return;
-  DTG_RT_STATE = estado;
-  DTG_RT_DETALLE = detalle || "";
-  try{ if(typeof renderRtBadge === "function") renderRtBadge(); }catch(e){}
+var dtgRtPoll = null;
+
+function dtgRtCanal(tabla){
+  if(!DTG_RT_CANALES[tabla]) DTG_RT_CANALES[tabla] = { estado: "conectando", intentos: 0, retry: null, canal: null, avisado: false, detalle: "" };
+  return DTG_RT_CANALES[tabla];
+}
+function dtgRtEstadoDe(tabla){ return dtgRtCanal(tabla).estado; }
+/* ¿Llega en vivo LO QUE ESTA PANTALLA MUESTRA? Una pantalla no debe decir
+   "RECONECTANDO" porque falle una tabla que ni siquiera usa. */
+function dtgRtVivoDe(){
+  for(var i = 0; i < arguments.length; i++) if(dtgRtEstadoDe(arguments[i]) !== "vivo") return false;
+  return true;
 }
 function dtgRtVivo(){ return DTG_RT_STATE === "vivo"; }
-function subscribeRealtime(){
-  clearTimeout(dtgRtRetry);
-  if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
-  var channel = sb.channel("dtg-changes");
-  ["tickets","productos","tareas","pagos","bitacora","app_settings","documentos","clientes","ticket_markers","feed_reactions","profiles"].forEach(function(table){
-    channel.on("postgres_changes", { event: "*", schema: "public", table: table }, scheduleRefresh);
+function dtgRtCaidas(){ return DTG_RT_TABLAS.filter(function(d){ return dtgRtCanal(d.t).estado === "caido"; }); }
+function dtgRtLista(ds){
+  var n = ds.map(function(d){ return d.que; });
+  if(n.length <= 1) return n[0] || "";
+  return n.slice(0, -1).join(", ") + " y " + n[n.length - 1];
+}
+/* Un solo lugar decide el estado global, y de paso enciende o apaga el
+   sondeo. Así nunca queda un sondeo huérfano ni un badge desfasado. */
+function dtgRtRecalcular(){
+  var caidas = dtgRtCaidas();
+  var chatCaido = caidas.some(function(d){ return d.chat; });
+  var conectando = DTG_RT_TABLAS.some(function(d){ return dtgRtCanal(d.t).estado === "conectando"; });
+  var estado = chatCaido ? "caido" : (caidas.length ? "parcial" : (conectando ? "conectando" : "vivo"));
+  var detalle = caidas.length ? dtgRtLista(caidas) : "";
+  DTG_RT_INTENTOS = DTG_RT_TABLAS.reduce(function(m, d){ return Math.max(m, dtgRtCanal(d.t).intentos); }, 0);
+  if(estado !== DTG_RT_STATE || detalle !== DTG_RT_DETALLE){
+    DTG_RT_STATE = estado;
+    DTG_RT_DETALLE = detalle;
+    try{ if(typeof renderRtBadge === "function") renderRtBadge(); }catch(e){}
+  }
+  /* Mientras algo no llegue solo, la app se mantiene al día sondeando. Es
+     peor que Realtime, pero es honesto: nada se queda sin llegar. */
+  if(estado === "vivo"){ if(dtgRtPoll){ clearInterval(dtgRtPoll); dtgRtPoll = null; } }
+  else if(!dtgRtPoll && typeof setInterval === "function"){
+    dtgRtPoll = setInterval(function(){ refreshFromServer({ background: true }); }, 30000);
+  }
+}
+/* Se conserva el nombre de v0.23.1 (lo llaman el badge y las pruebas):
+   ahora mueve las doce tablas a la vez, que es lo que significaba antes. */
+function dtgRtSet(estado, detalle){
+  DTG_RT_TABLAS.forEach(function(d){
+    var c = dtgRtCanal(d.t);
+    c.estado = estado === "vivo" ? "vivo" : (estado === "caido" ? "caido" : "conectando");
+    c.detalle = detalle || "";
+    if(estado === "vivo"){ c.intentos = 0; c.avisado = false; }
   });
+  dtgRtRecalcular();
+}
+/* El chat aplica el payload al instante; el resto solo pide un refresh. */
+function dtgRtHandler(tabla){
+  if(tabla !== "team_posts") return scheduleRefresh;
   /* v0.20 — chat: un mensaje nuevo de otra persona aparece AL INSTANTE con
      el payload del propio evento (Realtime ya aplica RLS), sin esperar el
      refresh completo de 300ms+fetch; el refresh de siempre corre igual
      después y reconcilia (misma fuente de verdad, solo llega antes). */
-  channel.on("postgres_changes", { event: "*", schema: "public", table: "team_posts" }, function(payload){
+  return function(payload){
     /* Ya NO se traga el error: si esto revienta, el mensaje no aparece y
        antes no quedaba rastro de por qué. */
     try{ applyTeamPostRealtime(payload); }
     catch(e){ console.error("[DTG] aplicar mensaje en vivo", e); }
     scheduleRefresh();
-  });
-  dtgRtSet("conectando");
-  channel.subscribe(function(status, err){
+  };
+}
+/* Suscribe UNA tabla. Su fallo no toca a las demás. */
+function subscribeRealtimeTabla(d){
+  var c = dtgRtCanal(d.t);
+  clearTimeout(c.retry); c.retry = null;
+  if(c.canal){ try{ sb.removeChannel(c.canal); }catch(e){} c.canal = null; }
+  var canal = sb.channel("dtg-" + d.t);
+  canal.on("postgres_changes", { event: "*", schema: "public", table: d.t }, dtgRtHandler(d.t));
+  c.estado = "conectando";
+  dtgRtRecalcular();
+  canal.subscribe(function(status, err){
     if(status === "SUBSCRIBED"){
-      DTG_RT_INTENTOS = 0;
-      dtgRtSet("vivo");
+      c.intentos = 0; c.avisado = false; c.estado = "vivo"; c.detalle = "";
+      dtgRtRecalcular();
       /* Al reconectar puede haberse perdido algo: ponerse al día en
          silencio (los mensajes recuperados no suenan, ver X1/v0.23). */
       refreshFromServer({ background: true });
       return;
     }
     if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
-      if(err) try{ console.error("[DTG] Realtime " + status, err); }catch(x){}
-      dtgRtSet("caido", status);
+      if(err) try{ console.error("[DTG] Realtime " + d.t + " " + status, err); }catch(x){}
+      c.estado = "caido"; c.detalle = status; c.intentos++;
+      dtgRtRecalcular();
       /* Reintento con espera creciente: 2s, 4s, 8s… tope 30s. Nunca deja
-         de intentar, y nunca satura si el servidor está caído. */
-      DTG_RT_INTENTOS++;
-      var espera = Math.min(30000, 2000 * Math.pow(2, Math.min(DTG_RT_INTENTOS - 1, 4)));
-      clearTimeout(dtgRtRetry);
-      dtgRtRetry = setTimeout(subscribeRealtime, espera);
-      /* Mientras no hay canal, la app se mantiene al día sondeando. Es peor
-         que Realtime, pero es honesto: nada se queda sin llegar. */
+         de intentar, y nunca satura si el servidor está caído. Cada tabla
+         lleva su propia cuenta: la sana no paga la espera de la rota. */
+      var espera = Math.min(30000, 2000 * Math.pow(2, Math.min(c.intentos - 1, 4)));
+      clearTimeout(c.retry);
+      c.retry = setTimeout(function(){ subscribeRealtimeTabla(d); }, espera);
       refreshFromServer({ background: true });
-      if(DTG_RT_INTENTOS === 3){
-        adminNote("Los mensajes en vivo no están conectando (" + status + "). Revisa que team_posts esté en la publicación supabase_realtime y que Realtime esté habilitado en el proyecto.");
+      /* Quien administra ve QUÉ tabla y CÓMO se arregla — no un "no
+         conecta" genérico que no dice dónde buscar. Una vez por tabla. */
+      if(c.intentos === 3 && !c.avisado){
+        c.avisado = true;
+        adminNote('Realtime no conecta la tabla "' + d.t + '" (' + status + '). Las demás siguen en vivo. Casi siempre falta en la publicación: ALTER PUBLICATION supabase_realtime ADD TABLE public.' + d.t + ';');
       }
     }
   });
-  realtimeChannel = channel;
+  c.canal = canal;
+  return canal;
+}
+function subscribeRealtime(){
+  clearTimeout(dtgRtRetry); dtgRtRetry = null;
+  /* Si quedó vivo el canal único de antes (sesión larga, build viejo en
+     caché), se suelta: ya no manda nadie ahí. */
+  if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
+  DTG_RT_TABLAS.forEach(function(d){ dtgRtCanal(d.t).intentos = 0; dtgRtCanal(d.t).avisado = false; });
+  DTG_RT_TABLAS.forEach(function(d){ subscribeRealtimeTabla(d); });
+  dtgRtRecalcular();
+}
+/* Soltar TODO: al cerrar sesión no puede quedar un canal de la persona
+   anterior escuchando en una computadora compartida. */
+function unsubscribeRealtime(){
+  DTG_RT_TABLAS.forEach(function(d){
+    var c = dtgRtCanal(d.t);
+    clearTimeout(c.retry); c.retry = null;
+    if(c.canal){ try{ sb.removeChannel(c.canal); }catch(e){} c.canal = null; }
+    c.estado = "conectando"; c.intentos = 0; c.avisado = false; c.detalle = "";
+  });
+  clearTimeout(dtgRtRetry); dtgRtRetry = null;
+  if(dtgRtPoll){ clearInterval(dtgRtPoll); dtgRtPoll = null; }
+  if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
+  DTG_RT_STATE = "conectando"; DTG_RT_DETALLE = ""; DTG_RT_INTENTOS = 0;
 }
 
 function applyTeamPostRealtime(payload){
@@ -7660,9 +7804,16 @@ function renderRtBadge(){
   if(typeof document === "undefined") return;
   var el = rtBadgeEl();
   if(dtgRtVivo() || AUTH_STATUS !== "signed_in"){ el.hidden = true; el.innerHTML = ""; return; }
-  var texto = DTG_RT_STATE === "conectando" ? "Conectando los mensajes…" : "Mensajes en vivo desconectados — reintentando";
+  /* Tres estados, tres verdades distintas. Antes solo había una frase y,
+     con una tabla suelta caída, decía "mensajes desconectados" aunque los
+     mensajes estuvieran llegando perfectamente. */
+  var texto;
+  if(DTG_RT_STATE === "conectando") texto = "Conectando los mensajes…";
+  else if(DTG_RT_STATE === "parcial") texto = "Los mensajes llegan bien. No llegan solos: " + DTG_RT_DETALLE + " — se revisan cada 30 s.";
+  else texto = "Mensajes en vivo desconectados — reintentando";
   el.hidden = false;
-  el.innerHTML = '<span class="rt-badge-dot"></span><span>' + texto + "</span>" +
+  el.className = "rt-badge" + (DTG_RT_STATE === "parcial" ? " rt-badge-parcial" : "");
+  el.innerHTML = '<span class="rt-badge-dot"></span><span>' + escapeHtml(texto) + "</span>" +
     '<button type="button" class="rt-badge-btn" data-action="rt-retry">Reintentar</button>';
 }
 function chatNotifsEl(){
@@ -7956,10 +8107,14 @@ function renderChatPrefsPanel(){
                 : "")) +
         "</div>" +
         '<div class="pref-sep"></div>' +
-        '<div class="pref-diag pref-diag-' + (dtgRtVivo() ? "ok" : "mal") + '">' +
-          "<b>" + (dtgRtVivo() ? "Los mensajes llegan en vivo" : "Los mensajes NO están llegando en vivo") + "</b>" +
-          "<small>" + (dtgRtVivo()
-            ? "Lo que escriba el equipo aparece sin recargar."
+        /* La pregunta de este panel es "¿llegan los MENSAJES?", y eso es
+           una sola tabla: team_posts. Si lo caído es otra cosa se dice
+           aparte, sin teñir de rojo un chat que funciona. */
+        '<div class="pref-diag pref-diag-' + (dtgRtVivoDe("team_posts") ? "ok" : "mal") + '">' +
+          "<b>" + (dtgRtVivoDe("team_posts") ? "Los mensajes llegan en vivo" : "Los mensajes NO están llegando en vivo") + "</b>" +
+          "<small>" + (dtgRtVivoDe("team_posts")
+            ? "Lo que escriba el equipo aparece sin recargar." +
+              (DTG_RT_STATE === "parcial" ? " Lo que sí va con retraso: " + escapeHtml(DTG_RT_DETALLE) + "." : "")
             : "Ahora mismo la pantalla se actualiza sola cada pocos segundos, pero no al instante." +
               (DTG_RT_DETALLE ? " (" + escapeHtml(DTG_RT_DETALLE) + ")" : "")) + "</small>" +
           '<button type="button" class="btn btn-ghost btn-sm" data-action="rt-retry">Volver a conectar</button>' +
@@ -14353,12 +14508,68 @@ function kdsNotas(it){
   if(ms.length) lines.push(markerLabel(ms[0].type) + (ms[0].text ? (" — " + ms[0].text) : ""));
   var notas = (it.t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; });
   if(notas.length) lines.push(notas[notas.length - 1].text);
-  /* El máximo son 3, pero en una tarjeta solo caben 2 ENTERAS. Media línea
-     cortada no se lee desde 5 metros: mejor dos completas. */
-  return lines.slice(0, 2);
+  /* F1: antes se cortaba en 2 "porque solo caben 2". No era cierto —
+     cabían 2 y sobraba medio panel negro debajo, porque las notas tenían
+     prohibido crecer. Ahora el cuerpo se queda el espacio sobrante y las
+     notas lo usan: se ofrecen las 3 y el CSS recorta por renglones
+     enteros. Media línea cortada sigue sin existir. */
+  return lines.slice(0, 3);
 }
 function kdsNotasCount(it){
   return (it.t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).length;
+}
+/* Cuánto lleva esperando este paso. En una TV la antigüedad es la señal
+   que impide que un pedido se quede atrás sin que nadie lo note — y es lo
+   que ocupa el renglón donde antes decía "· OK", que no quería decir nada. */
+function kdsEspera(it){
+  var iso = it.task.createdAt || it.t.createdAt;
+  if(!iso) return "";
+  var ms = Date.now() - new Date(iso).getTime();
+  if(!isFinite(ms) || ms < 0) return "";
+  var d = Math.floor(ms / 86400000);
+  if(d === 0) return "HOY";
+  if(d === 1) return "1 DÍA";
+  return d + " DÍAS";
+}
+/* La acción es lo único que se lee de verdad desde 5 metros, así que el
+   espacio que no usa nadie más es suyo: crece según lo poco que haya
+   debajo. Un solo número, que viaja como --ka y multiplica el tamaño ya
+   escalado por densidad. Que una acción larga ocupe dos renglones no es un
+   problema — es justo lo que llena la tarjeta. */
+function kdsEscalaAccion(accion, cant, notas){
+  var u = (cant ? 1 : 0) + notas.length;   /* renglones bajo la acción */
+  /* Crece SOLO cuando la tarjeta está vacía, que es para lo que existe. Con
+     dos renglones debajo ya no sobra sitio: estirarla ahí empujaba la
+     última nota fuera de la tarjeta y se veía cortada a media altura. */
+  var e = u === 0 ? 1.55 : (u === 1 ? 1.32 : 1);
+  var n = (accion || "").length;
+  if(n > 22) e *= 0.70;
+  else if(n > 13) e *= 0.82;
+  return Math.round(e * 100) / 100;
+}
+/* "ENTREGA/LOGÍSTICA" y "COMPRA/MATERIAL" no tienen espacios, así que el
+   navegador no sabe partirlas: o caben de una pieza o se salen. Y salirse
+   aquí significa que la TV recorta justo la palabra que se lee desde 5
+   metros. Se marca dónde SÍ se puede partir (después de "/" y de "-") con
+   un separador invisible; el texto que se copia o se lee no cambia. */
+function kdsCorteAccion(txt){
+  return String(txt).replace(/([/\-])/g, "$1\u200B");
+}
+/* Pasa de verdad en los datos de Diego: la orden se capturó en el campo del
+   cliente, así que la tarjeta escribía la MISMA frase dos veces y se comía
+   tres renglones para no decir nada nuevo. Se dice una vez, y de la segunda
+   se conserva lo único que añadía: cuántas piezas son. */
+function kdsCantidadVisible(it){
+  var cant = kdsCantidad(it);
+  if(!cant) return "";
+  var cli = (sidebarClienteLabel(it.t) || "").toUpperCase().trim();
+  if(!cli) return cant;
+  var sinNum = cant.replace(/^\d+\s+/, "").replace(/\s\s\+\d+$/, "").trim();
+  if(!sinNum) return cant;
+  if(cli.indexOf(sinNum) === -1 && sinNum.indexOf(cli) === -1) return cant;
+  var num = cant.match(/^(\d+)\s/);
+  var mas = cant.match(/\s\s(\+\d+)$/);
+  return (num ? num[1] + " PZ" : "") + (mas ? (num ? "  " : "") + mas[1] : "");
 }
 function kdsFechaCorta(dateOnly){
   if(!dateOnly || !isSaneDateOnly(dateOnly)) return "—";
@@ -14507,8 +14718,9 @@ function kdsClockStart(){
     if(el) el.textContent = fmtTime(new Date().toISOString());
     var live = document.querySelector(".kds-live");
     if(live){
-      live.textContent = DTG_OFFLINE ? "SIN RED" : (dtgRtVivo() ? "LIVE" : "RECONECTANDO");
-      live.className = "kds-live" + (DTG_OFFLINE || !dtgRtVivo() ? " kds-live-off" : "");
+      var vivoKds = dtgRtVivoDe("tickets", "productos", "tareas");
+      live.textContent = DTG_OFFLINE ? "SIN RED" : (vivoKds ? "LIVE" : "RECONECTANDO");
+      live.className = "kds-live" + (DTG_OFFLINE || !vivoKds ? " kds-live-off" : "");
     }
   }, 1000);
 }
@@ -14562,39 +14774,90 @@ function renderKdsGate(){
     "</div>"
   );
 }
+/* F1 — la tarjeta se llena con lo que hay, o dice que no hay.
+   Lo que estaba mal, tal como se veía en la televisión del taller:
+     · las fechas se empujaban al fondo con margin-top:auto, así que todo el
+       espacio sobrante se juntaba en UN hueco negro a media tarjeta;
+     · se dibujaba "PRODUCIR —  ENTREGA —" aunque no hubiera ninguna fecha:
+       dos etiquetas y dos rayas de tinta muerta en 7 de cada 9 tarjetas;
+     · el pie decía "0 NOTAS · OK" — un cero y una palabra que no significa
+       nada, en el renglón mejor colocado de la tarjeta.
+   Ahora: el cuerpo se queda el sobrante y lo centra, la falta de fecha se
+   grita en lugar de dibujarse con rayas, y el pie lleva la antigüedad. */
 function renderKdsCard(it, slot, selected){
   var t = it.t, task = it.task;
+  var cant = kdsCantidadVisible(it);
   var notas = kdsNotas(it);
-  var cant = kdsCantidad(it);
+  /* La cantidad ocupa el sitio de una nota. Con las dos cosas y tres notas,
+     la última se quedaba fuera y se veía cortada a media altura — que a 5
+     metros no se lee y parece una falla de la pantalla. Mejor dos enteras. */
+  if(cant && notas.length > 2) notas = notas.slice(0, 2);
+  var accion = kdsAccion(it);
+  var prod = task.fechaAtencion || t.fechaAtencion;
+  var ent = t.fechaCompromiso;
+  var hayProd = !!(prod && isSaneDateOnly(prod));
+  var hayEnt = !!(ent && isSaneDateOnly(ent));
+  var nn = kdsNotasCount(it);
+  var prog = Math.max(0, Math.min(100, Number(task.progreso) || 0));
+  var pie = [];
+  if(prog > 0) pie.push(prog + "%");
+  if(nn) pie.push(nn + (nn === 1 ? " NOTA" : " NOTAS"));
+  var esp = kdsEspera(it);
+  if(esp) pie.push(esp);
   return (
-    '<div class="kds-card kds-p-' + it.prio.key + (selected ? " kds-sel" : "") + '" data-kds-card="' + escapeHtml(it.id) + '">' +
+    '<div class="kds-card kds-p-' + it.prio.key + (selected ? " kds-sel" : "") + '" style="--ka:' + kdsEscalaAccion(accion, cant, notas) + '" data-kds-card="' + escapeHtml(it.id) + '">' +
       '<div class="kds-card-top">' +
         '<span class="kds-slot">' + (slot + 1) + "</span>" +
         '<span class="kds-estado">' + escapeHtml(it.prio.label) + "</span>" +
         '<span class="kds-folio">#' + t.seq + "</span>" +
       "</div>" +
       '<div class="kds-cliente">' + escapeHtml((sidebarClienteLabel(t) || "").toUpperCase()) + "</div>" +
-      '<div class="kds-accion">' + escapeHtml(kdsAccion(it)) + "</div>" +
-      (cant ? '<div class="kds-cant">' + escapeHtml(cant) + "</div>" : "") +
-      (notas.length ? '<ul class="kds-notas">' + notas.map(function(n){ return "<li>" + escapeHtml(n) + "</li>"; }).join("") + "</ul>" : "") +
-      '<div class="kds-fechas">' +
-        '<div><span>PRODUCIR</span><b>' + escapeHtml(kdsFechaCorta(task.fechaAtencion || t.fechaAtencion)) + "</b></div>" +
-        '<div><span>ENTREGA</span><b>' + escapeHtml(kdsFechaCorta(t.fechaCompromiso)) + "</b></div>" +
+      /* El cuerpo se queda TODO el espacio sobrante y lo centra. El hueco
+         negro de en medio deja de existir: o lo llenan las notas, o lo
+         llena la acción, que para eso es lo que se lee desde lejos. */
+      '<div class="kds-body">' +
+        '<div class="kds-accion">' + kdsCorteAccion(escapeHtml(accion)) + "</div>" +
+        (cant ? '<div class="kds-cant">' + escapeHtml(cant) + "</div>" : "") +
+        (notas.length ? '<ul class="kds-notas">' + notas.map(function(n){ return "<li>" + escapeHtml(n) + "</li>"; }).join("") + "</ul>" : "") +
       "</div>" +
+      /* Un pedido sin fecha de entrega es exactamente lo que esta pantalla
+         existe para gritar. Se dice con letras; nunca con una raya. */
+      (hayProd || hayEnt
+        ? '<div class="kds-fechas">' +
+            (hayProd ? '<div><span>PRODUCIR</span><b>' + escapeHtml(kdsFechaCorta(prod)) + "</b></div>" : "") +
+            (hayEnt
+              ? '<div><span>ENTREGA</span><b>' + escapeHtml(kdsFechaCorta(ent)) + "</b></div>"
+              : '<div class="kds-fechas-falta"><span>ENTREGA</span><b>SIN FECHA</b></div>') +
+          "</div>"
+        : '<div class="kds-sinfecha">SIN FECHA DE ENTREGA</div>') +
       '<div class="kds-foot">' +
         "<span>" + escapeHtml((task.responsable || "SIN ASIGNAR").toUpperCase()) + "</span>" +
-        '<span class="kds-foot-r">' + kdsNotasCount(it) + " NOTAS · OK</span>" +
+        '<span class="kds-foot-r">' + escapeHtml(pie.join(" · ")) + "</span>" +
       "</div>" +
     "</div>"
   );
 }
+/* F2 — el que no cupo arriba no se aplasta en una esquina.
+   La cola tenía repeat(4,1fr) fijo: con UN solo pendiente quedaba un
+   recuadro estrujado abajo a la izquierda y tres cuartos de televisión en
+   negro. Ahora las columnas son las que hacen falta, y cuando sobra ancho
+   el renglón dice también de quién es el pedido — que era lo único
+   importante que no cabía. */
 function renderKdsQueue(items, selectedId){
   if(!items.length) return "";
-  return '<div class="kds-queue">' + items.map(function(it, i){
+  var cols = Math.min(items.length, 4);
+  /* Con 1 o 2 columnas sobra ancho para el cliente y la cantidad. Con 3 o 4
+     no: metiéndolos, la acción se recortaba a "ENT…", que es justo lo que
+     nadie puede leer desde el taller. */
+  var ancho = cols <= 2;
+  return '<div class="kds-queue" style="grid-template-columns:repeat(' + cols + ',1fr)">' + items.map(function(it, i){
+    var cant = kdsCantidad(it);
     return '<div class="kds-q kds-p-' + it.prio.key + (it.id === selectedId ? " kds-sel" : "") + '">' +
       '<span class="kds-q-n">' + (kdsDensity().n + i + 1) + "</span>" +
+      '<span class="kds-q-folio">#' + it.t.seq + "</span>" +
+      (ancho ? '<span class="kds-q-cliente">' + escapeHtml((sidebarClienteLabel(it.t) || "").toUpperCase()) + "</span>" : "") +
       '<span class="kds-q-accion">' + escapeHtml(kdsAccion(it)) + "</span>" +
-      '<span class="kds-q-cant">' + escapeHtml(kdsCantidad(it) || ("#" + it.t.seq)) + "</span>" +
+      (ancho && cant ? '<span class="kds-q-cant">' + escapeHtml(cant) + "</span>" : "") +
       '<span class="kds-q-resp">' + escapeHtml((it.task.responsable || "—").toUpperCase()) + "</span>" +
     "</div>";
   }).join("") + "</div>";
@@ -14671,13 +14934,21 @@ function renderKdsView(){
   var main = items.slice(0, dens.n);
   var queue = items.slice(dens.n, dens.n + KDS_QUEUE_MAX);
   var now = new Date();
+  /* Esta pantalla vive de tickets/productos/tareas. Que falle app_settings
+     no la vuelve mentirosa, así que no apaga su "LIVE". */
+  var kdsVivo = dtgRtVivoDe("tickets", "productos", "tareas");
   var cards = main.map(function(it, i){ return renderKdsCard(it, i, it.id === selectedId); }).join("");
   /* La densidad es un MÁXIMO por pantalla, no una cuadrícula que haya que
      llenar: con 4 trabajos en modo 8, se ven 4 tarjetas grandes en una sola
      fila, no 4 huecos ocupando media televisión. Solo se completa la fila
-     empezada para que la última tarjeta no quede estirada. */
-  var resto = main.length % dens.cols;
-  if(main.length && resto) for(var i = 0; i < dens.cols - resto; i++) cards += '<div class="kds-card kds-card-empty"><span>LIBRE</span></div>';
+     empezada para que la última tarjeta no quede estirada.
+     F1: y las columnas son las que reparten lo que hay en el MENOR número
+     de filas. Con 5 pasos en modo 8 se ven 3+2 (un hueco), no 4+1 con tres
+     recuadros "LIBRE" ocupando media televisión. */
+  var filas = Math.max(1, Math.ceil(main.length / dens.cols));
+  var cols = Math.max(1, Math.ceil(main.length / filas));
+  var resto = main.length % cols;
+  if(main.length && resto) for(var i = 0; i < cols - resto; i++) cards += '<div class="kds-card kds-card-empty"><span>LIBRE</span></div>';
   void selIdx;
   return (
     '<div class="kds-root" style="--kdc:' + dens.escala + '">' +
@@ -14687,8 +14958,9 @@ function renderKdsView(){
         '<div class="kds-head-r">' +
           "<span>" + escapeHtml(fmtDateShort(now.toISOString()).toUpperCase()) + "</span>" +
           '<span class="kds-clock">' + escapeHtml(fmtTime(now.toISOString())) + "</span>" +
-          /* v0.23.1: "LIVE" solo si Realtime de verdad está conectado. */
-          '<span class="kds-live' + (DTG_OFFLINE || !dtgRtVivo() ? " kds-live-off" : "") + '">' + (DTG_OFFLINE ? "SIN RED" : (dtgRtVivo() ? "LIVE" : "RECONECTANDO")) + "</span>" +
+          /* v0.23.1: "LIVE" solo si Realtime de verdad está conectado.
+             v0.24: y solo de lo que ESTA pantalla muestra. */
+          '<span class="kds-live' + (DTG_OFFLINE || !kdsVivo ? " kds-live-off" : "") + '">' + (DTG_OFFLINE ? "SIN RED" : (kdsVivo ? "LIVE" : "RECONECTANDO")) + "</span>" +
         "</div>" +
       "</header>" +
       '<div class="kds-dens" role="group" aria-label="Cuántas tarjetas a la vez">' +
@@ -14700,7 +14972,7 @@ function renderKdsView(){
         return '<span class="kds-legend-i"><i class="kds-dot kds-p-' + l[0] + '"></i>' + l[1] + "</span>";
       }).join("") + '<span class="kds-legend-count">' + items.length + " EN PRODUCCIÓN</span></div>" +
       (items.length
-        ? '<main class="kds-grid" style="grid-template-columns:repeat(' + dens.cols + ',1fr)">' + cards + "</main>" + renderKdsQueue(queue, selectedId)
+        ? '<main class="kds-grid" style="grid-template-columns:repeat(' + cols + ',1fr)">' + cards + "</main>" + renderKdsQueue(queue, selectedId)
         : '<main class="kds-empty">NADA EN PRODUCCIÓN</main>') +
       renderKdsConfirm() +
       renderKdsDetail() +
