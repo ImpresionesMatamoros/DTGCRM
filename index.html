@@ -3350,10 +3350,13 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .dq-tone-danger{ color:var(--danger); background:color-mix(in srgb, var(--danger) 14%, transparent); border-color:color-mix(in srgb, var(--danger) 38%, transparent); }
 .dq-warn:hover{ filter:brightness(1.18); }
 .dq-warn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-/* Pulso muy corto al aparecer: incómodo de ignorar, nunca ruidoso. */
+/* Pulso muy corto al aparecer: incómodo de ignorar, nunca ruidoso.
+   La animación cuelga de .dq-aparece, que solo se emite la primera vez que
+   ese aviso se pinta (ver claseAlAparecer): suelta sobre .dq-warn se
+   reproducía en cada render, o sea en cada clic. */
 @keyframes dq-pop{ 0%{ transform:scale(.82); } 60%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
-.dq-warn{ animation:dq-pop .18s ease-out; }
-@media (prefers-reduced-motion: reduce){ .dq-warn{ animation:none; } }
+.dq-warn.dq-aparece{ animation:dq-pop .18s ease-out; }
+@media (prefers-reduced-motion: reduce){ .dq-warn.dq-aparece{ animation:none; } }
 
 .zone-chip{
   display:inline-flex; align-items:center; gap:5px; cursor:pointer; min-height:26px;
@@ -3859,8 +3862,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.25.0";
-var APP_BUILD = "2026.09.28.2";
+var APP_VERSION = "0.25.1";
+var APP_BUILD = "2026.09.28.3";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -4150,7 +4153,10 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* v0.23 Equipo en vivo — todo de presentación, nada se persiste aquí.
      chatMentionPicks guarda a QUIÉN eligió del menú (no lo que escribió). */
   chatMention: null, chatMentionPicks: [], chatMentionAllOk: false,
-  chatNotifs: [], chatPrefsOpen: false, chatFocusPost: null,
+  /* chatFocusNonce: cada salto a un mensaje es una aparición distinta, así
+     el destello vuelve a correr si se salta DOS veces al mismo mensaje —
+     pero no en cada render mientras está enfocado. */
+  chatNotifs: [], chatPrefsOpen: false, chatFocusPost: null, chatFocusNonce: 0,
   chatPinnedOpen: false, chatStickBottom: false, chatAtBottom: true, chatLastSeenTs: null,
   /* UX Flow Patch §3-5: pestaña "AI Bridge" dentro de Inicio — UI nueva
      sobre el protocolo YA EXISTENTE (DTG_STATE/DTG_PATCH), nunca un segundo
@@ -7872,6 +7878,7 @@ function abrirChatEnMensaje(postId){
   goHome();
   UI.chatStickBottom = false;
   UI.chatFocusPost = postId || null;
+  UI.chatFocusNonce = (UI.chatFocusNonce || 0) + 1;
   render();
   if(postId) setTimeout(function(){
     var el = document.querySelector('[data-chat-msg="' + postId + '"]');
@@ -8255,6 +8262,20 @@ function renderSmartActions(){
       "</div>" +
     "</div>"
   );
+}
+
+/* Reemplaza la tira "Usar como:" DONDE ESTÁ, sin tocar el resto del DOM.
+   Devuelve false si todavía no está en pantalla (ahí sí hace falta un
+   render completo, que además es lo que la hace aparecer).
+   Los chips no necesitan cablearse: el clic se atiende por delegación en el
+   listener global, así que basta con cambiar el HTML. */
+function updateSmartActionsEnSitio(){
+  var el = document.getElementById("smart-actions");
+  if(!el) return false;
+  var html = renderSmartActions();
+  if(!html) return false;
+  el.outerHTML = html;
+  return true;
 }
 
 /* Vista previa en vivo de /producto (sección 6): usa el MISMO parser que
@@ -9308,7 +9329,8 @@ function renderTicketWarnings(t, opts){
   return '<span class="dq-warns' + (opts.cls ? " " + opts.cls : "") + '">' + list.map(function(k){
     var meta = TICKET_WARNING_META[k];
     var label = ticketWarningLabel(k, t);
-    return '<button type="button" class="dq-warn dq-tone-' + meta.tone + '" data-action="ticket-warning" data-warn="' + k + '" data-ticket="' + t.id + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label + " — #" + t.seq) + '">' +
+    /* El pulso es de APARICIÓN, no de repintado (ver claseAlAparecer). */
+    return '<button type="button" class="dq-warn dq-tone-' + meta.tone + claseAlAparecer("dq:" + t.id + ":" + k, "dq-aparece") + '" data-action="ticket-warning" data-warn="' + k + '" data-ticket="' + t.id + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label + " — #" + t.seq) + '">' +
       icon(meta.icon) + (opts.labels ? '<span class="dq-warn-label">' + escapeHtml(label) + "</span>" : "") +
     "</button>";
   }).join("") + "</span>";
@@ -14194,7 +14216,7 @@ function renderChatMessage(item){
     "</div>";
   return (
     '<div class="chat-msg' + (item.continued ? " chat-msg-cont" : "") + (mine ? " chat-msg-mine" : "") + (p.pinLevel !== "none" ? " chat-msg-pinned" : "") + (p.pending ? " chat-msg-pending" : "") + (active ? " is-active" : "") +
-      (postMencionaA(p, currentActorId()) && !mine ? " chat-msg-mention" : "") + (focoPost ? " chat-msg-flash" : "") +
+      (postMencionaA(p, currentActorId()) && !mine ? " chat-msg-mention" : "") + (focoPost ? claseAlAparecer("flash:" + p.id + ":" + (UI.chatFocusNonce || 0), "chat-msg-flash") : "") +
       '" data-chat-msg="' + escapeHtml(String(p.id)) + '" data-chat-key="p:' + escapeHtml(String(p.id)) + '" data-post-id="' + escapeHtml(String(p.id)) + '">' +
       '<div class="chat-msg-gutter">' + (item.continued ? '<span class="chat-msg-cont-time">' + fmtChatTime(p.createdAt) + "</span>" : personAvatar(p.autor, { size: "md" })) + "</div>" +
       '<div class="chat-msg-main">' + head +
@@ -15382,6 +15404,40 @@ function renderMarkersBar(t){
   return '<div class="markers-bar" id="markers-bar">' + rows + "</div>";
 }
 
+/* ============ Animaciones de entrada que cuentan APARICIONES ============
+   El fallo que esto arregla, reportado por Diego: "los botones dentro del
+   ticket, cuando escribo texto, con cada click que doy parpadean".
+
+   render() reconstruye TODO el DOM de #app, así que los nodos son NUEVOS en
+   cada render. Una animación de entrada escrita en CSS (`.dq-warn{
+   animation:dq-pop }`) se vuelve a reproducir con cada uno de esos nodos
+   nuevos — y como casi cada clic termina en render(), los avisos del ticket
+   rebotaban con cada clic. La animación dejaba de decir "esto acaba de
+   aparecer" y pasaba a decir "hiciste clic", que no es información: es
+   parpadeo. Medido: escala 1.00 → 0.82 → 1.06 → 1.00 en cada clic.
+
+   El "ya apareció" no puede vivir en el nodo, porque el nodo se recrea.
+   Vive aquí, con la clave de la COSA que apareció. Y al terminar el render
+   se olvida lo que ya no está en pantalla, para que si vuelve a aparecer,
+   vuelva a anunciarse — que es justo lo que la animación quiere decir.
+
+   Regla para lo que venga: una animación de entrada NUNCA se escribe suelta
+   sobre una clase que render() vuelve a pintar. Se pide con claseAlAparecer(). */
+var DTG_APARECIDO = {};
+var DTG_APARECIDO_PASE = null;
+function claseAlAparecer(clave, clase){
+  var yaEstaba = !!DTG_APARECIDO[clave];
+  if(DTG_APARECIDO_PASE) DTG_APARECIDO_PASE[clave] = 1;
+  else DTG_APARECIDO[clave] = 1;   /* fuera de un pase completo, se recuerda igual */
+  return yaEstaba ? "" : " " + clase;
+}
+function aparecidoPaseInicio(){ DTG_APARECIDO_PASE = {}; }
+function aparecidoPaseFin(){
+  if(!DTG_APARECIDO_PASE) return;
+  /* Lo que no se pintó en este pase deja de estar visto. */
+  DTG_APARECIDO = DTG_APARECIDO_PASE;
+  DTG_APARECIDO_PASE = null;
+}
 function render(){
   var app = document.getElementById("app");
   if(FATAL_ERROR){
@@ -15428,6 +15484,9 @@ function render(){
   }
   var composerSnap = captureComposerDraft();
   var hScrollSnap = captureHorizontalScrolls();
+  /* Todo lo que se pinte de aquí a aparecidoPaseFin() cuenta como "lo que
+     está en pantalla ahora". */
+  aparecidoPaseInicio();
   app.innerHTML =
     '<datalist id="dtg-team-names">' + teamOptions + "</datalist>" +
     '<div class="app">' +
@@ -15462,6 +15521,7 @@ function render(){
     renderDeletePhotoConfirmOverlay() +
     renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
+  aparecidoPaseFin();
   restoreComposerDraft(composerSnap);
   restoreHorizontalScrolls(hScrollSnap);
   wireEvents();
@@ -15575,6 +15635,9 @@ function render(){
          se calcula — nunca compiten por el mismo teclado. Tampoco se
          calcula sobre texto que empieza con "/" o "-" (esa es la vía de
          comandos aunque todavía no matchee nada), ni sobre texto vacío. */
+      /* Para saber si la tira SOLO cambió de contenido (se actualiza en
+         sitio) o si aparece/desaparece (eso sí es un render). */
+      var tiraAntes = UI.smartActions;
       var startsAsCommand = v.charAt(0) === "/" || v.charAt(0) === "-";
       var wantSmartActions = !!v.trim() && !shouldOpen && !shouldSuggest && !startsAsCommand && !isChatComposerContext();
       var smartActionsChanged = false;
@@ -15593,9 +15656,25 @@ function render(){
         UI.smartActions = null;
         smartActionsChanged = true;
       }
-      if(menuChanged || suggestChanged || smartActionsChanged || hadOverlay){
-        render();
-        restoreComposerText(v);
+      /* Recalcular la tira de "Usar como:" NO es motivo para reconstruir el
+         DOM entero de la app. Antes lo era, y escribir una palabra de diez
+         letras reconstruía #app diez veces: con eso se repetían las
+         animaciones de entrada (el parpadeo que reportó Diego), se
+         re-hidrataban las imágenes y —lo peor— restoreComposerText()
+         devolvía el cursor AL FINAL del texto, así que no se podía corregir
+         una palabra en medio de lo ya escrito.
+         La tira se actualiza donde está, igual que la vista previa de
+         /producto, que lleva haciéndolo bien desde la sección 6. El render
+         completo se queda para cuando de verdad cambia otra cosa: que la
+         tira aparezca o desaparezca, el menú de comandos, el autocomplete
+         de cliente o un overlay abierto. */
+      var soloCambioLaTira = smartActionsChanged && !menuChanged && !suggestChanged && !hadOverlay &&
+        !!tiraAntes && !!UI.smartActions;
+      if(!(soloCambioLaTira && updateSmartActionsEnSitio())){
+        if(menuChanged || suggestChanged || smartActionsChanged || hadOverlay){
+          render();
+          restoreComposerText(v);
+        }
       }
       updateProductoPreview(v);
     });
