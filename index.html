@@ -3564,6 +3564,15 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 }
 .kds-head-l{ display:flex; align-items:center; gap:calc(10 * var(--kds)); font-size:calc(26 * var(--kds)); font-weight:800; color:#93A3B8; }
 .kds-head-c{ font-size:calc(46 * var(--kds)); font-weight:900; letter-spacing:calc(6 * var(--kds)); }
+/* PARTE E/I — el cambio de tablero vive en la cabecera: se ve desde el fondo
+   del taller y no le quita ni un píxel de alto a las tarjetas. */
+.kds-tabs{ display:flex; align-items:baseline; justify-content:center; gap:calc(26 * var(--kds)); letter-spacing:normal; }
+.kds-tab{
+  border:none; background:transparent; font-family:inherit; cursor:pointer; padding:0;
+  color:#5A6A7E; font-size:calc(26 * var(--kds)); font-weight:900; letter-spacing:calc(2 * var(--kds));
+  border-bottom:calc(5 * var(--kds)) solid transparent; padding-bottom:calc(4 * var(--kds));
+}
+.kds-tab.on{ color:#FFFFFF; font-size:calc(46 * var(--kds)); letter-spacing:calc(5 * var(--kds)); border-bottom-color:#FFFFFF; }
 .kds-head-r{ display:flex; align-items:center; justify-content:flex-end; gap:calc(18 * var(--kds)); font-size:calc(26 * var(--kds)); font-weight:700; color:#93A3B8; }
 .kds-clock{ color:#F2F5F9; font-variant-numeric:tabular-nums; }
 .kds-live{
@@ -3582,7 +3591,12 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-legend-i{ display:inline-flex; align-items:center; gap:calc(8 * var(--kds)); }
 .kds-dot{ width:calc(16 * var(--kds)); height:calc(16 * var(--kds)); border-radius:50%; background:var(--k-c, #94A3B8); }
 .kds-legend-count{ margin-left:auto; color:#F2F5F9; }
-.kds-grid{ flex:1; display:grid; grid-auto-rows:1fr; gap:calc(14 * var(--kds)); min-height:0; }
+/* PARTE F1 — las proporciones de una TV de 32", no las de un monitor:
+   cabecera + leyenda ~11 %, tarjetas grandes ~65-72 %, y lo que queda es de
+   la cola. El tope se le pone a la COLA, no a las tarjetas: así la cola
+   nunca se come la pantalla, y cuando hay poco en cola (o nada) el alto
+   sobrante vuelve a donde se lee de lejos en vez de quedarse en negro. */
+.kds-grid{ flex:1 1 auto; display:grid; grid-auto-rows:1fr; gap:calc(14 * var(--kds)); min-height:0; }
 .kds-card{
   position:relative; display:flex; flex-direction:column; min-height:0; overflow:hidden;
   background:#0E141C; border:calc(3 * var(--kds)) solid #1F2A38;
@@ -3608,15 +3622,21 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-card.kds-p-bloqueado{ background:#150B16; }
 /* Selección: borde blanco grueso, halo y escala — visible desde lejos. */
 .kds-sel{ outline:calc(5 * var(--kds)) solid #FFFFFF; outline-offset:calc(-2 * var(--kds)); box-shadow:0 0 calc(40 * var(--kds)) rgba(255,255,255,.28); transform:scale(1.008); }
-.kds-card-top{ display:flex; align-items:center; gap:calc(14 * var(--kds)); font-size:calc(22 * var(--kds) * var(--kdc)); font-weight:900; letter-spacing:.08em; }
+.kds-card-top{ display:flex; align-items:baseline; gap:calc(14 * var(--kds)); font-size:calc(22 * var(--kds) * var(--kdc)); font-weight:900; letter-spacing:.08em; flex-shrink:0; }
 .kds-slot{
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:calc(44 * var(--kds)); height:calc(44 * var(--kds)); border-radius:calc(10 * var(--kds));
+  width:calc(44 * var(--kds)); height:calc(44 * var(--kds)); border-radius:calc(10 * var(--kds)); align-self:center;
   background:var(--k-c, #94A3B8); color:#07090D; font-size:calc(28 * var(--kds) * var(--kdc)); font-weight:900;
 }
-.kds-estado{ color:inherit; }
-.kds-folio{ margin-left:auto; color:#6F7F93; font-family:var(--font-mono); }
-.kds-cliente{ font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:800; color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+.kds-estado{ color:inherit; flex-shrink:0; }
+.kds-folio{ color:#6F7F93; font-family:var(--font-mono); flex-shrink:0; }
+/* De quién es el pedido se lee desde el fondo del taller, no de cerca.
+   Comparte renglón con el folio y se queda con todo el ancho sobrante. */
+.kds-cliente{
+  margin-left:auto; text-align:right; min-width:0;
+  font-size:calc(32 * var(--kds) * var(--kdc)); font-weight:800; color:#CBD6E4; letter-spacing:.02em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 /* F1 — el cuerpo se queda TODO el espacio sobrante y lo centra. Antes ese
    sobrante caía como un hueco negro entre las notas y las fechas (que iban
    empujadas al fondo con margin-top:auto), y la tarjeta se veía vacía
@@ -3634,20 +3654,23 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
    encoge cuando el texto es largo (ver kdsEscalaAccion). */
 /* overflow-wrap: la última red. Antes de recortar la palabra más
    importante de la pantalla, que se parta donde sea. */
-.kds-accion{ font-size:calc(62 * var(--kds) * var(--kdc) * var(--ka, 1)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.kds-accion{ font-size:calc(68 * var(--kds) * var(--kdc) * var(--ka, 1)); font-weight:900; line-height:1.02; color:#FFFFFF; letter-spacing:-.01em; overflow-wrap:anywhere; }
 /* UN renglón. Una descripción larga se partía en dos o tres y empujaba las
    notas fuera de la tarjeta; desde 5 metros lo que cuenta es el número y
    las primeras palabras. */
 .kds-cant{ font-size:calc(40 * var(--kds) * var(--kdc)); font-weight:800; color:#DCE5F0; line-height:1.1; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* PARTE G — el canal (WHATSAPP / LLAMADA / CORREO) no es una cantidad: es
+   por dónde se hace la gestión. Se marca en el color de la prioridad. */
+.kds-canal{ color:var(--k-c, #DCE5F0); letter-spacing:calc(3 * var(--kds)); }
 .kds-notas{
   margin:calc(4 * var(--kds)) 0 0; padding-left:calc(22 * var(--kds));
-  font-size:calc(21 * var(--kds) * var(--kdc)); color:#94A3B8; font-weight:600; line-height:1.4;
-  /* Altura de renglones ENTEROS: nunca media línea cortada. Hasta 3 — el
+  font-size:calc(27 * var(--kds) * var(--kdc)); color:#A8B6C7; font-weight:600; line-height:1.35;
+  /* Altura de renglones ENTEROS: nunca media línea cortada. DOS (F3) — el
      tope es múltiplo exacto del renglón, así que lo que sobra se recorta
-     por líneas completas, no a media letra. */
-  /* NO se encoge: encogerse significaba enseñar media línea, que a 5 metros
+     por líneas completas, no a media letra.
+     NO se encoge: encogerse significaba enseñar media línea, que a 5 metros
      no se lee y parece un error de la pantalla. O cabe entera o no está. */
-  flex-shrink:0; max-height:calc(21 * 1.4 * 3 * var(--kds) * var(--kdc)); overflow:hidden;
+  flex-shrink:0; max-height:calc(27 * 1.35 * 2 * var(--kds) * var(--kdc)); overflow:hidden;
 }
 .kds-notas li{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Un solo renglón. En dos, esta franja se comía 80 px de la tarjeta —
@@ -3672,7 +3695,7 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 /* Las columnas las pone renderKdsQueue: tantas como pendientes, hasta 4.
    Con uno solo, el renglón ocupa el ancho entero en vez de estrujarse en
    una esquina con tres cuartos de televisión en negro. */
-.kds-queue{ display:grid; grid-template-columns:repeat(4, 1fr); gap:calc(10 * var(--kds)); flex-shrink:0; }
+.kds-queue{ display:grid; grid-template-columns:repeat(4, 1fr); gap:calc(10 * var(--kds)); flex:0 0 auto; max-height:30%; overflow:hidden; }
 .kds-q{
   display:flex; align-items:center; gap:calc(10 * var(--kds)); min-width:0;
   background:#0B1118; border:calc(2 * var(--kds)) solid #1F2A38; border-left:calc(8 * var(--kds)) solid var(--k-esp);
@@ -3836,8 +3859,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.24.0";
-var APP_BUILD = "2026.09.28.1";
+var APP_VERSION = "0.25.0";
+var APP_BUILD = "2026.09.28.2";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -4122,7 +4145,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* Pantalla operativa (KDS): todo de presentación, nada se persiste.
      ready = ya hubo el gesto que concede pantalla completa y sonido. */
   displayMode: false,
-  kds: { ready: false, sound: true, density: 4, selectedId: null, confirm: null, detailId: null, seen: null },
+  kds: { ready: false, sound: true, density: 4, board: "produccion", selectedId: null, confirm: null, detailId: null, seen: null },
   chatReactFor: null, chatMenuFor: null, chatActiveMsg: null, chatOptionsOpen: false,
   /* v0.23 Equipo en vivo — todo de presentación, nada se persiste aquí.
      chatMentionPicks guarda a QUIÉN eligió del menú (no lo que escribió). */
@@ -5049,7 +5072,10 @@ async function fetchAllState(){
     var t = byTicket[row.ticket_id]; if(!t) return;
     t.tareas.push({ id: row.id, desc: row.descripcion, tipo: row.tipo, responsable: row.responsable || "", fechaAtencion: row.fecha_atencion || "", estado: row.estado,
       /* v0.20 (0016) — tolerante: sin la migración, progreso 0 y sin tipo. */
-      progreso: row.progreso == null ? 0 : Number(row.progreso), tipoOperacion: row.tipo_operacion || "", terminadoAt: row.terminado_at || null, createdAt: row.created_at || null });
+      progreso: row.progreso == null ? 0 : Number(row.progreso), tipoOperacion: row.tipo_operacion || "", terminadoAt: row.terminado_at || null, createdAt: row.created_at || null,
+      /* B/D5: "" mientras 0022 no esté aplicada o la tarea no se haya
+         clasificado. Nunca se inventa un valor al leer. */
+      area: row.area || "" });
   });
   pagosRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
@@ -10743,6 +10769,41 @@ function opsTipoIcon(tipo){
   return "layers";
 }
 function isOpsTask(x){ return x && x.tipo === "produccion"; }
+/* ================= PARTE B + D5 — Planeación vs Producción =================
+   La pregunta es una sola: "¿en qué pantalla aparece esta tarea?". La
+   responde `tareas.area` (migración 0022), y nada más.
+
+   `tipo` NO sirve para esto: responde "¿qué CLASE de tarea es?" y lo leen
+   isOpsTask(), la bitácora y las vistas de ticket. Mezclar las dos preguntas
+   en un campo obliga a tocar todos esos puntos para ganar nada.
+
+   PUENTE TEMPORAL (y solo eso): mientras una tarea tenga `area` vacía —todas
+   las que ya existían antes de 0022— se deduce del tipo de operación. Es
+   explícitamente lo que la Parte D5 prohíbe como regla permanente, así que:
+     · vive en UNA función, marcada, para poder borrarla de un tirón;
+     · no escribe nada: en cuanto el backfill ponga `area`, deja de correr;
+     · el menú progresivo escribe `area` desde que se crea la tarea.
+   El backfill que reclasifica lo existente va en 0022, comentado, porque SÍ
+   cambia datos de producción y lo aprueba Diego, no yo. */
+var TASK_AREAS = ["planeacion", "produccion"];
+var AREA_LABEL = { planeacion: "Planeación", produccion: "Producción" };
+/* Gestión: lo que hay que HACER para que el trabajo avance (Parte B1). */
+var AREA_PUENTE_PLANEACION = /(compra|material|insumo|entrega|log[íi]stic|cotiz|cobr|anticipo|saldo|contact|llamad|whats|correo|mail|sms|mensaj|seguimiento|recog|coordin|confirmar|solicitar|aprobaci|program|bloqueo)/;
+function areaPuente(x){
+  var k = normalizeWord((x && x.tipoOperacion) || "");
+  if(k && AREA_PUENTE_PLANEACION.test(k)) return "planeacion";
+  /* Sin tipo de operación o sin coincidencia, se queda donde siempre estuvo:
+     Producción. El puente nunca MUEVE una tarea por adivinar de más. */
+  return "produccion";
+}
+function taskArea(x){
+  if(!x) return "produccion";
+  if(TASK_AREAS.indexOf(x.area) !== -1) return x.area;
+  return areaPuente(x);
+}
+/* ¿Esta tarea está clasificada de verdad, o la está sosteniendo el puente?
+   Lo usa el aviso a quien administra y el QA; el empleado no ve la diferencia. */
+function taskAreaEsPuente(x){ return TASK_AREAS.indexOf(x && x.area) === -1; }
 function opsTaskIsRecentlyDone(x, t){
   if(x.estado !== "terminado") return false;
   if(x.terminadoAt){ return (Date.now() - new Date(x.terminadoAt).getTime()) < 7 * 86400000; }
@@ -10886,11 +10947,14 @@ function renderOperacionesView(){
       '<button type="button" class="chip-toggle' + (o.urgentes ? " on" : "") + '" data-action="ops-urgentes" aria-pressed="' + (o.urgentes?"true":"false") + '">' + markerIcon("urgente") + "Urgentes</button>" +
       mostrarSeg +
     "</div>";
-  /* La pantalla de la TV se abre desde aquí, que es donde se administra la
-     producción. Pestaña nueva: el CRM sigue vivo en la computadora. */
+  /* PARTE E — las TRES pantallas de TV se abren desde aquí, que es donde se
+     administra la producción. Pestaña nueva: el CRM sigue vivo en la
+     computadora. Cada PC del taller se configura con su URL directa. */
   var header = '<div class="home-header"><div class="view-title">' + icon("factory", { cls: "view-title-ic" }) + "<h1>Operaciones</h1></div>" +
     '<div class="ops-header-actions">' +
-      '<a class="btn btn-ghost" href="?display=1" target="_blank" rel="noopener" data-action="open-kds">' + icon("monitor") + "Pantalla de TV</a>" +
+      '<a class="btn btn-ghost" href="?display=produccion" target="_blank" rel="noopener" data-action="open-kds">' + icon("monitor") + "TV · Producción</a>" +
+      '<a class="btn btn-ghost" href="?display=planeacion" target="_blank" rel="noopener" data-action="open-kds">' + icon("monitor") + "TV · Planeación</a>" +
+      '<a class="btn btn-ghost" href="?display=cxc" target="_blank" rel="noopener" data-action="open-kds">' + icon("monitor") + "TV · Por cobrar</a>" +
       '<button type="button" class="btn btn-primary" data-action="ops-task-new">' + icon("plus") + "Tarea</button>" +
     "</div></div>";
   var anyTask = STATE.tickets.some(function(t){ return (t.tareas || []).some(isOpsTask); });
@@ -14446,7 +14510,81 @@ function kdsCycleDensity(){
   var i = KDS_DENSITIES.findIndex(function(d){ return d.n === UI.kds.density; });
   kdsSetDensity(KDS_DENSITIES[(i + 1) % KDS_DENSITIES.length].n);
 }
-var KDS_QUEUE_MAX = 8;           /* cuántas más se anuncian abajo */
+/* ================= PARTE B + E — Los tres tableros de la TV =================
+   La pantalla del taller mostraba UNA sola cosa y no se podía salir de ahí:
+   para saber quién debe o qué hay que gestionar había que ir a la
+   computadora. Son tres tableros y UNA pantalla: cambian los datos, la
+   leyenda y qué teclas tienen sentido; la tarjeta, el bump bar, el reloj y
+   el resto son los mismos. */
+var KDS_BOARDS = [
+  { key: "produccion", area: "produccion", label: "PRODUCCIÓN", corto: "PRODUCCIÓN",
+    cuenta: "EN PRODUCCIÓN", vacio: "NADA EN PRODUCCIÓN", acciona: true },
+  { key: "planeacion", area: "planeacion", label: "PLANEACIÓN", corto: "PLANEACIÓN",
+    cuenta: "POR GESTIONAR", vacio: "NADA POR GESTIONAR", acciona: true },
+  /* CxC no es un tablero de tareas: son tickets entregados con dinero
+     pendiente. Por eso NO acciona — DONE aquí sería "pagado", y registrar un
+     pago es una decisión financiera que no se toma con un botón de TV. */
+  { key: "cxc", area: null, label: "CUENTAS POR COBRAR", corto: "POR COBRAR",
+    cuenta: "POR COBRAR", vacio: "NADA POR COBRAR", acciona: false }
+];
+function kdsBoard(){
+  return KDS_BOARDS.filter(function(b){ return b.key === UI.kds.board; })[0] || KDS_BOARDS[0];
+}
+function kdsSetBoard(key, opts){
+  if(!KDS_BOARDS.some(function(b){ return b.key === key; })) return;
+  if(UI.kds.board === key) return;
+  UI.kds.board = key;
+  /* La selección, la confirmación y el "ya lo vi" son de UN tablero. Si se
+     arrastraran, al volver sonarían de golpe las tarjetas de siempre y la
+     selección apuntaría a algo que ya no está en pantalla. */
+  UI.kds.selectedId = null; UI.kds.confirm = null; UI.kds.detailId = null; UI.kds.seen = null;
+  try{ localStorage.setItem("dtg_kds_board", key); }catch(e){}
+  /* La URL sigue al tablero: recargar la TV la deja donde estaba, y la PC
+     del taller se puede configurar directamente en la pantalla que le toca. */
+  kdsSyncUrl();
+  if(!opts || opts.render !== false) render();
+}
+function kdsCycleBoard(dir){
+  var i = KDS_BOARDS.findIndex(function(b){ return b.key === kdsBoard().key; });
+  kdsSetBoard(KDS_BOARDS[(i + (dir < 0 ? -1 : 1) + KDS_BOARDS.length) % KDS_BOARDS.length].key);
+}
+function kdsSyncUrl(){
+  try{
+    if(!UI.displayMode || typeof window === "undefined" || !window.history) return;
+    var u = new URL(window.location.href);
+    u.searchParams.set("display", kdsBoard().key);
+    window.history.replaceState(window.history.state, "", u.toString());
+  }catch(e){}
+}
+/* PARTE E — de la URL al tablero. `?display=1` (y `#display`) siguen
+   entrando a Producción: hay PCs del taller ya configuradas así y romperlas
+   no arregla nada. */
+function kdsBoardFromUrl(){
+  try{
+    var m = /[?&]display=([a-z0-9]+)/i.exec(window.location.search || "");
+    var v = m ? m[1].toLowerCase() : (window.location.hash === "#display" ? "1" : "");
+    if(!v) return null;
+    if(v === "1" || v === "true") return "produccion";
+    if(v === "cobranza" || v === "deudas") return "cxc";
+    return KDS_BOARDS.some(function(b){ return b.key === v; }) ? v : "produccion";
+  }catch(e){ return null; }
+}
+function kdsLoadBoard(){
+  var url = kdsBoardFromUrl();
+  if(url){ UI.kds.board = url; kdsSyncUrl(); return; }
+  try{
+    var v = localStorage.getItem("dtg_kds_board");
+    if(KDS_BOARDS.some(function(b){ return b.key === v; })) UI.kds.board = v;
+  }catch(e){}
+}
+/* Lo que se ve, sea cual sea el tablero. UN solo punto de entrada: el resto
+   de la pantalla (mover, contar, seleccionar, cola) no sabe de tableros. */
+function kdsItems(){
+  var b = kdsBoard();
+  if(b.key === "cxc") return kdsCxc();
+  return kdsTasks(b.area);
+}
+var KDS_QUEUE_MAX = 12;          /* cuántas más se anuncian abajo */
 var KDS_PRONTO_DIAS = 1;         /* "próximo a vencer" = hoy o mañana */
 
 /* Prioridad DERIVADA — nunca se guarda. Orden exigido: urgente, bloqueado,
@@ -14465,13 +14603,20 @@ function kdsPrioridad(t, task){
 }
 /* La cola de la pantalla: pasos de producción sin terminar, de tickets
    vivos. Lo que el actor no puede ver por RLS, nunca llegó a STATE. */
-function kdsTasks(){
+function kdsTasks(area){
   var out = [];
   STATE.tickets.forEach(function(t){
     if(ticketIsCerrado(t)) return;
+    /* PARTE C1 — un pedido entregado deja de ensuciar el taller. Lo que
+       queda por cobrar vive en su tablero, no aquí. */
+    if(ticketEstado(t) === "entregado") return;
     (t.tareas || []).forEach(function(task){
       if(!isOpsTask(task) || task.estado === "terminado") return;
-      out.push({ id: task.id, task: task, t: t, prio: kdsPrioridad(t, task) });
+      /* PARTE B — sin área pedida se devuelve todo (lo que hacía siempre);
+         con área, solo la suya. Producción jamás enseña una llamada y
+         Planeación jamás enseña un estampado. */
+      if(area && taskArea(task) !== area) return;
+      out.push({ id: task.id, board: taskArea(task), task: task, t: t, prio: kdsPrioridad(t, task) });
     });
   });
   var hoy = todayLocalYYYYMMDD();
@@ -14483,6 +14628,35 @@ function kdsTasks(){
   });
   void hoy;
   return out;
+}
+/* ================= PARTE H — CUENTAS POR COBRAR en la TV =================
+   Ni un número nuevo: el mismo cxcTickets() que usa la computadora. Es otra
+   VISTA del mismo ticket, no un segundo sistema financiero (Parte K).
+   El saldo desconocido va aparte y al final, nunca mezclado con los que sí
+   tienen cifra — y nunca contado como $0. */
+var KDS_TONO_PRIO = { ok: "atiempo", warn: "pronto", serious: "urgente", danger: "bloqueado" };
+function kdsCxc(){
+  var data = cxcTickets();
+  var conSaldo = data.withSaldo.map(function(r){
+    var b = r.bucket;
+    return {
+      id: "cxc:" + r.t.id, board: "cxc", t: r.t, task: null, cxc: r, saldoDesconocido: false,
+      prio: {
+        rank: b ? CXC_AGING.findIndex(function(x){ return x.key === b.key; }) : 9,
+        key: b ? (KDS_TONO_PRIO[b.tone] || "espera") : "espera",
+        label: b ? b.label.toUpperCase() : "SIN FECHA DE ENTREGA"
+      }
+    };
+  });
+  var sinCifra = data.unknown.map(function(r){
+    return {
+      id: "cxc:" + r.t.id, board: "cxc", t: r.t, task: null, cxc: r, saldoDesconocido: true,
+      prio: { rank: 99, key: "espera", label: "FALTA PRECIO" }
+    };
+  });
+  /* Antigüedad primero (es lo que manda en cobranza); lo indeterminable al
+     final, porque no se puede priorizar lo que no se sabe cuánto es. */
+  return conSaldo.concat(sinCifra);
 }
 /* La acción y la cantidad se DERIVAN de lo que ya existe: el tipo de
    operación es la acción; la cantidad sale del producto del ticket. */
@@ -14508,12 +14682,10 @@ function kdsNotas(it){
   if(ms.length) lines.push(markerLabel(ms[0].type) + (ms[0].text ? (" — " + ms[0].text) : ""));
   var notas = (it.t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; });
   if(notas.length) lines.push(notas[notas.length - 1].text);
-  /* F1: antes se cortaba en 2 "porque solo caben 2". No era cierto —
-     cabían 2 y sobraba medio panel negro debajo, porque las notas tenían
-     prohibido crecer. Ahora el cuerpo se queda el espacio sobrante y las
-     notas lo usan: se ofrecen las 3 y el CSS recorta por renglones
-     enteros. Media línea cortada sigue sin existir. */
-  return lines.slice(0, 3);
+  /* F3 lo fija: "hasta DOS instrucciones críticas". Y con la letra grande
+     que pidió Diego, dos es además lo que cabe entero. Media línea cortada
+     no se lee desde 5 metros y parece una falla de la pantalla. */
+  return lines.slice(0, 2);
 }
 function kdsNotasCount(it){
   return (it.t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).length;
@@ -14641,7 +14813,7 @@ function kdsSelectedIndex(items){
   return i;
 }
 function kdsMove(dx, dy){
-  var items = kdsTasks();
+  var items = kdsItems();
   if(!items.length) return;
   var i = kdsSelectedIndex(items);
   var d = kdsDensity();
@@ -14658,7 +14830,11 @@ function kdsMove(dx, dy){
 
 /* ---------------- acciones (mismos cores de siempre) ---------------- */
 function kdsAskDone(slotOrNull){
-  var items = kdsTasks();
+  /* PARTE I — DONE solo donde significa algo. En Cuentas por cobrar sería
+     "pagado", y registrar un pago es una decisión financiera que pasa por su
+     propio core, no por el botón 1 de un bump bar. */
+  if(!kdsBoard().acciona) return;
+  var items = kdsItems();
   if(!items.length) return;
   var it = slotOrNull != null ? items[slotOrNull] : items[kdsSelectedIndex(items)];
   if(!it) return;
@@ -14667,7 +14843,8 @@ function kdsAskDone(slotOrNull){
   render();
 }
 function kdsAskWait(){
-  var items = kdsTasks();
+  if(!kdsBoard().acciona) return;
+  var items = kdsItems();
   var it = items[kdsSelectedIndex(items)];
   if(!it) return;
   UI.kds.confirm = { id: it.id, accion: "esperar" };
@@ -14676,7 +14853,7 @@ function kdsAskWait(){
 async function kdsConfirm(){
   var c = UI.kds.confirm;
   if(!c) return;
-  var items = kdsTasks();
+  var items = kdsItems();
   var it = items.filter(function(x){ return x.id === c.id; })[0];
   UI.kds.confirm = null;
   if(!it){ render(); return; }
@@ -14696,6 +14873,7 @@ function kdsCancel(){
 function kdsStart_(){
   UI.kds.ready = true;
   kdsLoadDensity();
+  kdsLoadBoard();
   try{
     var el = document.documentElement;
     if(el.requestFullscreen) el.requestFullscreen().catch(function(){});
@@ -14725,7 +14903,7 @@ function kdsClockStart(){
   }, 1000);
 }
 function kdsOpenDetail(){
-  var items = kdsTasks();
+  var items = kdsItems();
   var it = items[kdsSelectedIndex(items)];
   if(!it) return;
   UI.kds.detailId = it.id;
@@ -14752,11 +14930,15 @@ function kdsKey(e){
   if(k === "Enter"){ e.preventDefault(); kdsOpenDetail(); return true; }
   if(k === "w" || k === "W"){ e.preventDefault(); kdsAskWait(); return true; }
   if(k === "g" || k === "G"){ e.preventDefault(); kdsCycleDensity(); return true; }
+  /* PARTE I — el mismo lenguaje en las tres pantallas. Tab (que es lo que
+     manda casi cualquier macropad sin configurar) y T cambian de tablero. */
+  if(k === "Tab" || k === "t" || k === "T"){ e.preventDefault(); kdsCycleBoard(e.shiftKey ? -1 : 1); return true; }
   /* El número de una tarjeta es su DONE. Con 6 u 8 en pantalla, también
-     valen el 5 al 8 — nunca un número que no esté a la vista. */
+     valen el 5 al 8 — nunca un número que no esté a la vista. Y nunca en
+     Cuentas por cobrar: ahí DONE sería "pagado" (kdsAskDone lo frena). */
   if(k >= "1" && k <= "9"){
     var slot = parseInt(k, 10) - 1;
-    if(slot < kdsDensity().n){ e.preventDefault(); kdsAskDone(slot); return true; }
+    if(slot < kdsDensity().n && kdsBoard().acciona){ e.preventDefault(); kdsAskDone(slot); return true; }
   }
   return false;
 }
@@ -14768,35 +14950,118 @@ function renderKdsGate(){
   return (
     '<div class="kds-gate">' +
       '<div class="kds-gate-brand">' + dtgLogoMark(64) + "<span>DTG CRM</span></div>" +
-      '<div class="kds-gate-title">PANTALLA DE OPERACIONES</div>' +
+      '<div class="kds-gate-title">' + escapeHtml(kdsBoard().label) + "</div>" +
       '<button type="button" class="kds-gate-btn" data-action="kds-start">ENTRAR A PANTALLA COMPLETA</button>' +
-      '<div class="kds-gate-hint">Flechas para moverse · OK abre el detalle · el número de una tarjeta la termina · G cambia cuántas se ven</div>' +
+      '<div class="kds-gate-hint">Flechas para moverse · OK abre el detalle · el número de una tarjeta la termina · TAB cambia de tablero (Producción · Planeación · Por cobrar) · G cambia cuántas se ven</div>' +
     "</div>"
   );
 }
-/* F1 — la tarjeta se llena con lo que hay, o dice que no hay.
-   Lo que estaba mal, tal como se veía en la televisión del taller:
+/* ================= La tarjeta de la TV, una sola =================
+   F1 — se llena con lo que hay, o dice que no hay. Lo que estaba mal, tal
+   como se veía en la televisión del taller:
      · las fechas se empujaban al fondo con margin-top:auto, así que todo el
        espacio sobrante se juntaba en UN hueco negro a media tarjeta;
      · se dibujaba "PRODUCIR —  ENTREGA —" aunque no hubiera ninguna fecha:
        dos etiquetas y dos rayas de tinta muerta en 7 de cada 9 tarjetas;
      · el pie decía "0 NOTAS · OK" — un cero y una palabra que no significa
        nada, en el renglón mejor colocado de la tarjeta.
-   Ahora: el cuerpo se queda el sobrante y lo centra, la falta de fecha se
-   grita en lugar de dibujarse con rayas, y el pie lleva la antigüedad. */
-function renderKdsCard(it, slot, selected){
-  var t = it.t, task = it.task;
+
+   F3/G/H — los tres tableros comparten ESTA tarjeta. Lo único que sabe de
+   ellos es kdsVista(): qué va en cada hueco. Ni un render por tablero, ni
+   un dato inventado — todo sale de lo que ya existe. */
+var KDS_CANALES = [
+  ["whats", "WHATSAPP"], ["llamad", "LLAMADA"], ["llamar", "LLAMADA"], ["telefon", "LLAMADA"],
+  ["correo", "CORREO"], ["email", "CORREO"], ["mail", "CORREO"], ["sms", "SMS"], ["presencial", "PRESENCIAL"]
+];
+/* PARTE G — el canal solo se muestra cuando el TIPO DE OPERACIÓN lo dice.
+   No se adivina por el título: si el tipo no nombra un canal, no hay canal. */
+function kdsCanal(task){
+  var k = normalizeWord((task && task.tipoOperacion) || "");
+  if(!k) return "";
+  for(var i = 0; i < KDS_CANALES.length; i++) if(k.indexOf(KDS_CANALES[i][0]) !== -1) return KDS_CANALES[i][1];
+  return "";
+}
+function kdsVista(it){
+  var t = it.t;
+  var cliente = (sidebarClienteLabel(t) || "").toUpperCase();
+
+  /* ---- PARTE H — Cuentas por cobrar ---- */
+  if(it.board === "cxc"){
+    var f = it.cxc.f;
+    var c = t.clienteId ? findCliente(t.clienteId) : null;
+    var notas = [];
+    if(c && c.telefono) notas.push(c.telefono);
+    if(t.queSigue) notas.push("QUÉ SIGUE: " + t.queSigue.toUpperCase());
+    var fechas = [];
+    if(it.cxc.days != null) fechas.push({ et: "ENTREGADO", val: fmtAgeDays(it.cxc.days).toUpperCase().replace(/^HACE /, "") });
+    return {
+      cliente: cliente,
+      /* El saldo es lo que se lee desde la puerta. Si no se puede saber, se
+         dice "FALTA PRECIO" — nunca $0, que sería mentir a favor. */
+      accion: it.saldoDesconocido ? "FALTA PRECIO" : fmtMoney(f.saldo),
+      /* El total solo aporta cuando hay abonos: si no se ha pagado nada,
+         "DE $980" repite el saldo y le roba tamaño a la cifra que importa. */
+      cant: it.saldoDesconocido
+        ? ((f.pendingPrices || 0) + (f.pendingPrices === 1 ? " PRODUCTO SIN PRECIO" : " PRODUCTOS SIN PRECIO"))
+        : (f.cobrado > 0 ? ("ABONADO " + fmtMoney(f.cobrado) + " DE " + fmtMoney(f.total)) : ""),
+      notas: notas.slice(0, 2), fechas: fechas,
+      sinFecha: "SIN FECHA DE ENTREGA",
+      footL: (t.responsable || "SIN ASIGNAR").toUpperCase(),
+      footR: (t.pagos || []).length ? ((t.pagos || []).length + ((t.pagos || []).length === 1 ? " PAGO" : " PAGOS")) : "SIN ABONOS"
+    };
+  }
+
+  var task = it.task;
+  var canal = kdsCanal(task);
+
+  /* ---- PARTE G — Planeación: gestión, no fabricación ---- */
+  if(it.board === "planeacion"){
+    var desc = (task.desc || "").trim();
+    /* El tipo de operación de estas tareas ES el canal ("WhatsApp",
+       "Llamada"), así que la tarjeta decía WHATSAPP dos veces: una como
+       acción y otra como canal. La gestión de verdad está en la descripción
+       — "Confirmar medidas exactas" —, y eso es lo que se lee de lejos.
+       Cuando el menú progresivo (Parte D) escriba la ruta completa, la
+       acción vendrá ya separada del canal y esto dejará de hacer falta. */
+    var accionP = kdsAccion(it);
+    if(canal && accionP === canal && desc) accionP = desc.toUpperCase();
+    var ntsP = [];
+    if(desc && desc.toUpperCase() !== accionP) ntsP.push(desc);
+    var msP = activeMarkers(t).filter(function(m){ return m.type !== "urgente"; });
+    if(msP.length) ntsP.push(markerLabel(msP[0].type) + (msP[0].text ? (" — " + msP[0].text) : ""));
+    var notasP = (t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; });
+    if(notasP.length) ntsP.push(notasP[notasP.length - 1].text);
+    /* Planeación no produce nada: "PRODUCIR" aquí no querría decir nada.
+       Su reloj es ATENDER, y el compromiso del ticket cuando lo hay. */
+    var at = task.fechaAtencion || t.fechaAtencion;
+    var fechasP = [];
+    if(at && isSaneDateOnly(at)) fechasP.push({ et: "ATENDER", val: kdsFechaCorta(at) });
+    if(t.fechaCompromiso && isSaneDateOnly(t.fechaCompromiso)) fechasP.push({ et: "COMPROMISO", val: kdsFechaCorta(t.fechaCompromiso) });
+    var nnP = kdsNotasCount(it);
+    var pieP = [];
+    if(nnP) pieP.push(nnP + (nnP === 1 ? " NOTA" : " NOTAS"));
+    var espP = kdsEspera(it);
+    if(espP) pieP.push(espP);
+    return {
+      cliente: cliente,
+      accion: accionP,
+      cant: canal, canal: true,
+      notas: ntsP.slice(0, 2), fechas: fechasP,
+      sinFecha: "SIN FECHA PARA ATENDER",
+      footL: (task.responsable || "SIN ASIGNAR").toUpperCase(),
+      footR: pieP.join(" · ")
+    };
+  }
+
+  /* ---- PARTE F3 — Producción: trabajo físico ---- */
   var cant = kdsCantidadVisible(it);
   var notas = kdsNotas(it);
-  /* La cantidad ocupa el sitio de una nota. Con las dos cosas y tres notas,
-     la última se quedaba fuera y se veía cortada a media altura — que a 5
-     metros no se lee y parece una falla de la pantalla. Mejor dos enteras. */
-  if(cant && notas.length > 2) notas = notas.slice(0, 2);
-  var accion = kdsAccion(it);
   var prod = task.fechaAtencion || t.fechaAtencion;
   var ent = t.fechaCompromiso;
-  var hayProd = !!(prod && isSaneDateOnly(prod));
-  var hayEnt = !!(ent && isSaneDateOnly(ent));
+  var fechas = [];
+  if(prod && isSaneDateOnly(prod)) fechas.push({ et: "PRODUCIR", val: kdsFechaCorta(prod) });
+  if(ent && isSaneDateOnly(ent)) fechas.push({ et: "ENTREGA", val: kdsFechaCorta(ent) });
+  else if(fechas.length) fechas.push({ et: "ENTREGA", val: "SIN FECHA", falta: true });
   var nn = kdsNotasCount(it);
   var prog = Math.max(0, Math.min(100, Number(task.progreso) || 0));
   var pie = [];
@@ -14804,35 +15069,47 @@ function renderKdsCard(it, slot, selected){
   if(nn) pie.push(nn + (nn === 1 ? " NOTA" : " NOTAS"));
   var esp = kdsEspera(it);
   if(esp) pie.push(esp);
+  return {
+    cliente: cliente,
+    accion: kdsAccion(it), cant: cant,
+    notas: notas, fechas: fechas,
+    sinFecha: "SIN FECHA DE ENTREGA",
+    footL: (task.responsable || "SIN ASIGNAR").toUpperCase(),
+    footR: pie.join(" · ")
+  };
+}
+function renderKdsCard(it, slot, selected){
+  var v = kdsVista(it);
   return (
-    '<div class="kds-card kds-p-' + it.prio.key + (selected ? " kds-sel" : "") + '" style="--ka:' + kdsEscalaAccion(accion, cant, notas) + '" data-kds-card="' + escapeHtml(it.id) + '">' +
+    '<div class="kds-card kds-p-' + it.prio.key + (selected ? " kds-sel" : "") + '" style="--ka:' + kdsEscalaAccion(v.accion, v.cant, v.notas) + '" data-kds-card="' + escapeHtml(it.id) + '">' +
+      /* Cliente y folio van JUNTOS, como los pide F3 ("Cliente / folio"),
+         G ("Folio + cliente") y H. Antes el cliente ocupaba un renglón
+         entero para él solo: ese renglón es el que le faltaba a la acción y
+         a las notas para caber sin recortarse. */
       '<div class="kds-card-top">' +
         '<span class="kds-slot">' + (slot + 1) + "</span>" +
         '<span class="kds-estado">' + escapeHtml(it.prio.label) + "</span>" +
-        '<span class="kds-folio">#' + t.seq + "</span>" +
+        '<span class="kds-cliente">' + escapeHtml(v.cliente) + "</span>" +
+        '<span class="kds-folio">#' + it.t.seq + "</span>" +
       "</div>" +
-      '<div class="kds-cliente">' + escapeHtml((sidebarClienteLabel(t) || "").toUpperCase()) + "</div>" +
       /* El cuerpo se queda TODO el espacio sobrante y lo centra. El hueco
          negro de en medio deja de existir: o lo llenan las notas, o lo
          llena la acción, que para eso es lo que se lee desde lejos. */
       '<div class="kds-body">' +
-        '<div class="kds-accion">' + kdsCorteAccion(escapeHtml(accion)) + "</div>" +
-        (cant ? '<div class="kds-cant">' + escapeHtml(cant) + "</div>" : "") +
-        (notas.length ? '<ul class="kds-notas">' + notas.map(function(n){ return "<li>" + escapeHtml(n) + "</li>"; }).join("") + "</ul>" : "") +
+        '<div class="kds-accion">' + kdsCorteAccion(escapeHtml(v.accion)) + "</div>" +
+        (v.cant ? '<div class="kds-cant' + (v.canal ? " kds-canal" : "") + '">' + escapeHtml(v.cant) + "</div>" : "") +
+        (v.notas.length ? '<ul class="kds-notas">' + v.notas.map(function(n){ return "<li>" + escapeHtml(n) + "</li>"; }).join("") + "</ul>" : "") +
       "</div>" +
-      /* Un pedido sin fecha de entrega es exactamente lo que esta pantalla
-         existe para gritar. Se dice con letras; nunca con una raya. */
-      (hayProd || hayEnt
-        ? '<div class="kds-fechas">' +
-            (hayProd ? '<div><span>PRODUCIR</span><b>' + escapeHtml(kdsFechaCorta(prod)) + "</b></div>" : "") +
-            (hayEnt
-              ? '<div><span>ENTREGA</span><b>' + escapeHtml(kdsFechaCorta(ent)) + "</b></div>"
-              : '<div class="kds-fechas-falta"><span>ENTREGA</span><b>SIN FECHA</b></div>') +
-          "</div>"
-        : '<div class="kds-sinfecha">SIN FECHA DE ENTREGA</div>') +
+      /* Un pedido sin fecha es exactamente lo que esta pantalla existe para
+         gritar. Se dice con letras; nunca con una raya. */
+      (v.fechas.length
+        ? '<div class="kds-fechas">' + v.fechas.map(function(f){
+            return '<div' + (f.falta ? ' class="kds-fechas-falta"' : "") + "><span>" + escapeHtml(f.et) + "</span><b>" + escapeHtml(f.val) + "</b></div>";
+          }).join("") + "</div>"
+        : '<div class="kds-sinfecha">' + escapeHtml(v.sinFecha) + "</div>") +
       '<div class="kds-foot">' +
-        "<span>" + escapeHtml((task.responsable || "SIN ASIGNAR").toUpperCase()) + "</span>" +
-        '<span class="kds-foot-r">' + escapeHtml(pie.join(" · ")) + "</span>" +
+        "<span>" + escapeHtml(v.footL) + "</span>" +
+        '<span class="kds-foot-r">' + escapeHtml(v.footR) + "</span>" +
       "</div>" +
     "</div>"
   );
@@ -14851,21 +15128,23 @@ function renderKdsQueue(items, selectedId){
      nadie puede leer desde el taller. */
   var ancho = cols <= 2;
   return '<div class="kds-queue" style="grid-template-columns:repeat(' + cols + ',1fr)">' + items.map(function(it, i){
-    var cant = kdsCantidad(it);
-    return '<div class="kds-q kds-p-' + it.prio.key + (it.id === selectedId ? " kds-sel" : "") + '">' +
+    /* F4 — mínimo exigido en cada renglón: número, acción, objeto/cantidad,
+       prioridad (el borde de color y el punto) y responsable. */
+    var v = kdsVista(it);
+    return '<div class="kds-q kds-p-' + it.prio.key + (it.id === selectedId ? " kds-sel" : "") + '" title="' + escapeHtml(it.prio.label) + '">' +
       '<span class="kds-q-n">' + (kdsDensity().n + i + 1) + "</span>" +
       '<span class="kds-q-folio">#' + it.t.seq + "</span>" +
-      (ancho ? '<span class="kds-q-cliente">' + escapeHtml((sidebarClienteLabel(it.t) || "").toUpperCase()) + "</span>" : "") +
-      '<span class="kds-q-accion">' + escapeHtml(kdsAccion(it)) + "</span>" +
-      (ancho && cant ? '<span class="kds-q-cant">' + escapeHtml(cant) + "</span>" : "") +
-      '<span class="kds-q-resp">' + escapeHtml((it.task.responsable || "—").toUpperCase()) + "</span>" +
+      (ancho ? '<span class="kds-q-cliente">' + escapeHtml(v.cliente) + "</span>" : "") +
+      '<span class="kds-q-accion">' + escapeHtml(v.accion) + "</span>" +
+      (ancho && v.cant ? '<span class="kds-q-cant">' + escapeHtml(v.cant) + "</span>" : "") +
+      '<span class="kds-q-resp">' + escapeHtml(v.footL) + "</span>" +
     "</div>";
   }).join("") + "</div>";
 }
 function renderKdsConfirm(){
   var c = UI.kds.confirm;
   if(!c) return "";
-  var it = kdsTasks().filter(function(x){ return x.id === c.id; })[0];
+  var it = kdsItems().filter(function(x){ return x.id === c.id; })[0];
   if(!it){ UI.kds.confirm = null; return ""; }
   var verbo = c.accion === "terminar" ? "¿TERMINAR TAREA?" : "¿MANDAR A ESPERAR?";
   return (
@@ -14887,7 +15166,7 @@ function renderKdsConfirm(){
 }
 function renderKdsDetail(){
   if(!UI.kds.detailId) return "";
-  var it = kdsTasks().filter(function(x){ return x.id === UI.kds.detailId; })[0];
+  var it = kdsItems().filter(function(x){ return x.id === UI.kds.detailId; })[0];
   if(!it){ UI.kds.detailId = null; return ""; }
   var t = it.t;
   var notas = (t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).slice(-8).reverse();
@@ -14924,10 +15203,32 @@ var KDS_LEYENDA = [
   ["atiempo", "A TIEMPO"], ["pronto", "PRÓXIMO A VENCER"], ["urgente", "URGENTE"],
   ["proceso", "EN PROCESO"], ["bloqueado", "BLOQUEADO"], ["espera", "EN ESPERA"]
 ];
+/* Cada tablero explica SUS colores. En Cuentas por cobrar "urgente" no es
+   una prisa del taller: es la antigüedad de la deuda, y decirlo con las
+   mismas palabras que Producción sería confundir dos cosas distintas. */
+function kdsLeyenda(){
+  if(kdsBoard().key !== "cxc") return KDS_LEYENDA;
+  return CXC_AGING.map(function(b){ return [KDS_TONO_PRIO[b.tone] || "espera", b.label.toUpperCase()]; })
+    .concat([["espera", "FALTA PRECIO"]]);
+}
+/* El contador de la esquina dice lo que ese tablero cuenta. En cobranza,
+   además, cuánto — que es la pregunta de verdad. */
+function kdsCuenta(items){
+  var b = kdsBoard();
+  if(b.key !== "cxc") return items.length + " " + b.cuenta;
+  var conCifra = items.filter(function(x){ return !x.saldoDesconocido; });
+  var total = conCifra.reduce(function(s2, x){ return s2 + (x.cxc.f.saldo || 0); }, 0);
+  var sinCifra = items.length - conCifra.length;
+  /* Lo indeterminable se cuenta aparte y JAMÁS se suma como cero. */
+  return conCifra.length + " POR COBRAR · " + fmtMoney(round2(total)) + (sinCifra ? "  ·  " + sinCifra + " SIN PRECIO" : "");
+}
 function renderKdsView(){
   if(!UI.kds.ready) return renderKdsGate();
-  var items = kdsTasks();
-  kdsAnnounce(items);
+  var board = kdsBoard();
+  var items = kdsItems();
+  /* Solo suenan las tareas. Una deuda que entra a Cuentas por cobrar no es
+     una novedad del taller: es la misma entrega que ya sonó al terminarse. */
+  if(board.acciona) kdsAnnounce(items);
   var selIdx = kdsSelectedIndex(items);
   var selectedId = UI.kds.selectedId;
   var dens = kdsDensity();
@@ -14954,7 +15255,15 @@ function renderKdsView(){
     '<div class="kds-root" style="--kdc:' + dens.escala + '">' +
       '<header class="kds-head">' +
         '<div class="kds-head-l">' + dtgLogoMark(30) + "<span>DTG CRM</span></div>" +
-        '<div class="kds-head-c">OPERACIONES</div>' +
+        /* PARTE E/I — el cambio de tablero VIVE en la cabecera: es lo
+           primero que se ve desde el fondo del taller y no le quita ni un
+           píxel de alto a las tarjetas. El activo grande y en blanco; los
+           otros dos apagados pero legibles. */
+        '<div class="kds-head-c kds-tabs" role="group" aria-label="Tablero">' +
+          KDS_BOARDS.map(function(b){
+            return '<button type="button" class="kds-tab' + (b.key === board.key ? " on" : "") + '" data-action="kds-board" data-board="' + b.key + '" aria-pressed="' + (b.key === board.key ? "true" : "false") + '">' + escapeHtml(b.corto) + "</button>";
+          }).join("") +
+        "</div>" +
         '<div class="kds-head-r">' +
           "<span>" + escapeHtml(fmtDateShort(now.toISOString()).toUpperCase()) + "</span>" +
           '<span class="kds-clock">' + escapeHtml(fmtTime(now.toISOString())) + "</span>" +
@@ -14968,12 +15277,12 @@ function renderKdsView(){
           return '<button type="button" class="kds-dens-btn' + (d.n === dens.n ? " on" : "") + '" data-action="kds-density" data-n="' + d.n + '" aria-pressed="' + (d.n === dens.n ? "true" : "false") + '">' + d.n + "</button>";
         }).join("") +
       "</div>" +
-      '<div class="kds-legend">' + KDS_LEYENDA.map(function(l){
+      '<div class="kds-legend">' + kdsLeyenda().map(function(l){
         return '<span class="kds-legend-i"><i class="kds-dot kds-p-' + l[0] + '"></i>' + l[1] + "</span>";
-      }).join("") + '<span class="kds-legend-count">' + items.length + " EN PRODUCCIÓN</span></div>" +
+      }).join("") + '<span class="kds-legend-count">' + escapeHtml(kdsCuenta(items)) + "</span></div>" +
       (items.length
         ? '<main class="kds-grid" style="grid-template-columns:repeat(' + cols + ',1fr)">' + cards + "</main>" + renderKdsQueue(queue, selectedId)
-        : '<main class="kds-empty">NADA EN PRODUCCIÓN</main>') +
+        : '<main class="kds-empty">' + escapeHtml(board.vacio) + "</main>") +
       renderKdsConfirm() +
       renderKdsDetail() +
     "</div>"
@@ -15853,6 +16162,7 @@ var SCHEMA_REQUIREMENTS = {
   tipo_operacion: { mig: "0016", que: "El tipo de operación" },
   terminado_at:   { mig: "0016", que: "La hora de término de una operación" },
   client_op_id:   { mig: "0018", que: "El control de pagos repetidos" },
+  area:           { mig: "0022", que: "El área de la tarea (Planeación o Producción)" },
   visibility:     { mig: "0015", que: "La privacidad por ticket" }
 };
 /* Columnas que esta sesión ya comprobó que faltan. Solo en memoria: al
@@ -16696,22 +17006,26 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
   var progreso = extra.progreso != null ? Math.max(0, Math.min(100, Number(extra.progreso) || 0)) : 0;
   var nowIso = new Date().toISOString();
   var local = { id: uid(), desc: desc, tipo: tipo, responsable: responsable||"", fechaAtencion: fechaAtencion||"", estado: estado,
-    progreso: progreso, tipoOperacion: extra.tipoOperacion || "", terminadoAt: estado === "terminado" ? nowIso : null, createdAt: nowIso };
+    progreso: progreso, tipoOperacion: extra.tipoOperacion || "", terminadoAt: estado === "terminado" ? nowIso : null, createdAt: nowIso,
+    /* B/D5: quien crea la tarea dice a qué pantalla va. Si no lo dice, se
+       queda vacío y manda el puente — nunca se inventa aquí. */
+    area: extra.area || "" };
   t.tareas.push(local);
   render();
   if(responsable && tipo !== "produccion") rememberName(responsable);
   var ok = true;
   try{
     var row = { ticket_id: t.id, descripcion: desc, tipo: tipo, responsable: responsable || null, fecha_atencion: fechaAtencion || null, estado: estado };
-    var hasExtra = tipo === "produccion" && (extra.tipoOperacion || progreso || estado === "terminado");
+    var hasExtra = tipo === "produccion" && (extra.tipoOperacion || progreso || estado === "terminado" || extra.area);
     if(hasExtra){
       row.progreso = progreso;
       row.tipo_operacion = extra.tipoOperacion || null;
       if(estado === "terminado") row.terminado_at = nowIso;
+      if(extra.area) row.area = extra.area;
     }
     var r3 = await sb.from("tareas").insert(row);
-    if(r3.error && hasExtra && /progreso|tipo_operacion|terminado_at|column|schema cache/i.test(r3.error.message || "")){
-      delete row.progreso; delete row.tipo_operacion; delete row.terminado_at;
+    if(r3.error && hasExtra && /progreso|tipo_operacion|terminado_at|area|column|schema cache/i.test(r3.error.message || "")){
+      delete row.progreso; delete row.tipo_operacion; delete row.terminado_at; delete row.area;
       r3 = await sb.from("tareas").insert(row);
       /* X1.1: el empleado ve que su tarea se guardó; el detalle de la
          migración es para quien administra. */
@@ -21691,6 +22005,9 @@ function wireEvents(){
     root.querySelectorAll('[data-action="kds-density"]').forEach(function(b){
       b.addEventListener("click", function(){ kdsSetDensity(parseInt(b.getAttribute("data-n"), 10)); });
     });
+    root.querySelectorAll('[data-action="kds-board"]').forEach(function(b){
+      b.addEventListener("click", function(){ kdsSetBoard(b.getAttribute("data-board")); });
+    });
     root.querySelectorAll("[data-kds-card]").forEach(function(c){
       c.addEventListener("click", function(){ UI.kds.selectedId = c.getAttribute("data-kds-card"); render(); });
     });
@@ -24132,10 +24449,13 @@ document.addEventListener("keydown", function(e){
 
 async function boot(){
   loadUi();
-  /* ?display=1 (o #display) enciende la pantalla operativa. Mismo mecanismo
-     de URL que ya usan los deep links de ticket — no hay servidor de rutas. */
+  /* PARTE E — ?display=produccion | planeacion | cxc encienden la TV en su
+     tablero. `?display=1` y `#display` siguen entrando a Producción: hay PCs
+     del taller configuradas así y romperlas no arregla nada. Mismo mecanismo
+     de URL que los deep links de ticket — no hay servidor de rutas. */
   try{
-    UI.displayMode = /[?&]display=1/.test(window.location.search) || window.location.hash === "#display";
+    UI.displayMode = /[?&]display=[a-z0-9]+/i.test(window.location.search) || window.location.hash === "#display";
+    if(UI.displayMode) kdsLoadBoard();
   }catch(e){ UI.displayMode = false; }
   render();
   if(window.__dtgSupabaseLoadFailed || !window.supabase){
