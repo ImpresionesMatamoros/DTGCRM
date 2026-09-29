@@ -3827,6 +3827,35 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 /* Insignias del chat en la navegación. */
 .nav-badge-chat{ background:var(--accent-soft); color:var(--accent-ink); }
 .nav-badge-mention{ background:var(--gold-soft); color:var(--gold); font-weight:800; }
+.astra-tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.astra-tab,.astra-later-toggle{border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--text);padding:7px 12px;white-space:nowrap;cursor:pointer}
+.astra-tab.active{background:var(--accent-soft);color:var(--accent-ink)}
+.astra-later-toggle{margin:6px 14px;align-self:flex-start}
+.astra-utilities{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-right:10px}
+.astra-utilities input{min-width:170px;max-width:300px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)}
+.astra-utilities button{min-height:36px}
+.astra-audio{display:flex;flex-direction:column;gap:5px;margin:8px 0;max-width:320px}
+.astra-audio audio{width:100%;max-width:100%}
+.astra-audio p{white-space:pre-wrap;overflow-wrap:anywhere}
+.astra-review{max-width:560px;max-height:88vh;overflow-y:auto;display:grid;gap:12px}
+.astra-review label{display:grid;gap:5px}
+.astra-review input:not([type=checkbox]),.astra-review select{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)}
+.astra-review-source{max-height:180px;overflow:auto;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.astra-review-source p{margin:6px 0;overflow-wrap:anywhere}
+.astra-context{display:flex;gap:12px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border)}
+.astra-thread-link,.astra-reply,.astra-ticket-link,.astra-later-row button{border:0;background:transparent;color:var(--accent-ink);text-align:left;cursor:pointer}
+.astra-reply{display:block;max-width:100%;padding:5px 9px;margin:4px 0;border-left:3px solid var(--accent);color:var(--text-muted)}
+.astra-thread-link{display:block;padding:8px 0;font-size:12px}
+.astra-compose-reply{padding:6px 12px;border-left:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center}
+.astra-ticket-links{display:grid;gap:7px;margin:8px 0 15px;padding:10px;border:1px solid var(--border);border-radius:var(--radius-m)}
+.astra-ticket-link{padding:5px 0}
+.astra-later{padding:12px 16px}
+.astra-later h3{margin:18px 0 6px}
+.astra-later-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+.astra-later-row button:first-child{flex:1 1 220px}
+.astra-remind-options{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1px solid var(--border);border-radius:var(--radius-m)}
+.astra-remind-options button{min-height:36px}
+@media(pointer:coarse){.astra-tab,.astra-later-row button,.astra-remind-options button{min-height:44px}}
 
 /* Preferencias de avisos. */
 .chat-prefs{ gap:2px; width:min(520px, calc(100vw - 32px)); }
@@ -3862,8 +3891,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.25.1";
-var APP_BUILD = "2026.09.28.3";
+var APP_VERSION = "0.25.2";
+var APP_BUILD = "2026.09.29.1";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -5133,6 +5162,9 @@ async function fetchAllState(){
     if(row.key === "doc_quote_valid_days") settings.quoteValidDays = parseInt((row.values || [])[0], 10) || null;
   });
   var teamPosts = teamPostsInfo.rows.map(mapTeamPostRow);
+  var conversations = await fetchAstraConversations();
+  var conversationLinks = await fetchAstraLinks();
+  var astraLater = await fetchAstraLater();
   var feedReactions = feedReactionsInfo.rows.map(function(row){
     return {
       id: row.id, targetType: row.target_type, targetId: row.target_id,
@@ -5149,7 +5181,8 @@ async function fetchAllState(){
     clientes: clientesInfo.rows.map(mapClienteRow),
     clientesTableMissing: clientesInfo.missing,
     markersTableMissing: markersInfo.missing,
-    teamPosts: teamPosts,
+    teamPosts: teamPosts, conversations: conversations, conversationLinks: conversationLinks,
+    astraLater: astraLater,
     feedReactions: feedReactions,
     profiles: profiles,
     teamPostsTableMissing: teamPostsInfo.missing,
@@ -5678,7 +5711,7 @@ function applyTeamPostRealtime(payload){
   STATE.teamPosts.unshift(post);
   /* v0.23: el aviso se decide en UN solo lugar, venga de donde venga. */
   onNuevoMensajeChat(post);
-  if(chatViendoConversacion()) chatMarkSeen();
+  if(!post.conversationId && !post.threadRootId && chatViendoConversacion(post)) chatMarkSeen();
   /* Antes solo se repintaba en Inicio; ahora el contador tiene que moverse
      aunque la persona esté en Tickets, Calendario o donde sea. */
   if(!UI.displayMode) renderKeepingLiveInputs();
@@ -7527,6 +7560,7 @@ var DTG_TONOS = {
   mensaje:   { v: 0.14, tipo: "sine",     notas: [[620, 0.07], [880, 0.09]] },
   mencion:   { v: 0.22, tipo: "sine",     notas: [[988, 0.10], [0, 0.05], [988, 0.14]] },
   equipo:    { v: 0.24, tipo: "triangle", notas: [[523, 0.10], [659, 0.10], [784, 0.18]] },
+  personal:  { v: 0.18, tipo: "sine", notas: [[740, 0.09], [1040, 0.12]] },
   /* Los de la pantalla de TV viven en la misma tabla: un solo generador. */
   nueva:     { v: 0.16, tipo: "sine",     notas: [[660, 0.10]] },
   urgente:   { v: 0.28, tipo: "sine",     notas: [[880, 0.12], [660, 0.12], [880, 0.16]] },
@@ -7643,7 +7677,7 @@ function mentionRoster(){
 function mentionNormalize(s){ return normalizeWord(String(s || "")); }
 function mentionFilter(q){
   var n = mentionNormalize(q);
-  return mentionRoster().filter(function(m){ return !n || mentionNormalize(m.name).indexOf(n) === 0 || mentionNormalize(m.name).indexOf(n) > 0; })
+  return astraMentionRoster(UI.chatMention && UI.chatMention.symbol).filter(function(m){ return !n || mentionNormalize(m.name).indexOf(n) === 0 || mentionNormalize(m.name).indexOf(n) > 0; })
     .sort(function(a, b){
       var ia = mentionNormalize(a.name).indexOf(n), ib = mentionNormalize(b.name).indexOf(n);
       if(ia !== ib) return ia - ib;
@@ -7654,12 +7688,12 @@ function mentionFilter(q){
    cursor. Devuelve null si el @ va pegado a otra palabra (correo@dominio). */
 function mentionTokenAt(text, caret){
   var t = String(text || ""), c = Math.max(0, Math.min(caret == null ? t.length : caret, t.length));
-  var i = t.lastIndexOf("@", c - 1);
+  var i = Math.max(t.lastIndexOf("@", c - 1), t.lastIndexOf("#", c - 1));
   if(i === -1) return null;
   if(i > 0 && !/\s/.test(t.charAt(i - 1))) return null;
   var frag = t.slice(i + 1, c);
-  if(/[\s@]/.test(frag)) return null;
-  return { start: i, end: c, query: frag };
+  if(/[\s@#]/.test(frag)) return null;
+  return { start: i, end: c, query: frag, symbol: t.charAt(i) };
 }
 /* Las elegidas se guardan aparte del texto. Al enviar solo sobreviven las
    que SIGUEN escritas: si la persona borró "@Alexia", Alexia no se entera. */
@@ -7767,10 +7801,12 @@ function dtgTabEsVocera(){
 var DTG_POSTS_AVISADOS = {};     /* id -> 1. Evita avisar dos veces el mismo */
 var DTG_CHAT_ARRANCADO = false;  /* la primera carga NO suena */
 
-function chatViendoConversacion(){
+function chatViendoConversacion(post){
   /* "Está viendo la conversación" = Inicio abierto, pestaña al frente y
      con el hilo abajo. Si está leyendo mensajes viejos, sí se le avisa. */
-  return !UI.displayMode && !UI.mainView && !UI.selectedTicketId &&
+  return !UI.displayMode && !UI.mainView && !UI.selectedTicketId && !UI.astraLaterOpen &&
+         (!post || ((UI.astraConversationId || null)===(post.conversationId || null) &&
+           (UI.astraThreadRoot || null)===(post.threadRootId || null))) &&
          typeof document !== "undefined" && !document.hidden && UI.chatAtBottom !== false;
 }
 function onNuevoMensajeChat(post, opts){
@@ -7794,8 +7830,8 @@ function onNuevoMensajeChat(post, opts){
   /* Una sola pestaña habla por todas. */
   if(!dtgTabEsVocera()) return;
 
-  var kind = esMencion ? "mencion" : (esEquipo ? "equipo" : "mensaje");
-  var viendo = chatViendoConversacion();
+  var kind = post.conversationId ? "personal" : (esMencion ? "mencion" : (esEquipo ? "equipo" : "mensaje"));
+  var viendo = chatViendoConversacion(post);
   /* Si ya está mirando la conversación no hace falta ninguna alarma. */
   if(!viendo){
     if(prefs.sonidos) dtgSound(kind);
@@ -7809,7 +7845,7 @@ function pushChatNotif(post, kind){
   UI.chatNotifs = (UI.chatNotifs || []).filter(function(n){ return n.id !== post.id; });
   UI.chatNotifs.unshift({
     id: post.id, autor: post.autor || "Equipo",
-    texto: String(post.text || "").slice(0, 90) + (String(post.text || "").length > 90 ? "…" : ""),
+    texto: String(post.text || (post.audioPath ? "Audio" : "Foto")).slice(0, 90) + (String(post.text || "").length > 90 ? "…" : ""),
     kind: kind, at: Date.now()
   });
   if(UI.chatNotifs.length > 3) UI.chatNotifs = UI.chatNotifs.slice(0, 3);
@@ -7872,6 +7908,9 @@ function renderChatNotifs(){
   }).join("");
 }
 function abrirChatEnMensaje(postId){
+  var targetPost = (STATE.teamPosts || []).find(function(p){ return p.id === postId; });
+  UI.astraConversationId = targetPost ? targetPost.conversationId : null;
+  UI.astraThreadRoot = targetPost ? targetPost.threadRootId : null;
   UI.chatNotifs = (UI.chatNotifs || []).filter(function(n){ return n.id !== postId; });
   renderChatNotifs();
   UI.displayMode = false;
@@ -8019,7 +8058,7 @@ function chatUnread(){
   var yo = currentActorId();
   var total = 0, menciones = 0;
   (STATE.teamPosts || []).forEach(function(p){
-    if(p.pending) return;
+    if(p.pending || p.conversationId || p.threadRootId) return;
     if(p.authorUserId === yo) return;
     if(isPostExpired(p)) return;
     if(new Date(p.createdAt).getTime() <= desde) return;
@@ -8040,10 +8079,10 @@ function renderMentionPicker(){
     lista.map(function(p, k){
       return '<button type="button" role="option" aria-selected="' + (k === i ? "true" : "false") +
         '" class="mention-item' + (k === i ? " on" : "") + (p.todos ? " mention-item-all" : "") +
-        '" data-action="mention-pick" data-id="' + escapeHtml(p.id) + '" data-name="' + escapeHtml(p.name) + '">' +
+        '" data-action="mention-pick" data-id="' + escapeHtml(p.id) + '" data-name="' + escapeHtml(p.name) + '" data-kind="' + escapeHtml(p.kind || "user") + '">' +
         (p.todos ? icon("users") : personAvatar(p.name, { size: "xs" })) +
         "<span>" + escapeHtml(p.name) + "</span>" +
-        (p.todos ? '<span class="mention-hint">avisa a todos</span>' : "") +
+        '<span class="mention-hint">' + escapeHtml(p.kind === "client" ? "Cliente · referencia" : p.kind === "ticket" ? "Ticket" : p.todos ? "avisa a todos" : "Persona · mención") + "</span>" +
       "</button>";
     }).join("") + "</div>";
 }
@@ -8057,7 +8096,7 @@ function mentionSync(el){
   var antes = UI.chatMention;
   if(!tok){ if(antes){ UI.chatMention = null; renderKeepingLiveInputs(); } return; }
   if(antes && antes.query === tok.query && antes.start === tok.start) return;
-  UI.chatMention = { start: tok.start, end: tok.end, query: tok.query, index: 0 };
+  UI.chatMention = { start: tok.start, end: tok.end, query: tok.query, symbol: tok.symbol, index: 0 };
   renderKeepingLiveInputs();
 }
 function mentionMove(delta){
@@ -8068,10 +8107,11 @@ function mentionMove(delta){
   renderKeepingLiveInputs();
   return true;
 }
-function mentionPick(id, name){
+function mentionPick(id, name, kind){
   var el = document.getElementById("composer-input");
   var m = UI.chatMention;
   if(!el || !m) return;
+  kind = kind || "user";
   var esTodos = id === MENTION_ALL;
   /* @Equipo le suena el teléfono a todo el taller: se confirma una vez. */
   if(esTodos && !UI.chatMentionAllOk){
@@ -8082,9 +8122,11 @@ function mentionPick(id, name){
     return;
   }
   var v = el.value;
-  var nuevo = v.slice(0, m.start) + "@" + name + " " + v.slice(m.end);
+  var symbol = kind === "ticket" ? "#" : "@";
+  var nuevo = v.slice(0, m.start) + symbol + name + " " + v.slice(m.end);
+  if(kind !== "user" && !esTodos) (UI.astraRefPicks = UI.astraRefPicks || []).push({ kind: kind, id: id, label: name });
   UI.chatMentionPicks = (UI.chatMentionPicks || []).filter(function(p){ return p.id !== id; });
-  UI.chatMentionPicks.push({ id: id, name: name });
+  if(kind === "user" || esTodos) UI.chatMentionPicks.push({ id: id, name: name });
   UI.chatMention = null;
   UI.chatMentionAllOk = false;
   el.value = nuevo;
@@ -8208,13 +8250,20 @@ function renderComposer(){
      dibujó este composer — render() lo usa para no perder un borrador al
      re-dibujar la MISMA pantalla, y nunca arrastrarlo a otra. */
   var chatMode = !hasTicket && isChatComposerContext();
-  var ctxKey = hasTicket ? ("t:" + UI.selectedTicketId) : (chatMode ? "chat" : ("v:" + (UI.mainView || "home")));
+  var ctxKey = hasTicket ? ("t:" + UI.selectedTicketId) : (chatMode ? "chat:" + (UI.astraConversationId || "team") + ":" + (UI.astraThreadRoot || "root") : ("v:" + (UI.mainView || "home")));
   var chatAttach = "", chatOpts = "", chatExtra = "";
   if(chatMode){
-    placeholder = "Escribe un mensaje al equipo…";
-    chatAttach = '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button><input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
+    placeholder = UI.astraThreadRoot ? "Responder en el hilo…" : (UI.astraConversationId ? "Mensaje personal…" : "Escribe un mensaje al equipo…");
+    if(UI.astraReplyTo) chatExtra += astraComposerReply();
+    if(UI.astraRecording) chatExtra += '<div class="astra-compose-reply">Grabando… ' +
+      '<button type="button" data-astra-action="audio-stop">Detener</button>' +
+      '<button type="button" data-astra-action="audio-cancel">Cancelar</button></div>';
+    if(UI.astraAudioBlob) chatExtra += '<div class="astra-compose-reply">Audio listo ('+
+      Math.round(UI.astraAudioSeconds || 0)+' s) '+
+      '<button type="button" data-astra-action="audio-clear">Quitar</button></div>';
+    chatAttach = UI.astraConversationId ? "" : '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button><input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
     var optsOn = UI.chatOptionsOpen || UI.feedComposerPin !== "none" || UI.feedComposerExpires !== "never";
-    chatOpts = '<button type="button" class="icon-btn chat-options-btn' + (optsOn ? " active" : "") + '" data-action="chat-options-toggle" aria-expanded="' + (UI.chatOptionsOpen ? "true" : "false") + '" aria-label="Opciones del mensaje: fijar o vencimiento" title="Fijar / vencimiento">' + icon("pin") + "</button>";
+    chatOpts = UI.astraConversationId ? "" : '<button type="button" class="icon-btn chat-options-btn' + (optsOn ? " active" : "") + '" data-action="chat-options-toggle" aria-expanded="' + (UI.chatOptionsOpen ? "true" : "false") + '" aria-label="Opciones del mensaje: fijar o vencimiento" title="Fijar / vencimiento">' + icon("pin") + "</button>";
     var ph = UI.feedComposerPhoto;
     if(ph) chatExtra += '<div class="chat-attach-preview"><img src="' + escapeHtml(ph.previewUrl) + '" alt=""><span>Foto lista para enviar</span><button type="button" class="icon-btn" data-action="feed-composer-remove-photo" aria-label="Quitar foto" title="Quitar foto">' + icon("x") + "</button></div>";
     if(UI.chatOptionsOpen) chatExtra += renderChatComposerOptions();
@@ -8222,9 +8271,10 @@ function renderComposer(){
   return (
     '<div class="composer-wrap' + (chatMode ? " chat-composer-wrap" : "") + '">' + pop + chatExtra +
       '<div class="composer' + (chatMode ? " chat-composer" : "") + '">' + plusBtn + chatAttach +
+        (chatMode && ASTRA_CONVERSATIONS_AVAILABLE ? '<button type="button" class="icon-btn" data-astra-action="audio-start" aria-label="Grabar audio" title="Grabar audio">🎙</button>' : '') +
         '<textarea id="composer-input" rows="1" data-ctx="' + escapeHtml(ctxKey) + '" placeholder="' + placeholder + '" aria-label="' + (chatMode ? "Mensaje al equipo" : "Composer") + '"></textarea>' +
         markerBtn + chatOpts +
-        '<button class="composer-send" id="composer-send" data-action="send-note" aria-label="Enviar" title="Enviar"' + (chatMode && UI.feedComposerPhoto ? "" : " disabled") + ">" + icon(chatMode ? "send" : "arrow-up") + "</button>" +
+        '<button class="composer-send" id="composer-send" data-action="send-note" aria-label="Enviar" title="Enviar"' + (chatMode && (UI.feedComposerPhoto || UI.astraAudioBlob) ? "" : " disabled") + ">" + icon(chatMode ? "send" : "arrow-up") + "</button>" +
       "</div>" +
       '<div class="producto-preview" id="producto-preview" hidden></div>' +
     "</div>"
@@ -13613,7 +13663,7 @@ function buildActivityFeed(){
     });
   });
   STATE.teamPosts.forEach(function(p){
-    if(isPostExpired(p)) return;
+    if(p.conversationId || p.threadRootId || isPostExpired(p)) return;
     items.push({ kind: "post", id: p.id, ts: p.createdAt, post: p });
   });
   if(UI.feedFilter === "posts") items = items.filter(function(i){ return i.kind === "post"; });
@@ -13733,6 +13783,11 @@ async function createTeamPostCore(opts){
   var row = {
     author_user_id: currentActorId(), author_name_snapshot: currentActorName() || "",
     text: opts.text || "", image_storage_path: imagePath, ticket_id: opts.ticketId || null,
+    conversation_id: opts.conversationId || null, reply_to_id: opts.replyToId || null,
+    thread_root_id: opts.threadRootId || null, references_data: opts.refs || [],
+    audio_storage_path: opts.audioPath || null, audio_mime: opts.audioMime || null,
+    audio_seconds: opts.audioSeconds || null,
+    transcript_status: opts.audioPath ? 'transcribing' : null,
     pin_level: pinLevel, pinned_by: pinLevel !== "none" ? (currentActorName()||"") : null,
     pinned_at: pinLevel !== "none" ? new Date().toISOString() : null,
     expires_at: feedExpiresIsoFromChoice(opts.expiresChoice)
@@ -13742,8 +13797,12 @@ async function createTeamPostCore(opts){
   if(opts.mentions && opts.mentions.length) row.mentions = opts.mentions;
   if(opts.mentionsAll) row.mentions_all = true;
   var ins = await sb.from("team_posts").insert(row).select().single();
-  if(ins.error && schemaGapFrom(ins.error)){
+  if(ins.error && !opts.conversationId && !opts.replyToId && !opts.threadRootId && !opts.audioPath && !(opts.refs || []).length && schemaGapFrom(ins.error)){
     delete row.mentions; delete row.mentions_all;
+    delete row.conversation_id; delete row.reply_to_id;
+    delete row.thread_root_id; delete row.references_data;
+    delete row.audio_storage_path; delete row.audio_mime;
+    delete row.audio_seconds; delete row.transcript_status;
     adminNote("Falta aplicar la migración 0019: las menciones no se están guardando.", ins.error);
     ins = await sb.from("team_posts").insert(row).select().single();
   }
@@ -13784,7 +13843,12 @@ function mapTeamPostRow(row){
     /* v0.23: sin 0019 estas columnas llegan undefined y el mensaje se ve
        exactamente como antes. Los mensajes viejos no cambian. */
     mentions: Array.isArray(row.mentions) ? row.mentions : [],
-    mentionsAll: row.mentions_all === true
+    mentionsAll: row.mentions_all === true,
+    conversationId: row.conversation_id || null, replyToId: row.reply_to_id || null,
+    threadRootId: row.thread_root_id || null, refs: Array.isArray(row.references_data) ? row.references_data : [],
+    audioPath: row.audio_storage_path || null, audioMime: row.audio_mime || null,
+    audioSeconds: row.audio_seconds || null, transcript: row.transcript || null,
+    transcriptStatus: row.transcript_status || null
   };
 }
 /* Enviar desde el composer del chat: optimista (el mensaje aparece al
@@ -13794,9 +13858,14 @@ function mapTeamPostRow(row){
 async function publishChatMessage(text){
   text = String(text || "").trim();
   var photo = UI.feedComposerPhoto;
-  if(!text && !photo) return false;
+  if(!text && !photo && !UI.astraAudioBlob) return false;
+  if(UI.astraAudioBlob) return astraPublishAudio(text);
   if(UI.feedComposerBusy) return false;
-  var linked = resolveChatTicketLink(text);
+  /* With the new relation table, #1330 is a reference, not an implicit
+     ticket mutation. Until migration, retain the previous chat behavior. */
+  var linked = UI.astraConversationId || ASTRA_CONVERSATIONS_AVAILABLE ? null : resolveChatTicketLink(text);
+  var ctx = { conversationId: UI.astraConversationId || null, replyToId: UI.astraReplyTo || null,
+    threadRootId: UI.astraThreadRoot || null, refs: astraRefsForText(text) };
   /* Solo cuentan las menciones que siguen escritas en el texto final. */
   var mm = mentionsForText(text);
   var tempId = "tmp-" + uid();
@@ -13807,9 +13876,11 @@ async function publishChatMessage(text){
     ticketId: linked ? linked.id : null, noTicketRequired: false,
     pinLevel: pinChoice === "none" ? "none" : "pin", pinnedBy: "", pinnedAt: null, expiresAt: null,
     createdAt: new Date().toISOString(), pending: true,
-    mentions: mm.mentions, mentionsAll: mm.all
+    mentions: mm.mentions, mentionsAll: mm.all, conversationId: ctx.conversationId,
+    replyToId: ctx.replyToId, threadRootId: ctx.threadRootId, refs: ctx.refs
   });
   UI.chatMention = null; UI.chatMentionPicks = []; UI.chatMentionAllOk = false;
+  UI.astraRefPicks = []; UI.astraReplyTo = null;
   UI.feedComposerPhoto = null; UI.feedComposerPin = "none"; UI.feedComposerExpires = "never"; UI.chatOptionsOpen = false;
   UI.feedComposerBusy = true;
   UI.chatStickBottom = true;
@@ -13817,7 +13888,8 @@ async function publishChatMessage(text){
   restoreComposerText("");
   var ok = true;
   try{
-    var row = await createTeamPostCore({ text: text, photoFile: photo ? photo.file : null, pinLevel: pinChoice, expiresChoice: expChoice, ticketId: linked ? linked.id : null, mentions: mm.mentions, mentionsAll: mm.all });
+    var row = await createTeamPostCore({ text: text, photoFile: photo ? photo.file : null, pinLevel: pinChoice, expiresChoice: expChoice, ticketId: linked ? linked.id : null, mentions: mm.mentions, mentionsAll: mm.all,
+      conversationId: ctx.conversationId, replyToId: ctx.replyToId, threadRootId: ctx.threadRootId, refs: ctx.refs });
     DTG_POSTS_AVISADOS[row.id] = 1;   /* lo mío nunca me avisa a mí */
     STATE.teamPosts = STATE.teamPosts.filter(function(p){ return p.id !== tempId && p.id !== row.id; });
     STATE.teamPosts.unshift(mapTeamPostRow(row));
@@ -13830,7 +13902,7 @@ async function publishChatMessage(text){
   UI.feedComposerBusy = false;
   if(ok && photo && photo.previewUrl){ setTimeout(function(){ try{ URL.revokeObjectURL(photo.previewUrl); }catch(e){} }, 4000); }
   renderKeepingLiveInputs();
-  if(!ok) restoreComposerText(text);
+  if(!ok){ UI.astraReplyTo = ctx.replyToId; UI.astraRefPicks = ctx.refs; restoreComposerText(text); }
   refreshFromServer({ background: true });
   return ok;
 }
@@ -14027,7 +14099,7 @@ function renderFeedPostItem(item){
           renderFeedTicketChip(t) +
         "</div>" +
         (p.text ? '<div class="feed-item-text">' + escapeHtml(p.text).replace(/\n/g,"<br>") + "</div>" : "") +
-        img +
+        img + astraRenderAudio(p) +
         resolutionActions +
         renderFeedReactionBar("post", p.id) +
         renderFeedPostPinControls(p) +
@@ -14096,7 +14168,7 @@ function buildChatTimeline(filter){
   }
   if(filter !== "eventos"){
     STATE.teamPosts.forEach(function(p){
-      if(isPostExpired(p)) return;
+      if(p.conversationId || p.threadRootId || isPostExpired(p)) return;
       items.push({ kind: "post", id: p.id, ts: p.createdAt, post: p });
     });
   }
@@ -14106,6 +14178,10 @@ function buildChatTimeline(filter){
     return String(a.id) < String(b.id) ? -1 : 1;
   });
   if(items.length > CHAT_MAX_ITEMS) items = items.slice(items.length - CHAT_MAX_ITEMS);
+  if(UI.astraSearch) items = items.filter(function(it){
+    return it.kind==='post' && normalizeWord((it.post.text||'')+' '+(it.post.transcript||''))
+      .indexOf(normalizeWord(UI.astraSearch))>=0;
+  });
   /* Agrupado: mensajes humanos seguidos de la MISMA persona, el mismo día y
      con menos de 5 min entre sí se muestran sin repetir avatar/nombre. */
   var prev = null;
@@ -14120,7 +14196,7 @@ function buildChatTimeline(filter){
   return items;
 }
 function chatPinnedPosts(){
-  return STATE.teamPosts.filter(function(p){ return p.pinLevel && p.pinLevel !== "none" && !isPostExpired(p); })
+  return STATE.teamPosts.filter(function(p){ return !p.conversationId && !p.threadRootId && p.pinLevel && p.pinLevel !== "none" && !isPostExpired(p); })
     .sort(function(a, b){
       if(a.pinLevel !== b.pinLevel) return a.pinLevel === "megapin" ? -1 : 1;
       return new Date(b.pinnedAt || b.createdAt).getTime() - new Date(a.pinnedAt || a.createdAt).getTime();
@@ -14170,11 +14246,20 @@ function renderChatMsgMenu(p){
   if(UI.chatMenuFor !== p.id) return "";
   var mineOrAdmin = isAdmin() || p.authorUserId === currentActorId();
   var items = [];
-  if(p.pinLevel === "none") items.push(['feed-post-pin', 'pin', "Fijar arriba", 'data-level="pin"']);
-  if(p.pinLevel === "pin") items.push(['feed-post-pin', 'pin', "Quitar fijado", 'data-level="none"']);
-  if(isAdmin() && p.pinLevel !== "megapin") items.push(['feed-post-pin', 'star', "Megapin (anuncio)", 'data-level="megapin"']);
-  if(isAdmin() && p.pinLevel === "megapin") items.push(['feed-post-pin', 'star', "Quitar Megapin", 'data-level="none"']);
-  if(!p.ticketId) items.push(['feed-photo-relacionar-open', 'link', "Vincular a un ticket", ""]);
+  items.push(['astra-reply', 'message', 'Responder', '']);
+  items.push(['astra-thread', 'message', 'Abrir hilo', '']);
+  items.push(['astra-save', 'pin', 'Guardar para después', '']);
+  items.push(['astra-remind', 'clock', 'Recordarme', '']);
+  items.push(['astra-create-ticket', 'ticket', 'Crear ticket', '']);
+  items.push(['astra-create-task', 'check', 'Crear tarea', '']);
+  items.push(['astra-create-followup', 'clock', 'Crear seguimiento', '']);
+  items.push(['astra-select', 'check', 'Seleccionar', '']);
+  if(!p.conversationId) items.push(['astra-link', 'link', p.threadRootId ? 'Vincular hilo a ticket' : 'Agregar a ticket', '']);
+  if(p.pinLevel === "none" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Fijar arriba", 'data-level="pin"']);
+  if(p.pinLevel === "pin" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Quitar fijado", 'data-level="none"']);
+  if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel !== "megapin") items.push(['feed-post-pin', 'star', "Megapin (anuncio)", 'data-level="megapin"']);
+  if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel === "megapin") items.push(['feed-post-pin', 'star', "Quitar Megapin", 'data-level="none"']);
+  if(!p.conversationId && !p.ticketId) items.push(['feed-photo-relacionar-open', 'link', "Vincular a un ticket", ""]);
   items.push(['chat-copy-text', 'copy', "Copiar texto", ""]);
   if(mineOrAdmin) items.push(['feed-post-delete', 'trash', "Eliminar", 'data-danger="1"']);
   return '<div class="chat-msg-menu" role="menu">' + items.map(function(it){
@@ -14218,12 +14303,17 @@ function renderChatMessage(item){
     '<div class="chat-msg' + (item.continued ? " chat-msg-cont" : "") + (mine ? " chat-msg-mine" : "") + (p.pinLevel !== "none" ? " chat-msg-pinned" : "") + (p.pending ? " chat-msg-pending" : "") + (active ? " is-active" : "") +
       (postMencionaA(p, currentActorId()) && !mine ? " chat-msg-mention" : "") + (focoPost ? claseAlAparecer("flash:" + p.id + ":" + (UI.chatFocusNonce || 0), "chat-msg-flash") : "") +
       '" data-chat-msg="' + escapeHtml(String(p.id)) + '" data-chat-key="p:' + escapeHtml(String(p.id)) + '" data-post-id="' + escapeHtml(String(p.id)) + '">' +
-      '<div class="chat-msg-gutter">' + (item.continued ? '<span class="chat-msg-cont-time">' + fmtChatTime(p.createdAt) + "</span>" : personAvatar(p.autor, { size: "md" })) + "</div>" +
+      '<div class="chat-msg-gutter">' + ((UI.astraSelected||[]).length ?
+        '<button type="button" class="astra-select-mark" data-astra-action="select-toggle" data-post-id="'+escapeHtml(p.id)+'" aria-label="Seleccionar mensaje" aria-pressed="'+
+        (UI.astraSelected.indexOf(p.id)!==-1?'true':'false')+'">'+(UI.astraSelected.indexOf(p.id)!==-1?'☑':'□')+'</button>' : '') +
+        (item.continued ? '<span class="chat-msg-cont-time">' + fmtChatTime(p.createdAt) + "</span>" : personAvatar(p.autor, { size: "md" })) + "</div>" +
       '<div class="chat-msg-main">' + head +
+        (p.replyToId ? astraReplyPreview(p) : "") +
         (p.text ? '<div class="chat-msg-text">' + chatLinkifyText(p.text, p) + "</div>" : "") +
+        (!p.threadRootId && astraThreadCount(p.id) ? '<button type="button" class="astra-thread-link" data-astra-action="thread" data-post-id="' + p.id + '">' + astraThreadCount(p.id) + ' respuestas · Abrir hilo</button>' : "") +
         img +
         (t ? '<div class="chat-msg-ticket">' + renderChatTicketChip(t) + "</div>" : "") +
-        resolution + relacionar +
+        resolution + relacionar + astraRenderLinkPicker(p) + astraRemindChoices(p) +
         renderChatReactions(p) +
       "</div>" + actions +
     "</div>"
@@ -14265,12 +14355,12 @@ function chatUnseenCount(){
   var me = currentActorId();
   var since = new Date(UI.chatLastSeenTs).getTime();
   return STATE.teamPosts.filter(function(p){
-    return !p.pending && p.authorUserId !== me && !isPostExpired(p) && new Date(p.createdAt).getTime() > since;
+    return !p.pending && !p.conversationId && !p.threadRootId && p.authorUserId !== me && !isPostExpired(p) && new Date(p.createdAt).getTime() > since;
   }).length;
 }
 function chatNewestTs(){
   var newest = null;
-  STATE.teamPosts.forEach(function(p){ if(!newest || new Date(p.createdAt) > new Date(newest)) newest = p.createdAt; });
+  STATE.teamPosts.forEach(function(p){ if(p.conversationId || p.threadRootId) return; if(!newest || new Date(p.createdAt) > new Date(newest)) newest = p.createdAt; });
   return newest;
 }
 function isChatComposerContext(){
@@ -14396,6 +14486,13 @@ function renderInicioFeed(){
   if(UI.feedFilter === "aibridge"){
     return header + '<div class="feed-scroll" id="feed-scroll">' + renderAiBridgePanel() + "</div>";
   }
+  header += '<div class="astra-utilities"><button type="button" class="astra-later-toggle" data-astra-action="later">Para después</button>' +
+    '<input type="search" id="astra-search" aria-label="Buscar mensajes y transcripciones" placeholder="Buscar conversación o transcripción" value="' +
+    escapeHtml(UI.astraSearch||'') + '"><button type="button" data-astra-action="search">Buscar</button></div>';
+  header += astraSelectionBar();
+  if(UI.astraLaterOpen) return header + astraRenderLater();
+  if(UI.astraConversationId || UI.astraThreadRoot) return astraRenderConversation(header);
+  header += astraConversationTabs();
   var items = buildChatTimeline(UI.feedFilter);
   var html = "", lastDay = null;
   items.forEach(function(it){
@@ -14475,7 +14572,7 @@ function restoreChatScroll(snap){
     var atBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 80;
     if(atBottom === UI.chatAtBottom) return;
     UI.chatAtBottom = atBottom;
-    if(atBottom){ UI.chatLastSeenTs = chatNewestTs(); chatMarkSeen(); dtgTabSend({ t: "leido", ts: UI.chatLastSeenTs }); }
+    if(atBottom && !UI.astraConversationId && !UI.astraThreadRoot){ UI.chatLastSeenTs = chatNewestTs(); chatMarkSeen(); dtgTabSend({ t: "leido", ts: UI.chatLastSeenTs }); }
     updateChatNewPill();
   }, { passive: true });
 }
@@ -14484,7 +14581,7 @@ function restoreChatScroll(snap){
    que todavía no se resolvieron. Reusa renderFeedPostItem TAL CUAL (mismo
    markup/acciones que en Inicio) — nunca una segunda tarjeta a mantener. */
 function feedUnresolvedPosts(){
-  return STATE.teamPosts.filter(function(p){ return !p.ticketId && !p.noTicketRequired && p.imageStoragePath && !isPostExpired(p); });
+  return STATE.teamPosts.filter(function(p){ return !p.conversationId && !p.threadRootId && !p.ticketId && !p.noTicketRequired && p.imageStoragePath && !isPostExpired(p); });
 }
 function renderBibliotecaSinRelacionar(){
   var pending = feedUnresolvedPosts();
@@ -15357,7 +15454,7 @@ function renderMain(){
        de competir por espacio en ese momento en vez de vivir siempre debajo. */
     var globalHtml = globalEphemeralHtml();
     if(!globalHtml){
-      return renderInicioFeed() + renderComposer();
+      return renderInicioFeed() + (UI.astraLaterOpen ? "" : renderComposer());
     }
     return (
       '<div class="home-header"><h1>¿Qué necesitas encontrar?</h1><button class="btn btn-ghost" data-action="new-ticket">+ Nuevo ticket</button></div>' +
@@ -15375,7 +15472,7 @@ function renderMain(){
     '<div class="ticket-body">' +
       renderMarkersBar(t) +
       renderTasksPanel(t) +
-      '<div class="thread" id="thread-scroll">' + mergedThreadHtml(t) + "</div>" +
+      '<div class="thread" id="thread-scroll">' + astraRenderTicketLinks(t) + mergedThreadHtml(t) + "</div>" +
     "</div>" +
     renderComposer()
   );
@@ -15499,6 +15596,7 @@ function render(){
     "</div>" +
     renderDocModal() +
     renderChatPrefsPanel() +
+    astraReviewOverlay() +
     renderDocShareSheet() +
     renderCierreModal() +
     renderTaskStateSheet() +
@@ -15526,6 +15624,7 @@ function render(){
   restoreHorizontalScrolls(hScrollSnap);
   wireEvents();
   hydrateImages();
+  astraHydrateAudios();
   restoreChatScroll(chatSnap);
   /* §128: un solo punto sincroniza la URL con "qué ticket está abierto
      ahora" — se apoya en que TODA navegación de la app ya termina en
@@ -15557,7 +15656,7 @@ function render(){
     });
     composerInput.addEventListener("input", function(){
       var v = composerInput.value;
-      document.getElementById("composer-send").disabled = !v.trim() && !(UI.feedComposerPhoto && isChatComposerContext());
+      document.getElementById("composer-send").disabled = !v.trim() && !((UI.feedComposerPhoto || UI.astraAudioBlob) && isChatComposerContext());
       mentionSync(composerInput);
       composerInput.style.height = "auto";
       composerInput.style.height = Math.min(composerInput.scrollHeight, 120) + "px";
@@ -15698,7 +15797,7 @@ function render(){
           if(lst.length){
             e.preventDefault();
             var el2 = lst[Math.max(0, Math.min(UI.chatMention.index || 0, lst.length - 1))];
-            mentionPick(el2.id, el2.name);
+            mentionPick(el2.id, el2.name, el2.kind);
             return;
           }
         }
@@ -16748,8 +16847,11 @@ async function submitNote(){
   var text = input.value.trim();
   if(!text){
     /* v0.20: en el chat, una foto sola (sin texto) también se puede enviar. */
-    if(!findTicket(UI.selectedTicketId) && isChatComposerContext() && UI.feedComposerPhoto) publishChatMessage("");
+    if(!findTicket(UI.selectedTicketId) && isChatComposerContext() && (UI.feedComposerPhoto || UI.astraAudioBlob)) publishChatMessage("");
     return;
+  }
+  if(!findTicket(UI.selectedTicketId) && isChatComposerContext() && UI.astraAudioBlob){
+    publishChatMessage(text); return;
   }
   /* Composer Intelligence §3: "-" como primer carácter abre/ejecuta un
      comando exactamente igual que "/" — se normaliza aquí, una sola vez,
@@ -23378,7 +23480,7 @@ document.addEventListener("click", function(e){
   }
   /* ---- v0.23 Equipo en vivo ---- */
   var mPick = e.target.closest && e.target.closest('[data-action="mention-pick"]');
-  if(mPick){ e.stopPropagation(); mentionPick(mPick.getAttribute("data-id"), mPick.getAttribute("data-name")); return; }
+  if(mPick){ e.stopPropagation(); mentionPick(mPick.getAttribute("data-id"), mPick.getAttribute("data-name"), mPick.getAttribute("data-kind")); return; }
   var mAll = e.target.closest && e.target.closest('[data-action="mention-all-yes"]');
   if(mAll){ e.stopPropagation(); mentionConfirmAll(); return; }
   var rtRetry = e.target.closest && e.target.closest('[data-action="rt-retry"]');
@@ -24525,6 +24627,549 @@ document.addEventListener("keydown", function(e){
 });
 
 /* ---------------- boot ---------------- */
+
+/* ASTRA · Conversación sobre team_posts existente. No carga datos privados
+   en una segunda caché persistente: RLS decide qué filas llegan a STATE. */
+var ASTRA_CONVERSATIONS_AVAILABLE = false;
+async function fetchAstraConversations(){
+  var r = await sb.from("chat_conversations").select("*");
+  ASTRA_CONVERSATIONS_AVAILABLE = !r.error;
+  if(r.error) return [];
+  return r.data || [];
+}
+async function fetchAstraLinks(){
+  var r = await sb.from('chat_ticket_links').select('*');
+  return r.error ? [] : (r.data || []);
+}
+async function fetchAstraLater(){
+  var r = await sb.from('chat_later').select('*');
+  return r.error ? [] : (r.data || []);
+}
+function astraSelectionBar(){
+  var ids=UI.astraSelected||[];if(!ids.length)return '';
+  var teamOnly=ids.every(function(id){var p=astraPost(id);return p && !p.conversationId;});
+  return '<div class="astra-selection" role="toolbar" aria-label="Acciones sobre mensajes seleccionados">' +
+    '<strong>'+ids.length+' seleccionados</strong>'+
+    (teamOnly?'<button type="button" data-astra-action="selection-link">Agregar a ticket</button>':'')+
+    '<button type="button" data-astra-action="selection-ticket">Crear ticket</button>'+
+    '<button type="button" data-astra-action="selection-task">Crear tarea</button>'+
+    '<button type="button" data-astra-action="selection-followup">Crear seguimiento</button>'+
+    '<button type="button" data-astra-action="selection-save">Guardar para después</button>'+
+    '<button type="button" data-astra-action="selection-cancel">Cancelar selección</button></div>';
+}
+function astraRenderLinkPicker(p){
+  if(UI.astraLinkFor !== p.id) return '';
+  var root=p.threadRootId ? astraPost(p.threadRootId) : p;
+  var kind=UI.astraLinkKind || (p.threadRootId ? 'thread' : 'message');
+  return '<div class="feed-relacionar-picker"><strong>' +
+    (kind==='selection' ? 'Agregar solo los mensajes seleccionados' : kind==='thread' ? 'Vincular hilo completo' : 'Agregar solo este mensaje') + '</strong>' +
+    (kind!=='selection' && !p.threadRootId ? '<button type="button" class="btn btn-ghost btn-sm" data-astra-action="link-kind" data-kind="' +
+      (kind==='thread'?'message':'thread') + '">Cambiar a ' + (kind==='thread'?'solo mensaje':'hilo completo') + '</button>' : '') +
+    '<div class="feed-relacionar-list">' + (STATE.tickets || []).filter(dtgIsVivo).slice(0,70).map(function(t){
+      return '<button type="button" class="feed-relacionar-row" data-astra-action="link-choose" data-post-id="' +
+        escapeHtml(kind==='thread' ? root.id : p.id) + '" data-ticket-id="' + escapeHtml(t.id) +
+        '" data-kind="' + kind + '">#' + escapeHtml(String(t.seq)) + ' · ' + escapeHtml(t.cliente || 'Sin cliente') + '</button>';
+    }).join('') + '</div><button type="button" class="btn-plain" data-astra-action="link-cancel">Cancelar</button></div>';
+}
+async function astraLinkTicket(postId,ticketId,kind){
+  if(kind==='selection') return astraLinkBulk(UI.astraSelected||[],ticketId);
+  var post=astraPost(postId), t=findTicket(ticketId);
+  if(!post || post.conversationId || (!t && !(UI.astraReview && UI.astraReview.kind==='ticket'))) return false;
+  var r=await sb.from('chat_ticket_links').insert({
+    post_id:postId,ticket_id:ticketId,link_kind:kind,linked_by:currentActorId()
+  });
+  if(r.error){ userError('Vincular conversación',r.error); return false; }
+  UI.astraLinkFor=null;
+  if(t) await refreshFromServer({background:true});
+  if(t) showToast((kind==='thread'?'Hilo vinculado':'Mensaje agregado')+' a #'+t.seq+'.');
+  return true;
+}
+async function astraLinkBulk(ids,ticketId){
+  var t=findTicket(ticketId);
+  if(!ids.length || !t || !ids.every(function(id){var p=astraPost(id);return p&&!p.conversationId;}))return false;
+  var rows=ids.map(function(id){return {post_id:id,ticket_id:ticketId,link_kind:'message',linked_by:currentActorId()};});
+  var res=await sb.from('chat_ticket_links').insert(rows);
+  if(res.error){userError('Agregar mensajes al ticket',res.error);return false;}
+  UI.astraSelected=[];UI.astraLinkFor=null;await refreshFromServer({background:true});
+  showToast(rows.length+' mensajes agregados a #'+t.seq+'.');return true;
+}
+function astraRenderTicketLinks(t){
+  var links=(STATE.conversationLinks||[]).filter(function(x){return x.ticket_id===t.id;});
+  if(!links.length) return '';
+  return '<section class="astra-ticket-links"><strong>Conversaciones</strong>' + links.map(function(x){
+    var root=astraPost(x.post_id);
+    if(!root) return '';
+    var count=x.link_kind==='thread' ? astraThreadCount(root.id)+1 : 1;
+    return '<button type="button" class="astra-ticket-link" data-astra-action="ticket-conversation" data-post-id="' +
+      escapeHtml(root.id) + '" data-kind="'+escapeHtml(x.link_kind)+'">' +
+      escapeHtml(root.autor || 'Equipo') + ' · '+count+' mensaje'+(count===1?'':'s')+
+      ' · '+escapeHtml((root.text||'Foto').slice(0,100)) + '</button>';
+  }).join('') + '</section>';
+}
+function astraReviewOverlay(){
+  var r=UI.astraReview;if(!r)return '';
+  var p=astraPost(r.postId);if(!p)return '';
+  var thread=p.threadRootId ? astraPost(p.threadRootId) : p;
+  var items= r.selectedIds && r.selectedIds.length
+    ? r.selectedIds.map(astraPost).filter(Boolean)
+    : r.kind==='ticket' && (p.threadRootId || UI.astraThreadRoot)
+    ? (STATE.teamPosts||[]).filter(function(x){return x.id===thread.id || x.threadRootId===thread.id;})
+    : [p];
+  var clientRef=(p.refs||[]).find(function(x){return x.kind==='client';});
+  var ticketRef=(p.refs||[]).find(function(x){return x.kind==='ticket';});
+  var suggestedTicket=p.ticketId || (ticketRef && ticketRef.id) || '';
+  var candidates=(STATE.tickets||[]).filter(dtgIsVivo);
+  return '<div class="cierre-modal-overlay astra-review-backdrop"><div class="cierre-modal astra-review" role="dialog" aria-modal="true" aria-label="Revisar antes de guardar">' +
+    '<h2>Revisar '+(r.kind==='ticket'?'ticket':r.kind==='followup'?'seguimiento':'tarea')+'</h2>'+
+    '<div class="astra-review-source"><strong>Origen · '+items.length+' mensaje'+(items.length===1?'':'s')+'</strong>'+
+    items.slice(0,8).map(function(x){return '<p>'+escapeHtml(x.autor||'Equipo')+' · '+
+      escapeHtml(fmtDateShort(x.createdAt))+' '+escapeHtml(fmtTime(x.createdAt))+
+      ': '+escapeHtml((x.text||x.transcript||'Audio/archivo').slice(0,220))+'</p>';}).join('')+
+    (items.length>8?'<small>Y '+(items.length-8)+' mensajes más</small>':'')+'</div>'+
+    (p.conversationId?'<p>Chat personal: los demás mensajes permanecen privados. Solo se guarda lo que confirmes aquí.</p>':'')+
+    (r.kind==='ticket'
+      ? '<label>Cliente (opcional)<input id="astra-review-client" value="'+escapeHtml(clientRef?clientRef.label:'')+'" placeholder="Sin cliente"></label>'+
+        '<label><input type="checkbox" id="astra-review-excerpt"> Agregar el texto del mensaje como nota visible en el ticket</label>'
+      : '<label>Ticket<select id="astra-review-ticket"><option value="">Seleccionar ticket</option>'+
+        candidates.map(function(t){return '<option value="'+escapeHtml(t.id)+'"'+
+          (t.id===suggestedTicket?' selected':'')+'>#'+escapeHtml(String(t.seq))+' · '+escapeHtml(t.cliente||'Sin cliente')+'</option>';}).join('')+
+        '</select></label>'+
+        '<label>Acción<input id="astra-review-desc" value="'+escapeHtml(items.map(function(x){return x.transcript||x.text||'';}).filter(Boolean).join(' · ').slice(0,500))+'" placeholder="Qué debe hacerse"></label>'+
+        (r.kind==='task'?'<label>Área<select id="astra-review-area"><option value="normal">Tarea interna</option>'+
+          '<option value="produccion">Producción</option><option value="planeacion">Planeación</option></select></label>':'')+
+        '<label>Fecha de atención (opcional)<input id="astra-review-date" type="date"></label>'+
+        '<label>Responsable (opcional)<select id="astra-review-owner"><option value="">Sin asignar</option>'+
+        activeAssignableProfiles().map(function(q){return '<option>'+escapeHtml(q.displayName)+'</option>';}).join('')+
+        '</select></label>')+
+    '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-astra-action="review-cancel">Cancelar</button>'+
+    '<button type="button" class="btn btn-primary" data-astra-action="review-confirm">Confirmar</button></div></div></div>';
+}
+async function astraConfirmReview(){
+  var r=UI.astraReview;if(!r || r.busy)return;
+  var p=astraPost(r.postId);if(!p)return;
+  var items=r.selectedIds && r.selectedIds.length ? r.selectedIds.map(astraPost).filter(Boolean) : [p];
+  r.busy=true;
+  try{
+    if(r.kind==='ticket'){
+      var cliente=(document.getElementById('astra-review-client').value||'').trim();
+      var include=document.getElementById('astra-review-excerpt').checked;
+      var id=await createTicketCore({cliente:cliente});
+      if(!id)return;
+      if(include){
+        var note=await sb.from('bitacora').insert({ticket_id:id,tipo:'nota',autor:currentActorName()||null,
+          payload:{text:items.map(function(x){return x.transcript||x.text||'';}).join('\n').slice(0,5000),source_post_id:p.id,
+            source_author:p.autor,source_at:p.createdAt,source_snapshot:true}});
+        if(note.error) userError('Guardar contexto en ticket',note.error);
+      }
+      if(r.selectedIds && r.selectedIds.length){
+        var publicIds=r.selectedIds.filter(function(postId){var x=astraPost(postId);return x&&!x.conversationId;});
+        if(publicIds.length){
+          var bulk=await sb.from('chat_ticket_links').insert(publicIds.map(function(postId){
+            return {post_id:postId,ticket_id:id,link_kind:'message',linked_by:currentActorId()};
+          }));
+          if(bulk.error) userError('Agregar mensajes al ticket',bulk.error);
+        }
+      }else if(!p.conversationId){
+        var root=p.threadRootId ? astraPost(p.threadRootId) : p;
+        var kind=(p.threadRootId || UI.astraThreadRoot)?'thread':'message';
+        await astraLinkTicket(kind==='thread'?root.id:p.id,id,kind);
+      }
+      UI.astraReview=null;
+      UI.astraSelected=[];
+      await refreshFromServer({background:true});
+      openTicketById(id);
+      showTicketCreatedToast(id);
+    }else{
+      var ticketId=document.getElementById('astra-review-ticket').value;
+      var t=findTicket(ticketId), desc=(document.getElementById('astra-review-desc').value||'').trim();
+      var date=document.getElementById('astra-review-date').value;
+      var owner=document.getElementById('astra-review-owner').value;
+      var area=r.kind==='followup'?'planeacion':document.getElementById('astra-review-area').value;
+      if(!t || !desc || (date && !isSaneDateOnly(date))){showToast('Revisa ticket, acción y fecha.');return;}
+      var ok=await addTareaCore(t,area==='normal'?'normal':'produccion',desc,owner,date,
+        area==='normal'?{}:{area:area});
+      if(!ok)return;
+      await sb.from('bitacora').insert({ticket_id:t.id,tipo:'sistema',autor:currentActorName()||null,
+        payload:{text:'Acción confirmada desde mensaje de '+(p.autor||'Equipo')+' ('+fmtDateShort(p.createdAt)+')',
+          source_post_id:p.id,source_post_ids:items.map(function(x){return x.id;}),
+          source_snapshot:items.map(function(x){return x.transcript||x.text||'';}).join('\n').slice(0,5000)}});
+      UI.astraSelected=[];
+      UI.astraReview=null;openTicketById(t.id);
+    }
+  }catch(e){userError('Crear desde conversación',e);}
+  finally{if(UI.astraReview)UI.astraReview.busy=false;}
+}
+var ASTRA_RECORDER=null, ASTRA_STREAM=null, ASTRA_RECORD_STARTED=0, ASTRA_CHUNKS=[];
+function astraRecordingCleanup(){
+  if(ASTRA_STREAM) ASTRA_STREAM.getTracks().forEach(function(t){t.stop();});
+  ASTRA_STREAM=null; ASTRA_RECORDER=null; UI.astraRecording=false;
+}
+async function astraStartRecording(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+    showToast('Este navegador no permite grabar audio.');return;
+  }
+  if(ASTRA_RECORDER || UI.astraAudioBlob) return;
+  try{
+    ASTRA_STREAM=await navigator.mediaDevices.getUserMedia({audio:true});
+    var mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']
+      .find(function(x){return MediaRecorder.isTypeSupported(x);});
+    ASTRA_RECORDER=new MediaRecorder(ASTRA_STREAM,mime?{mimeType:mime}:undefined);
+    ASTRA_CHUNKS=[]; ASTRA_RECORD_STARTED=Date.now();
+    ASTRA_RECORDER.ondataavailable=function(ev){if(ev.data && ev.data.size) ASTRA_CHUNKS.push(ev.data);};
+    ASTRA_RECORDER.onstop=function(){
+      var seconds=Math.round((Date.now()-ASTRA_RECORD_STARTED)/1000);
+      if(!UI.astraCancelAudio && ASTRA_CHUNKS.length){
+        UI.astraAudioBlob=new Blob(ASTRA_CHUNKS,{type:ASTRA_RECORDER.mimeType || mime || 'audio/webm'});
+        UI.astraAudioSeconds=seconds;
+      }
+      UI.astraCancelAudio=false; ASTRA_CHUNKS=[]; astraRecordingCleanup();renderKeepingLiveInputs();
+    };
+    ASTRA_RECORDER.start(250);UI.astraRecording=true;renderKeepingLiveInputs();
+  }catch(e){astraRecordingCleanup();showToast('No se pudo activar el micrófono.');}
+}
+function astraStopRecording(cancel){
+  if(!ASTRA_RECORDER) return;
+  UI.astraCancelAudio=!!cancel;
+  if(ASTRA_RECORDER.state!=='inactive') ASTRA_RECORDER.stop();
+}
+function astraRenderAudio(p){
+  if(!p.audioPath) return '';
+  return '<div class="astra-audio"><audio controls preload="none" data-audio-path="'+escapeHtml(p.audioPath)+
+    '" aria-label="Audio de '+escapeHtml(p.autor||'Equipo')+'"></audio><small>'+
+    (p.audioSeconds?Math.floor(p.audioSeconds/60)+':'+String(p.audioSeconds%60).padStart(2,'0'):'')+
+    '</small>'+(p.transcriptStatus==='transcribing' ? '<span>Transcribiendo…</span>' :
+    p.transcriptStatus==='failed' ? '<span>Transcripción no disponible</span>' :
+    p.transcript ? '<details><summary>Ver transcripción</summary><p>'+escapeHtml(p.transcript)+
+      '</p><button type="button" data-astra-action="copy-transcript" data-post-id="'+escapeHtml(p.id)+'">Copiar</button></details>' : '')+
+    '</div>';
+}
+async function astraPublishAudio(text){
+  if(UI.feedComposerBusy || !UI.astraAudioBlob) return false;
+  var blob=UI.astraAudioBlob, seconds=UI.astraAudioSeconds, conversation=UI.astraConversationId||null;
+  var reply=UI.astraReplyTo||null, root=UI.astraThreadRoot||null;
+  var refs=astraRefsForText(text), mm=mentionsForText(text);
+  var ext=blob.type.indexOf('mp4')>=0?'m4a':blob.type.indexOf('ogg')>=0?'ogg':'webm';
+  var path=(conversation||'team')+'/'+crypto.randomUUID()+'.'+ext;
+  UI.feedComposerBusy=true;showToast('Subiendo audio…');
+  try{
+    var up=await sb.storage.from('chat-private').upload(path,blob,{contentType:blob.type||'audio/webm'});
+    if(up.error) throw up.error;
+    try{
+      var row=await createTeamPostCore({text:text,conversationId:conversation,replyToId:reply,
+        threadRootId:root,refs:refs,mentions:mm.mentions,mentionsAll:mm.all,
+        audioPath:path,audioMime:blob.type,audioSeconds:seconds});
+      STATE.teamPosts.unshift(mapTeamPostRow(row));DTG_POSTS_AVISADOS[row.id]=1;
+      UI.astraAudioBlob=null;UI.astraAudioSeconds=null;UI.astraReplyTo=null;
+      UI.chatMentionPicks=[];UI.astraRefPicks=[];UI.chatMention=null;
+      restoreComposerText('');render();
+      sb.functions.invoke('transcribe-chat-audio',{body:{postId:row.id}}).then(function(result){
+        if(result.error) throw result.error;
+        refreshFromServer({background:true});
+      }).catch(async function(){
+        await sb.from('team_posts').update({transcript_status:'failed'}).eq('id',row.id);
+        refreshFromServer({background:true});
+      });
+      refreshFromServer({background:true});
+      return true;
+    }catch(e){await sb.storage.from('chat-private').remove([path]);throw e;}
+  }catch(e){userError('Enviar audio',e);return false;}
+  finally{UI.feedComposerBusy=false;renderKeepingLiveInputs();}
+}
+function astraHydrateAudios(){
+  document.querySelectorAll('audio[data-audio-path]').forEach(async function(el){
+    var path=el.getAttribute('data-audio-path');if(!path)return;
+    if(signedUrlCache[path]){el.src=signedUrlCache[path];return;}
+    var r=await sb.storage.from('chat-private').createSignedUrl(path,3600);
+    if(r.data && r.data.signedUrl && document.body.contains(el)){
+      signedUrlCache[path]=r.data.signedUrl;el.src=r.data.signedUrl;
+    }
+  });
+}
+async function astraSaveMessage(postId,remindAt){
+  if(!astraPost(postId)) return;
+  var r=await sb.from('chat_later').upsert({
+    user_id:currentActorId(),post_id:postId,remind_at:remindAt || null,
+    completed_at:null,archived_at:null
+  },{onConflict:'user_id,post_id'}).select().single();
+  if(r.error){userError('Guardar para después',r.error);return;}
+  STATE.astraLater=(STATE.astraLater||[]).filter(function(x){return x.post_id!==postId;});
+  STATE.astraLater.push(r.data); UI.chatMenuFor=null; render();
+  showToast(remindAt?'Recordatorio programado.':'Guardado para después.');
+}
+function astraRenderLater(){
+  var rows=(STATE.astraLater||[]).slice().sort(function(a,b){
+    return new Date(b.remind_at||b.created_at)-new Date(a.remind_at||a.created_at);
+  });
+  var now=Date.now();
+  var categories=[
+    ['Vencidos',function(x){return !x.completed_at&&!x.archived_at&&x.remind_at&&new Date(x.remind_at)<=now;}],
+    ['Próximos',function(x){return !x.completed_at&&!x.archived_at&&x.remind_at&&new Date(x.remind_at)>now;}],
+    ['Guardados',function(x){return !x.completed_at&&!x.archived_at&&!x.remind_at;}],
+    ['Completados',function(x){return !!x.completed_at&&!x.archived_at;}],
+    ['Archivados',function(x){return !!x.archived_at;}]
+  ];
+  return '<div class="feed-scroll astra-later"><h2>Para después</h2>' +
+    categories.map(function(c){
+      var selected=rows.filter(c[1]);
+      return '<h3>'+c[0]+' ('+selected.length+')</h3>' +
+        selected.map(function(x){
+          var p=astraPost(x.post_id);
+          return '<div class="astra-later-row"><button type="button" data-astra-action="later-open" data-post-id="' +
+            escapeHtml(x.post_id)+'">'+escapeHtml(p ? (p.autor+': '+(p.text||'Foto').slice(0,90)) : 'Mensaje no disponible')+
+            '</button>'+(x.remind_at?'<small>'+escapeHtml(fmtDateShort(x.remind_at))+' · '+escapeHtml(fmtTime(x.remind_at))+'</small>':'')+
+            '<button type="button" data-astra-action="later-complete" data-id="'+escapeHtml(x.id)+'">Completar</button>'+
+            '<button type="button" data-astra-action="later-snooze" data-post-id="'+escapeHtml(x.post_id)+'">Posponer 1 h</button>'+
+            '<button type="button" data-astra-action="later-archive" data-id="'+escapeHtml(x.id)+'">Archivar</button></div>';
+        }).join('');
+    }).join('')+'</div>';
+}
+async function astraLaterUpdate(id,patch){
+  var r=await sb.from('chat_later').update(patch).eq('id',id).select().single();
+  if(r.error){userError('Para después',r.error);return;}
+  STATE.astraLater=(STATE.astraLater||[]).map(function(x){return x.id===id?r.data:x;});render();
+}
+function astraRemindChoices(p){
+  if(UI.astraRemindFor!==p.id) return '';
+  return '<div class="astra-remind-options">' +
+    [['20 minutos',20],['1 hora',60],['Mañana',1440]].map(function(c){
+      return '<button type="button" data-astra-action="remind-quick" data-post-id="'+escapeHtml(p.id)+
+        '" data-minutes="'+c[1]+'">'+c[0]+'</button>';
+    }).join('')+
+    '<label>Fecha y hora<input type="datetime-local" id="astra-remind-date"></label>'+
+    '<button type="button" data-astra-action="remind-date" data-post-id="'+escapeHtml(p.id)+'">Recordarme</button>'+
+    '</div>';
+}
+var ASTRA_REMINDERS_SHOWN={};
+function astraCheckReminders(){
+  if(AUTH_STATUS!=='signed_in' || !dtgTabEsVocera())return;
+  (STATE.astraLater||[]).forEach(function(x){
+    if(!x.remind_at || x.completed_at || x.archived_at || Date.parse(x.remind_at)>Date.now())return;
+    var key=x.id+':'+x.remind_at;if(ASTRA_REMINDERS_SHOWN[key])return;
+    ASTRA_REMINDERS_SHOWN[key]=true;
+    var p=astraPost(x.post_id);
+    showActionToast('Recordatorio: '+(p ? (p.transcript||p.text||'Audio').slice(0,90) : 'Abre el contexto'),
+      '<button type="button" class="toast-action-btn" data-astra-action="later-open" data-post-id="'+escapeHtml(x.post_id)+'">Abrir contexto</button>'+
+      '<button type="button" class="toast-action-btn" data-astra-action="later-complete" data-id="'+escapeHtml(x.id)+'">Completar</button>'+
+      '<button type="button" class="toast-action-btn" data-astra-action="later-snooze" data-post-id="'+escapeHtml(x.post_id)+'">Posponer 1 h</button>'+
+      '<button type="button" class="toast-action-btn" data-astra-action="later-followup" data-post-id="'+escapeHtml(x.post_id)+'">Crear seguimiento</button>',15000);
+  });
+}
+setInterval(astraCheckReminders,30000);
+function astraPost(id){ return (STATE.teamPosts || []).find(function(p){ return p.id === id; }); }
+function astraConversationTabs(){
+  if(!ASTRA_CONVERSATIONS_AVAILABLE) return "";
+  var me = currentActorId();
+  var peers = activeAssignableProfiles().filter(function(p){ return p.id !== me; });
+  return '<nav class="astra-tabs" aria-label="Conversaciones"><button type="button" data-astra-action="team" class="astra-tab' +
+    (!UI.astraConversationId ? ' active' : '') + '">Equipo</button>' +
+    peers.map(function(p){ return '<button type="button" class="astra-tab" data-astra-action="dm" data-user-id="' +
+      escapeHtml(p.id) + '">' + escapeHtml(p.displayName) + '</button>'; }).join("") + '</nav>';
+}
+function astraRenderConversation(header){
+  var root = UI.astraThreadRoot && astraPost(UI.astraThreadRoot);
+  var id = UI.astraConversationId;
+  var peer = (STATE.conversations || []).find(function(c){ return c.id === id; });
+  var peerId = peer ? (peer.member_a === currentActorId() ? peer.member_b : peer.member_a) : null;
+  var person = (STATE.profiles || []).find(function(p){ return p.id === peerId; });
+  var label = root ? 'Hilo' : (person ? person.displayName : 'Chat personal');
+  var back = '<div class="astra-context"><button type="button" class="btn btn-ghost btn-sm" data-astra-action="' +
+    (root && id ? 'back-dm' : 'team') + '">← ' + (root && id ? 'Chat personal' : 'Equipo') +
+    '</button><strong>' + escapeHtml(label) + '</strong></div>';
+  var posts = (STATE.teamPosts || []).filter(function(p){
+    return !isPostExpired(p) && !p.deletedAt && (p.conversationId || null) === (id || null) &&
+      (root ? (p.id === root.id || p.threadRootId === root.id) : (!p.threadRootId)) &&
+      (!UI.astraSearch || normalizeWord((p.text||'')+' '+(p.transcript||''))
+        .indexOf(normalizeWord(UI.astraSearch))>=0);
+  }).sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
+  var body = posts.map(function(p){ return renderChatMessage({kind:'post',post:p,continued:false}); }).join("");
+  if(!body) body = '<div class="chat-empty">Todavía no hay mensajes.</div>';
+  return header + (root ? back : astraConversationTabs() + back) +
+    '<div class="chat-scroll-wrap"><div class="chat-scroll" id="chat-scroll" aria-label="' +
+    escapeHtml(label) + '">' + body + '</div></div>';
+}
+async function astraOpenDm(peerId){
+  if(!ASTRA_CONVERSATIONS_AVAILABLE) return;
+  var me = currentActorId(), ids = [me,peerId].sort();
+  if(!me || !peerId || me === peerId || !activeAssignableProfiles().some(function(p){return p.id===peerId;})) return;
+  var found = (STATE.conversations || []).find(function(c){ return c.member_a === ids[0] && c.member_b === ids[1]; });
+  if(!found){
+    var r = await sb.from("chat_conversations").insert({member_a:ids[0],member_b:ids[1]}).select().single();
+    if(r.error && r.error.code==='23505')
+      r=await sb.from("chat_conversations").select("*").eq("member_a",ids[0]).eq("member_b",ids[1]).single();
+    if(r.error){ userError("Abrir chat personal",r.error); return; }
+    found = r.data; STATE.conversations.push(found);
+  }
+  UI.astraConversationId = found.id; UI.astraThreadRoot = null; UI.astraReplyTo = null;
+  UI.astraSelected=[];
+  if(UI.feedComposerPhoto && UI.feedComposerPhoto.previewUrl) URL.revokeObjectURL(UI.feedComposerPhoto.previewUrl);
+  UI.feedComposerPhoto=null;UI.feedComposerPin='none';UI.feedComposerExpires='never';UI.chatOptionsOpen=false;
+  if(ASTRA_RECORDER) astraStopRecording(true);
+  UI.astraAudioBlob=null;
+  UI.chatMention = null; UI.chatMentionPicks = []; UI.astraRefPicks = [];
+  UI.feedFilter = "todo"; UI.chatStickBottom = true; render();
+}
+function astraOpenThread(id){
+  var post = astraPost(id); if(!post) return;
+  UI.selectedTicketId=null; UI.mainView=null; UI.feedFilter='todo';
+  if(ASTRA_RECORDER) astraStopRecording(true);
+  UI.astraAudioBlob=null;
+  UI.astraConversationId = post.conversationId || null;
+  UI.astraSelected=[];
+  UI.astraThreadRoot = post.threadRootId || post.id;
+  UI.astraReplyTo = null; UI.chatStickBottom = true; render();
+}
+function astraThreadCount(id){
+  return (STATE.teamPosts || []).filter(function(p){return p.threadRootId===id;}).length;
+}
+function astraReplyPreview(p){
+  var original = astraPost(p.replyToId);
+  return '<button type="button" class="astra-reply" data-astra-action="jump" data-post-id="' +
+    escapeHtml(p.replyToId) + '">↳ ' + escapeHtml(original
+      ? (original.autor + ': ' + (original.text || 'Foto').slice(0,90))
+      : 'Mensaje no disponible') + '</button>';
+}
+function astraComposerReply(){
+  var p = astraPost(UI.astraReplyTo);
+  return '<div class="astra-compose-reply">Responder a ' + escapeHtml(p ? p.autor : 'mensaje') +
+    '<button type="button" data-astra-action="cancel-reply" aria-label="Cancelar respuesta">×</button></div>';
+}
+function astraMentionRoster(symbol){
+  if(symbol === '#') return (STATE.tickets || []).map(function(t){
+    return {id:t.id,name:String(t.seq),kind:'ticket'};
+  });
+  return mentionRoster().filter(function(p){
+    if(!UI.astraConversationId) return true;
+    var c=(STATE.conversations||[]).find(function(x){return x.id===UI.astraConversationId;});
+    return c && (p.id===c.member_a || p.id===c.member_b);
+  })
+    .map(function(p){return Object.assign({kind:'user'},p);}).concat(
+    (STATE.clientes || []).map(function(c){ return {
+      id:c.id,name:c.empresa || c.nombre || '',kind:'client'
+    }; }).filter(function(x){return x.name;})
+  );
+}
+function astraRefsForText(text){
+  var selected = (UI.astraRefPicks || []).concat((UI.chatMentionPicks || []).filter(function(p){
+    return p.id !== MENTION_ALL;
+  }).map(function(p){return {kind:'user',id:p.id,label:p.name};}));
+  var refs = [], used = {};
+  selected.forEach(function(p){
+    var token = (p.kind === 'ticket' ? '#' : '@') + p.label;
+    var at = -1;
+    while((at = text.indexOf(token,at+1)) >= 0){
+      var key=at+':'+token;
+      if(used[key]) continue; used[key]=true;
+      if(at && !/\s/.test(text[at-1])) continue;
+      if(text[at+token.length] && !/[\s.,;!?)]/.test(text[at+token.length])) continue;
+      refs.push({kind:p.kind,id:p.id,label:p.label,start:at,length:token.length});
+    }
+  });
+  return refs.sort(function(a,b){return a.start-b.start;});
+}
+function astraRenderStructuredText(p){
+  var t=p.text || '', refs=p.refs || [], out='', last=0;
+  refs.forEach(function(r){
+    var token=(r.kind==='ticket'?'#':'@')+r.label;
+    if(r.start<last || t.slice(r.start,r.start+r.length)!==token) return;
+    out+=escapeHtml(t.slice(last,r.start));
+    var valid=r.kind==='ticket' ? (STATE.tickets||[]).some(function(x){return x.id===r.id;})
+      : r.kind==='client' ? (STATE.clientes||[]).some(function(x){return x.id===r.id;})
+      : (STATE.profiles||[]).some(function(x){return x.id===r.id;});
+    out+=valid && r.kind!=='user'
+      ? '<button type="button" class="chat-ticket-inline" data-astra-action="ref" data-kind="'+
+        escapeHtml(r.kind)+'" data-id="'+escapeHtml(r.id)+'">'+escapeHtml(token)+'</button>'
+      : '<span class="chat-mention">'+escapeHtml(token)+'</span>';
+    last=r.start+r.length;
+  });
+  return (out+escapeHtml(t.slice(last))).replace(/\n/g,'<br>');
+}
+var astraOriginalChatLinkifyText = chatLinkifyText;
+chatLinkifyText = function(text,post){
+  return post && post.refs && post.refs.length ? astraRenderStructuredText(post)
+    : astraOriginalChatLinkifyText(text,post);
+};
+/* Capture only our own controls, leaving the original event router intact. */
+document.addEventListener("click",function(e){
+  var btn=e.target.closest && e.target.closest('[data-astra-action], [data-action^="astra-"]');
+  if(!btn) return;
+  e.preventDefault(); e.stopPropagation();
+  var action=btn.getAttribute('data-astra-action') || btn.getAttribute('data-action');
+  var id=btn.getAttribute('data-post-id');
+  if(action==='dm') astraOpenDm(btn.getAttribute('data-user-id'));
+  if(action==='team'){ UI.astraConversationId=null; UI.astraThreadRoot=null; UI.astraReplyTo=null; UI.astraSelected=[]; render(); }
+  if(action==='back-dm'){ UI.astraThreadRoot=null; UI.astraReplyTo=null; render(); }
+  if(action==='thread'||action==='astra-thread') astraOpenThread(id);
+  if(action==='astra-reply'){
+    var p=astraPost(id); if(!p) return;
+    UI.astraReplyTo=id; UI.chatMenuFor=null; render();
+    var input=document.getElementById('composer-input'); if(input) input.focus();
+  }
+  if(action==='cancel-reply'){ UI.astraReplyTo=null; render(); }
+  if(action==='jump'){
+    var el=document.querySelector('[data-chat-msg="'+id+'"]');
+    if(el) el.scrollIntoView({block:'center'});
+    else if(astraPost(id)) astraOpenThread(id);
+  }
+  if(action==='ref'){
+    var kind=btn.getAttribute('data-kind'), target=btn.getAttribute('data-id');
+    if(kind==='client' && (STATE.clientes||[]).some(function(x){return x.id===target;})) openClienteFicha(target);
+    if(kind==='ticket' && findTicket(target)) openTicketById(target);
+  }
+  if(action==='astra-save') astraSaveMessage(id);
+  if(action==='astra-select'){UI.astraSelected=[id];UI.chatMenuFor=null;render();}
+  if(action==='select-toggle'){
+    UI.astraSelected=UI.astraSelected||[];
+    UI.astraSelected=UI.astraSelected.indexOf(id)<0?UI.astraSelected.concat(id):UI.astraSelected.filter(function(x){return x!==id;});render();
+  }
+  if(action==='selection-cancel'){UI.astraSelected=[];UI.astraLinkFor=null;render();}
+  if(action==='selection-link'){
+    var first=(UI.astraSelected||[])[0];if(first){UI.astraLinkFor=first;UI.astraLinkKind='selection';render();}
+  }
+  if(action==='selection-ticket'||action==='selection-task'||action==='selection-followup'){
+    var selected=(UI.astraSelected||[]).slice();
+    if(selected.length){UI.astraReview={postId:selected[0],selectedIds:selected,kind:action.slice('selection-'.length)};render();}
+  }
+  if(action==='selection-save'){
+    (async function(){for(var sid of (UI.astraSelected||[]).slice()) await astraSaveMessage(sid);UI.astraSelected=[];render();})();
+  }
+  if(action==='astra-create-ticket' || action==='astra-create-task' || action==='astra-create-followup'){
+    UI.chatMenuFor=null; UI.astraReview={postId:id,kind:action.slice('astra-create-'.length)};render();
+  }
+  if(action==='review-cancel'){UI.astraReview=null;render();}
+  if(action==='review-confirm') astraConfirmReview();
+  if(action==='audio-start') astraStartRecording();
+  if(action==='audio-stop') astraStopRecording(false);
+  if(action==='audio-cancel') astraStopRecording(true);
+  if(action==='audio-clear'){UI.astraAudioBlob=null;UI.astraAudioSeconds=null;render();}
+  if(action==='copy-transcript'){var spoken=astraPost(id);if(spoken)copyPlainText(spoken.transcript||'');}
+  if(action==='later'){UI.astraLaterOpen=!UI.astraLaterOpen;render();}
+  if(action==='search'){var field=document.getElementById('astra-search');UI.astraSearch=field?field.value.trim():'';render();}
+  if(action==='later-open'){ UI.astraLaterOpen=false; abrirChatEnMensaje(id); }
+  if(action==='later-followup'){UI.astraLaterOpen=false;UI.astraReview={postId:id,kind:'followup'};render();}
+  if(action==='later-complete') astraLaterUpdate(btn.getAttribute('data-id'),{completed_at:new Date().toISOString()});
+  if(action==='later-archive') astraLaterUpdate(btn.getAttribute('data-id'),{archived_at:new Date().toISOString()});
+  if(action==='later-snooze') astraSaveMessage(id,new Date(Date.now()+3600000).toISOString());
+  if(action==='astra-remind'){UI.astraRemindFor=id;UI.chatMenuFor=null;render();}
+  if(action==='remind-quick') astraSaveMessage(id,new Date(Date.now()+Number(btn.getAttribute('data-minutes'))*60000).toISOString());
+  if(action==='remind-date'){
+    var dateInput=document.getElementById('astra-remind-date'), time=dateInput&&new Date(dateInput.value);
+    if(!time || isNaN(time.getTime()) || time.getTime()<=Date.now()){showToast('Elige una fecha futura.');return;}
+    astraSaveMessage(id,time.toISOString());
+  }
+  if(action==='link'){UI.astraLinkFor=id;UI.astraLinkKind=astraPost(id)&&astraPost(id).threadRootId?'thread':'message';UI.chatMenuFor=null;render();}
+  if(action==='link-kind'){UI.astraLinkKind=btn.getAttribute('data-kind');render();}
+  if(action==='link-cancel'){UI.astraLinkFor=null;render();}
+  if(action==='link-choose') astraLinkTicket(btn.getAttribute('data-post-id'),btn.getAttribute('data-ticket-id'),btn.getAttribute('data-kind'));
+  if(action==='ticket-conversation'){
+    if(btn.getAttribute('data-kind')==='thread') astraOpenThread(id);
+    else abrirChatEnMensaje(id);
+  }
+},true);
+document.addEventListener('keydown',function(e){
+  if(e.target && e.target.id==='astra-search' && e.key==='Enter'){
+    e.preventDefault();e.stopPropagation();UI.astraSearch=e.target.value.trim();render();
+  }
+},true);
 
 async function boot(){
   loadUi();
