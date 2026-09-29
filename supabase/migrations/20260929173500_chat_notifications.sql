@@ -11,6 +11,7 @@ create table if not exists public.chat_read_state (
   primary key (user_id, scope_key)
 );
 alter table public.chat_read_state enable row level security;
+create index if not exists chat_read_state_conversation_idx on public.chat_read_state(conversation_id);
 drop policy if exists chat_read_state_own on public.chat_read_state;
 create policy chat_read_state_own on public.chat_read_state
   for all to authenticated
