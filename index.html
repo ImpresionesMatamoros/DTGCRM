@@ -2140,11 +2140,9 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   /* Addendum §8: manejo de teclado en iOS. .composer-wrap NO usa
      position:fixed (a propósito, ya desde antes de esta ronda) — es un
      hijo flex normal dentro de .main, que a su vez vive dentro de .app a
-     100dvh. Ese es el patrón correcto: cuando aparece el teclado nativo,
-     dvh se reduce y todo el layout flex se reacomoda solo, así que el
-     compositor nunca queda tapado detrás del teclado (el bug clásico de
-     barras con position:fixed). Lo único que faltaba era el padding del
-     home-indicator cuando el teclado está cerrado. */
+     100dvh. El teclado no siempre reduce dvh: mobile-viewport.js proporciona
+     el alto visible a mobile-ux.css cuando visualViewport está disponible.
+     El padding del home-indicator se conserva cuando el teclado está cerrado. */
   .composer{ padding-bottom:calc(12px + var(--safe-bottom)); padding-left:calc(20px + var(--safe-left)); padding-right:calc(20px + var(--safe-right)); }
 
   /* Composer Intelligence §4/§5: el hint "⌘H"/"Ctrl+Shift+H" solo tiene
@@ -3891,6 +3889,9 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 </style>
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
+<link rel="stylesheet" href="mobile-ux.css?v=1">
+<link rel="stylesheet" href="ticket-ux.css?v=1">
+<script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
 <script>
@@ -3912,8 +3913,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.25.3";
-var APP_BUILD = "2026.09.29.2";
+var APP_VERSION = "0.26.0";
+var APP_BUILD = "2026.09.29.ticket-ux";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -6980,6 +6981,116 @@ function comandaStat(label, valueHtml, dataAttrs){
   return '<button class="comanda-field comanda-stat" ' + (dataAttrs||"") + '>' + valueHtml + '<span class="comanda-field-label">' + label + "</span></button>";
 }
 
+/* Ticket UI adapters: same productos, tareas, team_posts and mutation cores. */
+function conversationTicketId(id){var c=(STATE.conversations||[]).find(function(x){return x.id===id;});return c&&c.kind==='ticket'?c.ticket_id:null;}
+function ticketConversationId(id){var c=(STATE.conversations||[]).find(function(x){return x.kind==='ticket'&&x.ticket_id===id;});return c?c.id:null;}
+function ticketSyncContext(){
+  var id=UI.selectedTicketId||null;
+  if(id!==UI.ticketChatContext && (id||UI.ticketChatContext)){
+    UI.astraThreadRoot=null;UI.astraReplyTo=null;UI.chatMention=null;UI.chatMentionPicks=[];UI.astraRefPicks=[];UI.astraSelected=[];
+    UI.chatLastSeenTs=null;UI.chatStickBottom=true;UI.ticketProductOpen=null;
+    UI.feedComposerPhoto=null;UI.ticketChatFile=null;UI.astraAudioBlob=null;
+    if(typeof ASTRA_RECORDER!=='undefined'&&ASTRA_RECORDER)astraStopRecording(true);
+    UI.astraConversationId=null;
+  }
+  UI.ticketChatContext=id;
+  if(id)UI.astraConversationId=ticketConversationId(id);
+}
+var TICKET_CONVERSATION_PENDING={};
+async function ensureTicketConversation(id){
+  if(!TICKET_CHAT_AVAILABLE)throw new Error("Conversaciones de ticket pendientes de activación");
+  var existing=ticketConversationId(id);if(existing)return existing;
+  if(!findTicket(id))throw new Error('Ticket no disponible');
+  if(!TICKET_CONVERSATION_PENDING[id])TICKET_CONVERSATION_PENDING[id]=(async function(){
+    var r=await sb.from('chat_conversations').insert({kind:'ticket',ticket_id:id}).select().single();
+    if(r.error&&r.error.code==='23505')r=await sb.from('chat_conversations').select('*').eq('kind','ticket').eq('ticket_id',id).single();
+    if(r.error)throw r.error;
+    STATE.conversations=STATE.conversations||[];
+    if(!STATE.conversations.some(function(c){return c.id===r.data.id;}))STATE.conversations.push(r.data);
+    return r.data.id;
+  })().finally(function(){delete TICKET_CONVERSATION_PENDING[id];});
+  return TICKET_CONVERSATION_PENDING[id];
+}
+function ticketProductBar(t){
+  return '<section class="ticket-products" aria-label="Productos solicitados"><div class="ticket-products-heading"><strong>Productos</strong><button type="button" class="btn btn-sm" data-open-form="producto">+ Crear producto</button></div><div class="ticket-product-list">'+
+    (t.productos||[]).map(function(p){
+      var open=UI.ticketProductOpen===p.id;
+      var tasks=(t.tareas||[]).filter(function(x){var m=DTGOps.meta(x),o=(t.workOrders||[]).find(function(o){return o.id===x.workOrderId;});return m.productId===p.id||o&&o.productId===p.id;});
+      return '<div class="ticket-product"><div class="ticket-product-line"><button type="button" class="ticket-product-open" data-ticket-ux="product" data-product="'+escapeHtml(p.id)+'" aria-expanded="'+open+'"><b>'+escapeHtml(String(p.cantidad)+' '+p.desc)+'</b><small>'+(p.precio==null?'Precio pendiente':fmtMoney(p.precio)+' c/u')+'</small></button><button type="button" class="ticket-product-add" data-ticket-ux="product-task" data-product="'+escapeHtml(p.id)+'" aria-label="Crear trabajo para '+escapeHtml(p.desc)+'">+</button></div>'+
+      (open?'<div class="ticket-product-context">'+productoEditRow(t,p)+'<small>Editar aquí conserva los documentos ya emitidos.</small><div><strong>Trabajo relacionado · '+tasks.length+'</strong>'+tasks.map(function(x){return '<button type="button" class="btn btn-sm" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+' · '+escapeHtml(estadoLabel(x.estado))+'</button>';}).join('')+'</div><small>Los archivos sin relación específica se consultan en la actividad del ticket.</small></div>':'')+'</div>';
+    }).join('')+(!(t.productos||[]).length?'<span class="muted">Sin productos todavía. Puedes agregarlos cuando los conozcas.</span>':'')+'</div></section>';
+}
+function ticketChatPosts(){
+  var cid=UI.selectedTicketId?ticketConversationId(UI.selectedTicketId):UI.astraConversationId;
+  if(UI.selectedTicketId&&!cid)return [];
+  return (STATE.teamPosts||[]).filter(function(p){return (p.conversationId||null)===(cid||null)&&!p.pending&&!isPostExpired(p)&&(!UI.astraThreadRoot?!p.threadRootId:p.id===UI.astraThreadRoot||p.threadRootId===UI.astraThreadRoot);});
+}
+function renderTicketConversation(t){
+  if(!TICKET_CHAT_AVAILABLE)return '<div class="ticket-body" data-scroll-ticket="'+escapeHtml(t.id)+'">'+renderMarkersBar(t)+renderWorkOrdersPanel(t)+renderTasksPanel(t)+'<div class="thread" id="thread-scroll"><div class="muted small">Notas y actividad · la conversación de equipo en este ticket está pendiente de activación.</div>'+astraRenderTicketLinks(t)+mergedThreadHtml(t)+'</div></div>';
+  var cid=ticketConversationId(t.id),root=UI.astraThreadRoot;
+  var posts=cid?(STATE.teamPosts||[]).filter(function(p){return p.conversationId===cid&&!isPostExpired(p)&&(root?(p.id===root||p.threadRootId===root):!p.threadRootId);}).sort(function(a,b){return new Date(a.createdAt)-new Date(b.createdAt);}):[];
+  var context=root?'<button type="button" class="btn btn-sm" data-ticket-ux="back-thread">← Conversación del ticket</button>':'<strong>Conversación del ticket</strong>';
+  return '<div class="ticket-chat-heading">'+context+'<button type="button" class="btn btn-sm btn-ghost" data-ticket-ux="note">Guardar nota</button></div>'+astraSelectionBar()+
+    '<div class="chat-scroll-wrap ticket-conversation"><div class="chat-scroll" id="chat-scroll" data-chat-context="ticket:'+t.id+':'+(root||'root')+'" aria-label="Conversación del ticket">'+
+    '<details class="ticket-work-context"'+(UI.ephemeralLog.some(function(x){return x.ticketId===t.id;})?' open':'')+'><summary>Trabajo · '+(t.tareas||[]).length+' tareas / actividad y notas</summary>'+renderMarkersBar(t)+renderWorkOrdersPanel(t)+renderTasksPanel(t)+mergedThreadHtml(t)+'</details>'+astraRenderTicketLinks(t)+
+    (posts.map(function(p){return renderChatMessage({post:p,continued:false});}).join('')||'<div class="chat-empty">Escribe para conversar sobre este ticket. Usa /nota para guardar información documental.</div>')+
+    '</div><button type="button" class="chat-new-pill" id="chat-new-pill" data-action="chat-jump-bottom" hidden><span id="chat-new-pill-label">Mensajes nuevos</span></button></div>';
+}
+function ticketFileMarkup(p){return p.filePath?'<button type="button" class="btn btn-sm" data-ticket-ux="file-open" data-post="'+escapeHtml(p.id)+'">Archivo · '+escapeHtml(p.fileName||'Descargar')+'</button>':'';}
+async function ticketPublishFile(text){
+  if(UI.feedComposerBusy||!UI.ticketChatFile)return false;
+  var file=UI.ticketChatFile,cid=UI.astraConversationId,ctx=cid,reply=UI.astraReplyTo,root=UI.astraThreadRoot,mm=mentionsForText(text);
+  if(!cid)return false;
+  UI.feedComposerBusy=true;
+  var path=cid+'/'+uuid4();
+  try{
+    var up=await sb.storage.from('chat-private').upload(path,file,{contentType:file.type||'application/octet-stream'});if(up.error)throw up.error;
+    var row=await createTeamPostCore({text:text,conversationId:cid,replyToId:reply,threadRootId:root,refs:astraRefsForText(text),mentions:mm.mentions,filePath:path,fileName:file.name,fileMime:file.type});
+    STATE.teamPosts.unshift(mapTeamPostRow(row));DTG_POSTS_AVISADOS[row.id]=1;
+    if(UI.astraConversationId===ctx){UI.ticketChatFile=null;UI.astraReplyTo=null;UI.chatMention=null;UI.chatMentionPicks=[];UI.astraRefPicks=[];restoreComposerText('');UI.chatStickBottom=true;render();}
+    return true;
+  }catch(e){userError('Enviar archivo',e);return false;}finally{UI.feedComposerBusy=false;}
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-ticket-ux]');if(!b)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  var action=b.dataset.ticketUx,t=findTicket(UI.selectedTicketId),id=b.dataset.product;
+  if(action==='products-focus'){var bar=document.querySelector('.ticket-products');if(bar)bar.scrollIntoView({block:'nearest'});}
+  if(action==='product'&&t){UI.ticketProductOpen=UI.ticketProductOpen===id?null:id;render();}
+  if(action==='product-task'&&t){openOpsEditor('create',null,t.id);var ed=UI.operaciones.editor;ed.productId=id;var p=document.getElementById('ops-f-product');if(p){p.value=id;p.disabled=true;}ed.draft={actionPath:JSON.stringify({v:1,productId:id})};}
+  if(action==='back-thread'){UI.astraThreadRoot=null;UI.astraReplyTo=null;UI.chatStickBottom=true;render();}
+  if(action==='note'){restoreComposerText('/nota ');}
+  if(action==='file-pick'){var input=document.getElementById('ticket-chat-file');if(input)input.click();}
+  if(action==='file-clear'){UI.ticketChatFile=null;renderKeepingLiveInputs();}
+  if(action==='file-open'){
+    var post=astraPost(b.dataset.post);if(!post||!post.filePath)return;
+    sb.storage.from('chat-private').createSignedUrl(post.filePath,120).then(function(r){if(r.error)throw r.error;var a=document.createElement('a');a.href=r.data.signedUrl;a.target='_blank';a.rel='noopener';a.click();}).catch(function(err){userError('Abrir archivo',err);});
+  }
+},true);
+document.addEventListener('change',function(e){if(e.target.id!=='ticket-chat-file')return;var f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>25*1024*1024){showToast('El archivo debe ser menor a 25 MB.');return;}UI.ticketChatFile=f;e.target.value='';renderKeepingLiveInputs();});
+// Single owner for Enter in explicit forms. Native buttons/selects and multiline
+// text retain native behavior; existing search/autocomplete handlers keep priority.
+document.addEventListener('keydown',function(e){
+  if(e.isComposing||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
+  var el=e.target;
+  if(e.key==='Escape'&&UI.composer&&el.closest&&el.closest('#composer-popover')){e.preventDefault();e.stopImmediatePropagation();UI.composer=null;UI.pendingFocus={elId:'composer-input',userInitiated:true};render();return;}
+  if(e.key!=='Enter'||e.shiftKey||!el.matches||!el.matches('input:not([type=file]):not([type=checkbox]):not([type=radio])'))return;
+  var form=el.closest('.popover-form');
+  if(form){
+    var fields=Array.from(form.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(function(x){return !x.disabled;});
+    var i=fields.indexOf(el);if(i<0)return;e.preventDefault();e.stopImmediatePropagation();
+    if(i<fields.length-1)fields[i+1].focus();else {var save=form.querySelector('[data-action="submit-form"]');if(save&&!save.disabled)save.click();}return;
+  }
+  if(el.matches('[data-producto-edit]')){e.preventDefault();e.stopImmediatePropagation();el.blur();return;}
+  // Other explicit modal forms: advance fields, then focus the primary action.
+  // Emitting a document or destructive confirmation still needs Enter on its button.
+  var modal=el.closest('.docform-modal,.ops-editor,.astra-review,.work-order-editor');
+  if(modal&&!el.readOnly){
+    var fields=Array.from(modal.querySelectorAll('input:not([type=hidden]):not([type=range]),select,textarea,button.btn-primary')).filter(function(x){return !x.disabled&&!x.closest('[hidden]');});
+    var i=fields.indexOf(el);if(i>=0&&i<fields.length-1){e.preventDefault();e.stopImmediatePropagation();fields[i+1].focus();}
+  }
+},true);
+
 function renderTicketHeader(t){
   var totals = computeTotals(t);
   var cobrado = t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
@@ -7131,7 +7242,7 @@ function renderTicketHeader(t){
      son derivados: nada aquí es obligatorio, y el aviso desaparece solo en
      cuanto el dato existe. */
   opRows += '<div class="comanda-field comanda-field-zone"><span class="comanda-field-label">Entrega</span>' + renderZoneChip(t) + "</div>";
-  var warnsHtml = renderTicketWarnings(t, { labels: true });
+  var warnsHtml = renderTicketWarnings(t, { labels: true, omitMoney:true });
   if(warnsHtml) opRows += '<div class="comanda-field comanda-field-warns"><span class="comanda-field-label">Falta</span>' + warnsHtml + "</div>";
 
   /* 5 — COMERCIAL: SOLO hechos ya calculados en otro lado (computeTotals,
@@ -7159,18 +7270,10 @@ function renderTicketHeader(t){
       ' <span class="comanda-compact-sep">·</span> Cobrado ' + fmtUsd(cobrado) +
     "</div>";
 
-  return (
-    '<div class="ticket-header ' + (expanded ? "th-expanded" : "th-collapsed") + (moreOpen ? " th-more-open" : "") + '">' +
-      topBar +
-      identity +
-      actionsRow +
-      compactSummary +
-      '<div class="comanda-zones">' +
-        '<div class="comanda-zone"><div class="comanda-zone-title">Operación</div><div class="comanda-zone-fields">' + opRows + "</div></div>" +
-        '<div class="comanda-zone comanda-zone-comercial"><div class="comanda-zone-title">Comercial</div><div class="comanda-zone-fields">' + comRows + "</div></div>" +
-      "</div>" +
-    "</div>"
-  );
+  return '<div class="ticket-header ticket-operational">'+topBar+identity+
+    '<div class="ticket-operation-strip">'+opRows+'</div>'+
+    '<details class="ticket-commercial-details"><summary>Total / pagos / documentos y cierre</summary>'+comRows+actionsRow+'</details></div>';
+
 }
 
 function popoverMenu(){
@@ -7929,7 +8032,7 @@ var DTG_CHAT_ARRANCADO = false;  /* la primera carga NO suena */
 function chatViendoConversacion(post){
   /* "Está viendo la conversación" = Inicio abierto, pestaña al frente y
      con el hilo abajo. Si está leyendo mensajes viejos, sí se le avisa. */
-  return !UI.displayMode && !UI.mainView && !UI.selectedTicketId && !UI.astraLaterOpen &&
+  return !UI.displayMode && !UI.mainView && !UI.astraLaterOpen &&
          (!post || ((UI.astraConversationId || null)===(post.conversationId || null) &&
            (UI.astraThreadRoot || null)===(post.threadRootId || null))) &&
          typeof document !== "undefined" && !document.hidden && UI.chatAtBottom !== false;
@@ -7955,7 +8058,7 @@ function onNuevoMensajeChat(post, opts){
   /* Una sola pestaña habla por todas. */
   if(!dtgTabEsVocera()) return;
 
-  var kind = post.conversationId ? "personal" : (esMencion ? "mencion" : (esEquipo ? "equipo" : "mensaje"));
+  var kind = esMencion ? "mencion" : post.conversationId && !conversationTicketId(post.conversationId) ? "personal" : esEquipo ? "equipo" : "mensaje";
   var viendo = chatViendoConversacion(post);
   /* Si ya está mirando la conversación no hace falta ninguna alarma. */
   if(!viendo){
@@ -8039,7 +8142,9 @@ function abrirChatEnMensaje(postId){
   UI.chatNotifs = (UI.chatNotifs || []).filter(function(n){ return n.id !== postId; });
   renderChatNotifs();
   UI.displayMode = false;
-  goHome();
+  var tid=targetPost&&conversationTicketId(targetPost.conversationId);
+  UI.ticketChatContext=tid||null;
+  if(tid)openTicketById(tid);else goHome();
   UI.chatStickBottom = false;
   UI.chatFocusPost = postId || null;
   UI.chatFocusNonce = (UI.chatFocusNonce || 0) + 1;
@@ -8200,9 +8305,11 @@ function renderMentionPicker(){
   var lista = mentionFilter(m.query);
   if(!lista.length) return "";
   var i = Math.max(0, Math.min(m.index || 0, lista.length - 1));
+  var lastGroup=null;
   return '<div class="mention-pop" id="mention-pop" role="listbox" aria-label="Mencionar a alguien">' +
     lista.map(function(p, k){
-      return '<button type="button" role="option" aria-selected="' + (k === i ? "true" : "false") +
+      var group=p.kind==='client'?'CLIENTES':p.kind==='ticket'?'TICKETS':'PERSONAS';var heading=group!==lastGroup?'<div class="mention-group" role="presentation">'+group+'</div>':'';lastGroup=group;
+      return heading+'<button type="button" role="option" aria-selected="' + (k === i ? "true" : "false") +
         '" class="mention-item' + (k === i ? " on" : "") + (p.todos ? " mention-item-all" : "") +
         '" data-action="mention-pick" data-id="' + escapeHtml(p.id) + '" data-name="' + escapeHtml(p.name) + '" data-kind="' + escapeHtml(p.kind || "user") + '">' +
         (p.todos ? icon("users") : personAvatar(p.name, { size: "xs" })) +
@@ -8374,11 +8481,11 @@ function renderComposer(){
      los caminos, no en la lógica). data-ctx identifica para qué contexto se
      dibujó este composer — render() lo usa para no perder un borrador al
      re-dibujar la MISMA pantalla, y nunca arrastrarlo a otra. */
-  var chatMode = !hasTicket && isChatComposerContext();
-  var ctxKey = hasTicket ? ("t:" + UI.selectedTicketId) : (chatMode ? "chat:" + (UI.astraConversationId || "team") + ":" + (UI.astraThreadRoot || "root") : ("v:" + (UI.mainView || "home")));
+  var chatMode = isChatComposerContext();
+  var ctxKey = hasTicket ? ("t:" + UI.selectedTicketId + ":" + (UI.astraThreadRoot||"root")) : (chatMode ? "chat:" + (UI.astraConversationId || "team") + ":" + (UI.astraThreadRoot || "root") : ("v:" + (UI.mainView || "home")));
   var chatAttach = "", chatOpts = "", chatExtra = "";
   if(chatMode){
-    placeholder = UI.astraThreadRoot ? "Responder en el hilo…" : (UI.astraConversationId ? "Mensaje personal…" : "Escribe un mensaje al equipo…");
+    placeholder = UI.astraThreadRoot ? "Responder en el hilo…" : hasTicket ? "Mensaje sobre este ticket…" : (UI.astraConversationId ? "Mensaje personal…" : "Escribe un mensaje al equipo…");
     if(UI.astraReplyTo) chatExtra += astraComposerReply();
     if(UI.astraRecording) chatExtra += '<div class="astra-compose-reply">Grabando… ' +
       '<button type="button" data-astra-action="audio-stop">Detener</button>' +
@@ -8386,7 +8493,11 @@ function renderComposer(){
     if(UI.astraAudioBlob) chatExtra += '<div class="astra-compose-reply">Audio listo ('+
       Math.round(UI.astraAudioSeconds || 0)+' s) '+
       '<button type="button" data-astra-action="audio-clear">Quitar</button></div>';
-    chatAttach = UI.astraConversationId ? "" : '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button><input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
+    chatAttach = UI.astraConversationId && !hasTicket ? "" : '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button><input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
+    if(hasTicket){
+      chatAttach += '<button type="button" class="icon-btn" data-ticket-ux="file-pick" aria-label="Adjuntar archivo">'+icon('paperclip')+'</button><input type="file" id="ticket-chat-file" hidden>';
+      if(UI.ticketChatFile)chatExtra+='<div class="astra-compose-reply">'+escapeHtml(UI.ticketChatFile.name)+'<button type="button" data-ticket-ux="file-clear">Quitar</button></div>';
+    }
     var optsOn = UI.chatOptionsOpen || UI.feedComposerPin !== "none" || UI.feedComposerExpires !== "never";
     chatOpts = UI.astraConversationId ? "" : '<button type="button" class="icon-btn chat-options-btn' + (optsOn ? " active" : "") + '" data-action="chat-options-toggle" aria-expanded="' + (UI.chatOptionsOpen ? "true" : "false") + '" aria-label="Opciones del mensaje: fijar o vencimiento" title="Fijar / vencimiento">' + icon("pin") + "</button>";
     var ph = UI.feedComposerPhoto;
@@ -8397,9 +8508,9 @@ function renderComposer(){
     '<div class="composer-wrap' + (chatMode ? " chat-composer-wrap" : "") + '">' + pop + chatExtra +
       '<div class="composer' + (chatMode ? " chat-composer" : "") + '">' + plusBtn + chatAttach +
         (chatMode && ASTRA_CONVERSATIONS_AVAILABLE ? '<button type="button" class="icon-btn" data-astra-action="audio-start" aria-label="Grabar audio" title="Grabar audio">🎙</button>' : '') +
-        '<textarea id="composer-input" rows="1" data-ctx="' + escapeHtml(ctxKey) + '" placeholder="' + placeholder + '" aria-label="' + (chatMode ? "Mensaje al equipo" : "Composer") + '"></textarea>' +
+        '<textarea id="composer-input" rows="1" data-ctx="' + escapeHtml(ctxKey) + '" placeholder="' + placeholder + '" aria-label="' + (hasTicket ? "Mensaje sobre el ticket" : chatMode ? "Mensaje al equipo" : "Composer") + '"></textarea>' +
         markerBtn + chatOpts +
-        '<button class="composer-send" id="composer-send" data-action="send-note" aria-label="Enviar" title="Enviar"' + (chatMode && (UI.feedComposerPhoto || UI.astraAudioBlob) ? "" : " disabled") + ">" + icon(chatMode ? "send" : "arrow-up") + "</button>" +
+        '<button class="composer-send" id="composer-send" data-action="send-note" aria-label="Enviar" title="Enviar"' + (chatMode && (UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile) ? "" : " disabled") + ">" + icon(chatMode ? "send" : "arrow-up") + "</button>" +
       "</div>" +
       '<div class="producto-preview" id="producto-preview" hidden></div>' +
     "</div>"
@@ -8652,6 +8763,7 @@ function productoRow(t, p){
 function productosEntryContent(entry){
   var t = entry.ticketId ? findTicket(entry.ticketId) : null;
   if(!t) return { title: "Productos", html: '<div class="ephemeral-sub">Este ticket ya no está disponible.</div>' };
+  if(UI.selectedTicketId===t.id)return {title:'Productos',html:'<button type="button" class="btn btn-sm" data-ticket-ux="products-focus">Ver productos arriba</button>'};
   var onlyPending = !!(entry.params && entry.params.filter === "pending");
   var list = onlyPending ? t.productos.filter(function(p){ return p.precio == null; }) : t.productos;
   var title = (onlyPending ? "Productos pendientes de precio — " : "Productos — ") + ticketLabel(t);
@@ -9499,6 +9611,7 @@ function ticketWarningLabel(key, t){
 function renderTicketWarnings(t, opts){
   opts = opts || {};
   var list = ticketDataWarnings(t);
+  if(opts.omitMoney)list=list.filter(function(k){return k!=="money";});
   if(!list.length) return "";
   if(opts.max) list = list.slice(0, opts.max);
   return '<span class="dq-warns' + (opts.cls ? " " + opts.cls : "") + '">' + list.map(function(k){
@@ -11190,7 +11303,7 @@ function renderOpsProgressive(ed,x,t){
   return '<section class="ops-progressive" aria-label="Elegir trabajo"><div class="ops-menu-tabs">'+
     ['action','category','free'].map(function(mode){return '<button type="button" class="btn btn-sm" data-ops-mode="'+mode+'" aria-pressed="'+(mode==='free'?p.free:!p.free&&p.mode===mode)+'">'+({action:'Por acción',category:'Por categoría / producto',free:'Edición libre'})[mode]+'</button>';}).join('')+
     '</div><div class="ops-menu-hint">Pasa el mouse para explorar. Haz clic para elegir. Flechas para navegar; Enter o espacio para elegir.</div><div class="ops-menu-panels"'+(p.free?' hidden':'')+'>'+opsPanelHTML(opsProgressiveTree(p),[])+'</div><div class="ops-menu-preview" aria-live="polite">'+opsPreviewHTML(p,x)+'</div><div class="ops-menu-provider" hidden></div>'+
-    '<div class="ops-menu-details"><label class="ops-ed-label" for="ops-f-product">Producto del ticket (opcional)</label><select class="field-input" id="ops-f-product"><option value="">Sin producto específico</option>'+products.map(function(pr){return '<option value="'+escapeHtml(pr.id)+'"'+(m.productId===pr.id?' selected':'')+'>'+escapeHtml((pr.cantidad||'')+' · '+pr.desc)+'</option>';}).join('')+'</select><label class="ops-ed-label" for="ops-f-details">Detalles (opcional)</label><textarea id="ops-f-details" class="field-input" rows="2">'+escapeHtml(m.details||'')+'</textarea><div id="ops-pack-choice"'+(p.selection&&p.selection.category==='parcel'?'':' hidden')+'><label><input type="checkbox" id="ops-f-pack"> Crear también «Empaquetar» primero</label><div class="muted small">La entrega se habilita en Planeación al terminar Empaquetar en Producción. Déjalo desmarcado si ya está empaquetado.</div></div></div></section>';
+    '<div class="ops-menu-details"><label class="ops-ed-label" for="ops-f-product">Producto del ticket (opcional)</label><select class="field-input" id="ops-f-product"'+(ed.productId?' disabled':'')+'><option value="">Sin producto específico</option>'+products.map(function(pr){return '<option value="'+escapeHtml(pr.id)+'"'+((ed.productId||m.productId)===pr.id?' selected':'')+'>'+escapeHtml((pr.cantidad||'')+' · '+pr.desc)+'</option>';}).join('')+'</select><label class="ops-ed-label" for="ops-f-details">Detalles (opcional)</label><textarea id="ops-f-details" class="field-input" rows="2">'+escapeHtml(m.details||'')+'</textarea><div id="ops-pack-choice"'+(p.selection&&p.selection.category==='parcel'?'':' hidden')+'><label><input type="checkbox" id="ops-f-pack"> Crear también «Empaquetar» primero</label><div class="muted small">La entrega se habilita en Planeación al terminar Empaquetar en Producción. Déjalo desmarcado si ya está empaquetado.</div></div></div></section>';
 }
 function opsPreviewHTML(p,x){
   if(p.free)return '<small>Edición libre · confirma la pantalla de destino</small><strong>'+escapeHtml(x&&x.desc||'Escribe la tarea')+'</strong>';
@@ -11226,6 +11339,7 @@ document.addEventListener('click',async function(e){
   if(mode){p.free=mode.dataset.opsMode==='free';if(!p.free)p.mode=mode.dataset.opsMode;root.querySelector('.ops-menu-panels').hidden=p.free;root.querySelector('.ops-menu-panels').innerHTML=opsPanelHTML(opsProgressiveTree(p),[]);root.querySelectorAll('[data-ops-mode]').forEach(function(el){el.setAttribute('aria-pressed',el===mode?'true':'false');});root.querySelector('.ops-menu-provider').hidden=true;opsSyncPreview();}
   if(b){
     clearTimeout(opsHoverTimer);var path=b.dataset.opsNode.split('.').map(Number),n=opsNodeAt(p,path);opsExpandNode(b,false);
+    if(n.children.length && isMobileViewport()){var child=b.closest('.ops-menu-panel').nextElementSibling;if(child)child.scrollIntoView({block:'nearest',inline:'nearest'});}
     if(n.addGroup){var form=root.querySelector('.ops-menu-provider');form.hidden=false;form.dataset.group=n.addGroup;form.dataset.path=b.dataset.opsNode;form.innerHTML='<label>Nuevo nombre · '+escapeHtml(DTGOps.groupLabels[n.addGroup])+'<input class="field-input" maxlength="80" id="ops-provider-name" autocomplete="off"></label><button type="button" class="btn" data-ops-add-provider>Guardar opción</button><small>Se conserva en la configuración compartida de DTG y estará disponible para el equipo.</small>';form.querySelector('input').focus();return;}
     p.selection=n.selection;p.path=path.map(function(_,i){return opsNodeAt(p,path.slice(0,i+1)).label;});p.free=false;
     root.querySelectorAll('[data-ops-node]').forEach(function(el){el.setAttribute('aria-current',String(el===b));});root.querySelector('.ops-menu-provider').hidden=true;opsSyncPreview();
@@ -11378,7 +11492,7 @@ async function submitOpsEditor(){
   var tipo=val('ops-f-tipo');if(!resolved && tipo==='__nuevo__'){tipo=resolveOpsTipoNuevo();if(tipo===null)return;}
   var oldMeta=found ? DTGOps.meta(found.task) : {};
   var unchanged=found && desc===found.task.desc && (area||'')===(found.task.area||'');
-  var metadata=Object.assign({},oldMeta,{v:1,selection:resolved ? resolved.selection : unchanged ? oldMeta.selection||null : null,path:resolved ? p.path : unchanged ? oldMeta.path||[] : [],details:val('ops-f-details').trim(),productId:val('ops-f-product')||null});
+  var metadata=Object.assign({},oldMeta,{v:1,selection:resolved ? resolved.selection : unchanged ? oldMeta.selection||null : null,path:resolved ? p.path : unchanged ? oldMeta.path||[] : [],details:val('ops-f-details').trim(),productId:ed.productId||val('ops-f-product')||null});
   var workOrderId=val('ops-f-work-order')||null;
   var order=(t.workOrders||[]).find(function(o){return o.id===workOrderId;});
   if(order && metadata.productId && order.productId && order.productId!==metadata.productId){showToast('El producto debe coincidir con la orden vinculada.');return;}
@@ -14018,8 +14132,8 @@ async function createTeamPostCore(opts){
   var imagePath = null;
   if(opts.photoFile){
     var blob = await resizeImageToBlob(opts.photoFile, 1280, 0.8);
-    imagePath = "feed/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
-    var up = await sb.storage.from(FILES_BUCKET).upload(imagePath, blob, { contentType: "image/jpeg" });
+    imagePath = (opts.conversationId ? opts.conversationId+"/" : "feed/") + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
+    var up = await sb.storage.from(opts.conversationId ? 'chat-private' : FILES_BUCKET).upload(imagePath, blob, { contentType: "image/jpeg" });
     if(up.error) throw up.error;
   }
   var row = {
@@ -14036,6 +14150,7 @@ async function createTeamPostCore(opts){
   };
   /* v0.23: las menciones elegidas del menú viajan con el mensaje. Si 0019
      no está aplicada, se reintenta sin ellas: el mensaje SIEMPRE se manda. */
+  if(opts.filePath){row.file_storage_path=opts.filePath;row.file_name=opts.fileName;row.file_mime=opts.fileMime||null;}
   if(opts.mentions && opts.mentions.length) row.mentions = opts.mentions;
   if(opts.mentionsAll) row.mentions_all = true;
   var ins = await sb.from("team_posts").insert(row).select().single();
@@ -14090,7 +14205,7 @@ function mapTeamPostRow(row){
     threadRootId: row.thread_root_id || null, refs: Array.isArray(row.references_data) ? row.references_data : [],
     audioPath: row.audio_storage_path || null, audioMime: row.audio_mime || null,
     audioSeconds: row.audio_seconds || null, transcript: row.transcript || null,
-    transcriptStatus: row.transcript_status || null
+    transcriptStatus: row.transcript_status || null, filePath:row.file_storage_path||null,fileName:row.file_name||null,fileMime:row.file_mime||null
   };
 }
 /* Enviar desde el composer del chat: optimista (el mensaje aparece al
@@ -14100,7 +14215,9 @@ function mapTeamPostRow(row){
 async function publishChatMessage(text){
   text = String(text || "").trim();
   var photo = UI.feedComposerPhoto;
-  if(!text && !photo && !UI.astraAudioBlob) return false;
+  if(!text && !photo && !UI.astraAudioBlob && !UI.ticketChatFile) return false;
+  if(UI.ticketChatFile&&(photo||UI.astraAudioBlob)){showToast('Envía el archivo separado de la foto o audio.');return false;}
+  if(UI.ticketChatFile)return ticketPublishFile(text);
   if(UI.astraAudioBlob) return astraPublishAudio(text);
   if(UI.feedComposerBusy) return false;
   /* With the new relation table, #1330 is a reference, not an implicit
@@ -14111,7 +14228,7 @@ async function publishChatMessage(text){
   /* Solo cuentan las menciones que siguen escritas en el texto final. */
   var mm = mentionsForText(text);
   var tempId = "tmp-" + uid();
-  var pinChoice = UI.feedComposerPin, expChoice = UI.feedComposerExpires;
+  var pinChoice = ctx.conversationId ? "none" : UI.feedComposerPin, expChoice = ctx.conversationId ? "never" : UI.feedComposerExpires;
   STATE.teamPosts.unshift({
     id: tempId, authorUserId: currentActorId(), autor: currentActorName() || "", text: text,
     imageStoragePath: null, localPreviewUrl: photo ? photo.previewUrl : null,
@@ -14130,7 +14247,7 @@ async function publishChatMessage(text){
   restoreComposerText("");
   var ok = true;
   try{
-    var row = await createTeamPostCore({ text: text, photoFile: photo ? photo.file : null, pinLevel: pinChoice, expiresChoice: expChoice, ticketId: linked ? linked.id : null, mentions: mm.mentions, mentionsAll: mm.all,
+    var row = await createTeamPostCore({ text: text, photoFile: photo ? photo.file : null, pinLevel: pinChoice, expiresChoice: expChoice, ticketId: linked ? linked.id : null, mentions: mm.mentions, mentionsAll: ctx.conversationId ? false : mm.all,
       conversationId: ctx.conversationId, replyToId: ctx.replyToId, threadRootId: ctx.threadRootId, refs: ctx.refs });
     DTG_POSTS_AVISADOS[row.id] = 1;   /* lo mío nunca me avisa a mí */
     STATE.teamPosts = STATE.teamPosts.filter(function(p){ return p.id !== tempId && p.id !== row.id; });
@@ -14514,12 +14631,12 @@ function renderChatMessage(item){
   var t = p.ticketId ? findTicket(p.ticketId) : null;
   var mine = p.authorUserId && p.authorUserId === currentActorId();
   var active = UI.chatActiveMsg === p.id || UI.chatReactFor === p.id || UI.chatMenuFor === p.id;
-  var imgSrcAttr = p.imageStoragePath ? ' data-storage-path="' + escapeHtml(p.imageStoragePath) + '"' : (p.localPreviewUrl ? ' src="' + escapeHtml(p.localPreviewUrl) + '"' : "");
+  var imgSrcAttr = p.imageStoragePath ? ' data-storage-bucket="'+(p.conversationId?'chat-private':FILES_BUCKET)+'" data-storage-path="' + escapeHtml(p.imageStoragePath) + '"' : (p.localPreviewUrl ? ' src="' + escapeHtml(p.localPreviewUrl) + '"' : "");
   var img = imgSrcAttr ? '<img class="chat-msg-img" loading="lazy"' + imgSrcAttr + ' alt="Imagen enviada por ' + escapeHtml(p.autor || "alguien") + '">' : "";
   var pinBadge = p.pinLevel === "megapin"
     ? '<span class="chat-pin-badge mega">' + icon("star") + "Megapin</span>"
     : p.pinLevel === "pin" ? '<span class="chat-pin-badge">' + icon("pin") + "Fijado</span>" : "";
-  var needsResolution = !p.pending && !p.ticketId && !p.noTicketRequired && p.imageStoragePath;
+  var needsResolution = !p.pending && !p.conversationId && !p.ticketId && !p.noTicketRequired && p.imageStoragePath;
   var resolution = needsResolution
     ? '<div class="chat-resolution"><span class="chat-resolution-hint">' + icon("image") + "Foto sin ticket</span>" +
         '<button type="button" class="btn btn-sm btn-ghost" data-action="feed-photo-relacionar-open" data-post-id="' + p.id + '">Vincular</button>' +
@@ -14553,7 +14670,7 @@ function renderChatMessage(item){
         (p.replyToId ? astraReplyPreview(p) : "") +
         (p.text ? '<div class="chat-msg-text">' + chatLinkifyText(p.text, p) + "</div>" : "") +
         (!p.threadRootId && astraThreadCount(p.id) ? '<button type="button" class="astra-thread-link" data-astra-action="thread" data-post-id="' + p.id + '">' + astraThreadCount(p.id) + ' respuestas · Abrir hilo</button>' : "") +
-        img +
+        img + ticketFileMarkup(p) +
         (t ? '<div class="chat-msg-ticket">' + renderChatTicketChip(t) + "</div>" : "") +
         resolution + relacionar + astraRenderLinkPicker(p) + astraRemindChoices(p) +
         renderChatReactions(p) +
@@ -14597,16 +14714,16 @@ function chatUnseenCount(){
   var me = currentActorId();
   var since = new Date(UI.chatLastSeenTs).getTime();
   return STATE.teamPosts.filter(function(p){
-    return !p.pending && !p.conversationId && !p.threadRootId && p.authorUserId !== me && !isPostExpired(p) && new Date(p.createdAt).getTime() > since;
+    return ticketChatPosts().indexOf(p)>=0 && p.authorUserId !== me && new Date(p.createdAt).getTime() > since;
   }).length;
 }
 function chatNewestTs(){
   var newest = null;
-  STATE.teamPosts.forEach(function(p){ if(p.conversationId || p.threadRootId) return; if(!newest || new Date(p.createdAt) > new Date(newest)) newest = p.createdAt; });
+  ticketChatPosts().forEach(function(p){ if(!newest || new Date(p.createdAt) > new Date(newest)) newest = p.createdAt; });
   return newest;
 }
 function isChatComposerContext(){
-  return !UI.selectedTicketId && !UI.mainView && UI.feedFilter !== "aibridge" && !globalEphemeralHtml();
+  return (!!UI.selectedTicketId&&TICKET_CHAT_AVAILABLE) || (!UI.selectedTicketId&&!UI.mainView && UI.feedFilter !== "aibridge" && !globalEphemeralHtml());
 }
 
 /* UX Flow Patch §3-5: pestaña AI Bridge de Inicio. Solo UI sobre el
@@ -14769,7 +14886,7 @@ function captureChatScroll(){
       if(n.offsetTop + n.offsetHeight > el.scrollTop){ anchorKey = n.getAttribute("data-chat-key"); anchorOffset = n.offsetTop - el.scrollTop; break; }
     }
   }
-  return { atBottom: atBottom, anchorKey: anchorKey, anchorOffset: anchorOffset };
+  return {context:el.getAttribute('data-chat-context')||'home',atBottom: atBottom, anchorKey: anchorKey, anchorOffset: anchorOffset };
 }
 function updateChatNewPill(){
   var pill = document.getElementById("chat-new-pill");
@@ -14790,7 +14907,7 @@ function chatScrollToBottom(){
 function restoreChatScroll(snap){
   var el = document.getElementById("chat-scroll");
   if(!el) return;
-  var stick = !snap || snap.atBottom || UI.chatStickBottom;
+  var stick = !snap || snap.context!==(el.getAttribute('data-chat-context')||'home') || snap.atBottom || UI.chatStickBottom;
   UI.chatStickBottom = false;
   if(stick){
     chatScrollToBottom();
@@ -15681,6 +15798,7 @@ function renderKdsView(){
 }
 
 function renderMain(){
+  ticketSyncContext();
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
     return UI.selectedClienteId ? renderClienteFichaView() : renderClientesListView();
   }
@@ -15739,15 +15857,8 @@ function renderMain(){
      a media fila y parecía que una se encimaba con la otra. Ahora van
      dentro de un solo contenedor que rueda como uno (ver .ticket-body); en
      escritorio, donde sí hay alto de sobra, nada cambia. */
-  return (
-    renderTicketHeader(t) +
-    '<div class="ticket-body">' +
-      renderMarkersBar(t) +
-      renderWorkOrdersPanel(t) + renderTasksPanel(t) +
-      '<div class="thread" id="thread-scroll">' + astraRenderTicketLinks(t) + mergedThreadHtml(t) + "</div>" +
-    "</div>" +
-    renderComposer()
-  );
+  return renderTicketHeader(t)+ticketProductBar(t)+renderTicketConversation(t)+renderComposer();
+
 }
 
 /* §19/§20: barra de marcadores ACTIVOS — visible pero compacta, debajo de
@@ -15807,6 +15918,23 @@ function aparecidoPaseFin(){
   DTG_APARECIDO = DTG_APARECIDO_PASE;
   DTG_APARECIDO_PASE = null;
 }
+/* Preserve the reading position on the same ticket, including background refresh. */
+function ticketScroller(){
+  var thread=document.getElementById('thread-scroll');
+  if(!thread)return null;
+  return thread.scrollHeight>thread.clientHeight ? thread : (thread.closest('.ticket-body')||thread);
+}
+function captureTicketScroll(){
+  var el=ticketScroller();
+  var shell=document.querySelector('.ticket-body[data-scroll-ticket]');
+  if(!el||!shell)return null;
+  return {id:shell.dataset.scrollTicket,top:el.scrollTop,atBottom:el.scrollHeight-el.clientHeight-el.scrollTop<80};
+}
+function restoreTicketScroll(snap){
+  var el=ticketScroller();if(!el)return;
+  el.scrollTop=!snap||snap.id!==UI.selectedTicketId||snap.atBottom ? el.scrollHeight : snap.top;
+}
+
 function render(){
   var app = document.getElementById("app");
   if(FATAL_ERROR){
@@ -15843,6 +15971,7 @@ function render(){
      pantalla). Así un clic en una reacción, un cambio de filtro o un evento
      de Realtime nunca se come lo que alguien estaba escribiendo ni lo
      arranca de donde estaba leyendo. */
+  var ticketScrollSnap = captureTicketScroll();
   var chatSnap = captureChatScroll();
   /* KDS: modo pantalla. Reemplaza TODO el árbol de la app — sin menú, sin
      compositor, sin nada administrativo. Sale con ?display= fuera de la URL. */
@@ -15909,11 +16038,7 @@ function render(){
   /* X1.11: en móvil quien rueda es .ticket-body (el hilo ya no tiene scroll
      propio), así que "ir al final" tiene que ir al final de lo que de
      verdad rueda. */
-  var threadEl = document.getElementById("thread-scroll");
-  if(threadEl){
-    var scroller = threadEl.scrollHeight > threadEl.clientHeight ? threadEl : (threadEl.closest(".ticket-body") || threadEl);
-    scroller.scrollTop = scroller.scrollHeight;
-  }
+  restoreTicketScroll(ticketScrollSnap);
   updateTotalPedidoSummary();
   var composerInput = document.getElementById("composer-input");
   if(composerInput){
@@ -15929,7 +16054,7 @@ function render(){
     });
     composerInput.addEventListener("input", function(){
       var v = composerInput.value;
-      document.getElementById("composer-send").disabled = !v.trim() && !((UI.feedComposerPhoto || UI.astraAudioBlob) && isChatComposerContext());
+      document.getElementById("composer-send").disabled = !v.trim() && !((UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile) && isChatComposerContext());
       mentionSync(composerInput);
       composerInput.style.height = "auto";
       composerInput.style.height = Math.min(composerInput.scrollHeight, 120) + "px";
@@ -16051,6 +16176,8 @@ function render(){
       updateProductoPreview(v);
     });
     composerInput.addEventListener("keydown", function(e){
+      if(e.isComposing||e.repeat)return;
+      if(e.key==="Enter"||e.key==="Escape"||e.key==="Tab")e.stopPropagation();
       /* §45: nunca dos sistemas peleando por la misma tecla. Mientras el
          selector de marcador o el editor de Total del pedido estén abiertos
          (tier 1, "confirmación/modal explícito"), este listener del
@@ -16430,6 +16557,14 @@ function restoreHorizontalScrolls(snap){
 }
 function renderKeepingLiveInputs(){
   var appBefore = document.getElementById("app");
+  // File selections cannot be restored by assigning .value. Keep the live form
+  // until the person sends/cancels; STATE still receives background updates.
+  if(appBefore && Array.from(appBefore.querySelectorAll('input[type=file]')).some(function(el){return el.files && el.files.length;}))return;
+  var scrolls=[];
+  if(appBefore)appBefore.querySelectorAll('[id],.cierre-modal,.ops-ed-body,.docform-body,.sidebar,.ticket-body').forEach(function(el){
+    if(el.id==='chat-scroll'||el.id==='thread-scroll'||el.classList.contains('ticket-body'))return;
+    if(el.scrollTop || el.scrollLeft)scrolls.push({id:el.id,cls:el.className,top:el.scrollTop,left:el.scrollLeft});
+  });
   var active = document.activeElement;
   var activeId = (active && appBefore && appBefore.contains(active)) ? active.id : null;
   var activeSel = null;
@@ -16466,12 +16601,16 @@ function renderKeepingLiveInputs(){
   if(activeId){
     var newActive = document.getElementById(activeId);
     if(newActive){
-      newActive.focus();
+      newActive.focus({preventScroll:true});
       if(activeSel){
         try{ newActive.selectionStart = activeSel[0]; newActive.selectionEnd = activeSel[1]; }catch(e){}
       }
     }
   }
+  scrolls.forEach(function(snap){
+    var el=snap.id?document.getElementById(snap.id):Array.from(appAfter.querySelectorAll('.cierre-modal,.ops-ed-body,.docform-body,.sidebar,.ticket-body')).find(function(x){return x.className===snap.cls;});
+    if(el){el.scrollTop=snap.top;el.scrollLeft=snap.left;}
+  });
 }
 
 /* El menú "/" y el de sugerencia de cliente comparten el mismo problema:
@@ -16500,11 +16639,12 @@ function hydrateImages(){
   imgs.forEach(async function(img){
     var path = img.getAttribute("data-storage-path");
     if(!path) return;
-    if(signedUrlCache[path]){ img.src = signedUrlCache[path]; return; }
+    var bucket=img.getAttribute('data-storage-bucket')||FILES_BUCKET;var cacheKey=bucket+':'+path;
+    if(signedUrlCache[cacheKey]){ img.src = signedUrlCache[cacheKey]; return; }
     try{
-      var res = await sb.storage.from(FILES_BUCKET).createSignedUrl(path, 3600);
+      var res = await sb.storage.from(bucket).createSignedUrl(path, 3600);
       if(res.data && res.data.signedUrl){
-        signedUrlCache[path] = res.data.signedUrl;
+        signedUrlCache[cacheKey] = res.data.signedUrl;
         if(document.body.contains(img)) img.src = res.data.signedUrl;
       }
     }catch(e){ /* leave broken silently, non-critical */ }
@@ -16513,13 +16653,17 @@ function hydrateImages(){
 
 /* El mismo visor sirve para fotos del ticket, Equipo, Biblioteca y KDS.
    Solo usa la URL firmada que ya autorizó Storage; no publica archivos. */
+var photoZoomReturnFocus=null;
 function closePhotoZoom(){
   var overlay = document.getElementById("photo-zoom-overlay");
   if(overlay) overlay.remove();
+  if(photoZoomReturnFocus && photoZoomReturnFocus.isConnected)photoZoomReturnFocus.focus({preventScroll:true});
+  photoZoomReturnFocus=null;
 }
 function openPhotoZoom(img){
   if(!img || !img.src) return;
   closePhotoZoom();
+  photoZoomReturnFocus=document.activeElement;
   var overlay = document.createElement("div");
   overlay.id = "photo-zoom-overlay"; overlay.className = "photo-zoom-overlay";
   overlay.setAttribute("role", "dialog"); overlay.setAttribute("aria-modal", "true");
@@ -16539,6 +16683,9 @@ document.addEventListener("click", function(e){
   openPhotoZoom(img);
 }, true);
 document.addEventListener("keydown", function(e){
+  if(e.key === "Tab" && document.getElementById("photo-zoom-overlay")){
+    e.preventDefault();e.stopImmediatePropagation();document.querySelector('.photo-zoom-close').focus();return;
+  }
   if(e.key === "Escape" && document.getElementById("photo-zoom-overlay")){
     e.preventDefault(); e.stopImmediatePropagation(); closePhotoZoom();
   }
@@ -17148,15 +17295,24 @@ function closeComposerOverlay(){
 }
 
 async function submitNote(){
+  if(UI.ticketSendBusy||UI.feedComposerBusy)return;
+  var ticketId=UI.selectedTicketId;
+  if(ticketId&&TICKET_CHAT_AVAILABLE){
+    UI.ticketSendBusy=true;
+    try{var cid=await ensureTicketConversation(ticketId);if(UI.selectedTicketId!==ticketId)return;UI.astraConversationId=cid;}
+    catch(e){userError('Conversación del ticket',e);return;}
+    finally{UI.ticketSendBusy=false;}
+  }
+
   var input = document.getElementById("composer-input");
   if(!input) return;
   var text = input.value.trim();
   if(!text){
     /* v0.20: en el chat, una foto sola (sin texto) también se puede enviar. */
-    if(!findTicket(UI.selectedTicketId) && isChatComposerContext() && (UI.feedComposerPhoto || UI.astraAudioBlob)) publishChatMessage("");
+    if(isChatComposerContext() && (UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile)) publishChatMessage("");
     return;
   }
-  if(!findTicket(UI.selectedTicketId) && isChatComposerContext() && UI.astraAudioBlob){
+  if(isChatComposerContext() && UI.astraAudioBlob){
     publishChatMessage(text); return;
   }
   /* Composer Intelligence §3: "-" como primer carácter abre/ejecuta un
@@ -17184,7 +17340,7 @@ async function submitNote(){
      mensaje al equipo. Smart Actions (Buscar/Nuevo/Cliente sobre texto
      plano) sigue existiendo dentro de un ticket; en Inicio esos caminos
      siguen disponibles como /buscar, /nuevo, /cliente. */
-  if(!findTicket(UI.selectedTicketId) && isChatComposerContext()){
+  if(isChatComposerContext()){
     publishChatMessage(text);
     return;
   }
@@ -17224,10 +17380,11 @@ async function addProductoCore(t, desc, cantidad, precio){
       showActionToast("Producto agregado", '<button type="button" class="toast-action-btn" data-action="undo-producto">Deshacer</button>', 6000);
     },
     persist: async function(){
-      var r1 = await sb.from("productos").insert({ ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio });
+      var r1 = await sb.from("productos").insert({ ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio }).select("id").single();
       if(r1.error) throw r1.error;
+      local.id=r1.data.id;
       var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: currentActorName() || null, payload: { desc: desc, cantidad: cantidad, precio: precio } });
-      if(r2.error) throw r2.error;
+      if(r2.error)adminNote("Producto guardado; falló bitácora",r2.error);
     }
   });
 }
@@ -18080,13 +18237,16 @@ async function submitForm(kind){
      esta guarda no debe cortar antes de llegar ahí. */
   if(!t && kind !== "archivo") return;
   if(kind === "producto"){
+    if(UI.ticketProductBusy)return;
     var desc = (document.getElementById("f-desc").value || "").trim();
     if(!desc){ showToast("Descripción requerida."); return; }
     var cantidad = parseFloat(document.getElementById("f-cantidad").value) || 1;
     var precioRaw = document.getElementById("f-precio").value;
     var precio = precioRaw === "" ? null : parseFloat(precioRaw);
-    UI.composer = null; render();
-    await addProductoCore(t, desc, cantidad, precio);
+    if(!Number.isFinite(cantidad)||cantidad<=0||precio!==null&&(!Number.isFinite(precio)||precio<0)){showToast('Revisa cantidad y precio.');return;}
+    UI.ticketProductBusy=true;
+    try{var ok=await addProductoCore(t, desc, cantidad, precio);if(ok){UI.composer=null;UI.pendingFocus={elId:'composer-input',userInitiated:true};render();}else{UI.composer='producto';render();document.getElementById('f-desc').value=desc;document.getElementById('f-cantidad').value=cantidad;document.getElementById('f-precio').value=precioRaw;document.getElementById('f-desc').focus();}}
+    finally{UI.ticketProductBusy=false;}
   } else if(kind === "tarea" || kind === "tarea_produccion"){
     var tdesc = (document.getElementById("f-desc").value || "").trim();
     if(!tdesc){ showToast("Descripción requerida."); return; }
@@ -23446,7 +23606,7 @@ function wireEvents(){
     });
   }
   root.querySelectorAll('[data-open-form]').forEach(function(b){
-    b.addEventListener("click", function(){ UI.composer = b.getAttribute("data-open-form"); render(); });
+    b.addEventListener("click", function(){ UI.composer = b.getAttribute("data-open-form"); UI.pendingFocus={elId:UI.composer==="pago"?"f-monto":"f-desc",userInitiated:true};render(); });
   });
   var cancelBtn = root.querySelector('[data-action="cancel-form"]');
   if(cancelBtn) cancelBtn.addEventListener("click", function(){ if(closeComposerOverlay()) render(); });
@@ -24966,8 +25126,11 @@ document.addEventListener("keydown", function(e){
 /* ASTRA · Conversación sobre team_posts existente. No carga datos privados
    en una segunda caché persistente: RLS decide qué filas llegan a STATE. */
 var ASTRA_CONVERSATIONS_AVAILABLE = false;
+var TICKET_CHAT_AVAILABLE = false;
 async function fetchAstraConversations(){
-  var r = await sb.from("chat_conversations").select("*");
+  var r = await sb.from("chat_conversations").select("id,kind,ticket_id,member_a,member_b,created_at");
+  TICKET_CHAT_AVAILABLE=!r.error;
+  if(r.error)r=await sb.from("chat_conversations").select("*");
   ASTRA_CONVERSATIONS_AVAILABLE = !r.error;
   if(r.error) return [];
   return r.data || [];
@@ -25052,7 +25215,7 @@ function astraReviewOverlay(){
     : [p];
   var clientRef=(p.refs||[]).find(function(x){return x.kind==='client';});
   var ticketRef=(p.refs||[]).find(function(x){return x.kind==='ticket';});
-  var suggestedTicket=p.ticketId || (ticketRef && ticketRef.id) || '';
+  var suggestedTicket=conversationTicketId(p.conversationId)||p.ticketId || (ticketRef && ticketRef.id) || '';
   var candidates=(STATE.tickets||[]).filter(dtgIsVivo);
   return '<div class="cierre-modal-overlay astra-review-backdrop"><div class="cierre-modal astra-review" role="dialog" aria-modal="true" aria-label="Revisar antes de guardar">' +
     '<h2>Revisar '+(r.kind==='ticket'?'ticket':r.kind==='followup'?'seguimiento':'tarea')+'</h2>'+
@@ -25061,7 +25224,7 @@ function astraReviewOverlay(){
       escapeHtml(fmtDateShort(x.createdAt))+' '+escapeHtml(fmtTime(x.createdAt))+
       ': '+escapeHtml((x.text||x.transcript||'Audio/archivo').slice(0,220))+'</p>';}).join('')+
     (items.length>8?'<small>Y '+(items.length-8)+' mensajes más</small>':'')+'</div>'+
-    (p.conversationId?'<p>Chat personal: los demás mensajes permanecen privados. Solo se guarda lo que confirmes aquí.</p>':'')+
+    (p.conversationId&&!conversationTicketId(p.conversationId)?'<p>Chat personal: los demás mensajes permanecen privados. Solo se guarda lo que confirmes aquí.</p>':'')+
     (r.kind==='ticket'
       ? '<label>Cliente (opcional)<input id="astra-review-client" value="'+escapeHtml(clientRef?clientRef.label:'')+'" placeholder="Sin cliente"></label>'+
         '<label><input type="checkbox" id="astra-review-excerpt"> Agregar el texto del mensaje como nota visible en el ticket</label>'
@@ -25345,7 +25508,7 @@ async function astraOpenDm(peerId){
 }
 function astraOpenThread(id){
   var post = astraPost(id); if(!post) return;
-  UI.selectedTicketId=null; UI.mainView=null; UI.feedFilter='todo';
+  var tid=conversationTicketId(post.conversationId);UI.selectedTicketId=tid||null;UI.ticketChatContext=tid||null;UI.mainView=null; UI.feedFilter='todo';
   if(ASTRA_RECORDER) astraStopRecording(true);
   UI.astraAudioBlob=null;
   UI.astraConversationId = post.conversationId || null;
@@ -25373,8 +25536,10 @@ function astraMentionRoster(symbol){
     return {id:t.id,name:String(t.seq),kind:'ticket'};
   });
   return mentionRoster().filter(function(p){
+    if(UI.selectedTicketId&&!UI.astraConversationId){var t=findTicket(UI.selectedTicketId);return p.id!==MENTION_ALL&&t&&(t.visibility!=='private'||(t.accessProfileIds||[]).indexOf(p.id)>=0);}
     if(!UI.astraConversationId) return true;
     var c=(STATE.conversations||[]).find(function(x){return x.id===UI.astraConversationId;});
+    if(c&&c.kind==='ticket'){var t=findTicket(c.ticket_id);return p.id!==MENTION_ALL&&t&&(t.visibility!=='private'||(t.accessProfileIds||[]).indexOf(p.id)>=0);}
     return c && (p.id===c.member_a || p.id===c.member_b);
   })
     .map(function(p){return Object.assign({kind:'user'},p);}).concat(

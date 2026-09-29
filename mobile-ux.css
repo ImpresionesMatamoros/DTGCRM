@@ -1,0 +1,26 @@
+/* Narrow mobile corrections; desktop and display KDS keep their layout. */
+@media (max-width:880px){
+  #app input:not([type=range]):not([type=checkbox]):not([type=radio]),
+  #app select,#app textarea{font-size:16px}
+  .app,.login-screen{height:var(--mobile-vh,100dvh);position:relative;top:var(--mobile-top,0px)}
+  .cierre-modal-overlay,.docform-overlay,.doc-modal-overlay,.mk-picker-layer,.photo-zoom-overlay{
+    top:var(--mobile-top,0px);bottom:auto;height:var(--mobile-vh,100dvh);box-sizing:border-box;
+  }
+  .mk-picker-sheet{max-height:calc(var(--mobile-vh,100dvh) * .82)}
+  .login-screen{overflow-y:auto;justify-content:safe center}
+  .cierre-modal{max-height:calc(var(--mobile-vh,100dvh) - 32px - var(--safe-top) - var(--safe-bottom));overscroll-behavior:contain}
+  .ops-editor .ops-ed-actions{position:sticky;bottom:-18px;background:var(--surface);padding:10px 0;z-index:2;flex-wrap:wrap}
+  .ops-menu-panels{max-height:min(280px,40dvh);max-height:min(280px,calc(var(--mobile-vh,100dvh) * .4))}
+  .mention-pop,.slash-menu{max-height:min(300px,calc(var(--mobile-vh,100dvh) * .4));max-width:calc(100vw - 32px)}
+  .mention-item{min-height:44px;flex-wrap:wrap;overflow-wrap:anywhere}
+  .mention-hint{font-size:12px}
+  .photo-zoom-overlay{padding-top:calc(52px + var(--safe-top));padding-bottom:calc(16px + var(--safe-bottom))}
+  .photo-zoom-close{top:calc(8px + var(--safe-top));right:calc(12px + var(--safe-right))}
+  .photo-zoom-overlay img{max-height:calc(var(--mobile-vh,100dvh) - 68px - var(--safe-top) - var(--safe-bottom))}
+}
+@media (max-width:640px){
+  .docform-modal,.doc-modal{height:var(--mobile-vh,100dvh);max-height:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .sidebar,.chat-msg,.dq-aparece{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

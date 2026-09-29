@@ -42,3 +42,9 @@ No se añadieron frameworks, tablas de tareas paralelas, canales, grupos arbitra
 - Versión `20260929003414`, nombre `astra_team_conversations_privacy`, proyecto `jpjpnxamiclvhmcywyhx`.
 - Antes de aplicar, se cerraron los permisos heredados de las tablas nuevas, se restringió el fan-out de push a los dos participantes de cada DM y se protegió también la edición posterior de mensajes privados.
 - Verificación: RLS con autor, destinatario y tercero en transacción revertida; tercero no vio conversación ni mensaje. Las 27 filas previas permanecen intactas y no quedó ninguna fila de prueba.
+
+## 2026-09-29 — Ticket UX sobre f237995
+- Cabecera compacta, productos arriba y creación de tarea con producto/ticket heredados.
+- Foco y Enter en captura, conservación ante error y mejoras de viewport móvil/PWA.
+- Conversación de ticket compartida implementada con comprobación de esquema; desactivada hasta migración autorizada.
+- SQL separado no aplicado; sin Edge Functions desplegadas. Auditoría y QA en TICKET-UX-AUDIT.md y QA-RESULTS.md.
