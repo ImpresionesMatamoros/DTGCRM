@@ -3890,6 +3890,8 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-gate-hint{ font-size:clamp(14px, 1.6vw, 22px); color:#6F7F93; font-weight:600; }
 </style>
 <div id="app"></div>
+<link rel="stylesheet" href="ops-menu.css?v=3">
+<script src="ops-menu.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
 <script>
 (function(){
@@ -3910,8 +3912,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    problema" (§3/§30) — nunca se vuelve a escribir esto a mano en otro
    lado. Súbanla a mano en cada ronda futura (no hay build step que la
    genere sola — este archivo se sirve tal cual, sin bundler). */
-var APP_VERSION = "0.25.2";
-var APP_BUILD = "2026.09.29.1";
+var APP_VERSION = "0.25.3";
+var APP_BUILD = "2026.09.29.2";
 var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
 var FILES_BUCKET = "ticket-files";
@@ -5172,11 +5174,15 @@ async function fetchAllState(){
     var t = byTicket[row.ticket_id]; if(!t) return;
     t.accessProfileIds.push(row.profile_id);
   });
-  var settings = { queSigueOptions: [], teamNames: [], operacionTipos: [], docTerms: {} };
+  var settings = { queSigueOptions: [], teamNames: [], operacionTipos: [], opsProviders: [], docTerms: {} };
   settingsRows.forEach(function(row){
     if(row.key === "que_sigue_options") settings.queSigueOptions = row.values || [];
     if(row.key === "team_names") settings.teamNames = row.values || [];
     /* v0.20 (0016): catálogo de tipos de operación y términos de documentos. */
+    if(row.key && row.key.indexOf('ops_provider_v1:')===0){
+      var parts=row.key.split(':'); var name=(row.values||[])[0];
+      if(parts.length===3 && name && DTGOps.providers[parts[1]]) settings.opsProviders.push({group:parts[1],id:parts[2],name:name});
+    }
     if(row.key === "operacion_tipos") settings.operacionTipos = row.values || [];
     if(row.key && row.key.indexOf("doc_terms_") === 0) settings.docTerms[row.key.slice(10)] = row.values || [];
     if(row.key === "doc_quote_valid_days") settings.quoteValidDays = parseInt((row.values || [])[0], 10) || null;
@@ -6858,7 +6864,7 @@ function renderTasksPanel(t){
         '<button type="button" class="ops-state-pill ops-state-' + st.key + '" data-toggle-task="' + task.id + '" data-ticket="' + t.id + '" aria-haspopup="true" title="Cambiar estado" aria-label="Estado: ' + st.label + '. Cambiar estado">' + icon(st.icon) + "<span>" + st.label + "</span></button>" +
         '<button type="button" class="ops-task-open" data-action="ops-task-edit" data-task="' + task.id + '" data-ticket="' + t.id + '">' +
           '<span class="ops-type-chip ops-type-chip-sm">' + icon(opsTipoIcon(task.tipoOperacion)) + "<span>" + escapeHtml(task.tipoOperacion || "Operación") + "</span></span>" +
-          '<span class="task-desc">' + escapeHtml(task.desc) + "</span>" +
+          '<span class="task-desc">' + escapeHtml(task.desc) + (DTGOps.blocked(task,t)?' · Espera empaquetado':'') + "</span>" +
           '<span class="ops-progress-row ops-progress-inline">' + renderOpsProgress(task.progreso, true) + '<span class="ops-progress-val">' + (Number(task.progreso) || 0) + "%</span></span>" +
           (task.responsable ? '<span class="ops-resp">' + personAvatar(task.responsable, { size: "xs" }) + "<span>" + escapeHtml(task.responsable) + "</span></span>" : "") +
         "</button>" +
@@ -10975,7 +10981,7 @@ function isOpsTask(x){ return x && x.tipo === "produccion"; }
    explícitamente lo que la Parte D5 prohíbe como regla permanente, así que:
      · vive en UNA función, marcada, para poder borrarla de un tirón;
      · no escribe nada: en cuanto el backfill ponga `area`, deja de correr;
-     · el menú progresivo escribe `area` desde que se crea la tarea.
+     · el núcleo requiere `area` para nuevas operaciones; las entradas antiguas abren revisión.
    El backfill que reclasifica lo existente va en 0022, comentado, porque SÍ
    cambia datos de producción y lo aprueba Diego, no yo. */
 var TASK_AREAS = ["planeacion", "produccion"];
@@ -11098,7 +11104,7 @@ function renderOpsCard(it){
         "</div>" +
       "</div>" +
       '<button type="button" class="ops-card-body" draggable="false" data-action="ops-task-edit" data-task="' + x.id + '" data-ticket="' + t.id + '">' +
-        '<span class="ops-card-title">' + escapeHtml(x.desc || "(sin nombre)") + "</span>" +
+        '<span class="ops-card-title">' + escapeHtml(x.desc || "(sin nombre)") + (DTGOps.blocked(x,t)?' · Espera empaquetado':'') + "</span>" +
         '<span class="ops-progress-row">' + renderOpsProgress(v) + '<span class="ops-progress-val">' + v + "%</span></span>" +
       "</button>" +
       '<div class="ops-card-ticket" draggable="false">' + thumb +
@@ -11164,49 +11170,94 @@ function renderOperacionesView(){
 /* ---- Editor de tarea (crear / editar) — un solo modal para ambos, y para
    todos los caminos (tablero, ticket, menú ⋯). Lee sus campos del DOM al
    guardar (mismo criterio que el resto de formularios de la app). ---- */
-/* Catálogo pequeño: ambas rutas del menú resuelven el mismo action_code.
-   La categoría ayuda a encontrarlo; la acción decide el área. */
-var OPS_ACTIONS = [
-  {code:'disenar_arte', label:'Diseñar arte', category:'Diseño', area:'planeacion'},
-  {code:'confirmar_diseno', label:'Confirmar diseño', category:'Diseño', area:'planeacion'},
-  {code:'cotizar_proveedor', label:'Cotizar con proveedor', category:'Compras', area:'planeacion'},
-  {code:'comprar_prendas', label:'Comprar prendas', category:'Compras', area:'planeacion'},
-  {code:'pedir_dtf_proveedor', label:'Pedir DTF al proveedor', category:'DTF', area:'planeacion'},
-  {code:'aplicar_dtf', label:'Aplicar DTF', category:'DTF', area:'produccion'},
-  {code:'bordar', label:'Bordar', category:'Bordado', area:'produccion'},
-  {code:'cortar_tarjetas', label:'Cortar tarjetas', category:'Tarjetas', area:'produccion'},
-  {code:'aplicar_vinil_coroplast', label:'Montar vinil en coroplast', category:'Coroplast', area:'produccion'},
-  {code:'acabado_lona', label:'Dar acabado a lona', category:'Lona', area:'produccion'},
-  {code:'armar_pinata', label:'Fabricar piñata', category:'Piñatas', area:'produccion'},
-  {code:'empacar', label:'Empacar', category:'Acabado', area:'produccion'},
-  {code:'llamar_cliente', label:'Llamar al cliente', category:'Seguimiento', area:'planeacion'}
-];
-function opsAction(code){ return OPS_ACTIONS.filter(function(a){ return a.code === code; })[0] || null; }
-function opsActionOptions(mode, category, selected){
-  var list = OPS_ACTIONS.filter(function(a){ return mode === 'action' || a.category === category; });
-  if(mode === 'action') list.sort(function(a,b){ return a.label.localeCompare(b.label, 'es'); });
-  return '<option value="">Acción libre…</option>' + list.map(function(a){
-    return '<option value="' + a.code + '"' + (a.code === selected ? ' selected' : '') + '>' + escapeHtml(a.label + (mode === 'action' ? ' · ' + a.category : '')) + '</option>';
-  }).join('');
-}
-document.addEventListener('change', function(e){
-  if(!e.target || ['ops-f-mode','ops-f-category','ops-f-action'].indexOf(e.target.id) === -1) return;
-  var mode = document.getElementById('ops-f-mode'), cat = document.getElementById('ops-f-category');
-  var sel = document.getElementById('ops-f-action');
-  if(!mode || !cat || !sel) return;
-  if(e.target === mode || e.target === cat){
-    cat.disabled = mode.value === 'action';
-    sel.innerHTML = opsActionOptions(mode.value, cat.value, '');
-    return;
+/* Adapter for the existing editor. No task store: STATE + add/updateTareaCore. */
+function opsProgressiveState(ed,x){
+  if(!ed.progressive){
+    var m=DTGOps.meta(x||{});
+    ed.progressive={mode:'action',selection:m.selection||null,path:m.path||[],free:ed.mode==='edit',panels:[],custom:[]};
   }
-  var a = opsAction(sel.value), area = document.getElementById('ops-f-area'), desc = document.getElementById('ops-f-desc');
-  if(a){
-    if(area) area.value = a.area;
-    if(desc && (!desc.value.trim() || desc.dataset.fromCatalog === 'true')){
-      desc.value = a.label; desc.dataset.fromCatalog = 'true';
-    }
+  return ed.progressive;
+}
+function opsCustomProviders(){return (STATE.meta&&STATE.meta.opsProviders)||[];}
+function opsProgressiveTree(p){return DTGOps.tree(p.mode,opsCustomProviders());}
+function opsNodeAt(p,path){var nodes=opsProgressiveTree(p),n;path.forEach(function(i){n=nodes[i];nodes=n.children;});return n;}
+function opsPanelHTML(nodes,path){
+  return '<div class="ops-menu-panel" role="group" aria-label="Nivel '+(path.length+1)+'" data-level="'+path.length+'">'+nodes.map(function(n,i){var key=path.concat(i).join('.');return '<button type="button" class="ops-menu-option" data-ops-node="'+key+'"'+(n.children.length?' aria-haspopup="true" aria-expanded="false"':'')+'><span>'+escapeHtml(n.label)+'</span>'+(n.children.length?'<span aria-hidden="true">›</span>':'')+'</button>';}).join('')+'</div>';
+}
+function renderOpsProgressive(ed,x,t){
+  var p=opsProgressiveState(ed,x),m=DTGOps.meta(x),products=(t&&t.productos)||[];
+  queueMicrotask(opsSyncPreview);
+  return '<section class="ops-progressive" aria-label="Elegir trabajo"><div class="ops-menu-tabs">'+
+    ['action','category','free'].map(function(mode){return '<button type="button" class="btn btn-sm" data-ops-mode="'+mode+'" aria-pressed="'+(mode==='free'?p.free:!p.free&&p.mode===mode)+'">'+({action:'Por acción',category:'Por categoría / producto',free:'Edición libre'})[mode]+'</button>';}).join('')+
+    '</div><div class="ops-menu-hint">Pasa el mouse para explorar. Haz clic para elegir. Flechas para navegar; Enter o espacio para elegir.</div><div class="ops-menu-panels"'+(p.free?' hidden':'')+'>'+opsPanelHTML(opsProgressiveTree(p),[])+'</div><div class="ops-menu-preview" aria-live="polite">'+opsPreviewHTML(p,x)+'</div><div class="ops-menu-provider" hidden></div>'+
+    '<div class="ops-menu-details"><label class="ops-ed-label" for="ops-f-product">Producto del ticket (opcional)</label><select class="field-input" id="ops-f-product"><option value="">Sin producto específico</option>'+products.map(function(pr){return '<option value="'+escapeHtml(pr.id)+'"'+(m.productId===pr.id?' selected':'')+'>'+escapeHtml((pr.cantidad||'')+' · '+pr.desc)+'</option>';}).join('')+'</select><label class="ops-ed-label" for="ops-f-details">Detalles (opcional)</label><textarea id="ops-f-details" class="field-input" rows="2">'+escapeHtml(m.details||'')+'</textarea><div id="ops-pack-choice"'+(p.selection&&p.selection.category==='parcel'?'':' hidden')+'><label><input type="checkbox" id="ops-f-pack"> Crear también «Empaquetar» primero</label><div class="muted small">La entrega se habilita en Planeación al terminar Empaquetar en Producción. Déjalo desmarcado si ya está empaquetado.</div></div></div></section>';
+}
+function opsPreviewHTML(p,x){
+  if(p.free)return '<small>Edición libre · confirma la pantalla de destino</small><strong>'+escapeHtml(x&&x.desc||'Escribe la tarea')+'</strong>';
+  var r=DTGOps.resolve(p.selection||{});
+  return '<small>'+escapeHtml(p.path.join(' → ')||'Elige una acción o un producto')+'</small><strong>'+escapeHtml(r?r.title:'Elige qué hacer')+'</strong><span>'+(r?'KDS: '+AREA_LABEL[r.area]:'La categoría sola no crea una tarea.')+'</span>';
+}
+function opsSyncPreview(){
+  var ed=UI.operaciones.editor;if(!ed)return;var p=ed.progressive,root=document.querySelector('.ops-progressive');if(!p||!root)return;
+  root.querySelector('.ops-menu-panels').hidden=p.free;
+  root.querySelectorAll('[data-ops-mode]').forEach(function(b){b.setAttribute('aria-pressed',String(p.free?b.dataset.opsMode==='free':b.dataset.opsMode===p.mode));});
+  var tipo=document.getElementById('ops-f-tipo');if(tipo)tipo.parentNode.hidden=!p.free;
+  var desc=document.getElementById('ops-f-desc'),area=document.getElementById('ops-f-area'),r=!p.free&&DTGOps.resolve(p.selection||{});
+  if(r){desc.value=r.title;area.value=r.area;}
+  desc.readOnly=!p.free;area.disabled=!p.free;
+  root.querySelector('.ops-menu-preview').innerHTML=opsPreviewHTML(p,{desc:desc.value});
+  document.getElementById('ops-pack-choice').hidden=!(r&&r.selection.category==='parcel')||ed.mode==='edit';
+  var save=document.querySelector('[data-action="ops-ed-save"]');if(save)save.disabled=!p.free&&!r;
+}
+function opsExpandNode(button,focus){
+  var ed=UI.operaciones.editor;if(!ed)return;var p=ed.progressive,path=button.dataset.opsNode.split('.').map(Number),n=opsNodeAt(p,path),panel=button.closest('.ops-menu-panel'),wrap=panel.parentNode;
+  // Keep the current panel and pointer target mounted; contiguous child panels
+  // never close on mouseleave. Diagonal movement cannot cross an empty gap.
+  Array.from(wrap.children).forEach(function(el){if(Number(el.dataset.level)>=path.length)el.remove();});
+  panel.querySelectorAll('[aria-expanded]').forEach(function(b){b.setAttribute('aria-expanded',String(b===button&&n.children.length>0));});
+  if(n.children.length){wrap.insertAdjacentHTML('beforeend',opsPanelHTML(n.children,path));if(focus){var first=wrap.lastElementChild.querySelector('button');first.focus();first.scrollIntoView({block:'nearest',inline:'nearest'});}}
+}
+var opsHoverTimer;
+document.addEventListener('pointerover',function(e){var b=e.target.closest&&e.target.closest('[data-ops-node]');if(!b||e.pointerType==='touch'||b.contains(e.relatedTarget))return;clearTimeout(opsHoverTimer);opsHoverTimer=setTimeout(function(){if(b.isConnected)opsExpandNode(b,false);},180);});
+document.addEventListener('pointerout',function(e){var b=e.target.closest&&e.target.closest('[data-ops-node]');if(b&&!b.contains(e.relatedTarget))clearTimeout(opsHoverTimer);});
+document.addEventListener('click',async function(e){
+  var root=e.target.closest&&e.target.closest('.ops-progressive');if(!root)return;
+  var ed=UI.operaciones.editor;if(!ed)return;var p=ed.progressive,mode=e.target.closest('[data-ops-mode]'),b=e.target.closest('[data-ops-node]');
+  if(mode){p.free=mode.dataset.opsMode==='free';if(!p.free)p.mode=mode.dataset.opsMode;root.querySelector('.ops-menu-panels').hidden=p.free;root.querySelector('.ops-menu-panels').innerHTML=opsPanelHTML(opsProgressiveTree(p),[]);root.querySelectorAll('[data-ops-mode]').forEach(function(el){el.setAttribute('aria-pressed',el===mode?'true':'false');});root.querySelector('.ops-menu-provider').hidden=true;opsSyncPreview();}
+  if(b){
+    clearTimeout(opsHoverTimer);var path=b.dataset.opsNode.split('.').map(Number),n=opsNodeAt(p,path);opsExpandNode(b,false);
+    if(n.addGroup){var form=root.querySelector('.ops-menu-provider');form.hidden=false;form.dataset.group=n.addGroup;form.dataset.path=b.dataset.opsNode;form.innerHTML='<label>Nuevo nombre · '+escapeHtml(DTGOps.groupLabels[n.addGroup])+'<input class="field-input" maxlength="80" id="ops-provider-name" autocomplete="off"></label><button type="button" class="btn" data-ops-add-provider>Guardar opción</button><small>Se conserva en la configuración compartida de DTG y estará disponible para el equipo.</small>';form.querySelector('input').focus();return;}
+    p.selection=n.selection;p.path=path.map(function(_,i){return opsNodeAt(p,path.slice(0,i+1)).label;});p.free=false;
+    root.querySelectorAll('[data-ops-node]').forEach(function(el){el.setAttribute('aria-current',String(el===b));});root.querySelector('.ops-menu-provider').hidden=true;opsSyncPreview();
+  }
+  var add=e.target.closest('[data-ops-add-provider]');if(add){
+    var form=root.querySelector('.ops-menu-provider'),name=form.querySelector('input').value.trim().replace(/\s+/g,' '),group=form.dataset.group;if(!name||name.length>80)return;
+    var id=DTGOps.providerId(name),existing=DTGOps.providerList(group,opsCustomProviders()).find(function(x){return x.id===id;});
+    add.disabled=true;
+    try{
+      var provider=existing||{id:id,name:name,group:group};
+      if(!existing){
+        var key='ops_provider_v1:'+group+':'+id,res=await sb.from('app_settings').insert({key:key,values:[name]});
+        if(res.error&&res.error.code!=='23505')throw res.error;
+        if(res.error){var read=await sb.from('app_settings').select('values').eq('key',key).single();if(read.error)throw read.error;provider.name=read.data.values[0];}
+        STATE.meta.opsProviders=opsCustomProviders().concat(provider);
+      }
+      var path=form.dataset.path.split('.').map(Number),base=opsNodeAt(p,path).selection;p.selection=Object.assign({},base,{provider:{id:id,name:provider.name,group:group}});p.path=path.slice(0,-1).map(function(_,i){return opsNodeAt(p,path.slice(0,i+1)).label;}).concat(provider.name);form.hidden=true;opsSyncPreview();
+      root.querySelector('.ops-menu-panels').innerHTML=opsPanelHTML(opsProgressiveTree(p),[]);
+    }catch(err){userError('Guardar proveedor',err);}finally{add.disabled=false;}
   }
 });
+document.addEventListener('keydown',function(e){
+  var b=e.target.closest&&e.target.closest('[data-ops-node]');if(!b)return;
+  if(['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End','Escape','Enter',' '].indexOf(e.key)<0)return;
+  e.preventDefault();e.stopImmediatePropagation();var peers=Array.from(b.parentNode.querySelectorAll('button')),i=peers.indexOf(b);
+  if(e.key==='Enter'||e.key===' '){b.click();return;}
+  if(e.key==='ArrowRight'){opsExpandNode(b,true);return;}
+  if(e.key==='ArrowLeft'||e.key==='Escape'){var prev=b.parentNode.previousElementSibling;if(prev){var parent=prev.querySelector('[aria-expanded=true]');if(parent){parent.focus();parent.setAttribute('aria-expanded','false');}var panel=b.parentNode;while(panel){var next=panel.nextElementSibling;panel.remove();panel=next;}}else b.closest('.ops-progressive').querySelector('[data-ops-mode]').focus();return;}
+  peers[e.key==='Home'?0:e.key==='End'?peers.length-1:(i+(e.key==='ArrowDown'?1:-1)+peers.length)%peers.length].focus();
+},true);
+document.addEventListener('input',function(e){if(e.target.id==='ops-f-desc'&&UI.operaciones.editor&&UI.operaciones.editor.progressive.free)opsSyncPreview();});
+
 function openOpsEditor(mode, taskId, ticketId, workOrderId){
   UI.operaciones.menuFor = null;
   UI.operaciones.editor = { mode: mode, taskId: taskId || null, ticketId: ticketId || null, workOrderId: workOrderId || null, ticketQuery: "", confirmDelete: false, lockedTicket: mode === "create" && !!ticketId };
@@ -11227,6 +11278,7 @@ function renderOpsEditor(){
   var found = ed.mode === "edit" ? findOpsTask(ed.ticketId, ed.taskId) : null;
   if(ed.mode === "edit" && !found){ UI.operaciones.editor = null; return ""; }
   var x = found ? found.task : { desc: "", tipoOperacion: "", responsable: "", estado: "pendiente", progreso: 0 };
+  if(ed.draft)x=Object.assign({},x,ed.draft);
   var t = ed.ticketId ? findTicket(ed.ticketId) : null;
   var ticketBlock;
   if(t){
@@ -11246,17 +11298,10 @@ function renderOpsEditor(){
       }).join("") : '<div class="muted small">Sin resultados.</div>') + "</div>";
   }
   var tipos = opsTiposCatalog();
-  var currentAction = opsAction(x.actionCode), initialCategory = currentAction ? currentAction.category : 'Diseño';
-  var categories = Array.from(new Set(OPS_ACTIONS.map(function(a){ return a.category; })));
   var orderSelect = t && (t.workOrders || []).length ?
     '<label class="ops-ed-label" for="ops-f-work-order">Orden de trabajo</label><select class="field-input" id="ops-f-work-order"><option value="">Sin orden vinculada</option>' +
     t.workOrders.map(function(o){ return '<option value="' + o.id + '"' + ((ed.workOrderId || x.workOrderId) === o.id ? ' selected' : '') + '>' + escapeHtml(o.title) + '</option>'; }).join('') + '</select>' : '';
-  var actionMenu = '<div class="ops-menu-fields"><label class="ops-ed-label" for="ops-f-mode">Buscar acción</label>' +
-    '<select class="field-input" id="ops-f-mode"><option value="category">Por categoría</option><option value="action">Por acción</option></select>' +
-    '<div class="ops-ed-grid"><div><label class="ops-ed-label" for="ops-f-category">Categoría</label><select class="field-input" id="ops-f-category">' +
-    categories.map(function(c){ return '<option value="' + escapeHtml(c) + '"' + (c === initialCategory ? ' selected' : '') + '>' + escapeHtml(c) + '</option>'; }).join('') + '</select></div>' +
-    '<div><label class="ops-ed-label" for="ops-f-action">Acción</label><select class="field-input" id="ops-f-action">' + opsActionOptions('category', initialCategory, x.actionCode) + '</select></div></div>' +
-    '<div class="muted small">La acción define la pantalla. Puedes ajustar el área de una acción libre.</div></div>';
+  var actionMenu = renderOpsProgressive(ed,x,t);
   var tipoSel = '<select id="ops-f-tipo" class="field-input"><option value="">Sin tipo</option>' +
     tipos.map(function(tp){ return '<option value="' + escapeHtml(tp) + '"' + (x.tipoOperacion === tp ? " selected" : "") + ">" + escapeHtml(tp) + "</option>"; }).join("") +
     '<option value="__nuevo__">+ Nuevo tipo…</option></select>';
@@ -11317,26 +11362,38 @@ function resolveOpsTipoNuevo(){
 }
 async function submitOpsEditor(){
   var ed = UI.operaciones.editor;
-  if(!ed) return;
-  var val = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
-  var desc = val("ops-f-desc").trim();
-  if(!desc){ showToast("Escribe qué tarea es."); return; }
-  var t = ed.ticketId ? findTicket(ed.ticketId) : null;
-  if(!t){ showToast("Elige el ticket de esta tarea."); return; }
-  var tipo = val("ops-f-tipo");
-  var action = opsAction(val('ops-f-action'));
-  if(!action && tipo === "__nuevo__"){ tipo = resolveOpsTipoNuevo(); if(tipo === null) return; }
-  var area = action ? action.area : val('ops-f-area');
-  if(TASK_AREAS.indexOf(area) === -1){ showToast('Elige Planeación o Producción para esta acción.'); return; }
-  var workOrderId = val('ops-f-work-order') || null;
-  var date = val('ops-f-date') || '';
-  var path = action ? (val('ops-f-mode') === 'category' ? action.category + ' → ' + action.label : 'Por acción → ' + action.label) : '';
-  var patch = { desc: desc, tipoOperacion: action ? action.label : (tipo || ''), responsable: val("ops-f-resp") || "", estado: val("ops-f-estado") || "pendiente", progreso: Math.max(0, Math.min(100, parseInt(val("ops-f-progreso"), 10) || 0)), area: area, fechaAtencion: date };
-  if(STATE.workOrdersTableMissing === false){ patch.workOrderId = workOrderId; patch.actionCode = action ? action.code : ''; patch.actionPath = path; }
-  UI.operaciones.editor = null;
-  render();
-  if(ed.mode === "edit") await updateTareaCore(t, ed.taskId, patch);
-  else await addTareaCore(t, "produccion", patch.desc, patch.responsable, date, { tipoOperacion: patch.tipoOperacion, progreso: patch.progreso, estado: patch.estado, area: area, workOrderId: workOrderId, actionCode: action ? action.code : '', actionPath: path });
+  if(!ed || ed.saving) return;
+  var val = function(id){ var el=document.getElementById(id); return el ? el.value : ''; };
+  var t=ed.ticketId ? findTicket(ed.ticketId) : null;
+  if(!t){showToast('Elige el ticket de esta tarea.');return;}
+  var p=ed.progressive, resolved=p && !p.free ? DTGOps.resolve(p.selection||{}) : null;
+  if(p && !p.free && !resolved){showToast('Elige qué hacer.');return;}
+  var desc=resolved ? resolved.title : val('ops-f-desc').trim();
+  if(!desc){showToast('Escribe qué tarea es.');return;}
+  var found=ed.mode==='edit' ? findOpsTask(ed.ticketId,ed.taskId) : null;
+  var area=resolved ? resolved.area : val('ops-f-area');
+  // Historical null area survives unrelated edits. Every NEW operation needs an area.
+  if(TASK_AREAS.indexOf(area)===-1 && !(found && !found.task.area)){showToast('Elige Planeación o Producción.');return;}
+  var date=val('ops-f-date');if(!isSaneDateOnly(date)){showToast('Fecha inválida.');return;}
+  var tipo=val('ops-f-tipo');if(!resolved && tipo==='__nuevo__'){tipo=resolveOpsTipoNuevo();if(tipo===null)return;}
+  var oldMeta=found ? DTGOps.meta(found.task) : {};
+  var unchanged=found && desc===found.task.desc && (area||'')===(found.task.area||'');
+  var metadata=Object.assign({},oldMeta,{v:1,selection:resolved ? resolved.selection : unchanged ? oldMeta.selection||null : null,path:resolved ? p.path : unchanged ? oldMeta.path||[] : [],details:val('ops-f-details').trim(),productId:val('ops-f-product')||null});
+  var workOrderId=val('ops-f-work-order')||null;
+  var order=(t.workOrders||[]).find(function(o){return o.id===workOrderId;});
+  if(order && metadata.productId && order.productId && order.productId!==metadata.productId){showToast('El producto debe coincidir con la orden vinculada.');return;}
+  if(metadata.productId && !(t.productos||[]).some(function(pr){return pr.id===metadata.productId;})){showToast('El producto ya no pertenece al ticket.');return;}
+  var patch={desc:desc,tipoOperacion:resolved ? DTGOps.actions[resolved.selection.action][0] : tipo||'',responsable:val('ops-f-resp'),estado:val('ops-f-estado')||'pendiente',progreso:Number(val('ops-f-progreso'))||0,fechaAtencion:date};
+  if(area)patch.area=area;
+  if(STATE.workOrdersTableMissing!==false){showToast('No se puede guardar el contexto: falta verificar el esquema de órdenes y acciones.');return;}
+  patch.workOrderId=workOrderId;patch.actionCode=resolved ? resolved.code : unchanged ? found.task.actionCode||'' : '';patch.actionPath=JSON.stringify(metadata);
+  var pack=ed.mode==='create' && resolved && resolved.selection.category==='parcel' && document.getElementById('ops-f-pack').checked;
+  if(pack && patch.estado!=='pendiente'){showToast('La secuencia empieza pendiente.');return;}
+  ed.draft=Object.assign({},patch);
+  ed.saving=true;var button=document.querySelector('[data-action="ops-ed-save"]');if(button)button.disabled=true;
+  var ok=false;
+  try{ok=ed.mode==='edit' ? await updateTareaCore(t,ed.taskId,patch) : await addTareaCore(t,'produccion',desc,patch.responsable,date,Object.assign({},patch,{packFirst:pack}));}
+  finally{ed.saving=false;if(ok && UI.operaciones.editor===ed)UI.operaciones.editor=null;render();}
 }
 /* Autoscroll horizontal durante un drag (Kanban de Responsables y
    Operaciones comparten esto): cerca del borde el tablero se desplaza solo,
@@ -14917,7 +14974,7 @@ function kdsTasks(area){
        queda por cobrar vive en su tablero, no aquí. */
     if(ticketEstado(t) === "entregado") return;
     (t.tareas || []).forEach(function(task){
-      if(!isOpsTask(task) || task.estado === "terminado") return;
+      if(!isOpsTask(task) || task.estado === "terminado" || DTGOps.blocked(task,t)) return;
       /* PARTE B — sin área pedida se devuelve todo (lo que hacía siempre);
          con área, solo la suya. Producción jamás enseña una llamada y
          Planeación jamás enseña un estampado. */
@@ -14967,10 +15024,13 @@ function kdsCxc(){
 /* La acción y la cantidad se DERIVAN de lo que ya existe: el tipo de
    operación es la acción; la cantidad sale del producto del ticket. */
 function kdsAccion(it){
+  if(it.task.actionCode && DTGOps.meta(it.task).v===1)return (it.task.desc||"Tarea").toUpperCase();
   var tipo = (it.task.tipoOperacion || "").trim();
   return (tipo || it.task.desc || "Paso de producción").toUpperCase();
 }
 function kdsCantidad(it){
+  var productId=DTGOps.meta(it.task).productId;
+  if(productId){var selected=(it.t.productos||[]).find(function(p){return p.id===productId;});return selected ? ((selected.cantidad?selected.cantidad+' ':'')+selected.desc).toUpperCase() : '';}
   var order = (it.t.workOrders || []).filter(function(o){ return o.id === it.task.workOrderId; })[0];
   if(order){
     var linked = (it.t.productos || []).filter(function(p){ return p.id === order.productId; })[0];
@@ -14987,6 +15047,7 @@ function kdsCantidad(it){
    aporta algo más que el tipo, el marcador que más pesa y la última nota. */
 function kdsNotas(it){
   var lines = [];
+  var details=DTGOps.meta(it.task).details;if(details)lines.push(details);
   var desc = (it.task.desc || "").trim();
   if(desc && desc.toUpperCase() !== kdsAccion(it)) lines.push(desc);
   var ms = activeMarkers(it.t).filter(function(m){ return m.type !== "urgente"; });
@@ -15350,6 +15411,7 @@ function kdsVista(it){
     var accionP = kdsAccion(it);
     if(canal && accionP === canal && desc) accionP = desc.toUpperCase();
     var ntsP = [];
+    var detailsP=DTGOps.meta(task).details;if(detailsP)ntsP.push(detailsP);
     if(desc && desc.toUpperCase() !== accionP) ntsP.push(desc);
     var msP = activeMarkers(t).filter(function(m){ return m.type !== "urgente"; });
     if(msP.length) ntsP.push(markerLabel(msP[0].type) + (msP[0].text ? (" — " + msP[0].text) : ""));
@@ -15497,7 +15559,9 @@ function renderKdsDetail(){
   var notas = (t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).slice(-8).reverse();
   var fotos = (t.thread || []).filter(function(ev){ return ev.type === "archivo" && ev.storage_path && !ev.deleted_at; }).length;
   var photo = ticketGalleryPhotos(t.id)[0];
-  var prods = (t.productos || []).filter(function(p){ return !order || p.id === order.productId; }).map(function(p){
+  var taskContext=DTGOps.meta(it.task);
+  var linkedProductId=taskContext.productId || (order && order.productId);
+  var prods = (t.productos || []).filter(function(p){ return !linkedProductId || p.id === linkedProductId; }).map(function(p){
     return "<li>" + escapeHtml(((p.cantidad && p.cantidad !== 1) ? (p.cantidad + " × ") : "") + (p.desc || "")) + "</li>";
   }).join("");
   return (
@@ -15511,7 +15575,7 @@ function renderKdsDetail(){
         '<div class="kds-detail-grid">' +
           (photo ? '<div class="kds-detail-photo"><h3>REFERENCIA</h3><img data-storage-path="' + escapeHtml(photo.storagePath) + '" alt="Referencia de trabajo; tocar para ampliar" style="width:100%;max-height:45vh;object-fit:contain;cursor:zoom-in"></div>' : "") +
           "<div><h3>TRABAJO</h3>" + (order ? '<p>' + escapeHtml(order.title) + '</p>' : '') + '<ul>' + (prods || "<li>Sin producto vinculado</li>") + "</ul>" + (order && order.instructions ? '<p>' + escapeHtml(order.instructions) + '</p>' : '') + '</div>' +
-          "<div><h3>PASO</h3><p>" + escapeHtml(it.task.desc || "—") + "</p>" +
+          "<div><h3>PASO</h3><p>" + escapeHtml(it.task.desc || "—") + "</p>" + (taskContext.details ? "<p>" + escapeHtml(taskContext.details) + "</p>" : "") +
             "<p>Responsable: <b>" + escapeHtml(it.task.responsable || "sin asignar") + "</b></p>" +
             "<p>Entrega: <b>" + escapeHtml(kdsFechaCorta(t.fechaCompromiso)) + "</b></p></div>" +
           "<div><h3>NOTAS (" + notas.length + ")</h3><ul>" +
@@ -17421,9 +17485,19 @@ async function commitClienteNombre(value){
    Operaciones. Sin extra, se comporta EXACTAMENTE igual que antes (el "+ →
    Tarea" y /produccion no cambian). Si 0016 todavía no se aplicó (columnas
    nuevas inexistentes / estado "esperando" rechazado por el CHECK viejo), se
-   reintenta con lo básico y se avisa con claridad — la tarea no se pierde. */
+   el guardado falla sin descartar area ni metadata. Se conserva el borrador. */
 async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
   extra = extra || {};
+  if(tipo==='produccion' && TASK_AREAS.indexOf(extra.area)===-1){
+    openOpsEditor('create',null,t.id);
+    var field=document.getElementById('ops-f-desc');if(field)field.value=desc;
+    UI.operaciones.editor.progressive.free=true;
+    UI.operaciones.editor.draft={desc:desc,responsable:responsable||'',fechaAtencion:fechaAtencion||'',area:''};
+    var resp=document.getElementById('ops-f-resp');if(resp)resp.value=responsable||'';
+    var date=document.getElementById('ops-f-date');if(date)date.value=fechaAtencion||'';
+    opsSyncPreview();
+    showToast('Confirma la pantalla de destino antes de crear la tarea.');return false;
+  }
   var kind = tipo === "produccion" ? "tarea_produccion" : "tarea";
   var estado = extra.estado || "pendiente";
   var progreso = extra.progreso != null ? Math.max(0, Math.min(100, Number(extra.progreso) || 0)) : 0;
@@ -17433,12 +17507,17 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
     /* B/D5: quien crea la tarea dice a qué pantalla va. Si no lo dice, se
        queda vacío y manda el puente — nunca se inventa aquí. */
     area: extra.area || "", workOrderId: extra.workOrderId || null, actionCode: extra.actionCode || '', actionPath: extra.actionPath || '' };
-  t.tareas.push(local);
-  render();
+  local.id=uuid4();
+  var packing=null;
+  if(extra.packFirst){
+    packing={id:uuid4(),desc:'Empaquetar',tipo:'produccion',responsable:'',fechaAtencion:fechaAtencion||'',estado:'pendiente',progreso:0,tipoOperacion:'Empaquetar',area:'produccion',createdAt:nowIso,workOrderId:extra.workOrderId||null,actionCode:'pack',actionPath:JSON.stringify({v:1,selection:{action:'pack'},productId:DTGOps.meta(local).productId||null})};
+    var context=DTGOps.meta(local);context.dependsOn=packing.id;local.actionPath=JSON.stringify(context);
+  }
+  // Persist before adding local cards: a failed insert must not look successful.
   if(responsable && tipo !== "produccion") rememberName(responsable);
   var ok = true;
   try{
-    var row = { ticket_id: t.id, descripcion: desc, tipo: tipo, responsable: responsable || null, fecha_atencion: fechaAtencion || null, estado: estado };
+    var row = { id:local.id, ticket_id: t.id, descripcion: desc, tipo: tipo, responsable: responsable || null, fecha_atencion: fechaAtencion || null, estado: estado };
     var hasExtra = tipo === "produccion" && (extra.tipoOperacion || progreso || estado === "terminado" || extra.area);
     if(hasExtra){
       row.progreso = progreso;
@@ -17448,21 +17527,17 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
       if(STATE.workOrdersTableMissing === false){
         row.work_order_id = extra.workOrderId || null;
         row.action_code = extra.actionCode || null;
-        row.action_path = extra.actionPath || null;
+        row.action_path = local.actionPath || null;
       }
     }
-    var r3 = await sb.from("tareas").insert(row);
-    if(r3.error && hasExtra && STATE.workOrdersTableMissing && /progreso|tipo_operacion|terminado_at|area|column|schema cache/i.test(r3.error.message || "")){
-      delete row.progreso; delete row.tipo_operacion; delete row.terminado_at; delete row.area;
-      r3 = await sb.from("tareas").insert(row);
-      /* X1.1: el empleado ve que su tarea se guardó; el detalle de la
-         migración es para quien administra. */
-      showToast("Tarea guardada (el tipo y el avance no se anotaron).");
-      adminNote("Falta aplicar la migración 0016: el tipo y el progreso de las operaciones no se están guardando.", r3 && r3.error);
-    }
+    var rows=packing ? [Object.assign({},row,{id:packing.id,descripcion:packing.desc,responsable:null,estado:'pendiente',progreso:0,area:'produccion',tipo_operacion:'Empaquetar',action_code:'pack',action_path:packing.actionPath}),row] : row;
+    // A multi-row insert is one database statement: package + delivery succeed together.
+    var r3 = await sb.from("tareas").insert(rows);
     if(r3.error) throw r3.error;
+    if(packing)t.tareas.push(packing);
+    t.tareas.push(local);render();
     var r4 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: kind, autor: currentActorName() || null, payload: { desc: desc, responsable: responsable, fechaAtencion: fechaAtencion, estado: tipo==="produccion" ? estado : null, tipoOperacion: extra.tipoOperacion || null } });
-    if(r4.error) throw r4.error;
+    if(r4.error){adminNote("Tarea guardada; no se pudo registrar en bitácora.",r4.error);}
   }catch(e){
     ok = false;
     var m = (e && e.message) || "error";
@@ -17484,6 +17559,7 @@ async function updateTareaCore(t, taskId, patch){
   if(!t) return false;
   var task = (t.tareas || []).filter(function(x){ return x.id === taskId; })[0];
   if(!task) return false;
+  if(DTGOps.blocked(task,t) && (patch.estado==='terminado'||patch.estado==='en_proceso')){showToast('Termina primero el empaquetado vinculado.');return false;}
   var prev = { estado: task.estado, responsable: task.responsable, terminadoAt: task.terminadoAt, desc: task.desc, progreso: task.progreso, tipoOperacion: task.tipoOperacion, area: task.area, fechaAtencion: task.fechaAtencion, workOrderId: task.workOrderId, actionCode: task.actionCode, actionPath: task.actionPath };
   var dbPatch = {}, changed = false;
   Object.keys(patch || {}).forEach(function(k){
@@ -17503,7 +17579,7 @@ async function updateTareaCore(t, taskId, patch){
   var ok = true;
   try{
     var r1 = await sb.from("tareas").update(dbPatch).eq("id", taskId);
-    if(r1.error && !('work_order_id' in dbPatch || 'action_code' in dbPatch || 'action_path' in dbPatch) && /progreso|tipo_operacion|terminado_at|column|schema cache/i.test(r1.error.message || "")){
+    if(r1.error && !('area' in dbPatch) && !('work_order_id' in dbPatch || 'action_code' in dbPatch || 'action_path' in dbPatch) && /progreso|tipo_operacion|terminado_at|column|schema cache/i.test(r1.error.message || "")){
       var basic = {};
       ["descripcion","estado","responsable"].forEach(function(c){ if(c in dbPatch) basic[c] = dbPatch[c]; });
       r1 = Object.keys(basic).length ? await sb.from("tareas").update(basic).eq("id", taskId) : { error: null };
@@ -17532,6 +17608,7 @@ async function deleteTareaCore(t, taskId){
   if(!t) return false;
   var task = (t.tareas || []).filter(function(x){ return x.id === taskId; })[0];
   if(!task) return false;
+  if(t.tareas.some(function(x){return DTGOps.meta(x).dependsOn===taskId;})){showToast('Esta tarea tiene una entrega vinculada. Elimina primero la entrega si deseas cancelar la secuencia.');return false;}
   t.tareas = t.tareas.filter(function(x){ return x.id !== taskId; });
   render();
   var ok = true;
@@ -22653,7 +22730,7 @@ function wireEvents(){
   }
   var opsDescInput = document.getElementById("ops-f-desc");
   if(opsDescInput){
-    opsDescInput.addEventListener("keydown", function(e){ if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitOpsEditor(); } });
+    opsDescInput.addEventListener("keydown", function(e){ if(!opsDescInput.readOnly && e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitOpsEditor(); } });
   }
   ["cxc-pago-monto","cxc-pago-concepto"].forEach(function(id){
     var el = document.getElementById(id);
