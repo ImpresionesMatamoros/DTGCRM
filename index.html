@@ -8550,7 +8550,7 @@ function renderNotificationCenter(){
         ? '<button type="button" class="btn btn-sm btn-primary" data-action="push-on"'+(est==="sin-configurar"?' disabled':'')+'>Activar avisos fuera de la app</button>'
         : '<span class="notification-center-push-hint">'+escapeHtml(est==="bloqueado"?"Avisos bloqueados por el sistema.":"Este dispositivo no admite Web Push.")+'</span>');
   return '<div class="cierre-modal-overlay notification-center-overlay" data-action="chat-notification-center-close">'+
-    '<div class="notification-center" role="dialog" aria-modal="true" aria-label="Notificaciones" onclick="event.stopPropagation()">'+
+    '<div class="notification-center" role="dialog" aria-modal="true" aria-label="Notificaciones">'+
       '<div class="notification-center-head"><div><strong>Notificaciones</strong><small>'+s.total+' pendiente'+(s.total===1?'':'s')+(s.menciones?' · '+s.menciones+' mención'+(s.menciones===1?'':'es'):'')+'</small></div>'+
       '<button type="button" class="icon-btn" data-action="chat-notification-center-close" aria-label="Cerrar">×</button></div>'+
       '<div class="notification-center-push">'+pushAction+'</div>'+
@@ -24273,7 +24273,7 @@ document.addEventListener("click", function(e){
   var nOpen=e.target.closest&&e.target.closest('[data-action="chat-notification-center-open"]');
   if(nOpen){e.stopPropagation();UI.chatNotificationCenterOpen=true;render();return;}
   var nClose=e.target.closest&&e.target.closest('[data-action="chat-notification-center-close"]');
-  if(nClose){e.stopPropagation();UI.chatNotificationCenterOpen=false;render();return;}
+  if(nClose && (nClose===e.target || nClose.tagName==="BUTTON")){e.stopPropagation();UI.chatNotificationCenterOpen=false;render();return;}
   var nItem=e.target.closest&&e.target.closest('[data-action="chat-notification-item"]');
   if(nItem){e.stopPropagation();UI.chatNotificationCenterOpen=false;abrirChatEnMensaje(nItem.getAttribute("data-post"));return;}
   var cPrefsOpen = e.target.closest && e.target.closest('[data-action="chat-prefs-open"]');
