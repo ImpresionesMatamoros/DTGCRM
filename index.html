@@ -4815,18 +4815,9 @@ async function startAppForSession(session){
   /* Si el push ya estaba activo en este dispositivo, se reengancha el
      service worker en silencio (sin volver a pedir permiso). */
   if(chatPrefs().notifPush && pushSoportado() && Notification.permission === "granted") registrarSW();
-  /* Al volver de otra app/pestaña: ponerse al día SIN reproducir sonidos de
-     lo que llegó mientras tanto, y marcar leído si está viendo el chat. */
-  document.addEventListener("visibilitychange", function(){
-    if(document.hidden) return;
-    refreshFromServer({ background: true });
-    if(chatViendoConversacion()) chatMarkSeen();
-  });
-  window.addEventListener("online", function(){
-    /* Reconexión: los mensajes perdidos entran por el refresco, ya marcados
-       como "no avisar" — se recuperan sin volver a sonar. */
-    refreshFromServer({ background: true });
-  });
+  /* visibilitychange/online se escuchan una sola vez más abajo, con el guard
+     del selector de archivos. No se registran de nuevo por sesión: duplicar
+     estos listeners multiplicaba refreshes completos después de relogins. */
   /* §125: este es el ÚNICO punto que corren TANTO boot() con una sesión ya
      guardada COMO submitLogin() justo después de autenticar — así que
      resolver el deep link aquí, después de que STATE.tickets ya tiene
@@ -5594,16 +5585,29 @@ var DTG_RT_TABLAS = [
   { t: "app_settings",   que: "los ajustes" },
   { t: "team_posts",     que: "los mensajes", chat: true }
 ];
-var DTG_RT_CANALES = {};           /* tabla -> { estado, intentos, retry, canal, avisado } */
+var DTG_RT_CANALES = {};           /* tabla -> estado/retry/canal/generación */
 var DTG_RT_STATE = "conectando";   /* conectando | vivo | parcial | caido */
 var DTG_RT_DETALLE = "";
 var DTG_RT_INTENTOS = 0;           /* el mayor de los doce: lo leen el botón y QA */
 var dtgRtRetry = null;
 var dtgRtPoll = null;
+var dtgRtCatchupTimer = null;
+var DTG_RT_POLL_MS = 120000;       /* fallback: 2 min, nunca martillar Supabase */
 
 function dtgRtCanal(tabla){
-  if(!DTG_RT_CANALES[tabla]) DTG_RT_CANALES[tabla] = { estado: "conectando", intentos: 0, retry: null, canal: null, avisado: false, detalle: "" };
+  if(!DTG_RT_CANALES[tabla]) DTG_RT_CANALES[tabla] = {
+    estado: "conectando", intentos: 0, retry: null, canal: null,
+    avisado: false, detalle: "", generation: 0, needsCatchup: false
+  };
   return DTG_RT_CANALES[tabla];
+}
+function dtgRtScheduleCatchup(){
+  clearTimeout(dtgRtCatchupTimer);
+  dtgRtCatchupTimer = setTimeout(function(){
+    dtgRtCatchupTimer = null;
+    if(AUTH_STATUS !== "signed_in") return;
+    refreshFromServer({ background: true });
+  }, 500);
 }
 function dtgRtEstadoDe(tabla){ return dtgRtCanal(tabla).estado; }
 /* ¿Llega en vivo LO QUE ESTA PANTALLA MUESTRA? Una pantalla no debe decir
@@ -5633,11 +5637,17 @@ function dtgRtRecalcular(){
     DTG_RT_DETALLE = detalle;
     try{ if(typeof renderRtBadge === "function") renderRtBadge(); }catch(e){}
   }
-  /* Mientras algo no llegue solo, la app se mantiene al día sondeando. Es
-     peor que Realtime, pero es honesto: nada se queda sin llegar. */
+  /* Fallback de emergencia. Antes corría cada 30 s y un solo canal inestable
+     podía descargar TODA la base indefinidamente. Realtime sigue reintentando
+     por separado; este sondeo solo evita quedar obsoletos si la falla persiste. */
   if(estado === "vivo"){ if(dtgRtPoll){ clearInterval(dtgRtPoll); dtgRtPoll = null; } }
   else if(!dtgRtPoll && typeof setInterval === "function"){
-    dtgRtPoll = setInterval(function(){ refreshFromServer({ background: true }); }, 30000);
+    dtgRtPoll = setInterval(function(){
+      if(AUTH_STATUS !== "signed_in") return;
+      if(typeof document !== "undefined" && document.hidden) return;
+      if(refreshInFlight) return;
+      refreshFromServer({ background: true });
+    }, DTG_RT_POLL_MS);
   }
 }
 /* Se conserva el nombre de v0.23.1 (lo llaman el badge y las pruebas):
@@ -5670,40 +5680,63 @@ function dtgRtHandler(tabla){
 function subscribeRealtimeTabla(d){
   var c = dtgRtCanal(d.t);
   clearTimeout(c.retry); c.retry = null;
-  if(c.canal){ try{ sb.removeChannel(c.canal); }catch(e){} c.canal = null; }
+
+  /* Cada reemplazo invalida callbacks del canal anterior ANTES de cerrarlo.
+     removeChannel() puede disparar CLOSED; ese CLOSED ya no debe programar
+     otro retry ni otro refresh sobre el canal nuevo. */
+  c.generation = (c.generation || 0) + 1;
+  var generation = c.generation;
+  var anterior = c.canal;
+  c.canal = null;
+  if(anterior){ try{ sb.removeChannel(anterior); }catch(e){} }
+
   var canal = sb.channel("dtg-" + d.t);
+  c.canal = canal;
   canal.on("postgres_changes", { event: "*", schema: "public", table: d.t }, dtgRtHandler(d.t));
   c.estado = "conectando";
   dtgRtRecalcular();
+
   canal.subscribe(function(status, err){
+    /* Callback de un canal sustituido/cerrado: completamente obsoleto. */
+    if(c.generation !== generation || c.canal !== canal) return;
+
     if(status === "SUBSCRIBED"){
+      clearTimeout(c.retry); c.retry = null;
+      var recovered = !!c.needsCatchup;
+      c.needsCatchup = false;
       c.intentos = 0; c.avisado = false; c.estado = "vivo"; c.detalle = "";
       dtgRtRecalcular();
-      /* Al reconectar puede haberse perdido algo: ponerse al día en
-         silencio (los mensajes recuperados no suenan, ver X1/v0.23). */
-      refreshFromServer({ background: true });
+      /* La carga inicial ya ocurrió antes de subscribeRealtime(). Solo una
+         reconexión real necesita ponerse al día, y todas las tablas que se
+         recuperen juntas comparten UN único refresh debounced. */
+      if(recovered) dtgRtScheduleCatchup();
       return;
     }
+
     if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
       if(err) try{ console.error("[DTG] Realtime " + d.t + " " + status, err); }catch(x){}
-      c.estado = "caido"; c.detalle = status; c.intentos++;
+      var firstFailure = c.estado !== "caido";
+      c.estado = "caido"; c.detalle = status; c.needsCatchup = true;
+      if(firstFailure) c.intentos++;
       dtgRtRecalcular();
-      /* Reintento con espera creciente: 2s, 4s, 8s… tope 30s. Nunca deja
-         de intentar, y nunca satura si el servidor está caído. Cada tabla
-         lleva su propia cuenta: la sana no paga la espera de la rota. */
-      var espera = Math.min(30000, 2000 * Math.pow(2, Math.min(c.intentos - 1, 4)));
-      clearTimeout(c.retry);
-      c.retry = setTimeout(function(){ subscribeRealtimeTabla(d); }, espera);
-      refreshFromServer({ background: true });
-      /* Quien administra ve QUÉ tabla y CÓMO se arregla — no un "no
-         conecta" genérico que no dice dónde buscar. Una vez por tabla. */
+
+      /* Nunca descargar la base porque un socket falló. Solo reintentar.
+         El catch-up sucede una vez cuando el canal vuelva a SUBSCRIBED. */
+      if(!c.retry){
+        var espera = Math.min(30000, 2000 * Math.pow(2, Math.min(Math.max(c.intentos, 1) - 1, 4)));
+        c.retry = setTimeout(function(){
+          c.retry = null;
+          if(c.generation !== generation || c.canal !== canal) return;
+          subscribeRealtimeTabla(d);
+        }, espera);
+      }
+
       if(c.intentos === 3 && !c.avisado){
         c.avisado = true;
-        adminNote('Realtime no conecta la tabla "' + d.t + '" (' + status + '). Las demás siguen en vivo. Casi siempre falta en la publicación: ALTER PUBLICATION supabase_realtime ADD TABLE public.' + d.t + ';');
+        adminNote('Realtime no conecta la tabla "' + d.t + '" (' + status + '). Las demás siguen en vivo. Revisa la conexión y la configuración Realtime de esa tabla.');
       }
     }
   });
-  c.canal = canal;
   return canal;
 }
 function subscribeRealtime(){
@@ -5721,10 +5754,17 @@ function unsubscribeRealtime(){
   DTG_RT_TABLAS.forEach(function(d){
     var c = dtgRtCanal(d.t);
     clearTimeout(c.retry); c.retry = null;
-    if(c.canal){ try{ sb.removeChannel(c.canal); }catch(e){} c.canal = null; }
+    /* Invalidar primero: el CLOSED provocado por removeChannel es intencional
+       y jamás debe revivir el ciclo de reconexión. */
+    c.generation = (c.generation || 0) + 1;
+    c.needsCatchup = false;
+    var anterior = c.canal;
+    c.canal = null;
+    if(anterior){ try{ sb.removeChannel(anterior); }catch(e){} }
     c.estado = "conectando"; c.intentos = 0; c.avisado = false; c.detalle = "";
   });
   clearTimeout(dtgRtRetry); dtgRtRetry = null;
+  clearTimeout(dtgRtCatchupTimer); dtgRtCatchupTimer = null;
   if(dtgRtPoll){ clearInterval(dtgRtPoll); dtgRtPoll = null; }
   if(realtimeChannel){ try{ sb.removeChannel(realtimeChannel); }catch(e){} realtimeChannel = null; }
   DTG_RT_STATE = "conectando"; DTG_RT_DETALLE = ""; DTG_RT_INTENTOS = 0;
@@ -5794,13 +5834,16 @@ document.addEventListener("change", function(e){
 });
 document.addEventListener("visibilitychange", function(){
   if(document.visibilityState !== "visible") return;
-  if(!sb) return; /* aún no terminó boot() */
+  if(!sb || AUTH_STATUS !== "signed_in") return; /* aún no terminó boot/login */
   if(filePickerOpen){ pendingVisibleRefresh = true; return; }
   refreshFromServer({ background: true });
+  if(chatViendoConversacion()) chatMarkSeen();
 });
 window.addEventListener("online", function(){
-  if(!sb) return;
-  refreshFromServer({ background: true });
+  if(!sb || AUTH_STATUS !== "signed_in") return;
+  /* Puede coincidir con la recuperación de varios canales: compartir un solo
+     catch-up evita duplicar una descarga completa al volver la red. */
+  dtgRtScheduleCatchup();
 });
 
 /* ---------------- helpers over STATE ---------------- */
