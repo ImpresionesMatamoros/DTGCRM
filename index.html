@@ -3844,6 +3844,23 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 /* Insignias del chat en la navegación. */
 .nav-badge-chat{ background:var(--accent-soft); color:var(--accent-ink); }
 .nav-badge-mention{ background:var(--gold-soft); color:var(--gold); font-weight:800; }
+.chat-peer-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;}
+.notification-bell-btn{position:relative;flex-shrink:0;}
+.notification-bell-count{position:absolute;top:-4px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--gold);color:#111;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;border:2px solid var(--surface);}
+.notification-center-overlay{z-index:120;}
+.notification-center{width:min(430px,calc(100vw - 24px));max-height:min(680px,82vh);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-pop);display:flex;flex-direction:column;overflow:hidden;}
+.notification-center-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.notification-center-head>div{display:flex;flex-direction:column;gap:2px}.notification-center-head small{color:var(--text-muted);}
+.notification-center-push{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.notification-center-push-ok{font-size:12.5px;color:var(--commit);font-weight:650}.notification-center-push-hint{font-size:12.5px;color:var(--text-muted);}
+.notification-center-list{overflow:auto;display:flex;flex-direction:column;padding:6px;}
+.notification-center-item{display:flex;flex-direction:column;gap:4px;text-align:left;border:0;background:transparent;color:var(--text);padding:10px;border-radius:10px;font:inherit;}
+.notification-center-item:hover,.notification-center-item:focus-visible{background:var(--surface-3);}
+.notification-center-item-top{display:flex;align-items:center;gap:8px;font-size:12.5px}.notification-center-item-top span{color:var(--text-muted);font-size:11.5px;}
+.notification-center-mencion .notification-center-item-top span{color:var(--gold);font-weight:800}.notification-center-equipo .notification-center-item-top span{color:var(--commit);font-weight:800;}
+.notification-center-item-text{font-size:13.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notification-center-empty{padding:28px 16px;text-align:center;color:var(--text-muted);}
+@media(max-width:880px){.mobile-topbar .notification-bell-btn{margin-left:auto}.notification-center{max-height:78vh}.astra-tabs{gap:4px}.chat-peer-badge{min-width:17px;height:17px;font-size:10px;}}
 .astra-tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .astra-tab,.astra-later-toggle{border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--text);padding:7px 12px;white-space:nowrap;cursor:pointer}
 .astra-tab.active{background:var(--accent-soft);color:var(--accent-ink)}
@@ -4164,7 +4181,7 @@ var AUTH_ERROR = "";
    fresco (p.ej. si display_name cambió después de reaccionar) conviene
    tener el roster a la mano. profiles_select_active_members (0010) ya
    permite leerlo completo. */
-var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [] };
+var STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [], chatReadState: [] };
 var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: false, accountMenuOpen: false,
   /* AI Bridge (DTG_PATCH v1): preview pendiente de un patch ya parseado y
      validado, esperando confirmación humana — null cuando no hay ninguno.
@@ -5011,6 +5028,8 @@ async function startAppForSession(session){
      "recordar" el ?t= por separado durante el login: la URL nunca se tocó
      mientras tanto). */
   resolveDeepLinkIfNeeded();
+  resolveChatNotificationDeepLink();
+  syncAppBadge();
 }
 
 /* Traduce los errores más comunes de sb.auth.signInWithPassword a algo que
@@ -5116,7 +5135,7 @@ async function signOut(){
   CURRENT_PROFILE = null;
   AUTH_STATUS = "signed_out";
   AUTH_ERROR = "";
-  STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [], chatState: null };
+  STATE = { meta: { queSigueOptions: [], teamNames: [] }, tickets: [], clientes: [], teamPosts: [], feedReactions: [], profiles: [], chatState: null, chatReadState: [] };
   UI = JSON.parse(UI_INITIAL_SNAPSHOT);
   UI.pendingFocus = { elId: "login-email-input" };
   render();
@@ -5274,6 +5293,7 @@ async function fetchAllState(){
   var feedReactionsInfo = await fetchFeedReactions();
   var profilesInfo = await fetchProfiles();
   var chatStateRow = await fetchChatState();   /* v0.23: lectura + preferencias */
+  var chatReadStateRows = await fetchChatReadState();
   var ticketAccessInfo = await fetchTicketAccess();
   var workOrdersInfo = await fetchWorkOrders();
 
@@ -5370,6 +5390,7 @@ async function fetchAllState(){
     if(row.key === "operacion_tipos") settings.operacionTipos = row.values || [];
     if(row.key && row.key.indexOf("doc_terms_") === 0) settings.docTerms[row.key.slice(10)] = row.values || [];
     if(row.key === "doc_quote_valid_days") settings.quoteValidDays = parseInt((row.values || [])[0], 10) || null;
+    if(row.key === "chat_unread_baseline") settings.chatUnreadBaseline = (row.values || [])[0] || null;
   });
   var teamPosts = teamPostsInfo.rows.map(mapTeamPostRow);
   var conversations = await fetchAstraConversations();
@@ -5398,7 +5419,8 @@ async function fetchAllState(){
     teamPostsTableMissing: teamPostsInfo.missing,
     ticketAccessTableMissing: ticketAccessInfo.missing,
     workOrdersTableMissing: workOrdersInfo.missing,
-    chatState: chatStateRow
+    chatState: chatStateRow,
+    chatReadState: chatReadStateRows
   };
 }
 
@@ -5538,6 +5560,15 @@ function resolveDeepLinkIfNeeded(){
    Refresh/abrir-en-pestaña-nueva SÍ deben conservar el ticket actual, y
    replaceState ya lo garantiza porque la URL de la barra queda correcta en
    todo momento. */
+var chatNotificationDeepLinkResolved=false;
+function resolveChatNotificationDeepLink(){
+  if(chatNotificationDeepLinkResolved) return;
+  var postId=null;
+  try{postId=new URLSearchParams(window.location.search).get("chat_post");}catch(e){}
+  if(!postId) return;
+  chatNotificationDeepLinkResolved=true;
+  setTimeout(function(){ abrirChatEnMensaje(postId); },50);
+}
 function syncDeepLinkUrl(ticketOrNull){
   try{
     var base = window.location.origin + window.location.pathname;
@@ -5773,6 +5804,7 @@ var DTG_RT_TABLAS = [
   { t: "feed_reactions", que: "las reacciones" },
   { t: "profiles",       que: "los datos del equipo" },
   { t: "app_settings",   que: "los ajustes" },
+  { t: "chat_read_state",que: "las lecturas del chat" },
   { t: "team_posts",     que: "los mensajes", chat: true }
 ];
 var DTG_RT_CANALES = {};           /* tabla -> estado/retry/canal/generación */
@@ -5971,7 +6003,7 @@ function applyTeamPostRealtime(payload){
   STATE.teamPosts.unshift(post);
   /* v0.23: el aviso se decide en UN solo lugar, venga de donde venga. */
   onNuevoMensajeChat(post);
-  if(!post.conversationId && !post.threadRootId && chatViendoConversacion(post)) chatMarkSeen();
+  if(!post.threadRootId && chatViendoConversacion(post)) chatMarkScopeSeen(post.conversationId || null);
   /* Antes solo se repintaba en Inicio; ahora el contador tiene que moverse
      aunque la persona esté en Tickets, Calendario o donde sea. */
   if(!UI.displayMode) renderKeepingLiveInputs();
@@ -6027,7 +6059,7 @@ document.addEventListener("visibilitychange", function(){
   if(!sb || AUTH_STATUS !== "signed_in") return; /* aún no terminó boot/login */
   if(filePickerOpen){ pendingVisibleRefresh = true; return; }
   refreshFromServer({ background: true });
-  if(chatViendoConversacion()) chatMarkSeen();
+  if(chatViendoConversacion()) chatMarkScopeSeen(chatCurrentScopeId());
 });
 window.addEventListener("online", function(){
   if(!sb || AUTH_STATUS !== "signed_in") return;
@@ -6679,6 +6711,7 @@ function renderSidebar(){
          cajón/drawer de mobile (misma función, mismo estado), así que un
          solo botón aquí ya cumple "ambos deben abrir el mismo panel" sin
          código aparte para mobile. */
+      renderNotificationBell() +
       '<button type="button" class="icon-btn help-panel-open-btn" data-action="open-help-panel" title="Ayuda" aria-label="Ayuda">' + icon("help-circle") + "</button>" +
     "</div>"
   );
@@ -7956,6 +7989,19 @@ async function fetchChatState(){
   }
 }
 /* Guardar preferencias: mismo patrón optimista de siempre (X1.1). */
+async function fetchChatReadState(){
+  try{
+    var r = await sb.from("chat_read_state").select("*").eq("user_id", currentActorId());
+    if(r.error) throw r.error;
+    return (r.data || []).map(function(x){
+      return { userId:x.user_id, conversationId:x.conversation_id || null, lastSeenAt:x.last_seen_at || null,
+        lastMentionSeenAt:x.last_mention_seen_at || null, updatedAt:x.updated_at || null };
+    });
+  }catch(e){
+    schemaGapFrom(e);
+    return [];
+  }
+}
 async function saveChatPrefs(patch){
   var prev = Object.assign({}, STATE.chatState);
   STATE.chatState = Object.assign({}, STATE.chatState, patch);
@@ -8167,6 +8213,7 @@ function onNuevoMensajeChat(post, opts){
     pushChatNotif(post, kind);
     if(document.hidden) mostrarNotificacionNavegador(post, kind);
   }
+  syncAppBadge();
 }
 
 /* Aviso DENTRO del CRM: tarjeta chica, no interrumpe el trabajo. */
@@ -8254,7 +8301,7 @@ function abrirChatEnMensaje(postId){
     var el = document.querySelector('[data-chat-msg="' + postId + '"]');
     if(el && el.scrollIntoView) el.scrollIntoView({ block: "center" });
     if(el){ el.classList.add("chat-msg-flash"); setTimeout(function(){ el.classList.remove("chat-msg-flash"); }, 1800); }
-    chatMarkSeen();
+    chatMarkScopeSeen(targetPost ? (targetPost.conversationId || null) : null);
   }, 120);
 }
 
@@ -8363,7 +8410,10 @@ async function pushSoltarDispositivo(){
 function loadPushConfig(settingsRows){
   try{
     (settingsRows || []).forEach(function(r){
-      if(r && r.key === "push_vapid_public" && r.value) DTG_VAPID_PUBLIC = String(r.value);
+      if(r && r.key === "push_vapid_public"){
+        var v = r.value || (r.values && r.values[0]);
+        if(v) DTG_VAPID_PUBLIC = String(v);
+      }
     });
   }catch(e){}
 }
@@ -8383,20 +8433,129 @@ function wirePushMessages(){
 /* ---------- 8. Contadores sin leer ----------
    Derivados, nunca guardados aparte: se comparan contra la marca de lectura
    que vive en chat_user_state (y que viaja entre dispositivos). */
-function chatUnread(){
-  var st = STATE.chatState || {};
-  var desde = st.lastSeenAt ? new Date(st.lastSeenAt).getTime() : 0;
+function chatScopeReadRow(conversationId){
+  return (STATE.chatReadState || []).find(function(r){ return (r.conversationId || null) === (conversationId || null); }) || null;
+}
+function chatUnreadBaseline(){
+  var v = STATE.meta && STATE.meta.chatUnreadBaseline;
+  var t = v ? new Date(v).getTime() : NaN;
+  return isFinite(t) ? t : Date.now();
+}
+function chatScopeLastSeen(conversationId){
+  var r = chatScopeReadRow(conversationId);
+  if(r && r.lastSeenAt) return new Date(r.lastSeenAt).getTime();
+  if(!conversationId && STATE.chatState && STATE.chatState.lastSeenAt) return new Date(STATE.chatState.lastSeenAt).getTime();
+  return chatUnreadBaseline();
+}
+function chatUnreadItems(){
   var yo = currentActorId();
-  var total = 0, menciones = 0;
+  return (STATE.teamPosts || []).filter(function(p){
+    if(!p || p.pending || p.deletedAt || isPostExpired(p)) return false;
+    if(p.authorUserId === yo) return false;
+    var created = new Date(p.createdAt).getTime();
+    return created > chatScopeLastSeen(p.conversationId || null);
+  }).sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+}
+function chatNotificationSummary(){
+  var yo = currentActorId(), items = chatUnreadItems(), mentions = 0;
+  items.forEach(function(p){ if(postMencionaA(p, yo)) mentions++; });
+  return { total: items.length, menciones: mentions, items: items };
+}
+function chatUnread(){
+  var s = chatNotificationSummary();
+  return { total:s.total, menciones:s.menciones };
+}
+function chatUnreadForConversation(conversationId){
+  return chatUnreadItems().filter(function(p){ return (p.conversationId || null) === (conversationId || null); }).length;
+}
+function chatDirectConversationWith(peerId){
+  var me=currentActorId();
+  return (STATE.conversations || []).find(function(x){
+    return x.kind === "direct" && ((x.member_a===me && x.member_b===peerId) || (x.member_b===me && x.member_a===peerId));
+  }) || null;
+}
+function chatUnreadForPeer(peerId){
+  var c=chatDirectConversationWith(peerId);
+  return c ? chatUnreadForConversation(c.id) : 0;
+}
+function chatCurrentScopeId(){
+  if(UI.selectedTicketId) return ticketConversationId(UI.selectedTicketId) || null;
+  return UI.astraConversationId || null;
+}
+function chatNewestTsForScope(conversationId){
+  var newest=null;
   (STATE.teamPosts || []).forEach(function(p){
-    if(p.pending || p.conversationId || p.threadRootId) return;
-    if(p.authorUserId === yo) return;
-    if(isPostExpired(p)) return;
-    if(new Date(p.createdAt).getTime() <= desde) return;
-    total++;
-    if(postMencionaA(p, yo)) menciones++;
+    if((p.conversationId || null)!==(conversationId || null) || p.pending || p.deletedAt || isPostExpired(p)) return;
+    if(!newest || new Date(p.createdAt)>new Date(newest)) newest=p.createdAt;
   });
-  return { total: total, menciones: menciones };
+  return newest;
+}
+var chatScopeSeenTimers={};
+function chatMarkScopeSeen(conversationId, opts){
+  opts=opts||{};
+  var ts=chatNewestTsForScope(conversationId);
+  if(!ts) return;
+  var row=chatScopeReadRow(conversationId);
+  if(row && row.lastSeenAt && new Date(row.lastSeenAt).getTime() >= new Date(ts).getTime() && !opts.force) return;
+  if(row){
+    row.lastSeenAt=ts; row.lastMentionSeenAt=ts; row.updatedAt=new Date().toISOString();
+  }else{
+    (STATE.chatReadState=STATE.chatReadState||[]).push({userId:currentActorId(),conversationId:conversationId||null,lastSeenAt:ts,lastMentionSeenAt:ts,updatedAt:new Date().toISOString()});
+  }
+  if(!conversationId){
+    STATE.chatState=Object.assign({},STATE.chatState||{},{lastSeenAt:ts,lastMentionSeenAt:ts});
+    UI.chatLastSeenTs=ts;
+  }
+  var key=conversationId||"team";
+  clearTimeout(chatScopeSeenTimers[key]);
+  chatScopeSeenTimers[key]=setTimeout(function(){
+    try{ sb.rpc("chat_mark_scope_seen",{p_conversation_id:conversationId||null,p_seen:ts,p_mention_seen:ts}).then(function(r){if(r&&r.error)schemaGapFrom(r.error);},function(e){schemaGapFrom(e);}); }catch(e){}
+  },300);
+  syncAppBadge();
+}
+function syncAppBadge(){
+  try{
+    var n=chatNotificationSummary().total;
+    if(n && navigator.setAppBadge) navigator.setAppBadge(n);
+    else if(!n && navigator.clearAppBadge) navigator.clearAppBadge();
+  }catch(e){}
+}
+function chatNotificationKind(p){
+  if(postMencionaA(p,currentActorId()) && !p.mentionsAll) return "mencion";
+  if(p.mentionsAll) return "equipo";
+  var c=(STATE.conversations||[]).find(function(x){return x.id===p.conversationId;});
+  if(c&&c.kind==="direct") return "personal";
+  if(c&&c.kind==="ticket") return "ticket";
+  return "mensaje";
+}
+function renderNotificationBell(){
+  var s=chatNotificationSummary();
+  return '<button type="button" class="icon-btn notification-bell-btn" data-action="chat-notification-center-open" title="Notificaciones" aria-label="Notificaciones'+(s.total?' · '+s.total+' pendientes':'')+'">'+
+    icon("bell")+(s.total?'<span class="notification-bell-count">'+Math.min(s.total,99)+(s.total>99?"+":"")+'</span>':'')+'</button>';
+}
+function renderNotificationCenter(){
+  if(!UI.chatNotificationCenterOpen) return "";
+  var s=chatNotificationSummary(), est=pushEstado();
+  var rows=s.items.slice(0,30).map(function(p){
+    var kind=chatNotificationKind(p);
+    var tag=kind==="mencion"?"Te mencionó":kind==="equipo"?"@Equipo":kind==="personal"?"Mensaje directo":kind==="ticket"?"Ticket":"Equipo";
+    var txt=String(p.text || p.transcript || (p.audioPath?"Audio":"Archivo")).slice(0,110);
+    return '<button type="button" class="notification-center-item notification-center-'+kind+'" data-action="chat-notification-item" data-post="'+escapeHtml(p.id)+'">'+
+      '<span class="notification-center-item-top"><b>'+escapeHtml(p.autor||"Equipo")+'</b><span>'+escapeHtml(tag)+'</span></span>'+
+      '<span class="notification-center-item-text">'+escapeHtml(txt)+'</span></button>';
+  }).join("");
+  var pushAction = est==="encendido"
+    ? '<span class="notification-center-push-ok">Avisos fuera de la app activos</span>'
+    : (est==="apagado"||est==="sin-configurar"
+        ? '<button type="button" class="btn btn-sm btn-primary" data-action="push-on"'+(est==="sin-configurar"?' disabled':'')+'>Activar avisos fuera de la app</button>'
+        : '<span class="notification-center-push-hint">'+escapeHtml(est==="bloqueado"?"Avisos bloqueados por el sistema.":"Este dispositivo no admite Web Push.")+'</span>');
+  return '<div class="cierre-modal-overlay notification-center-overlay" data-action="chat-notification-center-close">'+
+    '<div class="notification-center" role="dialog" aria-modal="true" aria-label="Notificaciones" onclick="event.stopPropagation()">'+
+      '<div class="notification-center-head"><div><strong>Notificaciones</strong><small>'+s.total+' pendiente'+(s.total===1?'':'s')+(s.menciones?' · '+s.menciones+' mención'+(s.menciones===1?'':'es'):'')+'</small></div>'+
+      '<button type="button" class="icon-btn" data-action="chat-notification-center-close" aria-label="Cerrar">×</button></div>'+
+      '<div class="notification-center-push">'+pushAction+'</div>'+
+      '<div class="notification-center-list">'+(rows||'<div class="notification-center-empty">No tienes mensajes pendientes.</div>')+'</div>'+
+    '</div></div>';
 }
 
 /* ---------- 9. Menú de menciones en el compositor ---------- */
@@ -15059,7 +15218,11 @@ function restoreChatScroll(snap){
     var atBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 80;
     if(atBottom === UI.chatAtBottom) return;
     UI.chatAtBottom = atBottom;
-    if(atBottom && !UI.astraConversationId && !UI.astraThreadRoot){ UI.chatLastSeenTs = chatNewestTs(); chatMarkSeen(); dtgTabSend({ t: "leido", ts: UI.chatLastSeenTs }); }
+    if(atBottom && !UI.astraThreadRoot){
+      var scopeId=chatCurrentScopeId();
+      chatMarkScopeSeen(scopeId);
+      if(!scopeId){ UI.chatLastSeenTs=chatNewestTs(); dtgTabSend({t:"leido",ts:UI.chatLastSeenTs}); }
+    }
     if(atBottom) UI.chatLastSeenTs = chatNewestTs();
     updateChatNewPill();
   }, { passive: true });
@@ -16120,12 +16283,13 @@ function render(){
       '<div class="sidebar' + (UI.sidebarOpen?" open":"") + '" id="sidebar">' + renderSidebar() + "</div>" +
       (UI.sidebarOpen ? '<div class="sidebar-backdrop" data-action="close-sidebar"></div>' : "") +
       '<div class="main">' +
-        '<div class="mobile-topbar"><button class="sidebar-toggle" data-action="toggle-sidebar" aria-label="Abrir menú">' + icon("menu") + '</button><span class="mobile-topbar-brand">' + dtgLogoMark(22) + "Design To Go</span></div>" +
+        '<div class="mobile-topbar"><button class="sidebar-toggle" data-action="toggle-sidebar" aria-label="Abrir menú">' + icon("menu") + '</button><span class="mobile-topbar-brand">' + dtgLogoMark(22) + 'Design To Go</span>' + renderNotificationBell() + '</div>' +
         renderMain() +
       "</div>" +
     "</div>" +
     renderDocModal() +
     renderChatPrefsPanel() +
+    renderNotificationCenter() +
     astraReviewOverlay() +
     renderDocShareSheet() +
     renderCierreModal() +
@@ -24106,6 +24270,12 @@ document.addEventListener("click", function(e){
   if(rtRetry){ e.stopPropagation(); DTG_RT_INTENTOS = 0; subscribeRealtime(); return; }
   var cNotif = e.target.closest && e.target.closest('[data-action="chat-notif-open"]');
   if(cNotif){ e.stopPropagation(); abrirChatEnMensaje(cNotif.getAttribute("data-post")); return; }
+  var nOpen=e.target.closest&&e.target.closest('[data-action="chat-notification-center-open"]');
+  if(nOpen){e.stopPropagation();UI.chatNotificationCenterOpen=true;render();return;}
+  var nClose=e.target.closest&&e.target.closest('[data-action="chat-notification-center-close"]');
+  if(nClose){e.stopPropagation();UI.chatNotificationCenterOpen=false;render();return;}
+  var nItem=e.target.closest&&e.target.closest('[data-action="chat-notification-item"]');
+  if(nItem){e.stopPropagation();UI.chatNotificationCenterOpen=false;abrirChatEnMensaje(nItem.getAttribute("data-post"));return;}
   var cPrefsOpen = e.target.closest && e.target.closest('[data-action="chat-prefs-open"]');
   if(cPrefsOpen){ e.stopPropagation(); UI.accountMenuOpen = false; UI.chatPrefsOpen = true; render(); return; }
   var cPrefsClose = e.target.closest && e.target.closest('[data-action="chat-prefs-close"]');
@@ -25796,10 +25966,13 @@ function astraConversationTabs(){
   if(!ASTRA_CONVERSATIONS_AVAILABLE) return "";
   var me = currentActorId();
   var peers = activeAssignableProfiles().filter(function(p){ return p.id !== me; });
+  var teamUnread=chatUnreadForConversation(null);
+  var current=(STATE.conversations||[]).find(function(x){return x.id===UI.astraConversationId;});
+  var currentPeer=current&&current.kind==="direct"?(current.member_a===me?current.member_b:current.member_a):null;
   return '<nav class="astra-tabs" aria-label="Conversaciones"><button type="button" data-astra-action="team" class="astra-tab' +
-    (!UI.astraConversationId ? ' active' : '') + '">Equipo</button>' +
-    peers.map(function(p){ return '<button type="button" class="astra-tab" data-astra-action="dm" data-user-id="' +
-      escapeHtml(p.id) + '">' + escapeHtml(p.displayName) + '</button>'; }).join("") + '</nav>';
+    (!UI.astraConversationId ? ' active' : '') + '">Equipo'+(teamUnread?'<span class="chat-peer-badge">'+teamUnread+'</span>':'')+'</button>' +
+    peers.map(function(p){ var n=chatUnreadForPeer(p.id); return '<button type="button" class="astra-tab'+(currentPeer===p.id?' active':'')+'" data-astra-action="dm" data-user-id="' +
+      escapeHtml(p.id) + '">' + escapeHtml(p.displayName) + (n?'<span class="chat-peer-badge">'+n+'</span>':'') + '</button>'; }).join("") + '</nav>';
 }
 function astraRenderConversation(header){
   var root = UI.astraThreadRoot && astraPost(UI.astraThreadRoot);
@@ -25842,7 +26015,7 @@ async function astraOpenDm(peerId){
   if(ASTRA_RECORDER) astraStopRecording(true);
   UI.astraAudioBlob=null;
   UI.chatMention = null; UI.chatMentionPicks = []; UI.astraRefPicks = [];
-  UI.feedFilter = "todo"; UI.chatStickBottom = true; render();
+  UI.feedFilter = "todo"; UI.chatStickBottom = true; chatMarkScopeSeen(found.id); render();
 }
 function astraOpenThread(id){
   var post = astraPost(id); if(!post) return;
