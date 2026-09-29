@@ -24,8 +24,15 @@ self.addEventListener("push", function(event){
   var titulo = kind === "mencion" ? (autor + " te mencionó")
              : kind === "equipo"  ? (autor + " · para todo el equipo")
              : autor;
-  event.waitUntil(
-    self.registration.showNotification(titulo, {
+  event.waitUntil((async function(){
+    try{
+      var unread = Number(d.unread || 0);
+      if(self.navigator && self.navigator.setAppBadge){
+        if(unread > 0) await self.navigator.setAppBadge(unread);
+        else if(self.navigator.clearAppBadge) await self.navigator.clearAppBadge();
+      }
+    }catch(e){}
+    return self.registration.showNotification(titulo, {
       body: cuerpo,
       icon: "icons/icon-192.png",
       badge: "icons/icon-192.png",
@@ -34,9 +41,10 @@ self.addEventListener("push", function(event){
       tag: DTG_TAG + "-" + (d.postId || Date.now()),
       renotify: kind !== "mensaje",
       requireInteraction: false,
-      data: { postId: d.postId || null, url: d.url || "./?chat=1" }
-    })
-  );
+      silent: false,
+      data: { postId: d.postId || null, url: d.url || "./?chat=1", unread: Number(d.unread || 0) }
+    });
+  })());
 });
 
 self.addEventListener("notificationclick", function(event){
