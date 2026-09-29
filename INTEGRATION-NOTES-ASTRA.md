@@ -29,14 +29,14 @@ La migración **reemplaza** `team_posts_select`: la política actual permite a c
 
 ## Función y configuración externa
 
-Para transcripción se necesita aplicar la migración en un clon/staging, crear el bucket incluido por SQL, configurar `OPENAI_API_KEY` como secreto de Edge Functions y desplegar `transcribe-chat-audio` con `verify_jwt=true`. El cliente nunca contiene la clave. La función verifica JWT, autor del mensaje, RLS de lectura y ruta del objeto antes de llamar al proveedor. No especifica idioma para conservar español/inglés. Requiere disponibilidad de la API externa y saldo de su cuenta. Se entrega código, no despliegue. Realtime existente de `team_posts` debe continuar publicado; confirmar en staging que los eventos INSERT respetan RLS para dos usuarios y un tercero.
+La migración ya está aplicada en el proyecto de Supabase y creó el bucket privado. Para transcripción falta configurar `OPENAI_API_KEY` como secreto de Edge Functions y desplegar `transcribe-chat-audio` con `verify_jwt=true`. El cliente nunca contiene la clave. La función verifica JWT, autor del mensaje, RLS de lectura y ruta del objeto antes de llamar al proveedor. No especifica idioma para conservar español/inglés. Requiere disponibilidad de la API externa y saldo de su cuenta. Se entrega código, no despliegue. Realtime existente de `team_posts` debe continuar publicado; confirmar en staging que los eventos INSERT respetan RLS para dos usuarios y un tercero.
 
 ## Funcionalidad y pruebas
 
 | Área | Estado en el paquete | Verificación ejecutada |
 | --- | --- | --- |
 | Equipo, Realtime y sonidos previos | Código preservado; rama nueva sobre mismo `team_posts` | Inspección/diff; sin sesión de staging para prueba E2E |
-| DM, privacidad real, fotos/archivos privados | Esquema RLS diseñado; DM de texto integrado. Fotos/archivos de DM pendientes | Auditoría estática de políticas; **RLS no ejecutado** |
+| DM, privacidad real, fotos/archivos privados | Esquema RLS diseñado; DM de texto integrado. Fotos/archivos de DM pendientes | RLS aplicado; prueba transaccional con autor, destinatario y tercero sin persistir filas |
 | @persona, @cliente y #ticket | Picker y referencias JSON con IDs | VM: parseo, coincidencia, estructura y escape HTML |
 | Reply, hilo y vínculos de Equipo | Integrados en UI/esquema | VM: conteo de hilo y exclusión del feed; vínculo DB sin E2E |
 | Selección múltiple y creación revisada | Integradas para mensajes; operaciones usan núcleos existentes | Inspección y check sintáctico; flujo DB sin E2E |
@@ -45,11 +45,11 @@ Para transcripción se necesita aplicar la migración en un clon/staging, crear 
 | Push y centro de notificaciones | Push anterior conservado; **centro persistente nuevo no construido** | Sin prueba |
 | Móvil/teclado | Controles táctiles y picker con flechas, Enter, Tab, Escape | Revisión de código; iPhone/Android/PWA sin prueba física |
 
-Comandos realmente ejecutados: `node --check` sobre el script inline extraído, `node ASTRA-QA.cjs` (PASS) y `git diff --check`. No se ejecutó SQL ni prueba con cuentas reales. Se intentó iniciar Chromium de Playwright, pero la imagen de navegador no está instalada; no se marca QA visual ni E2E como aprobado.
+Comandos realmente ejecutados: `node --check` sobre el script inline extraído, `node ASTRA-QA.cjs` (PASS) y `git diff --check`. SQL aplicado al proyecto `jpjpnxamiclvhmcywyhx`; se simuló el contexto de tres perfiles activos dentro de una transacción revertida. No se abrió sesión real en navegador. Se intentó iniciar Chromium de Playwright, pero la imagen de navegador no está instalada; no se marca QA visual ni E2E como aprobado.
 
 ## Pendientes y límites que no se deben confundir con terminado
 
-- La privacidad de DM depende de **aplicar primero** la migración y probar RLS con dos miembros y un tercero. Sin migración, el selector de DM queda oculto; el chat general conserva el fallback. No poner `index.html` en producción antes de la migración.
+- La migración está aplicada. Se verificó el aislamiento con tres perfiles activos en una transacción revertida; aún falta una prueba de Realtime y Storage con tres sesiones reales antes de publicar el HTML.
 - La transcripción, búsqueda de transcripciones reales y errores de proveedor requieren despliegue y una grabación real; si la función falla, el audio permanece, con estado `failed`.
 - No hay fotos/archivos adjuntos en DM, ni compartir un hilo personal con visibilidad ampliada a participantes del ticket. Se requiere política de Storage y consentimiento claro para eso.
 - No se construyeron selección por pulsación prolongada, previsualización enriquecida de archivos, detección automática de precio/anticipo/fecha, asociación de producto, edición de fuente con bandera visible, ni deduplicación de creación parcial tras falla de vínculo. La revisión es manual y la bitácora guarda snapshot del texto.
@@ -60,11 +60,15 @@ Comandos realmente ejecutados: `node --check` sobre el script inline extraído, 
 
 ## Secuencia para otro arquitecto
 
-1. Comparar `ASTRA-against-8d063d7.patch` (archivo de auditoría externo al commit) con el SHA arriba y revisar el SQL contra un esquema actualizado.
-2. Probar la migración en staging y verificar SELECT, INSERT, UPDATE y Storage con Martin, Alexia y un tercero no participante; comprobar que reacciones y Realtime no filtran IDs o contenido.
+1. Comparar el diff de la rama contra el SHA arriba. La migración `20260929003414_astra_team_conversations_privacy` ya está aplicada en producción.
+2. Probar en staging o con sesiones reales SELECT, INSERT, UPDATE, Storage y Realtime con dos participantes y un tercero; comprobar que reacciones no filtran IDs o contenido.
 3. Servir el HTML en staging con la función preparada y secreto configurado. Probar Safari iPhone/PWA, Chrome Android y desktop, sonido entre pestañas, grabación y formatos, navegación, tickets, KDS y regresión de los módulos intactos.
 4. Resolver límites pendientes y auditar las políticas legadas permisivas antes de integración productiva.
 
 ## Rebase de la integración
 
-El commit nuevo de `main` (`8d063d7`) modifica solo `index.html` (90 inserciones, 11 eliminaciones). Su corrección de `claseAlAparecer`, `chatFocusNonce` y `updateSmartActionsEnSitio` permanece en el archivo integrado. `ASTRA-against-8d063d7.patch` (archivo de auditoría externo al commit) ahora se calcula frente a ese commit. No se modificó `sw.js`. La prueba de interfaz y RLS en staging sigue pendiente; este commit de código no autoriza desplegar el HTML antes del SQL.
+El commit nuevo de `main` (`8d063d7`) modifica solo `index.html` (90 inserciones, 11 eliminaciones). Su corrección de `claseAlAparecer`, `chatFocusNonce` y `updateSmartActionsEnSitio` permanece en el archivo integrado. `ASTRA-against-8d063d7.patch` (archivo de auditoría externo al commit) ahora se calcula frente a ese commit. No se modificó `sw.js`. La migración ya se aplicó. La prueba de interfaz, Storage y Realtime en staging sigue pendiente antes de publicar el HTML.
+
+## Estado de Supabase tras la migración
+
+El 29 de septiembre de 2026 UTC se aplicó `20260929003414_astra_team_conversations_privacy` en `DesignToGoCRM` (`jpjpnxamiclvhmcywyhx`). Las tres tablas nuevas tienen RLS; `anon` carece de SELECT, y `authenticated` solo tiene los verbos requeridos. `chat-private` existe con `public=false`. El RPC `push_targets_for_post` sigue ejecutable solo por `service_role` y ahora filtra destinatarios de mensajes personales por membresía. Una transacción de prueba creó temporalmente una conversación y un mensaje: autor y segundo miembro pudieron leerlos; un tercer miembro activo no pudo leer ninguno. La transacción se revirtió; `team_posts` conserva 27 filas, sin filas de prueba. Security Advisors no reportó advertencias nuevas asociadas a estas tablas; quedan advertencias preexistentes de funciones y políticas generales fuera de esta ronda. La Edge Function no fue desplegada.

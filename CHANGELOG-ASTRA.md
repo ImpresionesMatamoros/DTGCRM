@@ -6,7 +6,7 @@ archivos inspeccionados: index.html, sw.js, README.md (vacío); JavaScript exter
 
 ## Estado de esta entrega
 
-Integración sobre `main` 8d063d7 en una rama de trabajo. Sin migraciones ejecutadas ni despliegues. `index.html` es el único archivo del repositorio que contiene JavaScript de la aplicación. `sw.js` permanece idéntico al baseline. Los archivos nuevos son aditivos y requieren integración deliberada.
+Integración sobre `main` 8d063d7 en una rama de trabajo. Migración `20260929003414_astra_team_conversations_privacy` aplicada en DesignToGoCRM; HTML y Edge Function sin desplegar. `index.html` es el único archivo del repositorio que contiene JavaScript de la aplicación. `sw.js` permanece idéntico al baseline. Los archivos nuevos son aditivos y requieren integración deliberada.
 
 ## Modificado: index.html
 
@@ -21,7 +21,7 @@ Integración sobre `main` 8d063d7 en una rama de trabajo. Sin migraciones ejecut
 
 ## Nuevos
 
-- `ASTRA-01-communications.sql`: modelo, RLS, integridad y bucket privado. **No ejecutado.**
+- `ASTRA-01-communications.sql`: modelo, RLS, integridad y bucket privado. **Aplicado en Supabase el 29 de septiembre de 2026 UTC.**
 - `supabase/functions/transcribe-chat-audio/index.ts`: transcripción bajo JWT de usuario y clave de proveedor en secreto del servidor. **No desplegada.**
 - `ASTRA-QA.cjs`: pruebas aisladas de funciones puras sin conexión a producción.
 - `INTEGRATION-NOTES-ASTRA.md`: auditoría, límites y secuencia de integración.
@@ -29,10 +29,16 @@ Integración sobre `main` 8d063d7 en una rama de trabajo. Sin migraciones ejecut
 
 ## Restricciones deliberadas
 
-No se añadieron frameworks, tablas de tareas paralelas, canales, grupos arbitrarios, bots ni automatización que escriba tickets sin revisión. No se modificó `sw.js` ni se enviaron datos a producción.
+No se añadieron frameworks, tablas de tareas paralelas, canales, grupos arbitrarios, bots ni automatización que escriba tickets sin revisión. No se modificó `sw.js` ni se publicaron archivos de la app en producción. El esquema de Supabase sí fue migrado por petición expresa.
 
 ## Integración del 29 de septiembre
 
 - Nuevo baseline: `8d063d70e45ac84f97ca8cfb7304e8a78789844b`; el anterior era `d72ddddcb7d4e60068daa7473ed25ff7da3d344b`.
 - Se preservaron los 101 renglones modificados por el commit `8d063d7`: corrección del pulso de avisos, destello de mensaje y actualización en sitio de Smart Actions. La aplicación se identifica como `0.25.2` / `2026.09.29.1`.
-- El cambio de Astra sigue siendo una entrega parcial con los límites detallados en las notas de integración. Su esquema y función siguen pendientes de despliegue.
+- El cambio de Astra sigue siendo una entrega parcial con los límites detallados en las notas de integración. Su esquema ya fue aplicado; la Edge Function y el HTML siguen sin desplegarse.
+
+## Migración aplicada en Supabase
+
+- Versión `20260929003414`, nombre `astra_team_conversations_privacy`, proyecto `jpjpnxamiclvhmcywyhx`.
+- Antes de aplicar, se cerraron los permisos heredados de las tablas nuevas, se restringió el fan-out de push a los dos participantes de cada DM y se protegió también la edición posterior de mensajes privados.
+- Verificación: RLS con autor, destinatario y tercero en transacción revertida; tercero no vio conversación ni mensaje. Las 27 filas previas permanecen intactas y no quedó ninguna fila de prueba.

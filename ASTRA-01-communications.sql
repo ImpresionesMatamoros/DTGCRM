@@ -1,7 +1,6 @@
--- Draft only. Apply in a staging clone after reviewing production policy drift.
--- This migration must run before deploying the accompanying index.html.
-begin;
-
+-- Reviewed against DesignToGoCRM on 2026-09-29 UTC. Apply before deploying index.html.
+-- New public tables have broad DEFAULT PRIVILEGES in this project; explicit
+-- REVOKE below is as important as their RLS policies.
 create table public.chat_conversations (
   id uuid primary key default gen_random_uuid(),
   member_a uuid not null references public.profiles(id),
@@ -17,6 +16,8 @@ create policy chat_conversations_create on public.chat_conversations for insert 
   with check (public.is_active_member() and (member_a = (select auth.uid()) or member_b = (select auth.uid()))
     and exists(select 1 from public.profiles p where p.id = member_a and p.active)
     and exists(select 1 from public.profiles p where p.id = member_b and p.active));
+revoke all on public.chat_conversations from public, anon, authenticated;
+grant select, insert on public.chat_conversations to authenticated;
 
 alter table public.team_posts
   add column conversation_id uuid references public.chat_conversations(id),
@@ -76,12 +77,12 @@ begin
       select 1 from public.team_posts p where p.id=new.reply_to_id
       and (p.id=new.thread_root_id or p.thread_root_id=new.thread_root_id)
     ) then raise exception 'Reply outside thread'; end if;
-    if new.conversation_id is not null and (new.pin_level <> 'none' or new.mentions_all or new.expires_at is not null
-      or new.ticket_id is not null or new.image_storage_path is not null)
-    then raise exception 'Personal messages cannot be broadcast, expire, or link implicitly'; end if;
   end if;
-  if new.conversation_id is not null and (new.ticket_id is not null or new.image_storage_path is not null)
-  then raise exception 'Private message cannot use legacy ticket links or images'; end if;
+  -- The private-chat constraints must apply to UPDATE too: the existing post
+  -- UPDATE policy permits authors to edit their own rows.
+  if new.conversation_id is not null and (new.pin_level <> 'none' or new.mentions_all
+    or new.expires_at is not null or new.ticket_id is not null or new.image_storage_path is not null)
+  then raise exception 'Private message cannot broadcast, expire, or use legacy links or images'; end if;
   if new.audio_storage_path is not null and
     new.audio_storage_path not like (coalesce(new.conversation_id::text,'team') || '/%')
   then raise exception 'Audio path outside conversation'; end if;
@@ -89,6 +90,38 @@ begin
 end $$;
 create trigger astra_guard_post before insert or update on public.team_posts
   for each row execute function public.astra_guard_post();
+revoke all on function public.astra_guard_post() from public, anon, authenticated;
+
+-- The pre-existing push RPC runs with SECURITY DEFINER. It must never fan out
+-- a private post to all subscribers. Its EXECUTE privilege already belongs
+-- only to service_role; CREATE OR REPLACE retains that privilege.
+create or replace function public.push_targets_for_post(p_post_id uuid)
+returns table(user_id uuid, endpoint text, p256dh text, auth text, autor text,
+  cuerpo text, es_mencion boolean, es_equipo boolean)
+language plpgsql security definer set search_path = '' as $$
+declare p public.team_posts;
+begin
+  update public.team_posts set push_sent_at = now()
+    where id = p_post_id and push_sent_at is null and deleted_at is null
+    returning * into p;
+  if not found then return; end if;
+  return query
+    select s.user_id, s.endpoint, s.p256dh, s.auth,
+      coalesce(p.author_name_snapshot, 'Equipo'), left(coalesce(p.text, ''), 140),
+      (p.mentions @> jsonb_build_array(jsonb_build_object('id', s.user_id::text))),
+      p.mentions_all
+    from public.push_subscriptions s
+    join public.profiles pr on pr.id = s.user_id
+    join public.chat_user_state st on st.user_id = s.user_id
+    where pr.active and s.user_id <> p.author_user_id and st.notif_push
+      and s.failures < 5
+      and (p.conversation_id is null or exists (
+        select 1 from public.chat_conversations c
+        where c.id = p.conversation_id and s.user_id in (c.member_a, c.member_b)
+      ))
+      and (st.notif_mensajes or (st.notif_menciones and (p.mentions_all
+        or p.mentions @> jsonb_build_array(jsonb_build_object('id', s.user_id::text)))));
+end $$;
 
 -- Reactions on personal messages would leak authors and message IDs under the old policy.
 drop policy if exists feed_reactions_select on public.feed_reactions;
@@ -101,6 +134,13 @@ create policy feed_reactions_insert on public.feed_reactions for insert to authe
   with check (public.is_active_member() and user_id = (select auth.uid()) and (target_type <> 'post' or exists (
     select 1 from public.team_posts p where p.id::text = target_id and p.deleted_at is null
   )));
+drop policy if exists feed_reactions_update_own on public.feed_reactions;
+create policy feed_reactions_update_own on public.feed_reactions for update to authenticated
+  using (public.is_active_member() and user_id = (select auth.uid()))
+  with check (public.is_active_member() and user_id = (select auth.uid()) and
+    (target_type <> 'post' or exists (
+      select 1 from public.team_posts p where p.id::text = target_id and p.deleted_at is null
+    )));
 
 -- A link points at the original message or thread root; replies remain live.
 -- Personal threads are deliberately excluded until a reviewed access grant
@@ -123,6 +163,8 @@ create policy chat_ticket_links_write on public.chat_ticket_links for insert to 
     and exists(select 1 from public.team_posts p where p.id=post_id
       and p.conversation_id is null and p.deleted_at is null
       and (link_kind='message' or p.thread_root_id is null)));
+revoke all on public.chat_ticket_links from public, anon, authenticated;
+grant select, insert on public.chat_ticket_links to authenticated;
 
 create table public.chat_later (
   id uuid primary key default gen_random_uuid(),
@@ -140,6 +182,8 @@ create policy chat_later_own on public.chat_later for all to authenticated
     and exists(select 1 from public.team_posts p where p.id=post_id and p.deleted_at is null))
   with check (public.is_active_member() and user_id=(select auth.uid())
     and exists(select 1 from public.team_posts p where p.id=post_id and p.deleted_at is null));
+revoke all on public.chat_later from public, anon, authenticated;
+grant select, insert, update, delete on public.chat_later to authenticated;
 
 -- Dedicated private bucket. Existing ticket-files policies allow any authenticated user to read;
 -- NEVER place a personal-chat attachment there.
@@ -160,7 +204,3 @@ create policy chat_private_upload on storage.objects for insert to authenticated
 create policy chat_private_delete_own on storage.objects for delete to authenticated
   using (bucket_id='chat-private' and public.is_active_member()
     and owner_id=(select auth.uid())::text);
-
-grant select,insert on public.chat_conversations,public.chat_ticket_links to authenticated;
-grant select,insert,update,delete on public.chat_later to authenticated;
-commit;
