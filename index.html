@@ -3890,7 +3890,190 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
 <link rel="stylesheet" href="mobile-ux.css?v=1">
-<link rel="stylesheet" href="ticket-ux.css?v=1">
+<style id="ticket-ux-css">
+/* Ticket: CABECERA -> PRODUCTOS + DINERO -> TAREAS -> MENSAJES + COMPOSER.
+   Una sola columna que rueda; el composer queda abajo. */
+.tk-wrap{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+.tk-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;position:relative;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px}
+.tk-scroll>*{max-width:1000px}
+[hidden].tk-mic,[hidden].composer-send,.composer [hidden]{display:none!important}
+.tk-icon{width:32px;height:32px;border:0;background:none;color:var(--text-faint);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.tk-icon:hover,.tk-icon[aria-pressed=true]{background:var(--surface-3);color:var(--text)}
+.tk-muted{color:var(--text-faint);font-size:12px}
+.tk-empty{color:var(--text-faint);font-size:13px;padding:14px 4px}
+.tk-add{border:1px dashed var(--border-strong,var(--border));background:none;color:var(--accent-ink);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tk-add:hover{background:var(--accent-soft)}
+
+/* Cabecera */
+.tk-head{padding:12px 18px 10px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid var(--border);background:var(--surface)}
+.tk-line1{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap}
+.tk-line1 .comanda-identity{flex:1 1 220px;min-width:0;margin:0}
+.tk-line1 .comanda-identity>div{display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;min-width:0}
+.tk-line1 .comanda-cliente-name{font-size:20px}
+.tk-meta{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.tk-tools{display:inline-flex;gap:2px;margin-left:auto}
+.tk-next{display:flex;align-items:baseline;gap:8px;background:none;border:0;padding:2px 0;text-align:left;cursor:pointer;color:var(--text);min-width:0}
+.tk-next-l{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);flex-shrink:0}
+.tk-next-v{font-size:15px;font-weight:700;color:var(--accent-ink);overflow-wrap:anywhere}
+.tk-next.empty .tk-next-v{color:var(--text-faint);font-weight:500;font-style:italic}
+.tk-next.editing{align-items:center}
+.tk-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tk-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:4px 10px;font-size:13px;line-height:1.3;cursor:pointer;min-height:30px;max-width:100%}
+.tk-chip:hover{background:var(--surface-3)}
+.tk-chip.empty{color:var(--text-faint);border-style:dashed}
+.tk-chip.editing{padding:1px 6px;cursor:default}
+.tk-chip.editing input,.tk-chip.editing select{font-size:13px;min-width:0;max-width:170px}
+.tk-chip .i{font-size:14px;color:var(--text-faint)}
+.tk-chip .resp-chip{font-weight:600}
+.tk-act{color:var(--accent-ink);border-color:var(--accent)}
+.tk-chips-end{margin-left:auto;display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tk-note{font-size:12px;color:var(--text-muted)}
+.tk-note button{background:none;border:0;padding:0;color:var(--text-faint);text-decoration:underline;cursor:pointer;font:inherit}
+.tk-head .mk-chips,.tk-head .zone-chip{margin:0;min-height:30px;box-sizing:border-box;align-self:center}
+.tk-head .dq-warns{display:inline-flex;gap:4px}
+
+/* Productos + dinero */
+.tk-products{padding:8px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.tk-prod{border-radius:8px}
+.tk-prod.open{background:var(--surface-2)}
+.tk-prod-line{display:flex;align-items:stretch;gap:4px}
+.tk-prod-main{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;background:none;border:0;padding:8px 6px;text-align:left;color:var(--text);cursor:pointer;font-size:14.5px;border-radius:8px}
+.tk-prod-main:hover{background:var(--surface-3)}
+.tk-qty{font-weight:700;color:var(--text-muted);flex-shrink:0}
+.tk-name{flex:1 1 90px;min-width:0;overflow-wrap:break-word}
+.tk-price{font-family:var(--font-mono);font-weight:600;white-space:nowrap;margin-left:auto}
+.tk-price.pending{color:var(--gold);font-family:inherit;font-weight:600;font-size:13px}
+.tk-count{font-size:11px;background:var(--surface-3);color:var(--text-muted);border-radius:999px;padding:1px 7px}
+.tk-plus{width:36px;min-width:36px;border:1px solid var(--border);background:var(--surface);color:var(--accent-ink);border-radius:50%;font-size:20px;line-height:1;cursor:pointer;align-self:center;height:36px}
+.tk-plus:hover{background:var(--accent-soft)}
+.tk-prod-edit{padding:4px 8px 10px;display:flex;flex-direction:column;gap:8px}
+.tk-prod-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(70px,.6fr) minmax(90px,.9fr);gap:8px}
+.tk-prod-fields label{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--text-faint)}
+.tk-prod-fields input{min-width:0;width:100%}
+.tk-prod-tasks{display:flex;flex-wrap:wrap;gap:6px}
+.tk-task-chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+.tk-task-chip.done{color:var(--text-faint);text-decoration:line-through}
+.tk-prod-actions{display:flex;gap:14px;justify-content:flex-end}
+.tk-prod-foot{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding-top:6px}
+.tk-totals{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto;font-size:13.5px}
+.tk-money{background:none;border:0;padding:4px 2px;color:var(--text-muted);font:inherit;font-size:13.5px}
+button.tk-money{cursor:pointer;border-bottom:1px dashed var(--text-faint)}
+.tk-money b{font-family:var(--font-mono);color:var(--text)}
+.tk-money.warn{color:var(--gold)}
+.tk-money.is-pending b{opacity:.6}
+.tk-saldo.owes b{color:var(--gold)}
+.tk-dot{color:var(--text-faint)}
+.tk-inline-form{position:static!important;width:auto!important;max-width:420px!important;margin:6px 0!important;box-shadow:none}
+
+/* Tareas */
+.tk-tasks{padding:8px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.tk-sec-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px}
+.tk-sec-head h2{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);font-weight:700}
+.tk-sec-head small{font-weight:600;letter-spacing:0;margin-left:4px}
+.tk-task{display:flex;align-items:center;gap:8px;min-height:36px}
+.tk-task.done .tk-task-desc{color:var(--text-faint);text-decoration:line-through}
+.tk-task .tk-state{padding:4px;min-width:30px;min-height:30px;justify-content:center;flex-shrink:0}
+.tk-task .tk-state span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tk-task-open{flex:1;min-width:0;display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;background:none;border:0;padding:4px 2px;text-align:left;color:var(--text);font-size:14px}
+button.tk-task-open{cursor:pointer;border-radius:6px}
+button.tk-task-open:hover{background:var(--surface-3)}
+.tk-task-desc{overflow-wrap:anywhere}
+.tk-task-bits{display:inline-flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:12px;color:var(--text-muted)}
+.tk-rel{background:var(--surface-3);border-radius:999px;padding:1px 8px}
+.tk-area{font-weight:600}
+.tk-who{display:inline-flex;align-items:center;gap:4px}
+.tk-wait{color:var(--gold)}
+.tk-suggest{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--text-muted);padding:4px 0}
+
+/* Mensajes */
+.tk-msgs{padding:6px 18px 0;display:flex;flex-direction:column}
+.tk-msgs .thread-item{max-width:none}
+.tk-thread-bar{display:flex;align-items:center;gap:10px;padding:8px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:3}
+.astra-ticket-links{margin:0 0 6px}
+.chat-msg-actions .icon-btn{width:32px;height:32px}
+
+/* Editor de tarea: relación */
+.ops-rel{display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.ops-rel-opts{display:flex;flex-wrap:wrap;gap:6px}
+.ops-rel-opt{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;min-height:32px;text-align:left}
+.ops-rel-opt.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+.ops-rel-opt:disabled{cursor:default}
+
+/* Composer */
+.tk-mic{width:38px;height:38px;border-radius:50%;border:0;background:none;color:var(--text-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;cursor:pointer}
+.tk-mic:hover{background:var(--surface-3);color:var(--text)}
+.tk-mic.busy{animation:tkpulse 1s infinite}
+@keyframes tkpulse{50%{opacity:.35}}
+.tk-menu{display:flex;flex-direction:column;gap:2px;min-width:200px}
+.composer.chat-composer{align-items:flex-end}
+.tk-rec{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:44px}
+.tk-rec-dot{width:10px;height:10px;border-radius:50%;background:#e5484d;flex-shrink:0;animation:tkpulse 1s infinite}
+.tk-rec-time{font-family:var(--font-mono);font-weight:700;min-width:38px;font-variant-numeric:tabular-nums}
+.tk-wave{display:flex;align-items:center;gap:2px;height:28px;flex:1;min-width:0}
+.tk-wave i{display:block;flex:1;min-width:2px;max-width:5px;background:var(--text-faint);border-radius:2px;opacity:.55}
+.tk-wave i.on{background:var(--accent);opacity:1}
+.tk-wave-live i{height:12%;background:#e5484d;opacity:.85;transition:height .12s}
+.tk-rec-cancel{border:0;background:none;color:var(--text-muted);font-size:14px;padding:8px;min-height:44px;cursor:pointer}
+.tk-rec-send{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--accent);color:#fff;padding:0 16px;min-height:44px;font-weight:700;cursor:pointer}
+.tk-mic-error{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 14px;background:var(--danger-soft);color:var(--text);border-top:1px solid var(--border);font-size:13px}
+.tk-mic-error div{flex:1 1 200px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tk-mic-error span{color:var(--text-muted);font-size:12.5px}
+.tk-audio-ready{display:flex;align-items:center;gap:8px;padding:6px 12px}
+.tk-audio-ready .tk-audio{flex:1}
+
+/* Burbuja de audio */
+.astra-audio{margin:6px 0;max-width:340px;display:flex;flex-direction:column;gap:2px}
+.tk-audio{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:18px;padding:6px 12px 6px 6px;min-width:220px}
+.tk-audio-btn{width:38px;height:38px;border-radius:50%;border:0;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:16px}
+.tk-audio.error .tk-audio-btn{background:var(--danger)}
+.tk-audio-track{flex:1;min-width:0;height:34px;display:flex;align-items:center;cursor:pointer;touch-action:none;border-radius:6px}
+.tk-audio-track:focus-visible{outline:2px solid var(--accent)}
+.tk-audio-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tk-tr{font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:0 4px}
+.tk-tr-state{color:var(--text-muted)}
+.tk-tr-state.fail{color:var(--gold)}
+.tk-tr-toggle{background:none;border:0;padding:2px 0;color:var(--accent-ink);cursor:pointer;font:inherit;text-decoration:underline}
+.tk-tr-text{flex-basis:100%;margin:2px 0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text)}
+
+@media(max-width:880px){
+ .tk-head{padding:8px 12px 8px;gap:4px}
+ .tk-line1 .comanda-cliente-name{font-size:18px}
+ .tk-line1{gap:0 8px}
+ .tk-line1 .comanda-identity{flex:1 1 100%;order:1}
+ .tk-meta{order:2}.tk-tools{order:3;margin-left:auto}
+ .tk-chips{gap:5px}
+ .tk-chip{padding:1px 8px;min-height:30px;font-size:12.5px;gap:4px}
+ .tk-chip .i{font-size:13px}
+ .tk-chips-end{margin-left:0;gap:5px}
+ .tk-head .mk-chips,.tk-head .zone-chip{min-height:30px}
+ .tk-next-v{font-size:14.5px}
+ .tk-products,.tk-tasks{padding:6px 12px}
+ .tk-msgs{padding:4px 8px 0}
+ .tk-thread-bar{padding:6px 12px}
+ .tk-prod-fields{grid-template-columns:1fr 1fr}.tk-prod-fields label:first-child{grid-column:1/-1}
+ .tk-totals{font-size:13px}
+ .tk-inline-form{max-width:none!important}
+ .tk-mic{width:44px;height:44px}
+ .tk-rec{gap:8px}.tk-rec-send span{display:none}.tk-rec-send{padding:0 14px}
+ .composer{gap:6px;padding-left:8px;padding-right:8px}
+ .astra-audio{max-width:100%}.tk-audio{min-width:0;width:100%}
+ .tk-task-open{font-size:14.5px}
+}
+@media(max-width:360px){
+ .tk-chip{font-size:12px;padding:1px 7px}
+ .tk-chip>.i{display:none}
+ .tk-head{padding:6px 10px}
+ .tk-meta{font-size:11.5px}
+ .tk-rec-cancel{padding:8px 4px}
+ .tk-audio{gap:6px}.tk-audio-time{font-size:11px}
+}
+@media(hover:none){.chat-msg-actions{display:flex;top:-2px;right:4px;background:none;border:0;box-shadow:none}.chat-msg-actions .icon-btn{opacity:.55}.chat-msg.is-active .chat-msg-actions{background:var(--surface);border:1px solid var(--border-strong);box-shadow:var(--shadow)}}
+/* Identidad en una sola línea: el "+" de contacto y el lápiz no deben empujar el nombre. */
+.tk-line1 .comanda-identity>div{flex-wrap:nowrap}
+.tk-line1 .comanda-identity .comanda-cliente-btn{min-width:0;text-align:left}
+.tk-line1 .comanda-contact-btn,.tk-line1 .comanda-clientename-edit-btn{min-width:32px;min-height:32px;width:32px;height:32px;flex-shrink:0}
+
+</style>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
@@ -6804,101 +6987,6 @@ function renderQueSigueSelect(t){
   return html;
 }
 
-function renderWorkOrdersPanel(t){
-  if(STATE.workOrdersTableMissing !== false) return '';
-  var orders = t.workOrders || [];
-  return '<section class="work-orders-panel" aria-label="Órdenes de trabajo">' +
-    '<div class="tasks-title-row"><div class="tasks-title">Órdenes de trabajo</div>' +
-      '<button type="button" class="btn btn-sm btn-plain" data-action="work-order-new" data-ticket="' + t.id + '">+ Orden</button></div>' +
-    (orders.length ? orders.map(function(o){
-      var product = (t.productos || []).filter(function(p){ return p.id === o.productId; })[0];
-      var tasks = (t.tareas || []).filter(function(x){ return x.workOrderId === o.id; });
-      var qty = o.quantityOverride || (product && product.cantidad);
-      return '<div class="work-order-row"><div><strong>' + escapeHtml(o.title) + '</strong>' +
-        (product ? '<div class="muted small">' + escapeHtml((qty ? qty + ' × ' : '') + product.desc) + '</div>' : '') +
-        (o.instructions ? '<div class="muted small">' + escapeHtml(o.instructions) + '</div>' : '') +
-        '<div class="muted small">' + tasks.length + ' acciones · ' + tasks.filter(function(x){ return x.estado === 'terminado'; }).length + ' terminadas</div></div>' +
-        '<button type="button" class="btn btn-sm btn-ghost" data-action="work-order-add-action" data-ticket="' + t.id + '" data-work-order="' + o.id + '">+ Acción</button></div>';
-    }).join('') : '<div class="muted small">Agrupa un entregable y sus acciones de Planeación y Producción. Las tareas existentes siguen funcionando.</div>') +
-  '</section>';
-}
-function renderWorkOrderEditor(){
-  var ed = UI.workOrderEditor;
-  if(!ed) return '';
-  var t = findTicket(ed.ticketId);
-  if(!t) return '';
-  return '<div class="cierre-modal-overlay" id="work-order-overlay"><div class="cierre-modal ops-editor" role="dialog" aria-modal="true" aria-label="Nueva orden de trabajo">' +
-    '<div class="modal-head"><div class="cierre-modal-title">Nueva orden · #' + t.seq + '</div><button type="button" class="icon-btn" data-action="work-order-close" aria-label="Cerrar">×</button></div>' +
-    '<div class="ops-ed-body"><label class="ops-ed-label" for="wo-title">Entregable</label><input class="field-input" id="wo-title" maxlength="160" placeholder="Ej. 24 playeras negras DTF">' +
-    '<label class="ops-ed-label" for="wo-product">Producto del ticket</label><select class="field-input" id="wo-product"><option value="">Sin producto vinculado</option>' +
-    (t.productos || []).map(function(p){ return '<option value="' + p.id + '">' + escapeHtml((p.cantidad ? p.cantidad + ' × ' : '') + p.desc) + '</option>'; }).join('') + '</select>' +
-    '<label class="ops-ed-label" for="wo-instructions">Instrucciones de esta orden</label><textarea class="field-input" id="wo-instructions" rows="3" maxlength="1000"></textarea></div>' +
-    '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="work-order-close">Cancelar</button><button type="button" class="btn btn-primary" data-action="work-order-save">Crear orden</button></div></div></div>';
-}
-async function saveWorkOrder(){
-  var ed = UI.workOrderEditor, t = ed && findTicket(ed.ticketId);
-  if(!t) return;
-  var title = document.getElementById('wo-title').value.trim();
-  if(!title){ showToast('Escribe el entregable.'); return; }
-  var productId = document.getElementById('wo-product').value || null;
-  var instructions = document.getElementById('wo-instructions').value.trim();
-  try{
-    var r = await sb.from('work_orders').insert({ ticket_id:t.id, title:title, product_id:productId, instructions:instructions }).select().single();
-    if(r.error) throw r.error;
-    UI.workOrderEditor = null;
-    await refreshFromServer();
-    showToast('Orden creada. Agrega sus acciones.');
-  }catch(e){ userError('Orden de trabajo · #' + t.seq, e); }
-}
-function renderTasksPanel(t){
-  if(!t.tareas.length) return "";
-  /* v0.20: las tareas de operación (tipo "produccion") se ven con su tipo,
-     estado (4), progreso y responsable — el MISMO dato que el tablero de
-     Operaciones; tocar una abre el mismo editor. Las tareas normales siguen
-     siendo el checklist simple de siempre. */
-  var ops = t.tareas.filter(isOpsTask);
-  var normal = t.tareas.filter(function(x){ return !isOpsTask(x); });
-  var opsRows = ops.map(function(task){
-    var st = OPS_ESTADOS.filter(function(e){ return e.key === (task.estado || "pendiente"); })[0] || OPS_ESTADOS[0];
-    return (
-      '<div class="task-row ops-task-row' + (task.estado === "terminado" ? " done" : "") + '">' +
-        '<button type="button" class="ops-state-pill ops-state-' + st.key + '" data-toggle-task="' + task.id + '" data-ticket="' + t.id + '" aria-haspopup="true" title="Cambiar estado" aria-label="Estado: ' + st.label + '. Cambiar estado">' + icon(st.icon) + "<span>" + st.label + "</span></button>" +
-        '<button type="button" class="ops-task-open" data-action="ops-task-edit" data-task="' + task.id + '" data-ticket="' + t.id + '">' +
-          '<span class="ops-type-chip ops-type-chip-sm">' + icon(opsTipoIcon(task.tipoOperacion)) + "<span>" + escapeHtml(task.tipoOperacion || "Operación") + "</span></span>" +
-          '<span class="task-desc">' + escapeHtml(task.desc) + (DTGOps.blocked(task,t)?' · Espera empaquetado':'') + "</span>" +
-          '<span class="ops-progress-row ops-progress-inline">' + renderOpsProgress(task.progreso, true) + '<span class="ops-progress-val">' + (Number(task.progreso) || 0) + "%</span></span>" +
-          (task.responsable ? '<span class="ops-resp">' + personAvatar(task.responsable, { size: "xs" }) + "<span>" + escapeHtml(task.responsable) + "</span></span>" : "") +
-        "</button>" +
-      "</div>"
-    );
-  }).join("");
-  var normalRows = normal.map(function(task){
-    var extraBits = [];
-    if(task.responsable) extraBits.push(escapeHtml(task.responsable));
-    if(task.fechaAtencion) extraBits.push(fmtDateOnlyShort(task.fechaAtencion));
-    var extra = extraBits.length ? '<span class="task-extra">' + extraBits.join(" · ") + "</span>" : "";
-    var done = task.estado === "terminado";
-    return (
-      '<div class="task-row' + (done?" done":"") + '">' +
-        '<button class="task-check' + (done?" on":"") + '" data-toggle-normal-task="' + task.id + '" data-ticket="' + t.id + '" aria-label="' + (done ? "Marcar pendiente" : "Marcar terminada") + '" aria-pressed="' + (done?"true":"false") + '">' + (done ? icon("check") : "") + "</button>" +
-        '<span class="task-desc">' + escapeHtml(task.desc) + "</span>" + extra +
-      "</div>"
-    );
-  }).join("");
-  /* Sugerencia (nunca automática): si todas las operaciones terminaron y el
-     ticket sigue abierto, se OFRECE marcar entregado — decide la persona. */
-  var allOpsDone = ops.length && ops.every(function(x){ return x.estado === "terminado"; });
-  var suggest = allOpsDone && ticketEstado(t) === "abierto"
-    ? '<div class="tasks-suggest">' + icon("check-circle") + "<span>Todas las tareas de operación están terminadas.</span>" +
-      '<button type="button" class="btn btn-sm btn-ghost" data-action="marcar-entregado" data-ticket="' + t.id + '">Marcar entregado</button></div>'
-    : "";
-  return '<div class="tasks-panel">' +
-    '<div class="tasks-title-row"><div class="tasks-title">' + (ops.length ? "Operaciones" : "Tareas") + "</div>" +
-      '<button type="button" class="btn btn-sm btn-plain" data-action="ops-task-new" data-ticket="' + t.id + '">' + icon("plus") + "Tarea de operación</button>" +
-      (ops.length ? '<button type="button" class="btn btn-sm btn-plain" data-action="go-operaciones">' + icon("factory") + "Ver tablero</button>" : "") +
-    "</div>" +
-    opsRows + normalRows + suggest + "</div>";
-}
 
 /* Nota: la identidad del cliente en el encabezado del ticket (vinculado vs.
    provisional, secciones 1.8/1.9/5.1) ahora vive directamente en
@@ -6988,8 +7076,8 @@ function ticketSyncContext(){
   var id=UI.selectedTicketId||null;
   if(id!==UI.ticketChatContext && (id||UI.ticketChatContext)){
     UI.astraThreadRoot=null;UI.astraReplyTo=null;UI.chatMention=null;UI.chatMentionPicks=[];UI.astraRefPicks=[];UI.astraSelected=[];
-    UI.chatLastSeenTs=null;UI.chatStickBottom=true;UI.ticketProductOpen=null;
-    UI.feedComposerPhoto=null;UI.ticketChatFile=null;UI.astraAudioBlob=null;
+    UI.chatLastSeenTs=null;UI.chatStickBottom=false;UI.ticketProductOpen=null;
+    UI.feedComposerPhoto=null;UI.ticketChatFile=null;astraDropLocalAudio();UI.astraAudioBlob=null;UI.astraMicError=null;
     if(typeof ASTRA_RECORDER!=='undefined'&&ASTRA_RECORDER)astraStopRecording(true);
     UI.astraConversationId=null;
   }
@@ -7011,30 +7099,10 @@ async function ensureTicketConversation(id){
   })().finally(function(){delete TICKET_CONVERSATION_PENDING[id];});
   return TICKET_CONVERSATION_PENDING[id];
 }
-function ticketProductBar(t){
-  return '<section class="ticket-products" aria-label="Productos solicitados"><div class="ticket-products-heading"><strong>Productos</strong><button type="button" class="btn btn-sm" data-open-form="producto">+ Crear producto</button></div><div class="ticket-product-list">'+
-    (t.productos||[]).map(function(p){
-      var open=UI.ticketProductOpen===p.id;
-      var tasks=(t.tareas||[]).filter(function(x){var m=DTGOps.meta(x),o=(t.workOrders||[]).find(function(o){return o.id===x.workOrderId;});return m.productId===p.id||o&&o.productId===p.id;});
-      return '<div class="ticket-product"><div class="ticket-product-line"><button type="button" class="ticket-product-open" data-ticket-ux="product" data-product="'+escapeHtml(p.id)+'" aria-expanded="'+open+'"><b>'+escapeHtml(String(p.cantidad)+' '+p.desc)+'</b><small>'+(p.precio==null?'Precio pendiente':fmtMoney(p.precio)+' c/u')+'</small></button><button type="button" class="ticket-product-add" data-ticket-ux="product-task" data-product="'+escapeHtml(p.id)+'" aria-label="Crear trabajo para '+escapeHtml(p.desc)+'">+</button></div>'+
-      (open?'<div class="ticket-product-context">'+productoEditRow(t,p)+'<small>Editar aquí conserva los documentos ya emitidos.</small><div><strong>Trabajo relacionado · '+tasks.length+'</strong>'+tasks.map(function(x){return '<button type="button" class="btn btn-sm" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+' · '+escapeHtml(estadoLabel(x.estado))+'</button>';}).join('')+'</div><small>Los archivos sin relación específica se consultan en la actividad del ticket.</small></div>':'')+'</div>';
-    }).join('')+(!(t.productos||[]).length?'<span class="muted">Sin productos todavía. Puedes agregarlos cuando los conozcas.</span>':'')+'</div></section>';
-}
 function ticketChatPosts(){
   var cid=UI.selectedTicketId?ticketConversationId(UI.selectedTicketId):UI.astraConversationId;
   if(UI.selectedTicketId&&!cid)return [];
   return (STATE.teamPosts||[]).filter(function(p){return (p.conversationId||null)===(cid||null)&&!p.pending&&!isPostExpired(p)&&(!UI.astraThreadRoot?!p.threadRootId:p.id===UI.astraThreadRoot||p.threadRootId===UI.astraThreadRoot);});
-}
-function renderTicketConversation(t){
-  if(!TICKET_CHAT_AVAILABLE)return '<div class="ticket-body" data-scroll-ticket="'+escapeHtml(t.id)+'">'+renderMarkersBar(t)+renderWorkOrdersPanel(t)+renderTasksPanel(t)+'<div class="thread" id="thread-scroll"><div class="muted small">Notas y actividad · la conversación de equipo en este ticket está pendiente de activación.</div>'+astraRenderTicketLinks(t)+mergedThreadHtml(t)+'</div></div>';
-  var cid=ticketConversationId(t.id),root=UI.astraThreadRoot;
-  var posts=cid?(STATE.teamPosts||[]).filter(function(p){return p.conversationId===cid&&!isPostExpired(p)&&(root?(p.id===root||p.threadRootId===root):!p.threadRootId);}).sort(function(a,b){return new Date(a.createdAt)-new Date(b.createdAt);}):[];
-  var context=root?'<button type="button" class="btn btn-sm" data-ticket-ux="back-thread">← Conversación del ticket</button>':'<strong>Conversación del ticket</strong>';
-  return '<div class="ticket-chat-heading">'+context+'<button type="button" class="btn btn-sm btn-ghost" data-ticket-ux="note">Guardar nota</button></div>'+astraSelectionBar()+
-    '<div class="chat-scroll-wrap ticket-conversation"><div class="chat-scroll" id="chat-scroll" data-chat-context="ticket:'+t.id+':'+(root||'root')+'" aria-label="Conversación del ticket">'+
-    '<details class="ticket-work-context"'+(UI.ephemeralLog.some(function(x){return x.ticketId===t.id;})?' open':'')+'><summary>Trabajo · '+(t.tareas||[]).length+' tareas / actividad y notas</summary>'+renderMarkersBar(t)+renderWorkOrdersPanel(t)+renderTasksPanel(t)+mergedThreadHtml(t)+'</details>'+astraRenderTicketLinks(t)+
-    (posts.map(function(p){return renderChatMessage({post:p,continued:false});}).join('')||'<div class="chat-empty">Escribe para conversar sobre este ticket. Usa /nota para guardar información documental.</div>')+
-    '</div><button type="button" class="chat-new-pill" id="chat-new-pill" data-action="chat-jump-bottom" hidden><span id="chat-new-pill-label">Mensajes nuevos</span></button></div>';
 }
 function ticketFileMarkup(p){return p.filePath?'<button type="button" class="btn btn-sm" data-ticket-ux="file-open" data-post="'+escapeHtml(p.id)+'">Archivo · '+escapeHtml(p.fileName||'Descargar')+'</button>':'';}
 async function ticketPublishFile(text){
@@ -7055,9 +7123,8 @@ document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-ticket-ux]');if(!b)return;
   e.preventDefault();e.stopImmediatePropagation();
   var action=b.dataset.ticketUx,t=findTicket(UI.selectedTicketId),id=b.dataset.product;
-  if(action==='products-focus'){var bar=document.querySelector('.ticket-products');if(bar)bar.scrollIntoView({block:'nearest'});}
   if(action==='product'&&t){UI.ticketProductOpen=UI.ticketProductOpen===id?null:id;render();}
-  if(action==='product-task'&&t){openOpsEditor('create',null,t.id);var ed=UI.operaciones.editor;ed.productId=id;var p=document.getElementById('ops-f-product');if(p){p.value=id;p.disabled=true;}ed.draft={actionPath:JSON.stringify({v:1,productId:id})};}
+  if(action==='product-task'&&t){openOpsEditor('create',null,t.id,null,id);}
   if(action==='back-thread'){UI.astraThreadRoot=null;UI.astraReplyTo=null;UI.chatStickBottom=true;render();}
   if(action==='note'){restoreComposerText('/nota ');}
   if(action==='file-pick'){var input=document.getElementById('ticket-chat-file');if(input)input.click();}
@@ -7067,7 +7134,23 @@ document.addEventListener('click',function(e){
     sb.storage.from('chat-private').createSignedUrl(post.filePath,120).then(function(r){if(r.error)throw r.error;var a=document.createElement('a');a.href=r.data.signedUrl;a.target='_blank';a.rel='noopener';a.click();}).catch(function(err){userError('Abrir archivo',err);});
   }
 },true);
+document.addEventListener('click',function(e){
+  var it=e.target.closest&&e.target.closest('[data-tk-menu]');if(!it)return;
+  var kind=it.getAttribute('data-tk-menu');
+  e.preventDefault();e.stopPropagation();
+  // El input de archivo debe seguir en el DOM mientras el selector está abierto: solo se oculta el menú.
+  UI.composer=null;var pop=document.getElementById('composer-popover');if(pop)pop.remove();
+  if(kind==='photo'){var i1=document.getElementById('feed-composer-photo-input');if(i1)i1.click();}
+  else if(kind==='file'){var i2=document.getElementById('ticket-chat-file');if(i2)i2.click();}
+  else if(kind==='marker')openMarkerPicker('composer');
+},true);
+document.addEventListener('mousedown',function(e){
+  // Elegir una mención/sugerencia no debe quitarle el foco al composer (el teclado móvil se cerraría).
+  if(e.target.closest&&e.target.closest('.mention-pop,.slash-menu,.smart-actions'))e.preventDefault();
+});
 document.addEventListener('change',function(e){if(e.target.id!=='ticket-chat-file')return;var f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>25*1024*1024){showToast('El archivo debe ser menor a 25 MB.');return;}UI.ticketChatFile=f;e.target.value='';renderKeepingLiveInputs();});
+// Al saltar de campo con Enter se selecciona el contenido (igual que con Tab): escribir reemplaza el valor por defecto.
+function tkFocusField(el){el.focus();try{if(el.select&&(el.tagName==='TEXTAREA'||/^(text|number|search|tel|email|url)$/.test(el.type)))el.select();}catch(e){}}
 // Single owner for Enter in explicit forms. Native buttons/selects and multiline
 // text retain native behavior; existing search/autocomplete handlers keep priority.
 document.addEventListener('keydown',function(e){
@@ -7079,7 +7162,7 @@ document.addEventListener('keydown',function(e){
   if(form){
     var fields=Array.from(form.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(function(x){return !x.disabled;});
     var i=fields.indexOf(el);if(i<0)return;e.preventDefault();e.stopImmediatePropagation();
-    if(i<fields.length-1)fields[i+1].focus();else {var save=form.querySelector('[data-action="submit-form"]');if(save&&!save.disabled)save.click();}return;
+    if(i<fields.length-1)tkFocusField(fields[i+1]);else {var save=form.querySelector('[data-action="submit-form"]');if(save&&!save.disabled)save.click();}return;
   }
   if(el.matches('[data-producto-edit]')){e.preventDefault();e.stopImmediatePropagation();el.blur();return;}
   // Other explicit modal forms: advance fields, then focus the primary action.
@@ -7087,57 +7170,127 @@ document.addEventListener('keydown',function(e){
   var modal=el.closest('.docform-modal,.ops-editor,.astra-review,.work-order-editor');
   if(modal&&!el.readOnly){
     var fields=Array.from(modal.querySelectorAll('input:not([type=hidden]):not([type=range]),select,textarea,button.btn-primary')).filter(function(x){return !x.disabled&&!x.closest('[hidden]');});
-    var i=fields.indexOf(el);if(i>=0&&i<fields.length-1){e.preventDefault();e.stopImmediatePropagation();fields[i+1].focus();}
+    var i=fields.indexOf(el);if(i>=0&&i<fields.length-1){e.preventDefault();e.stopImmediatePropagation();tkFocusField(fields[i+1]);}
   }
 },true);
 
+/* ================= Ticket · cuatro zonas =================
+   CABECERA -> PRODUCTOS + DINERO -> TAREAS -> MENSAJES + COMPOSER.
+   Todo se pinta con los mismos datos y cores de siempre (productos, tareas,
+   team_posts, bitácora); aquí solo cambia la anatomía. Work Orders ya no es
+   una capa visible: las tareas históricas con work_order_id se toleran. */
+function tkProductLabel(p){ return (p.cantidad!=null?p.cantidad:1)+' × '+p.desc; }
+function tkProductTasks(t,p){
+  return (t.tareas||[]).filter(function(x){
+    var m=DTGOps.meta(x);
+    if(m.productId===p.id)return true;
+    if(m.productId||!x.workOrderId)return false;
+    var o=(t.workOrders||[]).find(function(o){return o.id===x.workOrderId;});
+    return !!o&&o.productId===p.id;
+  });
+}
+function tkMoneyFooter(t){
+  var prods=t.productos||[],pagos=t.pagos||[];
+  if(!prods.length&&!pagos.length)return '';
+  var f=ticketFinancials(t),pend=pagos.some(function(pg){return pg._pending;});
+  var out=[];
+  if(prods.length){
+    out.push(f.total!=null
+      ? '<span class="tk-money" title="'+escapeHtml(financialBasisLabel(f))+'">Total <b>'+fmtUsd(f.total)+'</b></span>'
+      : '<span class="tk-money warn">Total · falta precio ('+f.pendingPrices+')</span>');
+  }
+  out.push('<button type="button" class="tk-money'+(pend?' is-pending':'')+'" data-action="show-dinero" data-ticket="'+t.id+'" title="Ver pagos">Pagado <b>'+fmtUsd(f.cobrado)+'</b></button>');
+  if(f.saldo!=null){
+    out.push('<button type="button" class="tk-money tk-saldo'+(f.saldo>0.005?' owes':'')+'" data-open-form="pago" title="Registrar pago">Saldo <b>'+fmtUsd(f.saldo)+'</b></button>');
+  }
+  return '<div class="tk-totals" aria-label="Total, pagado y saldo">'+out.join(' <span class="tk-dot" aria-hidden="true">·</span> ')+'</div>';
+}
+function ticketProductBar(t){
+  var prods=t.productos||[];
+  var rows=prods.map(function(p){
+    var open=UI.ticketProductOpen===p.id,pid=escapeHtml(p.id),tasks=tkProductTasks(t,p);
+    var price=p.precio==null?'<span class="tk-price pending">Precio pendiente</span>':'<span class="tk-price">'+fmtUsd((Number(p.cantidad)||0)*Number(p.precio))+'</span>';
+    var editor='';
+    if(open){
+      editor='<div class="tk-prod-edit"><div class="tk-prod-fields">'+
+        '<label>Nombre<input type="text" id="tk-pe-desc-'+pid+'" class="pe-desc" data-producto-edit="'+pid+'" data-field="desc" data-ticket="'+t.id+'" value="'+escapeHtml(p.desc)+'"></label>'+
+        '<label>Cantidad<input type="number" id="tk-pe-cant-'+pid+'" class="pe-cant" inputmode="decimal" min="0" step="1" data-producto-edit="'+pid+'" data-field="cantidad" data-ticket="'+t.id+'" value="'+escapeHtml(String(p.cantidad))+'"></label>'+
+        '<label>Precio unitario<input type="number" id="tk-pe-precio-'+pid+'" class="pe-precio" inputmode="decimal" min="0" step="0.01" placeholder="pendiente" data-producto-edit="'+pid+'" data-field="precio" data-ticket="'+t.id+'" value="'+(p.precio==null?'':escapeHtml(String(p.precio)))+'"></label></div>'+
+        '<div class="tk-prod-tasks">'+(tasks.length?tasks.map(function(x){return '<button type="button" class="tk-task-chip'+(x.estado==='terminado'?' done':'')+'" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+' · '+escapeHtml(estadoLabel(x.estado))+'</button>';}).join(''):'<span class="tk-muted">Sin tareas para este producto</span>')+'</div>'+
+        '<div class="tk-prod-actions"><button type="button" class="btn-plain" data-action="producto-duplicate" data-producto="'+pid+'" data-ticket="'+t.id+'">Duplicar</button><button type="button" class="btn-plain danger-text" data-action="producto-delete-open" data-producto="'+pid+'" data-ticket="'+t.id+'">Eliminar</button><button type="button" class="btn-plain" data-ticket-ux="product" data-product="'+pid+'">Cerrar</button></div></div>';
+    }
+    return '<div class="tk-prod'+(open?' open':'')+'"><div class="tk-prod-line">'+
+      '<button type="button" class="tk-prod-main" data-ticket-ux="product" data-product="'+pid+'" aria-expanded="'+open+'"><span class="tk-qty">'+escapeHtml(String(p.cantidad))+' ×</span> <span class="tk-name">'+escapeHtml(p.desc)+'</span> '+price+(tasks.length?' <span class="tk-count" title="'+tasks.length+' tarea'+(tasks.length===1?'':'s')+'">'+tasks.length+'</span>':'')+'</button>'+
+      '<button type="button" class="tk-plus" data-ticket-ux="product-task" data-product="'+pid+'" aria-label="Crear tarea para '+escapeHtml(p.desc)+'" title="Crear tarea para este producto">+</button></div>'+editor+'</div>';
+  }).join('');
+  var form=UI.composer==='producto'?popoverForm('producto').replace('class="popover" id="composer-popover"','class="popover tk-inline-form" id="composer-popover"'):'';
+  return '<section class="tk-products" aria-label="Productos">'+rows+form+
+    '<div class="tk-prod-foot"><button type="button" class="tk-add" data-open-form="producto">+ Producto</button>'+tkMoneyFooter(t)+'</div></section>';
+}
+function renderTasksPanel(t){
+  var all=(t.tareas||[]).slice().sort(function(a,b){return (a.estado==='terminado'?1:0)-(b.estado==='terminado'?1:0);});
+  var doneN=all.filter(function(x){return x.estado==='terminado';}).length;
+  var rows=all.map(function(task){
+    var m=DTGOps.meta(task),prod=m.productId?(t.productos||[]).find(function(p){return p.id===m.productId;}):null;
+    var ops=isOpsTask(task),done=task.estado==='terminado',bits=[];
+    if(prod)bits.push('<span class="tk-rel" title="Relacionada con este producto">'+escapeHtml(tkProductLabel(prod))+'</span>');
+    if(ops&&task.area)bits.push('<span class="tk-area tk-area-'+escapeHtml(task.area)+'">'+escapeHtml(AREA_LABEL[task.area]||task.area)+'</span>');
+    if(task.responsable)bits.push('<span class="tk-who">'+personAvatar(task.responsable,{size:'xs'})+escapeHtml(task.responsable)+'</span>');
+    if(task.fechaAtencion)bits.push('<span class="tk-when">'+fmtDateOnlyShort(task.fechaAtencion)+'</span>');
+    var pr=Number(task.progreso)||0;if(ops&&pr>0&&pr<100)bits.push('<span class="tk-pct">'+pr+'%</span>');
+    if(DTGOps.blocked(task,t))bits.push('<span class="tk-wait">Espera empaquetado</span>');
+    var inner='<span class="tk-task-desc">'+escapeHtml(task.desc)+'</span>'+(bits.length?' <span class="tk-task-bits">'+bits.join(' ')+'</span>':'');
+    if(ops){
+      var st=OPS_ESTADOS.filter(function(e){return e.key===(task.estado||'pendiente');})[0]||OPS_ESTADOS[0];
+      return '<div class="tk-task'+(done?' done':'')+'"><button type="button" class="ops-state-pill ops-state-'+st.key+' tk-state" data-toggle-task="'+task.id+'" data-ticket="'+t.id+'" aria-haspopup="true" title="'+st.label+' · cambiar estado" aria-label="Estado: '+st.label+'. Cambiar estado">'+icon(st.icon)+'<span>'+st.label+'</span></button>'+
+        '<button type="button" class="tk-task-open" data-action="ops-task-edit" data-task="'+task.id+'" data-ticket="'+t.id+'">'+inner+'</button></div>';
+    }
+    return '<div class="tk-task'+(done?' done':'')+'"><button class="task-check'+(done?' on':'')+'" data-toggle-normal-task="'+task.id+'" data-ticket="'+t.id+'" aria-label="'+(done?'Marcar pendiente':'Marcar terminada')+'" aria-pressed="'+(done?'true':'false')+'">'+(done?icon('check'):'')+'</button><span class="tk-task-open">'+inner+'</span></div>';
+  }).join('');
+  var ops=all.filter(isOpsTask);
+  var suggest=ops.length&&ops.every(function(x){return x.estado==='terminado';})&&ticketEstado(t)==='abierto'
+    ?'<div class="tk-suggest"><span>Todas las tareas de operación están terminadas.</span><button type="button" class="btn btn-sm btn-ghost" data-action="marcar-entregado" data-ticket="'+t.id+'">Marcar entregado</button></div>':'';
+  return '<section class="tk-tasks" aria-label="Tareas"><div class="tk-sec-head"><h2>Tareas'+(all.length?' <small>'+doneN+'/'+all.length+'</small>':'')+'</h2>'+
+    '<button type="button" class="tk-add" data-action="ops-task-new" data-ticket="'+t.id+'">+ Nueva tarea</button></div>'+rows+suggest+'</section>';
+}
+function tkStream(t,root){
+  var cid=ticketConversationId(t.id),items=[];
+  if(cid)(STATE.teamPosts||[]).forEach(function(p){
+    if(p.conversationId!==cid||isPostExpired(p))return;
+    if(root?!(p.id===root||p.threadRootId===root):p.threadRootId)return;
+    items.push({ts:p.createdAt,html:renderChatMessage({post:p,continued:false})});
+  });
+  if(!root){
+    // Productos y tareas ya se ven en sus zonas: sus altas no se repiten como mensajes (siguen en bitácora).
+    (t.thread||[]).forEach(function(ev){if(ev.type==='producto'||ev.type==='tarea'||ev.type==='tarea_produccion')return;items.push({ts:ev.ts,html:renderThreadItem(ev,t.id)});});
+    (UI.ephemeralLog||[]).filter(function(e){return e.ticketId===t.id;}).forEach(function(e){items.push({ts:e.ts,html:renderEphemeralEntry(e)});});
+  }
+  items.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
+  return items.length?joinWithDaySeparators(items):'<div class="tk-empty">Sin mensajes todavía.</div>';
+}
+function renderTicketConversation(t){
+  return '<section class="tk-msgs" aria-label="Mensajes">'+astraSelectionBar()+astraRenderTicketLinks(t)+tkStream(t,UI.astraThreadRoot||null)+'</section>';
+}
+function renderTicketScreen(t){
+  var chat=!!TICKET_CHAT_AVAILABLE,root=chat?UI.astraThreadRoot:null;
+  var pill='<button type="button" class="chat-new-pill" id="chat-new-pill" data-action="chat-jump-bottom" hidden><span id="chat-new-pill-label">Mensajes nuevos</span></button>';
+  if(!chat){
+    return '<div class="chat-scroll-wrap tk-wrap"><div class="tk-scroll ticket-body" id="thread-scroll" data-scroll-ticket="'+escapeHtml(t.id)+'">'+
+      renderTicketHeader(t)+ticketProductBar(t)+renderTasksPanel(t)+
+      '<section class="tk-msgs" aria-label="Mensajes">'+astraRenderTicketLinks(t)+(mergedThreadHtml(t)||'<div class="tk-empty">Sin mensajes todavía.</div>')+'</section></div></div>';
+  }
+  if(root){
+    return '<div class="chat-scroll-wrap tk-wrap"><div class="tk-scroll" id="chat-scroll" data-chat-context="ticket:'+escapeHtml(t.id)+':'+escapeHtml(root)+'" aria-label="Hilo">'+
+      '<div class="tk-thread-bar"><button type="button" class="btn btn-sm" data-ticket-ux="back-thread">← #'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</button><strong>Hilo</strong></div>'+
+      renderTicketConversation(t)+'</div>'+pill+'</div>';
+  }
+  return '<div class="chat-scroll-wrap tk-wrap"><div class="tk-scroll" id="chat-scroll" data-chat-context="ticket:'+escapeHtml(t.id)+':root" aria-label="Ticket">'+
+    renderTicketHeader(t)+ticketProductBar(t)+renderTasksPanel(t)+renderTicketConversation(t)+'</div>'+pill+'</div>';
+}
+
 function renderTicketHeader(t){
-  var totals = computeTotals(t);
-  var cobrado = t.pagos.reduce(function(s,p){ return s+p.monto; }, 0);
   var estado = ticketEstado(t);
   var editing = UI.headerEditField;
-
-  /* Cabecera móvil colapsable §21-28/§39: SIGUE SIENDO la misma función,
-     una sola vez — mobile solo reorganiza vía CSS/estado UI, nunca
-     duplica la mutación de datos. `expanded` decide qué zonas se ven en
-     mobile (en desktop las reglas de abajo no aplican: fuera del
-     @media(max-width:880px) todo se muestra siempre, igual que antes de
-     esta ronda). `moreOpen` es el "•••" de acciones secundarias
-     (Documentos/Fijar/Cerrar ticket) — independiente del expandido: solo
-     tiene sentido (y solo es visible) una vez expandido, porque colapsado
-     ya las oculta todas por completo (§22: nada de eso se muestra "de
-     forma permanente" en compacto). */
-  var expanded = !!UI.ticketHeaderExpanded[t.id];
-  var moreOpen = !!UI.headerMoreOpen;
-
-  /* 3.1 — barra superior chica: folio+fecha+pastilla de estado a la
-     izquierda, Documentos/Fijar a la derecha en desktop; en mobile esas
-     dos vuelven acciones secundarias detrás de "•••" (mismos botones,
-     mismo data-action — solo CSS decide si se ven). El control de
-     expandir/colapsar (˅/˄) es nuevo en esta ronda y solo se ve en mobile. */
-  var topBar =
-    '<div class="ticket-header-top">' +
-      '<div class="comanda-meta"><span class="ticket-id">#' + t.seq + " · creado " + fmtDateShort(t.createdAt) + '</span>' +
-        '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>" +
-        /* Privacidad real §9: solo lectura a propósito — la ÚNICA forma de
-           cambiar esto son los comandos /privado y /publico (ver COMMANDS),
-           nunca un botón paralelo aquí que duplique esa lógica. */
-        (t.visibility === "private" ? ' <span class="pill privacy-pill" title="Restringido — solo lo ven las personas agregadas con /privado">' + icon("lock") + " Privado</span>" : "") +
-      "</div>" +
-      '<div class="comanda-header-controls">' +
-        '<div class="ticket-header-actions">' +
-          '<button class="btn-plain doc-badge" data-action="show-documentos" data-ticket="' + t.id + '">' + icon("file-text") + " Documentos · " + t.documentos.length + "</button>" +
-          '<button class="btn-plain" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned?"Desfijar":"Fijar") + '">' + icon("pin") + (t.pinned ? " Fijado" : " Fijar") + "</button>" +
-        "</div>" +
-        '<button class="comanda-more-toggle" data-action="toggle-header-more" title="Más acciones" aria-label="Más acciones">' + icon("more-v") + "</button>" +
-        '<button class="comanda-expand-toggle" data-action="toggle-header-expanded" data-ticket="' + t.id + '" title="' + (expanded?"Ocultar detalles":"Ver detalles") + '" aria-label="' + (expanded?"Ocultar detalles":"Ver detalles") + '">' +
-          '<span class="comanda-expand-label-full">' + (expanded?"Ocultar detalles":"Ver detalles") + "</span>" +
-          '<span class="comanda-expand-label-short">Detalles</span>' +
-          '<span class="comanda-expand-chevron">' + icon(expanded ? "chevron-up" : "chevron-down") + "</span>" +
-        "</button>" +
-      "</div>" +
-    "</div>";
-
   /* 3.2 — identidad: cliente grande y clicable (o el mismo campo libre
      editable en línea si todavía no está vinculado a un cliente real),
      más el resumen de trabajo derivado de productos. */
@@ -7175,7 +7328,6 @@ function renderTicketHeader(t){
     identityMain = '<button class="comanda-identity-btn comanda-cliente-plain" data-action="header-edit" data-field="cliente">' +
       (t.cliente ? escapeHtml(t.cliente) : "Sin cliente definido") + " <span class=\"comanda-cliente-chevron\">&rsaquo;</span></button>";
   }
-  var workSummary = ticketWorkSummary(t);
   /* §10: spotlight es el único estilo que tiñe el CONTENEDOR (muy tenue) —
      nunca el ticket ni el thread completos, solo esta zona de identidad. */
   var identityStyle = identityC ? clienteIdentityStyle(identityC, "full") : null;
@@ -7190,100 +7342,49 @@ function renderTicketHeader(t){
     : "";
   var identity =
     '<div class="' + identityWrapClass + '"><div>' + identityMain + contactBtn +
-      (workSummary ? '<div class="comanda-summary">' + escapeHtml(workSummary) + "</div>" : "") +
     "</div></div>";
 
-  /* 6/7 — acciones primaria/secundaria, y el estado ya resuelto (nota de
-     entrega o de cierre) cuando aplica. "ENTREGADO NO SIGNIFICA CERRADO":
-     el botón de cerrar sigue disponible después de entregar. */
-  var actionsRow = "";
-  if(estado === "abierto" || estado === "entregado"){
-    actionsRow = '<div class="comanda-actions-row">';
-    if(estado === "abierto"){
-      actionsRow += '<button class="btn btn-success" data-action="marcar-entregado" data-ticket="' + t.id + '">' + icon("check") + " Marcar entregado</button>";
-    } else {
-      actionsRow += '<span class="comanda-entregado-note">Entregado ' + fmtDateShort(t.entregadoAt) + (t.entregadoPor ? " · " + escapeHtml(t.entregadoPor) : "") +
-        ' · <button data-action="deshacer-entrega" data-ticket="' + t.id + '">deshacer</button></span>';
-    }
-    actionsRow += '<button class="btn btn-cierre-secondary comanda-secondary-btn" data-action="abrir-cierre">Cerrar ticket ' + icon("chevron-down") + "</button>";
-    /* Parte S §122: "Copiar" visible en la cabecera del ticket completo —
-       mismo botón/core sin importar el estado (ver también la rama
-       "cerrado" abajo), nunca oculto detrás de un menú extra cuando ya cabe
-       directo en la barra de acciones. */
-    actionsRow += '<button class="btn btn-ghost comanda-secondary-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket">Copiar</button>';
-    actionsRow += "</div>";
+  var meta = '<span class="tk-meta"><span class="ticket-id">#' + t.seq + '</span><span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + '</span>' +
+    (t.visibility === "private" ? '<span class="pill privacy-pill" title="Restringido — solo lo ven las personas agregadas con /privado">' + icon("lock") + " Privado</span>" : "") + '</span>';
+  var tools = '<span class="tk-tools"><button type="button" class="tk-icon" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned ? "Desfijar" : "Fijar") + '" aria-label="' + (t.pinned ? "Desfijar ticket" : "Fijar ticket") + '" aria-pressed="' + (t.pinned ? "true" : "false") + '">' + icon("pin") + '</button>' +
+    '<button type="button" class="tk-icon" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket" aria-label="Copiar resumen del ticket">' + icon("copy") + '</button></span>';
+  /* Qué sigue: pieza central, siempre visible, opcional y de un toque. */
+  var next = editing === "quesigue"
+    ? '<div class="tk-next editing">' + renderQueSigueSelect(t) + '</div>'
+    : '<button type="button" class="tk-next' + (t.queSigue ? '' : ' empty') + '" data-action="header-edit" data-field="quesigue"><span class="tk-next-l">Qué sigue</span><span class="tk-next-v">' + (t.queSigue ? escapeHtml(t.queSigue) : "Sin definir") + '</span></button>';
+  function chip(field, icn, label, valueHtml){
+    if(editing === field) return '<span class="tk-chip editing">' + renderHeaderFieldInput(t, field) + '</span>';
+    return '<button type="button" class="tk-chip' + (valueHtml ? '' : ' empty') + '" data-action="header-edit" data-field="' + field + '">' + icon(icn) + '<span>' + (valueHtml || label) + '</span></button>';
+  }
+  var chips = chip("responsable", "user", "Responsable", t.responsable ? responsibleChip(t.responsable) : "") +
+    chip("atencion", "calendar", "Atender", t.fechaAtencion ? "Atender " + fmtDateOnlyShort(t.fechaAtencion) : "") +
+    chip("compromiso", "clock", "Compromiso", t.fechaCompromiso ? "Compromiso " + fmtDateOnlyShort(t.fechaCompromiso) : "") +
+    renderMarkerChips(t, { max: 4 }) + renderZoneChip(t) +
+    '<button type="button" class="tk-chip" data-action="show-documentos" data-ticket="' + t.id + '">' + icon("file-text") + '<span>Documentos' + (t.documentos.length ? " · " + t.documentos.length : "") + '</span></button>' +
+    renderTicketWarnings(t, { omitMoney: true, only: ["phone", "baddate"] });
+  var closing = "";
+  if(estado === "abierto"){
+    closing = '<button type="button" class="tk-chip tk-act" data-action="marcar-entregado" data-ticket="' + t.id + '">' + icon("check") + '<span>Entregar</span></button>' +
+      '<button type="button" class="tk-chip tk-act" data-action="abrir-cierre"><span>Cerrar</span></button>';
+  } else if(estado === "entregado"){
+    closing = '<span class="tk-note">Entregado ' + fmtDateShort(t.entregadoAt) + (t.entregadoPor ? " · " + escapeHtml(t.entregadoPor) : "") + ' · <button type="button" data-action="deshacer-entrega" data-ticket="' + t.id + '">deshacer</button></span>' +
+      '<button type="button" class="tk-chip tk-act" data-action="abrir-cierre"><span>Cerrar</span></button>';
   } else {
-    actionsRow = '<div class="comanda-cerrado-note"><b>' + ticketEstadoLabel(estado) + "</b> · " + fmtDateShort(t.cerradoAt) +
-      (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") +
-      (t.razonCierre ? '<div>' + escapeHtml(t.razonCierre) + "</div>" : "") + "</div>" +
-      '<div class="comanda-actions-row"><button class="btn btn-ghost comanda-secondary-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket">Copiar</button></div>';
+    closing = '<span class="tk-note"><b>' + ticketEstadoLabel(estado) + '</b> · ' + fmtDateShort(t.cerradoAt) + (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") + (t.razonCierre ? " · " + escapeHtml(t.razonCierre) : "") + '</span>';
   }
-
-  /* 4 — OPERACIÓN: clic para actuar, no inputs siempre visibles. Cada fila,
-     al abrirse, es EXACTAMENTE el mismo control que ya existía (misma
-     commitHeaderField/commitQueSigue) — solo cambia cuándo se muestra. */
-  var opRows = "";
-  opRows += (editing === "quesigue")
-    ? '<div class="comanda-edit-inline">' + renderQueSigueSelect(t) + "</div>"
-    : comandaField("Qué sigue", t.queSigue ? '<span class="comanda-field-value accent">' + escapeHtml(t.queSigue) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="quesigue"');
-  opRows += (editing === "responsable")
-    ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "responsable") + "</div>"
-    : comandaField("Responsable", t.responsable ? '<span class="comanda-field-value">' + responsibleChip(t.responsable) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin asignar &rsaquo;</span>', 'data-action="header-edit" data-field="responsable"');
-  opRows += (editing === "atencion")
-    ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "atencion") + "</div>"
-    : comandaField("Atender", t.fechaAtencion ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaAtencion) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="atencion"');
-  opRows += (editing === "compromiso")
-    ? '<div class="comanda-edit-inline">' + renderHeaderFieldInput(t, "compromiso") + "</div>"
-    : comandaField("Compromiso", t.fechaCompromiso ? '<span class="comanda-field-value">' + fmtDateOnlyShort(t.fechaCompromiso) + " &rsaquo;</span>" : '<span class="comanda-field-value muted">Sin definir &rsaquo;</span>', 'data-action="header-edit" data-field="compromiso"');
-  /* v0.20 — marcadores del ticket: mismos chips + picker de toggle que
-     Kanban/Lista (un clic agrega o quita, varios a la vez). */
-  opRows += '<div class="comanda-field comanda-field-markers"><span class="comanda-field-label">Marcadores</span>' + renderMarkerChips(t, { labels: true, max: 6 }) + "</div>";
-  /* v0.21 — zona de entrega (opcional) y avisos de datos faltantes. Ambos
-     son derivados: nada aquí es obligatorio, y el aviso desaparece solo en
-     cuanto el dato existe. */
-  opRows += '<div class="comanda-field comanda-field-zone"><span class="comanda-field-label">Entrega</span>' + renderZoneChip(t) + "</div>";
-  var warnsHtml = renderTicketWarnings(t, { labels: true, omitMoney:true });
-  if(warnsHtml) opRows += '<div class="comanda-field comanda-field-warns"><span class="comanda-field-label">Falta</span>' + warnsHtml + "</div>";
-
-  /* 5 — COMERCIAL: SOLO hechos ya calculados en otro lado (computeTotals,
-     pagos) — jamás una deuda/saldo inventada aquí ("PRECIO ≠ DEUDA"). Los
-     números van primero (comandaStat): en esta zona lo que se escanea es
-     la cifra, no el nombre del campo. */
-  var comRows = "";
-  comRows += comandaStat("Total", '<span class="comanda-field-value known">' + moneyTotalHtml(t) + " &rsaquo;</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="' + (moneySummary(t).faltanPrecios ? "pending" : "all") + '"');
-  var pagoPendiente = (t.pagos || []).some(function(pg){ return pg._pending; });
-  comRows += comandaStat("Cobrado", '<span class="comanda-field-value known cobrado' + (pagoPendiente ? " is-pending" : "") + '">' + fmtMoney(cobrado) + pendingMark(pagoPendiente ? { _pending: true } : null) + " &rsaquo;</span>", 'data-action="show-dinero" data-ticket="' + t.id + '"');
-  if(totals.pending){
-    comRows += comandaStat(totals.pending===1?"Precio pendiente":"Precios pendientes", '<span class="comanda-field-value pending">' + totals.pending + " &rsaquo;</span>", 'data-action="show-productos" data-ticket="' + t.id + '" data-filter="pending"');
-  }
-  comRows += comandaStat("Documentos", '<span class="comanda-field-value">' + t.documentos.length + " &rsaquo;</span>", 'data-action="show-documentos" data-ticket="' + t.id + '"');
-
-  /* §23/§26: resumen comercial "extremadamente compacto" — SOLO en mobile
-     colapsado (la regla CSS lo oculta en desktop y en expandido). Reutiliza
-     los mismos `totals`/`cobrado` ya calculados arriba — nunca un segundo
-     cálculo comercial. Sin "Documentos" aquí a propósito: ya está cubierto
-     por el badge de la barra superior una vez expandido, y en compacto no
-     hace falta duplicarlo. */
-  var compactSummary =
-    '<div class="comanda-compact-summary">' +
-      moneyTotalHtml(t, { short: true }) +
-      ' <span class="comanda-compact-sep">·</span> Cobrado ' + fmtUsd(cobrado) +
-    "</div>";
-
-  return '<div class="ticket-header ticket-operational">'+topBar+identity+
-    '<div class="ticket-operation-strip">'+opRows+'</div>'+
-    '<details class="ticket-commercial-details"><summary>Total / pagos / documentos y cierre</summary>'+comRows+actionsRow+'</details></div>';
-
+  return '<header class="tk-head"><div class="tk-line1">' + identity + meta + tools + '</div>' + next +
+    '<div class="tk-chips">' + chips + '<span class="tk-chips-end">' + closing + '</span></div></header>';
 }
 
 function popoverMenu(){
+  var chat = isChatComposerContext() && !!UI.selectedTicketId;
   return (
-    '<div class="popover" id="composer-popover">' +
-      '<div class="popover-title">Agregar al ticket</div>' +
-      '<button class="popover-menu-item" data-open-form="producto">' + icon("package") + " Producto</button>" +
-      '<button class="popover-menu-item" data-action="ops-task-new" data-ticket="' + escapeHtml(UI.selectedTicketId || "") + '">' + icon("factory") + " Tarea de operación</button>" +
-      '<button class="popover-menu-item" data-open-form="tarea">' + icon("list-checks") + " Tarea simple</button>" +
-      '<button class="popover-menu-item" data-open-form="archivo">' + icon("camera") + " Foto / archivo</button>" +
+    '<div class="popover tk-menu" id="composer-popover">' +
+      (chat ? '<button type="button" class="popover-menu-item" data-tk-menu="photo">' + icon("camera") + " Foto</button>" +
+        '<button type="button" class="popover-menu-item" data-tk-menu="file">' + icon("paperclip") + " Archivo</button>" : "") +
+      '<button class="popover-menu-item" data-open-form="archivo">' + icon("images") + " Fotos del pedido</button>" +
+      '<button type="button" class="popover-menu-item" data-tk-menu="marker">' + icon("flame") + " Nota con marcador</button>" +
+      '<button class="popover-menu-item" data-open-form="tarea">' + icon("list-checks") + " Tarea interna</button>" +
       '<button class="popover-menu-item" data-open-form="pago">' + icon("dollar") + " Pago</button>" +
       '<button class="popover-menu-item" data-action="open-doc-choice">' + icon("file-text") + " Documento comercial</button>" +
     "</div>"
@@ -8326,6 +8427,10 @@ function mentionSync(el){
   if(!isChatComposerContext()){ if(UI.chatMention){ UI.chatMention = null; renderKeepingLiveInputs(); } return; }
   var tok = mentionTokenAt(el.value, el.selectionStart);
   var antes = UI.chatMention;
+  // Escape descarta ESTA mención; el foco/selección que restaura el render no debe reabrirla.
+  var dis = UI.chatMentionDismissed;
+  if(dis && tok && dis.start === tok.start && dis.query === tok.query) return;
+  UI.chatMentionDismissed = null;
   if(!tok){ if(antes){ UI.chatMention = null; renderKeepingLiveInputs(); } return; }
   if(antes && antes.query === tok.query && antes.start === tok.start) return;
   UI.chatMention = { start: tok.start, end: tok.end, query: tok.query, symbol: tok.symbol, index: 0 };
@@ -8438,10 +8543,24 @@ function renderChatPrefsPanel(){
   );
 }
 
+function tkComposerHasContent(){
+  var inp=document.getElementById('composer-input');
+  return !!(inp&&inp.value.trim())||!!(isChatComposerContext()&&(UI.feedComposerPhoto||UI.astraAudioBlob||UI.ticketChatFile));
+}
+/* Envío y micrófono comparten lugar: sin contenido se ofrece grabar, con
+   contenido enviar. Una sola función decide, para que ningún render la pise. */
+function tkSyncComposer(){
+  var send=document.getElementById('composer-send'),mic=document.getElementById('composer-mic');
+  if(!send)return;
+  var has=tkComposerHasContent();
+  send.disabled=!has;
+  if(mic){send.hidden=!has;mic.hidden=has;}
+}
 function renderComposer(){
   var hasTicket = !!findTicket(UI.selectedTicketId);
   var pop = "";
-  if(UI.composer === "menu") pop = popoverMenu();
+  if(UI.composer === "producto" && hasTicket) pop = "";
+  else if(UI.composer === "menu") pop = popoverMenu();
   else if(UI.composer === "doc_choice") pop = docChoiceMenu();
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.markerPicker && UI.markerPicker.source === "composer") pop = renderMarkerPickerPopover();
@@ -8450,67 +8569,54 @@ function renderComposer(){
   else if(UI.smartActions) pop = renderSmartActions();
   else if(UI.slashMenuOpen) pop = slashMenu();
   else if(UI.cliSuggestOpen) pop = clienteSuggestPopover();
-  /* v0.23: el menú de menciones es el último en la cadena — nunca le quita
-     el lugar a una confirmación ni al autocompletar de cliente. */
   else if(UI.chatMention) pop = renderMentionPicker();
-  /* /help, /estado, /pendientes, /dinero ya NO son popovers flotantes —
-     viven como mensajes efímeros dentro del hilo (ver renderEphemeralEntry),
-     igual que una consola. Aquí solo quedan los overlays de "interacción"
-     momentánea: confirmación, autocomplete, y ahora las acciones sugeridas
-     sobre texto plano y el preview de /nuevo. */
-  var plusBtn = hasTicket ? '<button class="composer-plus" data-action="toggle-menu" title="Agregar" aria-label="Agregar al ticket">' + icon("plus") + "</button>" : "";
-  /* §25: control discreto asociado al compositor — abre el selector de
-     marcador usando el texto TODAVÍA sin enviar como descripción. No se
-     deshabilita con textarea vacío (evita el costo de recalcular en cada
-     tecla); en su lugar openMarkerPicker() avisa con un toast si no hay
-     nada escrito, mismo criterio que otros botones del compositor. */
-  var markerBtn = hasTicket ? '<button class="composer-marker-btn" data-action="marker-picker-open-composer" title="Guardar como nota + marcador" aria-label="Guardar como nota con marcador">' + icon("flame") + "</button>" : "";
-  /* Composer Intelligence §4: enseña los DOS prefijos de comando — "/" y
-     "-" (este último pensado para teclados móviles/mexicanos donde "/" no
-     está a la mano, sección 3).
-     Ronda "Fluidez…" §13: en mobile el placeholder descriptivo no cabe en
-     una sola línea en un iPhone chico y se corta feo — ahí se usa EXACTO
-     "Escribe / o - para comandos", sin ejemplos. Desktop conserva el más
-     descriptivo de siempre (con ejemplos), sin cambios. */
+  var chatMode = isChatComposerContext();
+  var plusBtn = hasTicket ? '<button type="button" class="composer-plus" data-action="toggle-menu" title="Agregar" aria-label="Agregar al ticket" aria-haspopup="true" aria-expanded="' + (UI.composer === "menu" ? "true" : "false") + '">' + icon("plus") + "</button>" : "";
   var placeholder = isMobileViewport()
     ? "Escribe / o - para comandos"
     : (hasTicket ? "Escribe / o - para comandos (nota, producto, pago…)" : "Escribe / o - para comandos (buscar, nuevo, ayuda…)");
-  /* v0.20 — en Inicio este MISMO composer es el del chat del equipo: texto
-     normal + Enter = mensaje al equipo (Shift+Enter = salto de línea); "/" o
-     "-" siguen siendo comandos exactamente igual que antes (redundancia en
-     los caminos, no en la lógica). data-ctx identifica para qué contexto se
-     dibujó este composer — render() lo usa para no perder un borrador al
-     re-dibujar la MISMA pantalla, y nunca arrastrarlo a otra. */
-  var chatMode = isChatComposerContext();
   var ctxKey = hasTicket ? ("t:" + UI.selectedTicketId + ":" + (UI.astraThreadRoot||"root")) : (chatMode ? "chat:" + (UI.astraConversationId || "team") + ":" + (UI.astraThreadRoot || "root") : ("v:" + (UI.mainView || "home")));
-  var chatAttach = "", chatOpts = "", chatExtra = "";
+  var chatAttach = "", chatOpts = "", chatExtra = "", micBtn = "", recording = !!UI.astraRecording;
   if(chatMode){
-    placeholder = UI.astraThreadRoot ? "Responder en el hilo…" : hasTicket ? "Mensaje sobre este ticket…" : (UI.astraConversationId ? "Mensaje personal…" : "Escribe un mensaje al equipo…");
+    placeholder = UI.astraThreadRoot ? "Responder en el hilo…" : hasTicket ? "Escribe un mensaje…" : (UI.astraConversationId ? "Mensaje personal…" : "Escribe un mensaje al equipo…");
     if(UI.astraReplyTo) chatExtra += astraComposerReply();
-    if(UI.astraRecording) chatExtra += '<div class="astra-compose-reply">Grabando… ' +
-      '<button type="button" data-astra-action="audio-stop">Detener</button>' +
-      '<button type="button" data-astra-action="audio-cancel">Cancelar</button></div>';
-    if(UI.astraAudioBlob) chatExtra += '<div class="astra-compose-reply">Audio listo ('+
-      Math.round(UI.astraAudioSeconds || 0)+' s) '+
-      '<button type="button" data-astra-action="audio-clear">Quitar</button></div>';
-    chatAttach = UI.astraConversationId && !hasTicket ? "" : '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button><input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
+    if(UI.astraMicError){
+      var me = UI.astraMicError;
+      chatExtra += '<div class="tk-mic-error" role="alert"><div><strong>' + escapeHtml(me.title) + '</strong><span>' + escapeHtml(me.help) + '</span></div>' +
+        (me.retry ? '<button type="button" class="btn btn-sm" data-astra-action="audio-start">Reintentar</button>' : '') +
+        '<button type="button" class="btn btn-sm btn-ghost" data-astra-action="mic-error-close">Cerrar</button></div>';
+    }
+    if(UI.astraAudioBlob && !recording) chatExtra += '<div class="tk-audio-ready">' + tkAudioBubble({ key: "local", seconds: UI.astraAudioSeconds }) +
+      '<button type="button" class="icon-btn" data-astra-action="audio-clear" aria-label="Descartar audio" title="Descartar audio">' + icon("trash") + '</button></div>';
+    if(!hasTicket && !(UI.astraConversationId)) chatAttach = '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button>';
+    chatAttach += '<input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
     if(hasTicket){
-      chatAttach += '<button type="button" class="icon-btn" data-ticket-ux="file-pick" aria-label="Adjuntar archivo">'+icon('paperclip')+'</button><input type="file" id="ticket-chat-file" hidden>';
-      if(UI.ticketChatFile)chatExtra+='<div class="astra-compose-reply">'+escapeHtml(UI.ticketChatFile.name)+'<button type="button" data-ticket-ux="file-clear">Quitar</button></div>';
+      chatAttach += '<input type="file" id="ticket-chat-file" hidden>';
+      if(UI.ticketChatFile) chatExtra += '<div class="astra-compose-reply">' + escapeHtml(UI.ticketChatFile.name) + '<button type="button" data-ticket-ux="file-clear" aria-label="Quitar archivo">×</button></div>';
     }
     var optsOn = UI.chatOptionsOpen || UI.feedComposerPin !== "none" || UI.feedComposerExpires !== "never";
-    chatOpts = UI.astraConversationId ? "" : '<button type="button" class="icon-btn chat-options-btn' + (optsOn ? " active" : "") + '" data-action="chat-options-toggle" aria-expanded="' + (UI.chatOptionsOpen ? "true" : "false") + '" aria-label="Opciones del mensaje: fijar o vencimiento" title="Fijar / vencimiento">' + icon("pin") + "</button>";
+    chatOpts = UI.astraConversationId || hasTicket ? "" : '<button type="button" class="icon-btn chat-options-btn' + (optsOn ? " active" : "") + '" data-action="chat-options-toggle" aria-expanded="' + (UI.chatOptionsOpen ? "true" : "false") + '" aria-label="Opciones del mensaje: fijar o vencimiento" title="Fijar / vencimiento">' + icon("pin") + "</button>";
     var ph = UI.feedComposerPhoto;
     if(ph) chatExtra += '<div class="chat-attach-preview"><img src="' + escapeHtml(ph.previewUrl) + '" alt=""><span>Foto lista para enviar</span><button type="button" class="icon-btn" data-action="feed-composer-remove-photo" aria-label="Quitar foto" title="Quitar foto">' + icon("x") + "</button></div>";
     if(UI.chatOptionsOpen) chatExtra += renderChatComposerOptions();
+    if(ASTRA_CONVERSATIONS_AVAILABLE) micBtn = '<button type="button" id="composer-mic" class="tk-mic' + (UI.astraStarting ? ' busy' : '') + '" data-astra-action="audio-start" aria-label="Grabar mensaje de voz" title="Grabar mensaje de voz"' + (UI.astraStarting ? ' aria-busy="true" disabled' : '') + '>' + icon("mic") + '</button>';
+  }
+  var hasContent = chatMode && !!(UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile);
+  var showMic = !!micBtn && !hasContent;
+  var recBar = '';
+  if(recording){
+    var wave = '', n;
+    for(n = 0; n < TK_REC_BARS; n++) wave += '<i></i>';
+    recBar = '<div class="tk-rec" role="group" aria-label="Grabando audio"><span class="tk-rec-dot" aria-hidden="true"></span><span class="tk-rec-time" id="tk-rec-time">0:00</span><span class="tk-wave tk-wave-live" id="tk-rec-wave" aria-hidden="true">' + wave + '</span>' +
+      '<button type="button" class="tk-rec-cancel" data-astra-action="audio-cancel">Cancelar</button>' +
+      '<button type="button" class="tk-rec-send" data-astra-action="audio-send" aria-label="Enviar audio">' + icon("send") + '<span>Enviar</span></button></div>';
   }
   return (
     '<div class="composer-wrap' + (chatMode ? " chat-composer-wrap" : "") + '">' + pop + chatExtra +
-      '<div class="composer' + (chatMode ? " chat-composer" : "") + '">' + plusBtn + chatAttach +
-        (chatMode && ASTRA_CONVERSATIONS_AVAILABLE ? '<button type="button" class="icon-btn" data-astra-action="audio-start" aria-label="Grabar audio" title="Grabar audio">🎙</button>' : '') +
-        '<textarea id="composer-input" rows="1" data-ctx="' + escapeHtml(ctxKey) + '" placeholder="' + placeholder + '" aria-label="' + (hasTicket ? "Mensaje sobre el ticket" : chatMode ? "Mensaje al equipo" : "Composer") + '"></textarea>' +
-        markerBtn + chatOpts +
-        '<button class="composer-send" id="composer-send" data-action="send-note" aria-label="Enviar" title="Enviar"' + (chatMode && (UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile) ? "" : " disabled") + ">" + icon(chatMode ? "send" : "arrow-up") + "</button>" +
+      '<div class="composer' + (chatMode ? " chat-composer" : "") + (recording ? " is-recording" : "") + '">' + (recording ? "" : plusBtn + chatAttach) +
+        '<textarea id="composer-input" rows="1" data-ctx="' + escapeHtml(ctxKey) + '" placeholder="' + placeholder + '" aria-label="' + (hasTicket ? "Mensaje sobre el ticket" : chatMode ? "Mensaje al equipo" : "Composer") + '"' + (recording ? " hidden" : "") + '></textarea>' +
+        (recording ? recBar : chatOpts + (showMic ? micBtn : (micBtn ? micBtn.replace('class="tk-mic', 'hidden class="tk-mic') : "")) +
+        '<button class="composer-send" id="composer-send" data-action="send-note" aria-label="Enviar" title="Enviar"' + (chatMode && hasContent ? "" : " disabled") + (micBtn && !hasContent ? " hidden" : "") + ">" + icon(chatMode ? "send" : "arrow-up") + "</button>") +
       "</div>" +
       '<div class="producto-preview" id="producto-preview" hidden></div>' +
     "</div>"
@@ -9612,6 +9718,7 @@ function renderTicketWarnings(t, opts){
   opts = opts || {};
   var list = ticketDataWarnings(t);
   if(opts.omitMoney)list=list.filter(function(k){return k!=="money";});
+  if(opts.only)list=list.filter(function(k){return opts.only.indexOf(k)!==-1;});
   if(!list.length) return "";
   if(opts.max) list = list.slice(0, opts.max);
   return '<span class="dq-warns' + (opts.cls ? " " + opts.cls : "") + '">' + list.map(function(k){
@@ -11303,7 +11410,7 @@ function renderOpsProgressive(ed,x,t){
   return '<section class="ops-progressive" aria-label="Elegir trabajo"><div class="ops-menu-tabs">'+
     ['action','category','free'].map(function(mode){return '<button type="button" class="btn btn-sm" data-ops-mode="'+mode+'" aria-pressed="'+(mode==='free'?p.free:!p.free&&p.mode===mode)+'">'+({action:'Por acción',category:'Por categoría / producto',free:'Edición libre'})[mode]+'</button>';}).join('')+
     '</div><div class="ops-menu-hint">Pasa el mouse para explorar. Haz clic para elegir. Flechas para navegar; Enter o espacio para elegir.</div><div class="ops-menu-panels"'+(p.free?' hidden':'')+'>'+opsPanelHTML(opsProgressiveTree(p),[])+'</div><div class="ops-menu-preview" aria-live="polite">'+opsPreviewHTML(p,x)+'</div><div class="ops-menu-provider" hidden></div>'+
-    '<div class="ops-menu-details"><label class="ops-ed-label" for="ops-f-product">Producto del ticket (opcional)</label><select class="field-input" id="ops-f-product"'+(ed.productId?' disabled':'')+'><option value="">Sin producto específico</option>'+products.map(function(pr){return '<option value="'+escapeHtml(pr.id)+'"'+((ed.productId||m.productId)===pr.id?' selected':'')+'>'+escapeHtml((pr.cantidad||'')+' · '+pr.desc)+'</option>';}).join('')+'</select><label class="ops-ed-label" for="ops-f-details">Detalles (opcional)</label><textarea id="ops-f-details" class="field-input" rows="2">'+escapeHtml(m.details||'')+'</textarea><div id="ops-pack-choice"'+(p.selection&&p.selection.category==='parcel'?'':' hidden')+'><label><input type="checkbox" id="ops-f-pack"> Crear también «Empaquetar» primero</label><div class="muted small">La entrega se habilita en Planeación al terminar Empaquetar en Producción. Déjalo desmarcado si ya está empaquetado.</div></div></div></section>';
+    '<div class="ops-menu-details"><label class="ops-ed-label" for="ops-f-details">Detalles (opcional)</label><textarea id="ops-f-details" class="field-input" rows="2">'+escapeHtml(m.details||'')+'</textarea><div id="ops-pack-choice"'+(p.selection&&p.selection.category==='parcel'?'':' hidden')+'><label><input type="checkbox" id="ops-f-pack"> Crear también «Empaquetar» primero</label><div class="muted small">La entrega se habilita en Planeación al terminar Empaquetar en Producción. Déjalo desmarcado si ya está empaquetado.</div></div></div></section>';
 }
 function opsPreviewHTML(p,x){
   if(p.free)return '<small>Edición libre · confirma la pantalla de destino</small><strong>'+escapeHtml(x&&x.desc||'Escribe la tarea')+'</strong>';
@@ -11372,12 +11479,24 @@ document.addEventListener('keydown',function(e){
 },true);
 document.addEventListener('input',function(e){if(e.target.id==='ops-f-desc'&&UI.operaciones.editor&&UI.operaciones.editor.progressive.free)opsSyncPreview();});
 
-function openOpsEditor(mode, taskId, ticketId, workOrderId){
+function openOpsEditor(mode, taskId, ticketId, workOrderId, productId){
   UI.operaciones.menuFor = null;
-  UI.operaciones.editor = { mode: mode, taskId: taskId || null, ticketId: ticketId || null, workOrderId: workOrderId || null, ticketQuery: "", confirmDelete: false, lockedTicket: mode === "create" && !!ticketId };
+  UI.operaciones.editor = { mode: mode, taskId: taskId || null, ticketId: ticketId || null, workOrderId: workOrderId || null, productId: productId || null, ticketQuery: "", confirmDelete: false, lockedTicket: mode === "create" && !!ticketId };
   UI.pendingFocus = { elId: mode === "create" && !ticketId ? "ops-f-ticket-q" : "ops-f-desc", userInitiated: true };
   UI.composer = null;
   render();
+}
+/* "Relacionado con": todo el ticket o un producto. Sin productos no hay nada que elegir.
+   Desde el + de un producto la relación ya viene fijada. */
+function opsRelationHTML(ed, x, t){
+  var products = (t && t.productos) || [], m = DTGOps.meta(x), cur = ed.productId || m.productId || "";
+  if(!products.length) return '<input type="hidden" id="ops-f-product" value="">';
+  var locked = !!ed.productId;
+  var opts = [{ id: "", label: "Todo el ticket" }].concat(products.map(function(p){ return { id: p.id, label: tkProductLabel(p) }; }));
+  return '<div class="ops-rel" role="radiogroup" aria-label="Relacionado con"><span class="ops-ed-label">Relacionado con</span><div class="ops-rel-opts">' +
+    opts.filter(function(o){ return !locked || o.id === cur; }).map(function(o){
+      return '<button type="button" role="radio" aria-checked="' + (o.id === cur ? "true" : "false") + '" class="ops-rel-opt' + (o.id === cur ? " on" : "") + '" data-ops-rel="' + escapeHtml(o.id) + '"' + (locked ? " disabled" : "") + '>' + escapeHtml(o.label) + '</button>';
+    }).join("") + '</div><input type="hidden" id="ops-f-product" value="' + escapeHtml(cur) + '"></div>';
 }
 function closeOpsEditor(){ UI.operaciones.editor = null; render(); }
 function findOpsTask(ticketId, taskId){
@@ -11412,9 +11531,6 @@ function renderOpsEditor(){
       }).join("") : '<div class="muted small">Sin resultados.</div>') + "</div>";
   }
   var tipos = opsTiposCatalog();
-  var orderSelect = t && (t.workOrders || []).length ?
-    '<label class="ops-ed-label" for="ops-f-work-order">Orden de trabajo</label><select class="field-input" id="ops-f-work-order"><option value="">Sin orden vinculada</option>' +
-    t.workOrders.map(function(o){ return '<option value="' + o.id + '"' + ((ed.workOrderId || x.workOrderId) === o.id ? ' selected' : '') + '>' + escapeHtml(o.title) + '</option>'; }).join('') + '</select>' : '';
   var actionMenu = renderOpsProgressive(ed,x,t);
   var tipoSel = '<select id="ops-f-tipo" class="field-input"><option value="">Sin tipo</option>' +
     tipos.map(function(tp){ return '<option value="' + escapeHtml(tp) + '"' + (x.tipoOperacion === tp ? " selected" : "") + ">" + escapeHtml(tp) + "</option>"; }).join("") +
@@ -11441,7 +11557,7 @@ function renderOpsEditor(){
           '<button type="button" class="icon-btn" data-action="ops-ed-close" aria-label="Cerrar">' + icon("x") + "</button></div>" +
         '<div class="ops-ed-body">' +
           ticketBlock +
-          orderSelect + actionMenu +
+          opsRelationHTML(ed, x, t) + actionMenu +
           '<label class="ops-ed-label" for="ops-f-desc">Tarea</label>' +
           '<input type="text" id="ops-f-desc" class="field-input" maxlength="120" placeholder="Ej. Imprimir DTF, Coser bandera…" value="' + escapeHtml(x.desc || "") + '">' +
           '<div class="ops-ed-grid">' +
@@ -11493,13 +11609,11 @@ async function submitOpsEditor(){
   var oldMeta=found ? DTGOps.meta(found.task) : {};
   var unchanged=found && desc===found.task.desc && (area||'')===(found.task.area||'');
   var metadata=Object.assign({},oldMeta,{v:1,selection:resolved ? resolved.selection : unchanged ? oldMeta.selection||null : null,path:resolved ? p.path : unchanged ? oldMeta.path||[] : [],details:val('ops-f-details').trim(),productId:ed.productId||val('ops-f-product')||null});
-  var workOrderId=val('ops-f-work-order')||null;
-  var order=(t.workOrders||[]).find(function(o){return o.id===workOrderId;});
-  if(order && metadata.productId && order.productId && order.productId!==metadata.productId){showToast('El producto debe coincidir con la orden vinculada.');return;}
+  // Work Orders ya no se eligen: una tarea histórica conserva su work_order_id tal cual.
+  var workOrderId=found ? found.task.workOrderId||null : ed.workOrderId||null;
   if(metadata.productId && !(t.productos||[]).some(function(pr){return pr.id===metadata.productId;})){showToast('El producto ya no pertenece al ticket.');return;}
   var patch={desc:desc,tipoOperacion:resolved ? DTGOps.actions[resolved.selection.action][0] : tipo||'',responsable:val('ops-f-resp'),estado:val('ops-f-estado')||'pendiente',progreso:Number(val('ops-f-progreso'))||0,fechaAtencion:date};
   if(area)patch.area=area;
-  if(STATE.workOrdersTableMissing!==false){showToast('No se puede guardar el contexto: falta verificar el esquema de órdenes y acciones.');return;}
   patch.workOrderId=workOrderId;patch.actionCode=resolved ? resolved.code : unchanged ? found.task.actionCode||'' : '';patch.actionPath=JSON.stringify(metadata);
   var pack=ed.mode==='create' && resolved && resolved.selection.category==='parcel' && document.getElementById('ops-f-pack').checked;
   if(pack && patch.estado!=='pendiente'){showToast('La secuencia empieza pendiente.');return;}
@@ -13702,7 +13816,7 @@ function renderEphemeralEntry(entry){
    por fecha, para que la consola se lea como un solo hilo continuo — igual
    que un chat — en vez de dos zonas separadas. */
 function mergedThreadHtml(t){
-  var permanent = t.thread.map(function(ev){ return { ts: ev.ts, html: renderThreadItem(ev, t.id) }; });
+  var permanent = t.thread.filter(function(ev){ return ev.type !== 'producto' && ev.type !== 'tarea' && ev.type !== 'tarea_produccion'; }).map(function(ev){ return { ts: ev.ts, html: renderThreadItem(ev, t.id) }; });
   var ephemeral = UI.ephemeralLog.filter(function(e){ return e.ticketId === t.id; })
     .map(function(e){ return { ts: e.ts, html: renderEphemeralEntry(e) }; });
   var merged = permanent.concat(ephemeral);
@@ -14604,21 +14718,25 @@ function renderChatReactionPalette(p){
 function renderChatMsgMenu(p){
   if(UI.chatMenuFor !== p.id) return "";
   var mineOrAdmin = isAdmin() || p.authorUserId === currentActorId();
+  var inTicket = !!conversationTicketId(p.conversationId);
   var items = [];
   items.push(['astra-reply', 'message', 'Responder', '']);
   items.push(['astra-thread', 'message', 'Abrir hilo', '']);
-  items.push(['astra-save', 'pin', 'Guardar para después', '']);
-  items.push(['astra-remind', 'clock', 'Recordarme', '']);
-  items.push(['astra-create-ticket', 'ticket', 'Crear ticket', '']);
-  items.push(['astra-create-task', 'check', 'Crear tarea', '']);
   items.push(['astra-create-followup', 'clock', 'Crear seguimiento', '']);
+  items.push(['astra-create-task', 'check', 'Crear tarea', '']);
+  items.push(['astra-remind', 'clock', 'Recordarme', '']);
+  items.push(['astra-save', 'pin', 'Guardar para después', '']);
+  items.push(['chat-react-open', 'smile-plus', 'Reaccionar', '']);
   items.push(['astra-select', 'check', 'Seleccionar', '']);
-  if(!p.conversationId) items.push(['astra-link', 'link', p.threadRootId ? 'Vincular hilo a ticket' : 'Agregar a ticket', '']);
-  if(p.pinLevel === "none" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Fijar arriba", 'data-level="pin"']);
-  if(p.pinLevel === "pin" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Quitar fijado", 'data-level="none"']);
-  if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel !== "megapin") items.push(['feed-post-pin', 'star', "Megapin (anuncio)", 'data-level="megapin"']);
-  if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel === "megapin") items.push(['feed-post-pin', 'star', "Quitar Megapin", 'data-level="none"']);
-  if(!p.conversationId && !p.ticketId) items.push(['feed-photo-relacionar-open', 'link', "Vincular a un ticket", ""]);
+  if(!inTicket){
+    items.push(['astra-create-ticket', 'ticket', 'Crear ticket', '']);
+    if(!p.conversationId) items.push(['astra-link', 'link', p.threadRootId ? 'Vincular hilo a ticket' : 'Agregar a ticket', '']);
+    if(p.pinLevel === "none" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Fijar arriba", 'data-level="pin"']);
+    if(p.pinLevel === "pin" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Quitar fijado", 'data-level="none"']);
+    if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel !== "megapin") items.push(['feed-post-pin', 'star', "Megapin (anuncio)", 'data-level="megapin"']);
+    if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel === "megapin") items.push(['feed-post-pin', 'star', "Quitar Megapin", 'data-level="none"']);
+    if(!p.conversationId && !p.ticketId) items.push(['feed-photo-relacionar-open', 'link', "Vincular a un ticket", ""]);
+  }
   items.push(['chat-copy-text', 'copy', "Copiar texto", ""]);
   if(mineOrAdmin) items.push(['feed-post-delete', 'trash', "Eliminar", 'data-danger="1"']);
   return '<div class="chat-msg-menu" role="menu">' + items.map(function(it){
@@ -14654,7 +14772,6 @@ function renderChatMessage(item){
     "</div>";
   var actions = p.pending ? "" :
     '<div class="chat-msg-actions">' +
-      '<button type="button" class="icon-btn" data-action="chat-react-open" data-post-id="' + p.id + '" aria-label="Reaccionar" title="Reaccionar" aria-expanded="' + (UI.chatReactFor === p.id ? "true" : "false") + '">' + icon("smile-plus") + "</button>" +
       '<button type="button" class="icon-btn" data-action="chat-menu-open" data-post-id="' + p.id + '" aria-label="Más acciones" title="Más acciones" aria-haspopup="true" aria-expanded="' + (UI.chatMenuFor === p.id ? "true" : "false") + '">' + icon("more-h") + "</button>" +
       renderChatReactionPalette(p) + renderChatMsgMenu(p) +
     "</div>";
@@ -14670,7 +14787,7 @@ function renderChatMessage(item){
         (p.replyToId ? astraReplyPreview(p) : "") +
         (p.text ? '<div class="chat-msg-text">' + chatLinkifyText(p.text, p) + "</div>" : "") +
         (!p.threadRootId && astraThreadCount(p.id) ? '<button type="button" class="astra-thread-link" data-astra-action="thread" data-post-id="' + p.id + '">' + astraThreadCount(p.id) + ' respuestas · Abrir hilo</button>' : "") +
-        img + ticketFileMarkup(p) +
+        img + astraRenderAudio(p) + ticketFileMarkup(p) +
         (t ? '<div class="chat-msg-ticket">' + renderChatTicketChip(t) + "</div>" : "") +
         resolution + relacionar + astraRenderLinkPicker(p) + astraRemindChoices(p) +
         renderChatReactions(p) +
@@ -14883,10 +15000,15 @@ function captureChatScroll(){
     var nodes = el.querySelectorAll("[data-chat-key]");
     for(var i = 0; i < nodes.length; i++){
       var n = nodes[i];
-      if(n.offsetTop + n.offsetHeight > el.scrollTop){ anchorKey = n.getAttribute("data-chat-key"); anchorOffset = n.offsetTop - el.scrollTop; break; }
+      if(n.offsetTop + n.offsetHeight > el.scrollTop){
+        // Solo se ancla a un mensaje que ya empezó arriba del borde visible; si la
+        // persona está leyendo cabecera/productos/tareas, se conserva el desplazamiento tal cual.
+        if(n.offsetTop <= el.scrollTop){ anchorKey = n.getAttribute("data-chat-key"); anchorOffset = n.offsetTop - el.scrollTop; }
+        break;
+      }
     }
   }
-  return {context:el.getAttribute('data-chat-context')||'home',atBottom: atBottom, anchorKey: anchorKey, anchorOffset: anchorOffset };
+  return {context:el.getAttribute('data-chat-context')||'home',atBottom: atBottom, anchorKey: anchorKey, anchorOffset: anchorOffset, top: el.scrollTop };
 }
 function updateChatNewPill(){
   var pill = document.getElementById("chat-new-pill");
@@ -14907,23 +15029,29 @@ function chatScrollToBottom(){
 function restoreChatScroll(snap){
   var el = document.getElementById("chat-scroll");
   if(!el) return;
-  var stick = !snap || snap.context!==(el.getAttribute('data-chat-context')||'home') || snap.atBottom || UI.chatStickBottom;
+  var ctx = el.getAttribute('data-chat-context')||'home';
+  var fresh = !snap || snap.context !== ctx;
+  // Un ticket recién abierto empieza arriba (cabecera primero); hilos y chats, abajo.
+  var ticketTop = /^ticket:[^:]+:root$/.test(ctx);
+  var stick = UI.chatStickBottom || (!fresh && snap.atBottom) || (fresh && !ticketTop);
   UI.chatStickBottom = false;
   if(stick){
     chatScrollToBottom();
-  } else if(snap.anchorKey){
-    var sel = '[data-chat-key="' + (window.CSS && CSS.escape ? CSS.escape(snap.anchorKey) : snap.anchorKey) + '"]';
-    var a = el.querySelector(sel);
-    if(a) el.scrollTop = a.offsetTop - snap.anchorOffset;
+  } else if(fresh){
+    el.scrollTop = 0;
+    UI.chatAtBottom = (el.scrollHeight - el.clientHeight) < 80;
+    UI.chatLastSeenTs = chatNewestTs();
+    updateChatNewPill();
+  } else {
+    if(snap.anchorKey){
+      var sel = '[data-chat-key="' + (window.CSS && CSS.escape ? CSS.escape(snap.anchorKey) : snap.anchorKey) + '"]';
+      var a = el.querySelector(sel);
+      if(a) el.scrollTop = a.offsetTop - snap.anchorOffset; else el.scrollTop = snap.top || 0;
+    } else el.scrollTop = snap.top || 0;
     UI.chatAtBottom = false;
     updateChatNewPill();
   }
-  /* Las imágenes llegan después (URL firmada) y agrandan el contenido: si la
-     persona estaba abajo, se vuelve a pegar al fondo cuando cada una carga. */
   el.querySelectorAll("img").forEach(function(img){
-    /* Una <img data-storage-path> recién creada todavía no tiene src (la URL
-       firmada llega después, hydrateImages) — "complete" es true en ese
-       estado, así que se escucha el load igual. */
     if(img.getAttribute("src") && img.complete) return;
     img.addEventListener("load", function(){ if(UI.chatAtBottom){ el.scrollTop = el.scrollHeight; } }, { once: true });
   });
@@ -14932,6 +15060,7 @@ function restoreChatScroll(snap){
     if(atBottom === UI.chatAtBottom) return;
     UI.chatAtBottom = atBottom;
     if(atBottom && !UI.astraConversationId && !UI.astraThreadRoot){ UI.chatLastSeenTs = chatNewestTs(); chatMarkSeen(); dtgTabSend({ t: "leido", ts: UI.chatLastSeenTs }); }
+    if(atBottom) UI.chatLastSeenTs = chatNewestTs();
     updateChatNewPill();
   }, { passive: true });
 }
@@ -15857,7 +15986,7 @@ function renderMain(){
      a media fila y parecía que una se encimaba con la otra. Ahora van
      dentro de un solo contenedor que rueda como uno (ver .ticket-body); en
      escritorio, donde sí hay alto de sobra, nada cambia. */
-  return renderTicketHeader(t)+ticketProductBar(t)+renderTicketConversation(t)+renderComposer();
+  return renderTicketScreen(t)+renderComposer();
 
 }
 
@@ -15932,7 +16061,7 @@ function captureTicketScroll(){
 }
 function restoreTicketScroll(snap){
   var el=ticketScroller();if(!el)return;
-  el.scrollTop=!snap||snap.id!==UI.selectedTicketId||snap.atBottom ? el.scrollHeight : snap.top;
+  el.scrollTop=!snap||snap.id!==UI.selectedTicketId ? 0 : snap.atBottom ? el.scrollHeight : snap.top;
 }
 
 function render(){
@@ -16017,7 +16146,6 @@ function render(){
     renderCxcPagoModal() +
     renderDocTermsEditor() +
     renderOpsEditor() +
-    renderWorkOrderEditor() +
     renderDeletePhotoConfirmOverlay() +
     renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
@@ -16054,7 +16182,7 @@ function render(){
     });
     composerInput.addEventListener("input", function(){
       var v = composerInput.value;
-      document.getElementById("composer-send").disabled = !v.trim() && !((UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile) && isChatComposerContext());
+      tkSyncComposer();
       mentionSync(composerInput);
       composerInput.style.height = "auto";
       composerInput.style.height = Math.min(composerInput.scrollHeight, 120) + "px";
@@ -16201,7 +16329,7 @@ function render(){
             return;
           }
         }
-        if(e.key === "Escape"){ e.preventDefault(); UI.chatMention = null; renderKeepingLiveInputs(); return; }
+        if(e.key === "Escape"){ e.preventDefault(); UI.chatMentionDismissed = { start: UI.chatMention.start, query: UI.chatMention.query }; UI.chatMention = null; renderKeepingLiveInputs(); return; }
       }
       if(UI.slashMenuOpen){
         var hasTicket = !!findTicket(UI.selectedTicketId);
@@ -16536,8 +16664,7 @@ function restoreComposerDraft(snap){
   el.value = snap.value;
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 120) + "px";
-  var sendBtn = document.getElementById("composer-send");
-  if(sendBtn) sendBtn.disabled = !snap.value.trim();
+  tkSyncComposer();
   if(snap.focused){
     try{ el.focus({ preventScroll: true }); if(snap.sel){ el.selectionStart = snap.sel[0]; el.selectionEnd = snap.sel[1]; } }catch(e){}
   }
@@ -16594,8 +16721,7 @@ function renderKeepingLiveInputs(){
   if(composerInput){
     composerInput.style.height = "auto";
     composerInput.style.height = Math.min(composerInput.scrollHeight, 120) + "px";
-    var sendBtn = document.getElementById("composer-send");
-    if(sendBtn) sendBtn.disabled = !composerInput.value.trim();
+    tkSyncComposer();
     updateProductoPreview(composerInput.value);
   }
   if(activeId){
@@ -17681,15 +17807,19 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
       row.tipo_operacion = extra.tipoOperacion || null;
       if(estado === "terminado") row.terminado_at = nowIso;
       if(extra.area) row.area = extra.area;
-      if(STATE.workOrdersTableMissing === false){
-        row.work_order_id = extra.workOrderId || null;
-        row.action_code = extra.actionCode || null;
-        row.action_path = local.actionPath || null;
-      }
+      if(extra.workOrderId) row.work_order_id = extra.workOrderId;
+      row.action_code = extra.actionCode || null;
+      row.action_path = local.actionPath || null;
     }
     var rows=packing ? [Object.assign({},row,{id:packing.id,descripcion:packing.desc,responsable:null,estado:'pendiente',progreso:0,area:'produccion',tipo_operacion:'Empaquetar',action_code:'pack',action_path:packing.actionPath}),row] : row;
     // A multi-row insert is one database statement: package + delivery succeed together.
     var r3 = await sb.from("tareas").insert(rows);
+    if(r3.error && /action_path|action_code|work_order_id/i.test(r3.error.message || "")){
+      // Esquema sin las columnas de contexto: la tarea se crea igual, sin la relación guardada.
+      var stripCtx = function(r){ var c = Object.assign({}, r); delete c.action_path; delete c.action_code; delete c.work_order_id; return c; };
+      adminNote("Falta la migración de contexto de tareas: la relación con producto no se guardó.", r3.error);
+      r3 = await sb.from("tareas").insert(Array.isArray(rows) ? rows.map(stripCtx) : stripCtx(rows));
+    }
     if(r3.error) throw r3.error;
     if(packing)t.tareas.push(packing);
     t.tareas.push(local);render();
@@ -17736,6 +17866,11 @@ async function updateTareaCore(t, taskId, patch){
   var ok = true;
   try{
     var r1 = await sb.from("tareas").update(dbPatch).eq("id", taskId);
+    if(r1.error && /action_path|action_code|work_order_id/i.test(r1.error.message || "")){
+      var noCtx = Object.assign({}, dbPatch); delete noCtx.action_path; delete noCtx.action_code; delete noCtx.work_order_id;
+      adminNote("Falta la migración de contexto de tareas: la relación con producto no se guardó.", r1.error);
+      r1 = Object.keys(noCtx).length ? await sb.from("tareas").update(noCtx).eq("id", taskId) : { error: null };
+    }
     if(r1.error && !('area' in dbPatch) && !('work_order_id' in dbPatch || 'action_code' in dbPatch || 'action_path' in dbPatch) && /progreso|tipo_operacion|terminado_at|column|schema cache/i.test(r1.error.message || "")){
       var basic = {};
       ["descripcion","estado","responsable"].forEach(function(c){ if(c in dbPatch) basic[c] = dbPatch[c]; });
@@ -23931,17 +24066,6 @@ function bindField(id, evtName){
 /* single delegated document-level listener, registered once at boot (never re-added on render).
    CAPTURE phase so it sees the DOM before any handler-triggered render() replaces it. */
 document.addEventListener("click", function(e){
-  var woNew = e.target.closest && e.target.closest('[data-action="work-order-new"]');
-  if(woNew){
-    if(STATE.workOrdersTableMissing){ showToast('Falta aplicar ASTRA-02-work-orders.sql.'); return; }
-    UI.workOrderEditor = { ticketId: woNew.getAttribute('data-ticket') }; render(); return;
-  }
-  var woClose = e.target.closest && e.target.closest('[data-action="work-order-close"]');
-  if(woClose){ UI.workOrderEditor = null; render(); return; }
-  var woSave = e.target.closest && e.target.closest('[data-action="work-order-save"]');
-  if(woSave){ saveWorkOrder(); return; }
-  var woAction = e.target.closest && e.target.closest('[data-action="work-order-add-action"]');
-  if(woAction){ openOpsEditor('create', null, woAction.getAttribute('data-ticket'), woAction.getAttribute('data-work-order')); return; }
   /* Identity Foundation §6: menú corto de cuenta — mismo patrón "toggle +
      cerrar con clic afuera" que el "⋯" de Miniaturas. */
   var acctToggleBtn = e.target.closest && e.target.closest('[data-action="toggle-account-menu"]');
@@ -24547,6 +24671,12 @@ document.addEventListener("click", function(e){
     opsEdEstado.parentNode.querySelectorAll(".seg-btn").forEach(function(b){ var on = b === opsEdEstado; b.classList.toggle("active", on); b.setAttribute("aria-checked", on ? "true" : "false"); });
     return;
   }
+  var opsRel = e.target.closest && e.target.closest('[data-ops-rel]');
+  if(opsRel && !opsRel.disabled){
+    var relHid = document.getElementById("ops-f-product"); if(relHid) relHid.value = opsRel.getAttribute("data-ops-rel");
+    opsRel.parentNode.querySelectorAll(".ops-rel-opt").forEach(function(b){ var on = b === opsRel; b.classList.toggle("on", on); b.setAttribute("aria-checked", on ? "true" : "false"); });
+    return;
+  }
   var opsPickTicket = e.target.closest && e.target.closest('[data-action="ops-ed-pick-ticket"]');
   if(opsPickTicket && UI.operaciones.editor){ UI.operaciones.editor.ticketId = opsPickTicket.getAttribute("data-ticket"); UI.pendingFocus = { elId: "ops-f-desc", userInitiated: true }; renderKeepingLiveInputs(); return; }
   var opsChangeTicket = e.target.closest && e.target.closest('[data-action="ops-ed-change-ticket"]');
@@ -24899,7 +25029,7 @@ document.addEventListener("change", function(e){
   } else {
     return;
   }
-  updateProductoCore(t, productoId, patch);
+  updateProductoCore(t, productoId, patch, { keepInputs: true });
 });
 
 /* Addendum final §18: resumen en vivo del editor de "Total del pedido" —
@@ -25194,7 +25324,7 @@ async function astraLinkBulk(ids,ticketId){
 function astraRenderTicketLinks(t){
   var links=(STATE.conversationLinks||[]).filter(function(x){return x.ticket_id===t.id;});
   if(!links.length) return '';
-  return '<section class="astra-ticket-links"><strong>Conversaciones</strong>' + links.map(function(x){
+  return '<section class="astra-ticket-links">' + links.map(function(x){
     var root=astraPost(x.post_id);
     if(!root) return '';
     var count=x.link_kind==='thread' ? astraThreadCount(root.id)+1 : 1;
@@ -25298,91 +25428,299 @@ async function astraConfirmReview(){
   finally{if(UI.astraReview)UI.astraReview.busy=false;}
 }
 var ASTRA_RECORDER=null, ASTRA_STREAM=null, ASTRA_RECORD_STARTED=0, ASTRA_CHUNKS=[];
+/* ================= Voz: grabar, cancelar, enviar, reproducir =================
+   Un solo reproductor global (fuera del DOM): render() reconstruye la pantalla
+   con cada evento de Realtime y un <audio> dentro del DOM se cortaría. Las
+   burbujas son solo una vista del estado de ese reproductor. */
+ICON_PATHS.mic='<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>';
+ICON_PATHS.pause='<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>';
+var ASTRA_REC_TIMER=null, ASTRA_REC_AC=null, ASTRA_REC_AN=null, ASTRA_REC_LEVELS=[], ASTRA_REC_MAX=600;
+var TK_WAVE_BARS=32, TK_REC_BARS=28;
+function tkFmtDur(sec){ sec=Math.max(0,Math.floor(Number(sec)||0)); return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
+function tkWaveBars(seed){
+  var h=0,i,out='';
+  for(i=0;i<String(seed).length;i++)h=(h*31+String(seed).charCodeAt(i))>>>0;
+  for(i=0;i<TK_WAVE_BARS;i++){h=(Math.imul(h,1664525)+1013904223)>>>0;out+='<i style="height:'+(22+((h>>>24)%72))+'%"></i>';}
+  return out;
+}
+function astraMicProblem(e){
+  var name=(e&&e.name)||'';
+  if(name==='NotAllowedError'||name==='SecurityError'||name==='PermissionDeniedError')
+    return {title:'No pudimos acceder al micrófono.',help:'Permite el micrófono para este sitio: toca el candado junto a la dirección → Micrófono → Permitir. En iPhone: Ajustes → Safari → Micrófono. Luego toca Reintentar.',retry:true};
+  if(name==='NotFoundError'||name==='DevicesNotFoundError'||name==='OverconstrainedError')
+    return {title:'No se encontró un micrófono.',help:'Conecta un micrófono o revisa que el dispositivo lo tenga habilitado, y toca Reintentar.',retry:true};
+  if(name==='NotReadableError'||name==='TrackStartError'||name==='AbortError')
+    return {title:'El micrófono está en uso.',help:'Otra app o pestaña lo está usando. Ciérrala y toca Reintentar.',retry:true};
+  if(name==='Unsupported'){
+    if(typeof window!=='undefined'&&window.isSecureContext===false)return {title:'La grabación necesita una conexión segura (https).',help:'Abre el CRM desde su dirección https.',retry:false};
+    return {title:'Este navegador no puede grabar audio.',help:'Usa Chrome, Edge o Safari actualizados, o adjunta un archivo de audio desde +.',retry:false};
+  }
+  return {title:'No se pudo grabar el audio.',help:'Toca Reintentar. Si sigue igual, recarga la página.',retry:true};
+}
+function astraPickMime(){
+  if(typeof MediaRecorder==='undefined'||typeof MediaRecorder.isTypeSupported!=='function')return '';
+  var list=['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'];
+  for(var i=0;i<list.length;i++){try{if(MediaRecorder.isTypeSupported(list[i]))return list[i];}catch(e){}}
+  return '';
+}
+function astraBaseMime(type){ return String(type||'audio/webm').split(';')[0].trim()||'audio/webm'; }
 function astraRecordingCleanup(){
-  if(ASTRA_STREAM) ASTRA_STREAM.getTracks().forEach(function(t){t.stop();});
-  ASTRA_STREAM=null; ASTRA_RECORDER=null; UI.astraRecording=false;
+  clearInterval(ASTRA_REC_TIMER);ASTRA_REC_TIMER=null;
+  if(ASTRA_STREAM)ASTRA_STREAM.getTracks().forEach(function(t){try{t.stop();}catch(e){}});
+  try{if(ASTRA_REC_AC)ASTRA_REC_AC.close();}catch(e){}
+  ASTRA_STREAM=null;ASTRA_RECORDER=null;ASTRA_REC_AC=null;ASTRA_REC_AN=null;ASTRA_REC_LEVELS=[];UI.astraRecording=false;
+}
+function astraRecWaveTick(){
+  var level=0;
+  if(ASTRA_REC_AN){
+    try{var d=new Uint8Array(ASTRA_REC_AN.fftSize);ASTRA_REC_AN.getByteTimeDomainData(d);var sum=0;for(var i=0;i<d.length;i++){var v=(d[i]-128)/128;sum+=v*v;}level=Math.min(1,Math.sqrt(sum/d.length)*4);}catch(e){level=0;}
+  }else level=0.25+0.5*Math.abs(Math.sin(Date.now()/240));
+  ASTRA_REC_LEVELS.push(level);if(ASTRA_REC_LEVELS.length>TK_REC_BARS)ASTRA_REC_LEVELS.shift();
+  var wave=document.getElementById('tk-rec-wave');if(!wave)return;
+  var bars=wave.children,off=TK_REC_BARS-ASTRA_REC_LEVELS.length;
+  for(var k=0;k<bars.length;k++){var lv=k<off?0:ASTRA_REC_LEVELS[k-off];bars[k].style.height=Math.round(12+lv*88)+'%';}
+}
+function astraRecTimerStart(){
+  clearInterval(ASTRA_REC_TIMER);
+  ASTRA_REC_TIMER=setInterval(function(){
+    if(!ASTRA_RECORDER){clearInterval(ASTRA_REC_TIMER);ASTRA_REC_TIMER=null;return;}
+    var sec=(Date.now()-ASTRA_RECORD_STARTED)/1000,el=document.getElementById('tk-rec-time');
+    if(el)el.textContent=tkFmtDur(sec);
+    astraRecWaveTick();
+    if(sec>=ASTRA_REC_MAX)astraStopRecording(false);
+  },200);
 }
 async function astraStartRecording(){
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
-    showToast('Este navegador no permite grabar audio.');return;
+  if(ASTRA_RECORDER||UI.astraStarting||UI.astraAudioBlob||UI.feedComposerBusy)return;
+  UI.astraMicError=null;
+  if(typeof window!=='undefined'&&window.isSecureContext===false||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined'){
+    UI.astraMicError=astraMicProblem({name:'Unsupported'});renderKeepingLiveInputs();return;
   }
-  if(ASTRA_RECORDER || UI.astraAudioBlob) return;
-  try{
-    ASTRA_STREAM=await navigator.mediaDevices.getUserMedia({audio:true});
-    var mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']
-      .find(function(x){return MediaRecorder.isTypeSupported(x);});
-    ASTRA_RECORDER=new MediaRecorder(ASTRA_STREAM,mime?{mimeType:mime}:undefined);
-    ASTRA_CHUNKS=[]; ASTRA_RECORD_STARTED=Date.now();
-    ASTRA_RECORDER.ondataavailable=function(ev){if(ev.data && ev.data.size) ASTRA_CHUNKS.push(ev.data);};
-    ASTRA_RECORDER.onstop=function(){
-      var seconds=Math.round((Date.now()-ASTRA_RECORD_STARTED)/1000);
-      if(!UI.astraCancelAudio && ASTRA_CHUNKS.length){
-        UI.astraAudioBlob=new Blob(ASTRA_CHUNKS,{type:ASTRA_RECORDER.mimeType || mime || 'audio/webm'});
-        UI.astraAudioSeconds=seconds;
-      }
-      UI.astraCancelAudio=false; ASTRA_CHUNKS=[]; astraRecordingCleanup();renderKeepingLiveInputs();
-    };
-    ASTRA_RECORDER.start(250);UI.astraRecording=true;renderKeepingLiveInputs();
-  }catch(e){astraRecordingCleanup();showToast('No se pudo activar el micrófono.');}
+  UI.astraStarting=true;renderKeepingLiveInputs();
+  var token=UI.astraStartToken=(UI.astraStartToken||0)+1;
+  // Si el navegador nunca responde al permiso, el botón no se queda muerto: se avisa y se puede reintentar.
+  var waitTimer=setTimeout(function(){
+    if(UI.astraStartToken!==token||!UI.astraStarting)return;
+    UI.astraStartToken++;UI.astraStarting=false;
+    UI.astraMicError={title:'El navegador no respondió a la solicitud del micrófono.',help:'Revisa si apareció un aviso de permiso y toca Reintentar.',retry:true};renderKeepingLiveInputs();
+  },25000);
+  var stream=null;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+  catch(e){clearTimeout(waitTimer);if(UI.astraStartToken!==token)return;UI.astraStarting=false;UI.astraMicError=astraMicProblem(e);renderKeepingLiveInputs();return;}
+  clearTimeout(waitTimer);
+  if(UI.astraStartToken!==token){stream.getTracks().forEach(function(t){t.stop();});return;}
+  UI.astraStarting=false;
+  var ticketAtStart=UI.selectedTicketId||null;
+  // Si el contexto cambió mientras el navegador pedía permiso, no se graba en el lugar equivocado.
+  if(!isChatComposerContext()||(UI.selectedTicketId||null)!==ticketAtStart){stream.getTracks().forEach(function(t){t.stop();});renderKeepingLiveInputs();return;}
+  var mime=astraPickMime(),rec;
+  try{rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);}
+  catch(e){stream.getTracks().forEach(function(t){t.stop();});UI.astraMicError=astraMicProblem({name:'Unsupported'});renderKeepingLiveInputs();return;}
+  ASTRA_STREAM=stream;ASTRA_RECORDER=rec;ASTRA_CHUNKS=[];ASTRA_RECORD_STARTED=Date.now();UI.astraCancelAudio=false;UI.astraSendAfterStop=false;
+  try{var AC=window.AudioContext||window.webkitAudioContext;if(AC){ASTRA_REC_AC=new AC();ASTRA_REC_AN=ASTRA_REC_AC.createAnalyser();ASTRA_REC_AN.fftSize=256;ASTRA_REC_AC.createMediaStreamSource(stream).connect(ASTRA_REC_AN);}}catch(e){ASTRA_REC_AN=null;}
+  rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)ASTRA_CHUNKS.push(ev.data);};
+  rec.onerror=function(){
+    if(ASTRA_RECORDER!==rec)return;
+    astraRecordingCleanup();UI.astraMicError={title:'La grabación se interrumpió.',help:'Toca Reintentar.',retry:true};renderKeepingLiveInputs();
+  };
+  rec.onstop=function(){
+    var ms=Date.now()-ASTRA_RECORD_STARTED,chunks=ASTRA_CHUNKS,cancel=UI.astraCancelAudio,send=UI.astraSendAfterStop,type=rec.mimeType||mime||'audio/webm';
+    ASTRA_CHUNKS=[];UI.astraCancelAudio=false;UI.astraSendAfterStop=false;
+    astraRecordingCleanup();
+    if(cancel){renderKeepingLiveInputs();return;}
+    if(ms<900){UI.astraMicError={title:'Audio demasiado corto.',help:'Graba al menos un segundo.',retry:true};renderKeepingLiveInputs();return;}
+    var blob=chunks.length?new Blob(chunks,{type:type}):null;
+    if(!blob||!blob.size){UI.astraMicError={title:'La grabación quedó vacía.',help:'Revisa que el micrófono funcione y vuelve a intentarlo.',retry:true};renderKeepingLiveInputs();return;}
+    astraDropLocalAudio();
+    UI.astraAudioBlob=blob;UI.astraAudioSeconds=Math.max(1,Math.round(ms/1000));
+    try{UI.astraAudioUrl=URL.createObjectURL(blob);}catch(e){UI.astraAudioUrl=null;}
+    renderKeepingLiveInputs();
+    if(send)submitNote();
+  };
+  try{rec.start(250);}catch(e){astraRecordingCleanup();UI.astraMicError=astraMicProblem(e);renderKeepingLiveInputs();return;}
+  UI.astraRecording=true;astraRecTimerStart();renderKeepingLiveInputs();
 }
-function astraStopRecording(cancel){
-  if(!ASTRA_RECORDER) return;
-  UI.astraCancelAudio=!!cancel;
-  if(ASTRA_RECORDER.state!=='inactive') ASTRA_RECORDER.stop();
+function astraStopRecording(cancel,send){
+  if(!ASTRA_RECORDER||ASTRA_RECORDER.state==='inactive')return;
+  UI.astraCancelAudio=!!cancel;UI.astraSendAfterStop=!!send&&!cancel;
+  if(ASTRA_RECORDER.state!=='inactive'){try{ASTRA_RECORDER.stop();}catch(e){astraRecordingCleanup();renderKeepingLiveInputs();}}
+}
+function astraDropLocalAudio(){
+  if(ASTRA_PLAYER.key==='local')astraPlayerStop();
+  if(UI.astraAudioUrl){try{URL.revokeObjectURL(UI.astraAudioUrl);}catch(e){}}
+  UI.astraAudioUrl=null;
+}
+/* ---- reproductor global ---- */
+var ASTRA_PLAYER={audio:null,key:null,seek:null};
+function astraPlayerAudio(){
+  if(ASTRA_PLAYER.audio)return ASTRA_PLAYER.audio;
+  var a=new Audio();a.preload='auto';ASTRA_PLAYER.audio=a;
+  ['timeupdate','play','pause','ended','loadedmetadata','durationchange','waiting','playing'].forEach(function(ev){a.addEventListener(ev,astraPlayerSync);});
+  a.addEventListener('loadedmetadata',function(){
+    // MediaRecorder/webm suele no traer duración: se fuerza el cálculo una vez.
+    if(a.duration===Infinity){a.currentTime=1e101;a.addEventListener('timeupdate',function fix(){a.removeEventListener('timeupdate',fix);a.currentTime=0;});}
+    if(ASTRA_PLAYER.seek!=null&&isFinite(a.duration)){a.currentTime=ASTRA_PLAYER.seek*a.duration;ASTRA_PLAYER.seek=null;}
+  });
+  a.addEventListener('error',function(){
+    if(!a.getAttribute('src'))return;
+    var key=ASTRA_PLAYER.key;
+    if(key&&key!=='local'&&!ASTRA_PLAYER.retried){ASTRA_PLAYER.retried=true;var el=document.querySelector('.tk-audio[data-audio-key="'+key+'"]');if(el){var path=el.getAttribute('data-audio-path');delete signedUrlCache[path];astraPlayerLoad(key,path,true);return;}}
+    ASTRA_PLAYER.error=key;showToast('No se pudo reproducir el audio.');astraPlayerSync();
+  });
+  return a;
+}
+function astraPlayerStop(){
+  var a=ASTRA_PLAYER.audio;if(a){try{a.pause();}catch(e){}a.removeAttribute('src');try{a.load();}catch(e){}}
+  ASTRA_PLAYER.key=null;ASTRA_PLAYER.seek=null;astraPlayerSync();
+}
+async function astraPlayerLoad(key,path,autoplay){
+  var a=astraPlayerAudio(),url=null;
+  ASTRA_PLAYER.key=key;ASTRA_PLAYER.error=null;
+  if(key==='local')url=UI.astraAudioUrl;
+  else{
+    url=signedUrlCache[path];
+    if(!url){
+      var r=await sb.storage.from('chat-private').createSignedUrl(path,3600);
+      if(r.error||!r.data||!r.data.signedUrl){if(ASTRA_PLAYER.key===key){ASTRA_PLAYER.error=key;ASTRA_PLAYER.key=null;showToast('No se pudo cargar el audio.');astraPlayerSync();}return;}
+      url=signedUrlCache[path]=r.data.signedUrl;
+    }
+  }
+  if(ASTRA_PLAYER.key!==key||!url)return;
+  a.src=url;
+  if(autoplay){try{await a.play();}catch(e){if(e&&e.name==='NotAllowedError')showToast('Toca de nuevo para reproducir.');}}
+  astraPlayerSync();
+}
+function astraPlayerToggle(key,path){
+  var a=astraPlayerAudio();
+  if(ASTRA_PLAYER.key===key&&a.src){if(a.paused){a.play().catch(function(){});}else a.pause();return;}
+  if(ASTRA_PLAYER.key&&ASTRA_PLAYER.key!==key){try{a.pause();}catch(e){}}
+  ASTRA_PLAYER.retried=false;astraPlayerLoad(key,path,true);
+}
+function astraPlayerSeek(key,path,ratio){
+  var a=astraPlayerAudio();ratio=Math.max(0,Math.min(1,ratio));
+  if(ASTRA_PLAYER.key===key&&a.src){
+    var box=document.querySelector('.tk-audio[data-audio-key="'+key+'"]');
+    var d=isFinite(a.duration)&&a.duration>0?a.duration:Number(box&&box.getAttribute('data-seconds'))||0;
+    if(d)a.currentTime=ratio*d;
+    astraPlayerSync();return;
+  }
+  ASTRA_PLAYER.seek=ratio;ASTRA_PLAYER.retried=false;astraPlayerLoad(key,path,false);
+}
+function astraPlayerSync(){
+  var a=ASTRA_PLAYER.audio;
+  document.querySelectorAll('.tk-audio').forEach(function(el){
+    var key=el.getAttribute('data-audio-key'),cur=ASTRA_PLAYER.key===key,sec=Number(el.getAttribute('data-seconds'))||0;
+    var dur=cur&&a&&isFinite(a.duration)&&a.duration>0?a.duration:sec,pos=cur&&a?a.currentTime:0;
+    var playing=!!(cur&&a&&!a.paused&&!a.ended);
+    var ratio=dur?Math.min(1,pos/dur):0;
+    el.classList.toggle('playing',playing);el.classList.toggle('error',ASTRA_PLAYER.error===key);
+    var btn=el.querySelector('.tk-audio-btn');
+    if(btn){var want=playing?'pause':'play';if(btn.getAttribute('data-state')!==want){btn.setAttribute('data-state',want);btn.innerHTML=icon(want);btn.setAttribute('aria-label',playing?'Pausar audio':'Reproducir audio');}}
+    var bars=el.querySelectorAll('.tk-wave i'),lit=Math.round(ratio*bars.length);
+    bars.forEach(function(b,i){b.classList.toggle('on',i<lit);});
+    var track=el.querySelector('.tk-audio-track');
+    if(track){track.setAttribute('aria-valuenow',String(Math.round(pos)));track.setAttribute('aria-valuemax',String(Math.round(dur)));track.setAttribute('aria-valuetext',tkFmtDur(pos)+' de '+tkFmtDur(dur));}
+    var time=el.querySelector('.tk-audio-time');if(time)time.textContent=cur&&(playing||pos>0)?tkFmtDur(pos)+' / '+tkFmtDur(dur):tkFmtDur(dur);
+  });
+}
+function astraHydrateAudios(){ astraPlayerSync(); }
+function tkAudioBubble(a){
+  var sec=Math.max(0,Math.round(Number(a.seconds)||0)),key=escapeHtml(a.key);
+  return '<div class="tk-audio" data-audio-key="'+key+'"'+(a.path?' data-audio-path="'+escapeHtml(a.path)+'"':'')+' data-seconds="'+sec+'">'+
+    '<button type="button" class="tk-audio-btn" data-astra-action="audio-play" data-audio-key="'+key+'" data-state="play" aria-label="Reproducir audio">'+icon('play')+'</button>'+
+    '<div class="tk-audio-track" role="slider" tabindex="0" aria-label="Posición del audio" aria-valuemin="0" aria-valuemax="'+sec+'" aria-valuenow="0" data-audio-seek="'+key+'"><span class="tk-wave" aria-hidden="true">'+tkWaveBars(a.key)+'</span></div>'+
+    '<span class="tk-audio-time">'+tkFmtDur(sec)+'</span></div>';
+}
+function tkTranscriptState(p){
+  var st=p.transcriptStatus;
+  if(st==='transcribing'){
+    var since=(UI.astraRetry&&UI.astraRetry[p.id])||new Date(p.createdAt).getTime();
+    if(Date.now()-since>180000)st='failed';
+  }
+  return st;
+}
+function tkTranscriptBlock(p){
+  var st=tkTranscriptState(p),mine=p.authorUserId&&p.authorUserId===currentActorId(),id=escapeHtml(p.id);
+  if(p.transcript){
+    var open=!!(UI.astraTranscriptOpen&&UI.astraTranscriptOpen[p.id]);
+    return '<div class="tk-tr"><button type="button" class="tk-tr-toggle" data-astra-action="transcript-toggle" data-post-id="'+id+'" aria-expanded="'+open+'" title="Transcripción disponible">'+(open?'Ocultar transcripción':'Ver transcripción')+'</button>'+
+      (open?'<p class="tk-tr-text" lang="und">'+escapeHtml(p.transcript)+'</p><button type="button" class="tk-tr-toggle" data-astra-action="copy-transcript" data-post-id="'+id+'">Copiar</button>':'')+'</div>';
+  }
+  if(st==='transcribing')return '<div class="tk-tr"><span class="tk-tr-state" role="status">Transcribiendo...</span></div>';
+  if(st==='failed')return '<div class="tk-tr"><span class="tk-tr-state fail">No se pudo transcribir</span>'+(mine?'<button type="button" class="tk-tr-toggle" data-astra-action="transcript-retry" data-post-id="'+id+'">Reintentar</button>':'')+'</div>';
+  return '';
 }
 function astraRenderAudio(p){
-  if(!p.audioPath) return '';
-  return '<div class="astra-audio"><audio controls preload="none" data-audio-path="'+escapeHtml(p.audioPath)+
-    '" aria-label="Audio de '+escapeHtml(p.autor||'Equipo')+'"></audio><small>'+
-    (p.audioSeconds?Math.floor(p.audioSeconds/60)+':'+String(p.audioSeconds%60).padStart(2,'0'):'')+
-    '</small>'+(p.transcriptStatus==='transcribing' ? '<span>Transcribiendo…</span>' :
-    p.transcriptStatus==='failed' ? '<span>Transcripción no disponible</span>' :
-    p.transcript ? '<details><summary>Ver transcripción</summary><p>'+escapeHtml(p.transcript)+
-      '</p><button type="button" data-astra-action="copy-transcript" data-post-id="'+escapeHtml(p.id)+'">Copiar</button></details>' : '')+
-    '</div>';
+  if(!p.audioPath)return '';
+  return '<div class="astra-audio" data-audio-post="'+escapeHtml(p.id)+'">'+tkAudioBubble({key:p.id,path:p.audioPath,seconds:p.audioSeconds})+tkTranscriptBlock(p)+'</div>';
+}
+function astraRequestTranscript(postId){
+  return Promise.resolve(sb.functions.invoke('transcribe-chat-audio',{body:{postId:postId}}))
+    .then(function(result){if(result&&result.error)throw result.error;})
+    .catch(async function(){try{await sb.from('team_posts').update({transcript_status:'failed'}).eq('id',postId);}catch(e){}})
+    .then(function(){refreshFromServer({background:true});});
+}
+async function astraRetryTranscript(postId){
+  var p=astraPost(postId);if(!p||!p.audioPath)return;
+  UI.astraRetry=UI.astraRetry||{};UI.astraRetry[postId]=Date.now();
+  p.transcriptStatus='transcribing';renderKeepingLiveInputs();
+  try{await sb.from('team_posts').update({transcript_status:'transcribing'}).eq('id',postId);}catch(e){}
+  astraRequestTranscript(postId);
 }
 async function astraPublishAudio(text){
-  if(UI.feedComposerBusy || !UI.astraAudioBlob) return false;
-  var blob=UI.astraAudioBlob, seconds=UI.astraAudioSeconds, conversation=UI.astraConversationId||null;
-  var reply=UI.astraReplyTo||null, root=UI.astraThreadRoot||null;
-  var refs=astraRefsForText(text), mm=mentionsForText(text);
-  var ext=blob.type.indexOf('mp4')>=0?'m4a':blob.type.indexOf('ogg')>=0?'ogg':'webm';
+  if(UI.feedComposerBusy||!UI.astraAudioBlob)return false;
+  var blob=UI.astraAudioBlob,seconds=UI.astraAudioSeconds,conversation=UI.astraConversationId||null;
+  var reply=UI.astraReplyTo||null,root=UI.astraThreadRoot||null,ticketCtx=UI.selectedTicketId||null;
+  var refs=astraRefsForText(text),mm=mentionsForText(text);
+  var mime=astraBaseMime(blob.type),ext=mime.indexOf('mp4')>=0||mime.indexOf('aac')>=0?'m4a':mime.indexOf('ogg')>=0?'ogg':'webm';
+  // Un audio de ticket JAMÁS cae en el chat general: sin conversación no se sube.
+  if(ticketCtx&&!conversation){showToast('La conversación del ticket no está lista. Inténtalo de nuevo.');return false;}
   var path=(conversation||'team')+'/'+crypto.randomUUID()+'.'+ext;
   UI.feedComposerBusy=true;showToast('Subiendo audio…');
+  var sameCtx=function(){return (UI.selectedTicketId||null)===ticketCtx&&(UI.astraConversationId||null)===conversation;};
   try{
-    var up=await sb.storage.from('chat-private').upload(path,blob,{contentType:blob.type||'audio/webm'});
-    if(up.error) throw up.error;
+    var up=await sb.storage.from('chat-private').upload(path,blob,{contentType:mime});
+    if(up.error)throw up.error;
     try{
-      var row=await createTeamPostCore({text:text,conversationId:conversation,replyToId:reply,
-        threadRootId:root,refs:refs,mentions:mm.mentions,mentionsAll:mm.all,
-        audioPath:path,audioMime:blob.type,audioSeconds:seconds});
+      var row=await createTeamPostCore({text:text,conversationId:conversation,replyToId:reply,threadRootId:root,refs:refs,mentions:mm.mentions,mentionsAll:mm.all,audioPath:path,audioMime:mime,audioSeconds:seconds});
       STATE.teamPosts.unshift(mapTeamPostRow(row));DTG_POSTS_AVISADOS[row.id]=1;
-      UI.astraAudioBlob=null;UI.astraAudioSeconds=null;UI.astraReplyTo=null;
-      UI.chatMentionPicks=[];UI.astraRefPicks=[];UI.chatMention=null;
-      restoreComposerText('');render();
-      sb.functions.invoke('transcribe-chat-audio',{body:{postId:row.id}}).then(function(result){
-        if(result.error) throw result.error;
-        refreshFromServer({background:true});
-      }).catch(async function(){
-        await sb.from('team_posts').update({transcript_status:'failed'}).eq('id',row.id);
-        refreshFromServer({background:true});
-      });
+      if(sameCtx()){
+        astraDropLocalAudio();UI.astraAudioBlob=null;UI.astraAudioSeconds=null;UI.astraReplyTo=null;
+        UI.chatMentionPicks=[];UI.astraRefPicks=[];UI.chatMention=null;UI.chatStickBottom=true;
+        restoreComposerText('');render();
+      }
+      astraRequestTranscript(row.id);
       refreshFromServer({background:true});
       return true;
-    }catch(e){await sb.storage.from('chat-private').remove([path]);throw e;}
+    }catch(e){try{await sb.storage.from('chat-private').remove([path]);}catch(x){}throw e;}
   }catch(e){userError('Enviar audio',e);return false;}
   finally{UI.feedComposerBusy=false;renderKeepingLiveInputs();}
 }
-function astraHydrateAudios(){
-  document.querySelectorAll('audio[data-audio-path]').forEach(async function(el){
-    var path=el.getAttribute('data-audio-path');if(!path)return;
-    if(signedUrlCache[path]){el.src=signedUrlCache[path];return;}
-    var r=await sb.storage.from('chat-private').createSignedUrl(path,3600);
-    if(r.data && r.data.signedUrl && document.body.contains(el)){
-      signedUrlCache[path]=r.data.signedUrl;el.src=r.data.signedUrl;
+/* Posición: clic/toque/arrastre sobre la forma de onda. */
+(function(){
+  var drag=null;
+  function ratioOf(track,ev){if(!track.isConnected&&drag){track=drag.track=document.querySelector('.tk-audio[data-audio-key="'+drag.key+'"] .tk-audio-track')||track;}var r=track.getBoundingClientRect();return r.width?(ev.clientX-r.left)/r.width:0;}
+  document.addEventListener('pointerdown',function(e){
+    var track=e.target.closest&&e.target.closest('.tk-audio-track');if(!track)return;
+    var box=track.closest('.tk-audio');drag={track:track,key:box.getAttribute('data-audio-key'),path:box.getAttribute('data-audio-path')};
+    try{track.setPointerCapture(e.pointerId);}catch(x){}
+    astraPlayerSeek(drag.key,drag.path,ratioOf(track,e));
+  });
+  document.addEventListener('pointermove',function(e){if(drag)astraPlayerSeek(drag.key,drag.path,ratioOf(drag.track,e));});
+  ['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){drag=null;});});
+  document.addEventListener('keydown',function(e){
+    var track=e.target.closest&&e.target.closest('.tk-audio-track');if(!track)return;
+    var box=track.closest('.tk-audio'),key=box.getAttribute('data-audio-key'),path=box.getAttribute('data-audio-path'),a=astraPlayerAudio();
+    if(e.key===' '||e.key==='Enter'){e.preventDefault();astraPlayerToggle(key,path);return;}
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+      e.preventDefault();
+      if(ASTRA_PLAYER.key!==key){astraPlayerToggle(key,path);return;}
+      var d=isFinite(a.duration)?a.duration:Number(box.getAttribute('data-seconds'))||0;
+      if(d)a.currentTime=Math.max(0,Math.min(d,a.currentTime+(e.key==='ArrowRight'?5:-5)));
     }
   });
-}
+})();
+
 async function astraSaveMessage(postId,remindAt){
   if(!astraPost(postId)) return;
   var r=await sb.from('chat_later').upsert({
@@ -25544,7 +25882,7 @@ function astraMentionRoster(symbol){
   })
     .map(function(p){return Object.assign({kind:'user'},p);}).concat(
     (STATE.clientes || []).map(function(c){ return {
-      id:c.id,name:c.empresa || c.nombre || '',kind:'client'
+      id:c.id,name:[c.nombre,c.empresa].filter(Boolean).join(' '),kind:'client'
     }; }).filter(function(x){return x.name;})
   );
 }
@@ -25640,7 +25978,12 @@ document.addEventListener("click",function(e){
   if(action==='audio-start') astraStartRecording();
   if(action==='audio-stop') astraStopRecording(false);
   if(action==='audio-cancel') astraStopRecording(true);
-  if(action==='audio-clear'){UI.astraAudioBlob=null;UI.astraAudioSeconds=null;render();}
+  if(action==='audio-send') astraStopRecording(false,true);
+  if(action==='audio-clear'){astraDropLocalAudio();UI.astraAudioBlob=null;UI.astraAudioSeconds=null;render();}
+  if(action==='mic-error-close'){UI.astraMicError=null;renderKeepingLiveInputs();}
+  if(action==='audio-play'){var box=btn.closest('.tk-audio');astraPlayerToggle(btn.getAttribute('data-audio-key'),box&&box.getAttribute('data-audio-path'));}
+  if(action==='transcript-toggle'){UI.astraTranscriptOpen=UI.astraTranscriptOpen||{};UI.astraTranscriptOpen[id]=!UI.astraTranscriptOpen[id];renderKeepingLiveInputs();}
+  if(action==='transcript-retry') astraRetryTranscript(id);
   if(action==='copy-transcript'){var spoken=astraPost(id);if(spoken)copyPlainText(spoken.transcript||'');}
   if(action==='later'){UI.astraLaterOpen=!UI.astraLaterOpen;render();}
   if(action==='search'){var field=document.getElementById('astra-search');UI.astraSearch=field?field.value.trim():'';render();}
