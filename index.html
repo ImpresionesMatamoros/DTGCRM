@@ -2047,6 +2047,14 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .ticket-gallery-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .ticket-gallery-thumb.active{border-color:var(--accent);}
 .ticket-gallery-thumb:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+/* Fotos operativas: un toque muestra la imagen a tamaño de pantalla. */
+.ticket-gallery-modal{width:min(96vw, 1400px); max-width:none; max-height:96dvh; overflow:auto;}
+.ticket-gallery-media{max-height:78dvh; min-height:45vh;}
+.ticket-gallery-media img{max-height:78dvh; max-width:100%; cursor:zoom-in;}
+.photo-zoom-overlay{position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.94); display:flex; align-items:center; justify-content:center; padding:52px 12px 16px;}
+.photo-zoom-overlay img{max-width:100%; max-height:calc(100dvh - 68px); object-fit:contain; touch-action:pinch-zoom;}
+.photo-zoom-close{position:absolute; top:8px; right:12px; min-width:44px; min-height:44px; color:#fff; background:#202833; border:1px solid #8190a2; border-radius:8px; font-size:25px;}
+.thread-img,.feed-item-img,.chat-msg-img,.tickets-list-preview-photos img{cursor:zoom-in;}
 
 @media (max-width: 880px){
   /* Addendum §3: el cajón (drawer) del sidebar ya existía de una ronda
@@ -3014,6 +3022,9 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 
 /* Kanban de Responsables — tarjeta v0.20 */
 .tickets-explorer-scroll-kanban .kanban-board{ padding-top:14px; }
+.tickets-explorer-scroll-kanban{overflow:hidden;}
+.tickets-explorer-scroll-kanban .kanban-board{height:100%; min-height:0; overflow:auto; overscroll-behavior:contain; align-items:stretch;}
+.kanban-column-header{position:sticky; top:0; z-index:5; background:var(--surface-2); box-shadow:0 2px 8px rgba(0,0,0,.32);}
 .kanban-board{ gap:14px; }
 .kanban-column{ width:284px; }
 .kanban-card{
@@ -3025,6 +3036,14 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kanban-card-draghandle{ position:static; width:18px; height:22px; font-size:inherit; opacity:1; }
 .kanban-card-top-row{ display:flex; align-items:center; gap:6px; min-height:24px; }
 .kanban-card-top-row .kanban-card-open-top{ flex:0 0 auto; width:auto; padding:0 2px; }
+.kanban-card-cliente-link{min-height:44px; align-items:center;}
+.kanban-card-cliente-edit-btn{min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center;}
+.work-orders-panel{margin:12px 16px; padding:12px; border:1px solid var(--border); border-radius:12px; background:var(--surface); display:grid; gap:8px;}
+.work-order-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 4px; border-top:1px solid var(--border);}
+.work-order-row strong{font-size:14px;}
+.work-order-row .btn{flex-shrink:0; min-height:44px;}
+.ops-menu-fields{margin:10px 0; padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2);}
+.ops-menu-fields .ops-ed-grid{margin-top:8px;}
 .kanban-card-folio{ font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--text-muted); }
 .kanban-card-more-wrap{ margin-left:auto; }
 .kanban-card-more-btn.icon-btn{ width:26px; height:26px; color:var(--text-faint); }
@@ -5050,6 +5069,10 @@ async function fetchTicketAccess(){
     return { rows: [], missing: true };
   }
 }
+async function fetchWorkOrders(){
+  try{ return { rows: await selectAll("work_orders"), missing: false }; }
+  catch(e){ return { rows: [], missing: true }; }
+}
 async function fetchAllState(){
   /* X1.9: todas paginadas. La bitácora se pide al REVÉS (lo más nuevo
      primero) y se voltea en memoria: si algún día hiciera falta cortar,
@@ -5075,6 +5098,7 @@ async function fetchAllState(){
   var profilesInfo = await fetchProfiles();
   var chatStateRow = await fetchChatState();   /* v0.23: lectura + preferencias */
   var ticketAccessInfo = await fetchTicketAccess();
+  var workOrdersInfo = await fetchWorkOrders();
 
   var byTicket = {};
   ticketsRows.forEach(function(row){
@@ -5096,7 +5120,7 @@ async function fetchAllState(){
          que es EXACTAMENTE el comportamiento de hoy — nunca rompe el
          arranque por una columna opcional que aún no existe. */
       visibility: row.visibility || "team",
-      productos: [], tareas: [], pagos: [], documentos: [], thread: [], markers: [], accessProfileIds: []
+      productos: [], tareas: [], workOrders: [], pagos: [], documentos: [], thread: [], markers: [], accessProfileIds: []
     };
   });
   productosRows.forEach(function(row){
@@ -5110,7 +5134,12 @@ async function fetchAllState(){
       progreso: row.progreso == null ? 0 : Number(row.progreso), tipoOperacion: row.tipo_operacion || "", terminadoAt: row.terminado_at || null, createdAt: row.created_at || null,
       /* B/D5: "" mientras 0022 no esté aplicada o la tarea no se haya
          clasificado. Nunca se inventa un valor al leer. */
-      area: row.area || "" });
+      area: row.area || "", workOrderId: row.work_order_id || null, actionCode: row.action_code || "", actionPath: row.action_path || "" });
+  });
+  workOrdersInfo.rows.forEach(function(row){
+    var t = byTicket[row.ticket_id]; if(!t) return;
+    t.workOrders.push({ id: row.id, title: row.title, productId: row.product_id || null,
+      instructions: row.instructions || "", quantityOverride: row.quantity_override == null ? null : Number(row.quantity_override), createdAt: row.created_at });
   });
   pagosRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
@@ -5187,6 +5216,7 @@ async function fetchAllState(){
     profiles: profiles,
     teamPostsTableMissing: teamPostsInfo.missing,
     ticketAccessTableMissing: ticketAccessInfo.missing,
+    workOrdersTableMissing: workOrdersInfo.missing,
     chatState: chatStateRow
   };
 }
@@ -6724,6 +6754,52 @@ function renderQueSigueSelect(t){
   return html;
 }
 
+function renderWorkOrdersPanel(t){
+  if(STATE.workOrdersTableMissing !== false) return '';
+  var orders = t.workOrders || [];
+  return '<section class="work-orders-panel" aria-label="Órdenes de trabajo">' +
+    '<div class="tasks-title-row"><div class="tasks-title">Órdenes de trabajo</div>' +
+      '<button type="button" class="btn btn-sm btn-plain" data-action="work-order-new" data-ticket="' + t.id + '">+ Orden</button></div>' +
+    (orders.length ? orders.map(function(o){
+      var product = (t.productos || []).filter(function(p){ return p.id === o.productId; })[0];
+      var tasks = (t.tareas || []).filter(function(x){ return x.workOrderId === o.id; });
+      var qty = o.quantityOverride || (product && product.cantidad);
+      return '<div class="work-order-row"><div><strong>' + escapeHtml(o.title) + '</strong>' +
+        (product ? '<div class="muted small">' + escapeHtml((qty ? qty + ' × ' : '') + product.desc) + '</div>' : '') +
+        (o.instructions ? '<div class="muted small">' + escapeHtml(o.instructions) + '</div>' : '') +
+        '<div class="muted small">' + tasks.length + ' acciones · ' + tasks.filter(function(x){ return x.estado === 'terminado'; }).length + ' terminadas</div></div>' +
+        '<button type="button" class="btn btn-sm btn-ghost" data-action="work-order-add-action" data-ticket="' + t.id + '" data-work-order="' + o.id + '">+ Acción</button></div>';
+    }).join('') : '<div class="muted small">Agrupa un entregable y sus acciones de Planeación y Producción. Las tareas existentes siguen funcionando.</div>') +
+  '</section>';
+}
+function renderWorkOrderEditor(){
+  var ed = UI.workOrderEditor;
+  if(!ed) return '';
+  var t = findTicket(ed.ticketId);
+  if(!t) return '';
+  return '<div class="cierre-modal-overlay" id="work-order-overlay"><div class="cierre-modal ops-editor" role="dialog" aria-modal="true" aria-label="Nueva orden de trabajo">' +
+    '<div class="modal-head"><div class="cierre-modal-title">Nueva orden · #' + t.seq + '</div><button type="button" class="icon-btn" data-action="work-order-close" aria-label="Cerrar">×</button></div>' +
+    '<div class="ops-ed-body"><label class="ops-ed-label" for="wo-title">Entregable</label><input class="field-input" id="wo-title" maxlength="160" placeholder="Ej. 24 playeras negras DTF">' +
+    '<label class="ops-ed-label" for="wo-product">Producto del ticket</label><select class="field-input" id="wo-product"><option value="">Sin producto vinculado</option>' +
+    (t.productos || []).map(function(p){ return '<option value="' + p.id + '">' + escapeHtml((p.cantidad ? p.cantidad + ' × ' : '') + p.desc) + '</option>'; }).join('') + '</select>' +
+    '<label class="ops-ed-label" for="wo-instructions">Instrucciones de esta orden</label><textarea class="field-input" id="wo-instructions" rows="3" maxlength="1000"></textarea></div>' +
+    '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="work-order-close">Cancelar</button><button type="button" class="btn btn-primary" data-action="work-order-save">Crear orden</button></div></div></div>';
+}
+async function saveWorkOrder(){
+  var ed = UI.workOrderEditor, t = ed && findTicket(ed.ticketId);
+  if(!t) return;
+  var title = document.getElementById('wo-title').value.trim();
+  if(!title){ showToast('Escribe el entregable.'); return; }
+  var productId = document.getElementById('wo-product').value || null;
+  var instructions = document.getElementById('wo-instructions').value.trim();
+  try{
+    var r = await sb.from('work_orders').insert({ ticket_id:t.id, title:title, product_id:productId, instructions:instructions }).select().single();
+    if(r.error) throw r.error;
+    UI.workOrderEditor = null;
+    await refreshFromServer();
+    showToast('Orden creada. Agrega sus acciones.');
+  }catch(e){ userError('Orden de trabajo · #' + t.seq, e); }
+}
 function renderTasksPanel(t){
   if(!t.tareas.length) return "";
   /* v0.20: las tareas de operación (tipo "produccion") se ven con su tipo,
@@ -10652,13 +10728,15 @@ function renderKanbanClienteCell(t){
     var c = STATE.clientes.filter(function(x){ return x.id === t.clienteId; })[0];
     var nombreHtml = escapeHtml(c ? c.nombre : (t.cliente || ""));
     inner =
-      '<button type="button" class="kanban-card-cliente-link" draggable="false" data-action="open-cliente-ficha" data-client-id="' + t.clienteId + '" data-ticket="' + t.id + '">' + nombreHtml + ' <span class="kanban-card-cliente-chevron" aria-hidden="true">&rsaquo;</span></button>' +
+      '<button type="button" class="kanban-card-cliente-link" draggable="false" data-action="open-ticket" data-id="' + t.id + '" aria-label="Abrir ticket #' + t.seq + '">' + nombreHtml + '</button>' +
+      '<button type="button" class="kanban-card-cliente-edit-btn" draggable="false" data-action="open-cliente-ficha" data-client-id="' + t.clienteId + '" data-ticket="' + t.id + '" title="Abrir ficha del cliente" aria-label="Abrir ficha del cliente">↗</button>' +
       '<button type="button" class="kanban-card-cliente-edit-btn" draggable="false" data-action="details-cell-inline" data-field="clientename" data-ticket="' + t.id + '" title="Editar nombre del cliente" aria-label="Editar nombre del cliente">' + icon("pencil") + "</button>";
   } else if(t.cliente && t.cliente.trim()){
     /* Texto libre, sin clienteId todavía (ej. "/nuevo Top Builders ..." o
        Quick Create) — un solo botón, igual que Qué sigue: tocar el nombre
        ya edita (no hay ficha real que abrir todavía). */
-    inner = '<button type="button" class="kanban-card-cliente-edit-btn kanban-card-cliente-text" draggable="false" data-action="details-cell-inline" data-field="clientename" data-ticket="' + t.id + '">' + escapeHtml(t.cliente) + "</button>";
+    inner = '<button type="button" class="kanban-card-cliente-link kanban-card-cliente-text" draggable="false" data-action="open-ticket" data-id="' + t.id + '" aria-label="Abrir ticket #' + t.seq + '">' + escapeHtml(t.cliente) + '</button>' +
+      '<button type="button" class="kanban-card-cliente-edit-btn" draggable="false" data-action="details-cell-inline" data-field="clientename" data-ticket="' + t.id + '" title="Editar nombre del cliente" aria-label="Editar nombre del cliente">' + icon("pencil") + '</button>';
   } else {
     /* Vacío de verdad (spec: "NO mostrar campo editable falso llamado Sin
        cliente"): affordance discreta "+ Agregar cliente", nunca un
@@ -11043,9 +11121,52 @@ function renderOperacionesView(){
 /* ---- Editor de tarea (crear / editar) — un solo modal para ambos, y para
    todos los caminos (tablero, ticket, menú ⋯). Lee sus campos del DOM al
    guardar (mismo criterio que el resto de formularios de la app). ---- */
-function openOpsEditor(mode, taskId, ticketId){
+/* Catálogo pequeño: ambas rutas del menú resuelven el mismo action_code.
+   La categoría ayuda a encontrarlo; la acción decide el área. */
+var OPS_ACTIONS = [
+  {code:'disenar_arte', label:'Diseñar arte', category:'Diseño', area:'planeacion'},
+  {code:'confirmar_diseno', label:'Confirmar diseño', category:'Diseño', area:'planeacion'},
+  {code:'cotizar_proveedor', label:'Cotizar con proveedor', category:'Compras', area:'planeacion'},
+  {code:'comprar_prendas', label:'Comprar prendas', category:'Compras', area:'planeacion'},
+  {code:'pedir_dtf_proveedor', label:'Pedir DTF al proveedor', category:'DTF', area:'planeacion'},
+  {code:'aplicar_dtf', label:'Aplicar DTF', category:'DTF', area:'produccion'},
+  {code:'bordar', label:'Bordar', category:'Bordado', area:'produccion'},
+  {code:'cortar_tarjetas', label:'Cortar tarjetas', category:'Tarjetas', area:'produccion'},
+  {code:'aplicar_vinil_coroplast', label:'Montar vinil en coroplast', category:'Coroplast', area:'produccion'},
+  {code:'acabado_lona', label:'Dar acabado a lona', category:'Lona', area:'produccion'},
+  {code:'armar_pinata', label:'Fabricar piñata', category:'Piñatas', area:'produccion'},
+  {code:'empacar', label:'Empacar', category:'Acabado', area:'produccion'},
+  {code:'llamar_cliente', label:'Llamar al cliente', category:'Seguimiento', area:'planeacion'}
+];
+function opsAction(code){ return OPS_ACTIONS.filter(function(a){ return a.code === code; })[0] || null; }
+function opsActionOptions(mode, category, selected){
+  var list = OPS_ACTIONS.filter(function(a){ return mode === 'action' || a.category === category; });
+  if(mode === 'action') list.sort(function(a,b){ return a.label.localeCompare(b.label, 'es'); });
+  return '<option value="">Acción libre…</option>' + list.map(function(a){
+    return '<option value="' + a.code + '"' + (a.code === selected ? ' selected' : '') + '>' + escapeHtml(a.label + (mode === 'action' ? ' · ' + a.category : '')) + '</option>';
+  }).join('');
+}
+document.addEventListener('change', function(e){
+  if(!e.target || ['ops-f-mode','ops-f-category','ops-f-action'].indexOf(e.target.id) === -1) return;
+  var mode = document.getElementById('ops-f-mode'), cat = document.getElementById('ops-f-category');
+  var sel = document.getElementById('ops-f-action');
+  if(!mode || !cat || !sel) return;
+  if(e.target === mode || e.target === cat){
+    cat.disabled = mode.value === 'action';
+    sel.innerHTML = opsActionOptions(mode.value, cat.value, '');
+    return;
+  }
+  var a = opsAction(sel.value), area = document.getElementById('ops-f-area'), desc = document.getElementById('ops-f-desc');
+  if(a){
+    if(area) area.value = a.area;
+    if(desc && (!desc.value.trim() || desc.dataset.fromCatalog === 'true')){
+      desc.value = a.label; desc.dataset.fromCatalog = 'true';
+    }
+  }
+});
+function openOpsEditor(mode, taskId, ticketId, workOrderId){
   UI.operaciones.menuFor = null;
-  UI.operaciones.editor = { mode: mode, taskId: taskId || null, ticketId: ticketId || null, ticketQuery: "", confirmDelete: false, lockedTicket: mode === "create" && !!ticketId };
+  UI.operaciones.editor = { mode: mode, taskId: taskId || null, ticketId: ticketId || null, workOrderId: workOrderId || null, ticketQuery: "", confirmDelete: false, lockedTicket: mode === "create" && !!ticketId };
   UI.pendingFocus = { elId: mode === "create" && !ticketId ? "ops-f-ticket-q" : "ops-f-desc", userInitiated: true };
   UI.composer = null;
   render();
@@ -11082,6 +11203,17 @@ function renderOpsEditor(){
       }).join("") : '<div class="muted small">Sin resultados.</div>') + "</div>";
   }
   var tipos = opsTiposCatalog();
+  var currentAction = opsAction(x.actionCode), initialCategory = currentAction ? currentAction.category : 'Diseño';
+  var categories = Array.from(new Set(OPS_ACTIONS.map(function(a){ return a.category; })));
+  var orderSelect = t && (t.workOrders || []).length ?
+    '<label class="ops-ed-label" for="ops-f-work-order">Orden de trabajo</label><select class="field-input" id="ops-f-work-order"><option value="">Sin orden vinculada</option>' +
+    t.workOrders.map(function(o){ return '<option value="' + o.id + '"' + ((ed.workOrderId || x.workOrderId) === o.id ? ' selected' : '') + '>' + escapeHtml(o.title) + '</option>'; }).join('') + '</select>' : '';
+  var actionMenu = '<div class="ops-menu-fields"><label class="ops-ed-label" for="ops-f-mode">Buscar acción</label>' +
+    '<select class="field-input" id="ops-f-mode"><option value="category">Por categoría</option><option value="action">Por acción</option></select>' +
+    '<div class="ops-ed-grid"><div><label class="ops-ed-label" for="ops-f-category">Categoría</label><select class="field-input" id="ops-f-category">' +
+    categories.map(function(c){ return '<option value="' + escapeHtml(c) + '"' + (c === initialCategory ? ' selected' : '') + '>' + escapeHtml(c) + '</option>'; }).join('') + '</select></div>' +
+    '<div><label class="ops-ed-label" for="ops-f-action">Acción</label><select class="field-input" id="ops-f-action">' + opsActionOptions('category', initialCategory, x.actionCode) + '</select></div></div>' +
+    '<div class="muted small">La acción define la pantalla. Puedes ajustar el área de una acción libre.</div></div>';
   var tipoSel = '<select id="ops-f-tipo" class="field-input"><option value="">Sin tipo</option>' +
     tipos.map(function(tp){ return '<option value="' + escapeHtml(tp) + '"' + (x.tipoOperacion === tp ? " selected" : "") + ">" + escapeHtml(tp) + "</option>"; }).join("") +
     '<option value="__nuevo__">+ Nuevo tipo…</option></select>';
@@ -11107,12 +11239,15 @@ function renderOpsEditor(){
           '<button type="button" class="icon-btn" data-action="ops-ed-close" aria-label="Cerrar">' + icon("x") + "</button></div>" +
         '<div class="ops-ed-body">' +
           ticketBlock +
+          orderSelect + actionMenu +
           '<label class="ops-ed-label" for="ops-f-desc">Tarea</label>' +
           '<input type="text" id="ops-f-desc" class="field-input" maxlength="120" placeholder="Ej. Imprimir DTF, Coser bandera…" value="' + escapeHtml(x.desc || "") + '">' +
           '<div class="ops-ed-grid">' +
             '<div><label class="ops-ed-label" for="ops-f-tipo">Tipo</label>' + tipoSel + "</div>" +
             '<div><label class="ops-ed-label" for="ops-f-resp">Responsable de la tarea</label>' + respSel + "</div>" +
           "</div>" +
+          '<div class="ops-ed-grid"><div><label class="ops-ed-label" for="ops-f-area">Pantalla</label><select class="field-input" id="ops-f-area"><option value="">Elegir área…</option><option value="planeacion"' + (x.area === 'planeacion' ? ' selected' : '') + '>Planeación</option><option value="produccion"' + (x.area === 'produccion' ? ' selected' : '') + '>Producción</option></select></div>' +
+          '<div><label class="ops-ed-label" for="ops-f-date">Atender esta tarea</label><input type="date" class="field-input" id="ops-f-date" value="' + escapeHtml(x.fechaAtencion || '') + '"></div></div>' +
           '<div class="ops-ed-label">Estado</div>' + estadoSeg +
           '<label class="ops-ed-label" for="ops-f-progreso">Progreso <span id="ops-f-progreso-val" class="ops-ed-progress-val">' + v + "%</span></label>" +
           '<input type="range" id="ops-f-progreso" min="0" max="100" step="5" value="' + v + '" class="range">' +
@@ -11146,12 +11281,19 @@ async function submitOpsEditor(){
   var t = ed.ticketId ? findTicket(ed.ticketId) : null;
   if(!t){ showToast("Elige el ticket de esta tarea."); return; }
   var tipo = val("ops-f-tipo");
-  if(tipo === "__nuevo__"){ tipo = resolveOpsTipoNuevo(); if(tipo === null) return; }
-  var patch = { desc: desc, tipoOperacion: tipo || "", responsable: val("ops-f-resp") || "", estado: val("ops-f-estado") || "pendiente", progreso: Math.max(0, Math.min(100, parseInt(val("ops-f-progreso"), 10) || 0)) };
+  var action = opsAction(val('ops-f-action'));
+  if(!action && tipo === "__nuevo__"){ tipo = resolveOpsTipoNuevo(); if(tipo === null) return; }
+  var area = action ? action.area : val('ops-f-area');
+  if(TASK_AREAS.indexOf(area) === -1){ showToast('Elige Planeación o Producción para esta acción.'); return; }
+  var workOrderId = val('ops-f-work-order') || null;
+  var date = val('ops-f-date') || '';
+  var path = action ? (val('ops-f-mode') === 'category' ? action.category + ' → ' + action.label : 'Por acción → ' + action.label) : '';
+  var patch = { desc: desc, tipoOperacion: action ? action.label : (tipo || ''), responsable: val("ops-f-resp") || "", estado: val("ops-f-estado") || "pendiente", progreso: Math.max(0, Math.min(100, parseInt(val("ops-f-progreso"), 10) || 0)), area: area, fechaAtencion: date };
+  if(STATE.workOrdersTableMissing === false){ patch.workOrderId = workOrderId; patch.actionCode = action ? action.code : ''; patch.actionPath = path; }
   UI.operaciones.editor = null;
   render();
   if(ed.mode === "edit") await updateTareaCore(t, ed.taskId, patch);
-  else await addTareaCore(t, "produccion", patch.desc, patch.responsable, "", { tipoOperacion: patch.tipoOperacion, progreso: patch.progreso, estado: patch.estado });
+  else await addTareaCore(t, "produccion", patch.desc, patch.responsable, date, { tipoOperacion: patch.tipoOperacion, progreso: patch.progreso, estado: patch.estado, area: area, workOrderId: workOrderId, actionCode: action ? action.code : '', actionPath: path });
 }
 /* Autoscroll horizontal durante un drag (Kanban de Responsables y
    Operaciones comparten esto): cerca del borde el tablero se desplaza solo,
@@ -14712,11 +14854,13 @@ function kdsPrioridad(t, task){
   var ms = activeMarkers(t).map(function(m){ return m.type; });
   var hoy = todayLocalYYYYMMDD();
   var comp = t.fechaCompromiso && isSaneDateOnly(t.fechaCompromiso) ? t.fechaCompromiso : "";
-  if(comp && comp < hoy) return { rank: 0, key: "urgente", label: "VENCIDO" };
+  var atender = task.fechaAtencion && isSaneDateOnly(task.fechaAtencion) ? task.fechaAtencion : '';
+  if(atender && atender < hoy) return { rank: 0, key: "urgente", label: "ACCIÓN VENCIDA" };
+  if(comp && comp < hoy) return { rank: 0, key: "urgente", label: "ENTREGA VENCIDA" };
   if(ms.indexOf("urgente") !== -1) return { rank: 0, key: "urgente", label: "URGENTE" };
   if(ms.indexOf("bloqueado") !== -1) return { rank: 1, key: "bloqueado", label: "BLOQUEADO" };
   if(task.estado === "esperando") return { rank: 1, key: "espera", label: "EN ESPERA" };
-  if(comp && comp <= addDaysToDateOnly(hoy, KDS_PRONTO_DIAS)) return { rank: 2, key: "pronto", label: "PRONTO" };
+  if((atender && atender <= addDaysToDateOnly(hoy, KDS_PRONTO_DIAS)) || (comp && comp <= addDaysToDateOnly(hoy, KDS_PRONTO_DIAS))) return { rank: 2, key: "pronto", label: "PRONTO" };
   if(task.estado === "en_proceso") return { rank: 3, key: "proceso", label: "EN PROCESO" };
   return { rank: 4, key: "atiempo", label: "PENDIENTE" };
 }
@@ -14741,7 +14885,7 @@ function kdsTasks(area){
   var hoy = todayLocalYYYYMMDD();
   out.sort(function(a, b){
     if(a.prio.rank !== b.prio.rank) return a.prio.rank - b.prio.rank;
-    var ca = a.t.fechaCompromiso || "9999-12-31", cb = b.t.fechaCompromiso || "9999-12-31";
+    var ca = a.task.fechaAtencion || a.t.fechaCompromiso || "9999-12-31", cb = b.task.fechaAtencion || b.t.fechaCompromiso || "9999-12-31";
     if(ca !== cb) return ca < cb ? -1 : 1;
     return (a.t.seq || 0) - (b.t.seq || 0);
   });
@@ -14784,11 +14928,16 @@ function kdsAccion(it){
   return (tipo || it.task.desc || "Paso de producción").toUpperCase();
 }
 function kdsCantidad(it){
+  var order = (it.t.workOrders || []).filter(function(o){ return o.id === it.task.workOrderId; })[0];
+  if(order){
+    var linked = (it.t.productos || []).filter(function(p){ return p.id === order.productId; })[0];
+    var quantity = order.quantityOverride || (linked && linked.cantidad);
+    return ((quantity ? quantity + ' ' : '') + (linked ? linked.desc : order.title)).toUpperCase();
+  }
   var prods = it.t.productos || [];
-  if(!prods.length) return "";
+  if(prods.length !== 1) return ""; /* sin orden, varios productos son ambiguos */
   var p = prods[0];
   var txt = ((p.cantidad && p.cantidad !== 1) ? (p.cantidad + " ") : "") + (p.desc || "");
-  if(prods.length > 1) txt += "  +" + (prods.length - 1);
   return txt.toUpperCase();
 }
 /* Máximo 3 líneas de información secundaria: la descripción del paso si
@@ -14984,7 +15133,7 @@ async function kdsConfirm(){
 }
 function kdsCancel(){
   if(UI.kds.confirm){ UI.kds.confirm = null; render(); return true; }
-  if(UI.kds.detailId){ UI.kds.detailId = null; render(); return true; }
+  if(UI.kds.detailId){ clearTimeout(kdsDetailTimer); UI.kds.detailId = null; render(); return true; }
   return false;
 }
 /* El gesto que el navegador exige para conceder pantalla completa y audio.
@@ -15021,11 +15170,23 @@ function kdsClockStart(){
     }
   }, 1000);
 }
+var kdsDetailTimer = null;
+function kdsScheduleDetailClose(){
+  clearTimeout(kdsDetailTimer);
+  kdsDetailTimer = setTimeout(function(){
+    if(document.getElementById("photo-zoom-overlay") || UI.kds.confirm){ kdsScheduleDetailClose(); return; }
+    if(UI.kds.detailId){ UI.kds.detailId = null; render(); }
+  }, 30000);
+}
+document.addEventListener('pointerdown', function(e){
+  if(UI.kds.detailId && e.target.closest && e.target.closest('.kds-detail')) kdsScheduleDetailClose();
+}, true);
 function kdsOpenDetail(){
   var items = kdsItems();
   var it = items[kdsSelectedIndex(items)];
   if(!it) return;
   UI.kds.detailId = it.id;
+  kdsScheduleDetailClose();
   render();
 }
 
@@ -15047,6 +15208,7 @@ function kdsKey(e){
   if(k === "ArrowUp"){ e.preventDefault(); kdsMove(0, -1); return true; }
   if(k === "ArrowDown"){ e.preventDefault(); kdsMove(0, 1); return true; }
   if(k === "Enter"){ e.preventDefault(); kdsOpenDetail(); return true; }
+  if(k === " " || k === "Spacebar"){ e.preventDefault(); kdsOpenDetail(); return true; }
   if(k === "w" || k === "W"){ e.preventDefault(); kdsAskWait(); return true; }
   if(k === "g" || k === "G"){ e.preventDefault(); kdsCycleDensity(); return true; }
   /* PARTE I — el mismo lenguaje en las tres pantallas. Tab (que es lo que
@@ -15164,7 +15326,7 @@ function kdsVista(it){
     return {
       cliente: cliente,
       accion: accionP,
-      cant: canal, canal: true,
+      cant: kdsCantidadVisible(it) || canal, canal: !kdsCantidad(it),
       notas: ntsP.slice(0, 2), fechas: fechasP,
       sinFecha: "SIN FECHA PARA ATENDER",
       footL: (task.responsable || "SIN ASIGNAR").toUpperCase(),
@@ -15288,9 +15450,11 @@ function renderKdsDetail(){
   var it = kdsItems().filter(function(x){ return x.id === UI.kds.detailId; })[0];
   if(!it){ UI.kds.detailId = null; return ""; }
   var t = it.t;
+  var order = (t.workOrders || []).filter(function(o){ return o.id === (it.task && it.task.workOrderId); })[0];
   var notas = (t.thread || []).filter(function(ev){ return ev.type === "nota" && ev.text && !ev.deleted_at; }).slice(-8).reverse();
   var fotos = (t.thread || []).filter(function(ev){ return ev.type === "archivo" && ev.storage_path && !ev.deleted_at; }).length;
-  var prods = (t.productos || []).map(function(p){
+  var photo = ticketGalleryPhotos(t.id)[0];
+  var prods = (t.productos || []).filter(function(p){ return !order || p.id === order.productId; }).map(function(p){
     return "<li>" + escapeHtml(((p.cantidad && p.cantidad !== 1) ? (p.cantidad + " × ") : "") + (p.desc || "")) + "</li>";
   }).join("");
   return (
@@ -15302,7 +15466,8 @@ function renderKdsDetail(){
         "</div>" +
         '<div class="kds-detail-accion">' + escapeHtml(kdsAccion(it)) + "</div>" +
         '<div class="kds-detail-grid">' +
-          "<div><h3>TRABAJO</h3><ul>" + (prods || "<li>Sin productos capturados</li>") + "</ul></div>" +
+          (photo ? '<div class="kds-detail-photo"><h3>REFERENCIA</h3><img data-storage-path="' + escapeHtml(photo.storagePath) + '" alt="Referencia de trabajo; tocar para ampliar" style="width:100%;max-height:45vh;object-fit:contain;cursor:zoom-in"></div>' : "") +
+          "<div><h3>TRABAJO</h3>" + (order ? '<p>' + escapeHtml(order.title) + '</p>' : '') + '<ul>' + (prods || "<li>Sin producto vinculado</li>") + "</ul>" + (order && order.instructions ? '<p>' + escapeHtml(order.instructions) + '</p>' : '') + '</div>' +
           "<div><h3>PASO</h3><p>" + escapeHtml(it.task.desc || "—") + "</p>" +
             "<p>Responsable: <b>" + escapeHtml(it.task.responsable || "sin asignar") + "</b></p>" +
             "<p>Entrega: <b>" + escapeHtml(kdsFechaCorta(t.fechaCompromiso)) + "</b></p></div>" +
@@ -15471,7 +15636,7 @@ function renderMain(){
     renderTicketHeader(t) +
     '<div class="ticket-body">' +
       renderMarkersBar(t) +
-      renderTasksPanel(t) +
+      renderWorkOrdersPanel(t) + renderTasksPanel(t) +
       '<div class="thread" id="thread-scroll">' + astraRenderTicketLinks(t) + mergedThreadHtml(t) + "</div>" +
     "</div>" +
     renderComposer()
@@ -15616,6 +15781,7 @@ function render(){
     renderCxcPagoModal() +
     renderDocTermsEditor() +
     renderOpsEditor() +
+    renderWorkOrderEditor() +
     renderDeletePhotoConfirmOverlay() +
     renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
@@ -16237,6 +16403,39 @@ function hydrateImages(){
     }catch(e){ /* leave broken silently, non-critical */ }
   });
 }
+
+/* El mismo visor sirve para fotos del ticket, Equipo, Biblioteca y KDS.
+   Solo usa la URL firmada que ya autorizó Storage; no publica archivos. */
+function closePhotoZoom(){
+  var overlay = document.getElementById("photo-zoom-overlay");
+  if(overlay) overlay.remove();
+}
+function openPhotoZoom(img){
+  if(!img || !img.src) return;
+  closePhotoZoom();
+  var overlay = document.createElement("div");
+  overlay.id = "photo-zoom-overlay"; overlay.className = "photo-zoom-overlay";
+  overlay.setAttribute("role", "dialog"); overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", "Fotografía ampliada");
+  var close = document.createElement("button");
+  close.type = "button"; close.className = "photo-zoom-close";
+  close.setAttribute("aria-label", "Cerrar fotografía"); close.textContent = "×";
+  var full = document.createElement("img"); full.src = img.src; full.alt = img.alt || "Fotografía";
+  overlay.appendChild(close); overlay.appendChild(full);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay || e.target === close) closePhotoZoom(); });
+  document.body.appendChild(overlay); close.focus();
+}
+document.addEventListener("click", function(e){
+  var img = e.target.closest && e.target.closest(".thread-img, .feed-item-img, .chat-msg-img, .tickets-list-preview-photos img, .biblioteca-viewer-media img, .ticket-gallery-media img, .kds-detail-photo img");
+  if(!img) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  openPhotoZoom(img);
+}, true);
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape" && document.getElementById("photo-zoom-overlay")){
+    e.preventDefault(); e.stopImmediatePropagation(); closePhotoZoom();
+  }
+}, true);
 
 /* ================= X1.1 — ESCRITURAS HONESTAS =================
    Nada se muestra como guardado si no se guardó. Tres piezas:
@@ -17190,7 +17389,7 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
     progreso: progreso, tipoOperacion: extra.tipoOperacion || "", terminadoAt: estado === "terminado" ? nowIso : null, createdAt: nowIso,
     /* B/D5: quien crea la tarea dice a qué pantalla va. Si no lo dice, se
        queda vacío y manda el puente — nunca se inventa aquí. */
-    area: extra.area || "" };
+    area: extra.area || "", workOrderId: extra.workOrderId || null, actionCode: extra.actionCode || '', actionPath: extra.actionPath || '' };
   t.tareas.push(local);
   render();
   if(responsable && tipo !== "produccion") rememberName(responsable);
@@ -17203,9 +17402,14 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
       row.tipo_operacion = extra.tipoOperacion || null;
       if(estado === "terminado") row.terminado_at = nowIso;
       if(extra.area) row.area = extra.area;
+      if(STATE.workOrdersTableMissing === false){
+        row.work_order_id = extra.workOrderId || null;
+        row.action_code = extra.actionCode || null;
+        row.action_path = extra.actionPath || null;
+      }
     }
     var r3 = await sb.from("tareas").insert(row);
-    if(r3.error && hasExtra && /progreso|tipo_operacion|terminado_at|area|column|schema cache/i.test(r3.error.message || "")){
+    if(r3.error && hasExtra && STATE.workOrdersTableMissing && /progreso|tipo_operacion|terminado_at|area|column|schema cache/i.test(r3.error.message || "")){
       delete row.progreso; delete row.tipo_operacion; delete row.terminado_at; delete row.area;
       r3 = await sb.from("tareas").insert(row);
       /* X1.1: el empleado ve que su tarea se guardó; el detalle de la
@@ -17232,12 +17436,12 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
    RESPONSABLE — el progreso no se registra para no llenar el chat de ruido).
    NUNCA toca el ticket: terminar una tarea no cierra, no entrega, no cobra y
    no cambia Qué sigue. */
-var TAREA_PATCH_COLS = { desc: "descripcion", estado: "estado", progreso: "progreso", responsable: "responsable", tipoOperacion: "tipo_operacion" };
+var TAREA_PATCH_COLS = { desc: "descripcion", estado: "estado", progreso: "progreso", responsable: "responsable", tipoOperacion: "tipo_operacion", area: "area", fechaAtencion: "fecha_atencion", workOrderId: "work_order_id", actionCode: "action_code", actionPath: "action_path" };
 async function updateTareaCore(t, taskId, patch){
   if(!t) return false;
   var task = (t.tareas || []).filter(function(x){ return x.id === taskId; })[0];
   if(!task) return false;
-  var prev = { estado: task.estado, responsable: task.responsable, terminadoAt: task.terminadoAt, desc: task.desc, progreso: task.progreso, tipoOperacion: task.tipoOperacion };
+  var prev = { estado: task.estado, responsable: task.responsable, terminadoAt: task.terminadoAt, desc: task.desc, progreso: task.progreso, tipoOperacion: task.tipoOperacion, area: task.area, fechaAtencion: task.fechaAtencion, workOrderId: task.workOrderId, actionCode: task.actionCode, actionPath: task.actionPath };
   var dbPatch = {}, changed = false;
   Object.keys(patch || {}).forEach(function(k){
     if(!(k in TAREA_PATCH_COLS)) return;
@@ -17245,7 +17449,7 @@ async function updateTareaCore(t, taskId, patch){
     if(k === "progreso") v = Math.max(0, Math.min(100, Number(v) || 0));
     if((task[k] || (k === "progreso" ? 0 : "")) === (v || (k === "progreso" ? 0 : ""))) return;
     task[k] = v; changed = true;
-    dbPatch[TAREA_PATCH_COLS[k]] = (k === "responsable" || k === "tipoOperacion") ? (v || null) : v;
+    dbPatch[TAREA_PATCH_COLS[k]] = (k === "responsable" || k === "tipoOperacion" || k === "fechaAtencion" || k === "workOrderId" || k === "actionCode" || k === "actionPath") ? (v || null) : v;
   });
   if(!changed) return true;
   if("estado" in dbPatch){
@@ -17256,7 +17460,7 @@ async function updateTareaCore(t, taskId, patch){
   var ok = true;
   try{
     var r1 = await sb.from("tareas").update(dbPatch).eq("id", taskId);
-    if(r1.error && /progreso|tipo_operacion|terminado_at|column|schema cache/i.test(r1.error.message || "")){
+    if(r1.error && !('work_order_id' in dbPatch || 'action_code' in dbPatch || 'action_path' in dbPatch) && /progreso|tipo_operacion|terminado_at|column|schema cache/i.test(r1.error.message || "")){
       var basic = {};
       ["descripcion","estado","responsable"].forEach(function(c){ if(c in dbPatch) basic[c] = dbPatch[c]; });
       r1 = Object.keys(basic).length ? await sb.from("tareas").update(basic).eq("id", taskId) : { error: null };
@@ -23447,6 +23651,17 @@ function bindField(id, evtName){
 /* single delegated document-level listener, registered once at boot (never re-added on render).
    CAPTURE phase so it sees the DOM before any handler-triggered render() replaces it. */
 document.addEventListener("click", function(e){
+  var woNew = e.target.closest && e.target.closest('[data-action="work-order-new"]');
+  if(woNew){
+    if(STATE.workOrdersTableMissing){ showToast('Falta aplicar ASTRA-02-work-orders.sql.'); return; }
+    UI.workOrderEditor = { ticketId: woNew.getAttribute('data-ticket') }; render(); return;
+  }
+  var woClose = e.target.closest && e.target.closest('[data-action="work-order-close"]');
+  if(woClose){ UI.workOrderEditor = null; render(); return; }
+  var woSave = e.target.closest && e.target.closest('[data-action="work-order-save"]');
+  if(woSave){ saveWorkOrder(); return; }
+  var woAction = e.target.closest && e.target.closest('[data-action="work-order-add-action"]');
+  if(woAction){ openOpsEditor('create', null, woAction.getAttribute('data-ticket'), woAction.getAttribute('data-work-order')); return; }
   /* Identity Foundation §6: menú corto de cuenta — mismo patrón "toggle +
      cerrar con clic afuera" que el "⋯" de Miniaturas. */
   var acctToggleBtn = e.target.closest && e.target.closest('[data-action="toggle-account-menu"]');
