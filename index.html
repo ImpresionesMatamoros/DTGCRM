@@ -4092,6 +4092,12 @@ button.tk-task-open:hover{background:var(--surface-3)}
 
 
 /* Chat compacto: herramientas secundarias fuera del espacio de lectura. */
+.task-more{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
+.task-more>summary{cursor:pointer;color:var(--text-muted);font-size:13px;padding:6px 0}
+.task-more[open]>summary{margin-bottom:10px}
+.kanban-add-task{margin-left:auto;white-space:nowrap}
+.ops-editor .ops-ed-actions{position:sticky;bottom:0;background:var(--surface)}
+.sidebar-account-menu{max-height:70dvh;overflow-y:auto}
 .chat-header{padding-bottom:10px}
 .astra-utilities{padding:0 20px 10px;gap:8px}
 .astra-utilities input{min-width:0;flex:1;max-width:280px;padding:6px 10px;font-size:12px;background:transparent}
@@ -5757,7 +5763,7 @@ function dtgCloseTopOverlay(){
   }
   if(UI.docTermsEditor){ UI.docTermsEditor = null; render(); return true; }
   if(UI.editingDisplayName){ closeEditName(); return true; }
-  if(UI.accountMenuOpen){ UI.accountMenuOpen = false; render(); return true; }
+  if(UI.accountMenuOpen){ setAccountMenuOpen(false); return true; }
   if(UI.photoBatch && UI.photoBatch.ticketId){ if(closeComposerOverlay()) render(); return true; }
   if(UI.ticketGallery){ closeTicketGallery(); return true; }
   /* AI BRIDGE — RONDA HARDENING: el preview de un DTG_PATCH es una interfaz
@@ -6733,6 +6739,16 @@ function renderSidebar(){
       '<button type="button" class="icon-btn help-panel-open-btn" data-action="open-help-panel" title="Ayuda" aria-label="Ayuda">' + icon("help-circle") + "</button>" +
     "</div>"
   );
+}
+function setAccountMenuOpen(open){
+  UI.accountMenuOpen = !!open;
+  var wrap = document.querySelector(".sidebar-account-wrap");
+  if(!wrap) return;
+  var menu = wrap.querySelector(".sidebar-account-menu");
+  if(menu) menu.remove();
+  if(open) wrap.insertAdjacentHTML("beforeend", renderAccountMenu());
+  var button = wrap.querySelector('[data-action="toggle-account-menu"]');
+  if(button) button.setAttribute("aria-expanded", String(!!open));
 }
 function renderAccountMenu(){
   var email = (AUTH_SESSION && AUTH_SESSION.user && AUTH_SESSION.user.email) || "";
@@ -11250,7 +11266,6 @@ function renderKanbanCardMenu(t){
   return '<div class="kanban-card-menu producto-more-menu" draggable="false" role="menu">' +
     '<button type="button" class="kanban-card-menu-item" draggable="false" data-action="kanban-card-menu-move" data-ticket="' + t.id + '" role="menuitem">' + icon("arrow-left-right") + " Mover a&hellip;</button>" +
     '<button type="button" class="kanban-card-menu-item" draggable="false" data-action="marker-toggle-open" data-ticket="' + t.id + '" role="menuitem">' + icon("flame") + " Marcadores&hellip;</button>" +
-    '<button type="button" class="kanban-card-menu-item" draggable="false" data-action="ops-task-new" data-ticket="' + t.id + '" role="menuitem">' + icon("factory") + " Tarea de operación&hellip;</button>" +
     '<button type="button" class="kanban-card-menu-item kanban-card-menu-danger producto-more-danger" draggable="false" data-action="kanban-card-menu-cerrar" data-ticket="' + t.id + '" role="menuitem">' + icon("archive") + " Cerrar ticket&hellip;</button>" +
   "</div>";
 }
@@ -11287,6 +11302,7 @@ function renderKanbanCard(t){
           '<span class="kanban-card-folio">#' + t.seq + "</span>" +
         "</button>" +
         dateChip +
+        '<button type="button" class="btn btn-sm btn-ghost kanban-add-task" draggable="false" data-action="ops-task-new" data-ticket="' + t.id + '" aria-label="Crear tarea para ticket #' + t.seq + '">+ Tarea</button>' +
         '<div class="kanban-card-more-wrap" draggable="false">' +
           /* v0.20: el viejo "🏃" (y antes "⋯") pasa a un ícono vectorial de
              TRANSFERIR — describe lo que de verdad hace el menú (Mover a otra
@@ -11571,7 +11587,7 @@ function renderOperacionesView(){
 function opsProgressiveState(ed,x){
   if(!ed.progressive){
     var m=DTGOps.meta(x||{});
-    ed.progressive={mode:'action',selection:m.selection||null,path:m.path||[],free:ed.mode==='edit',panels:[],custom:[]};
+    ed.progressive={mode:'action',selection:m.selection||null,path:m.path||[],free:true,panels:[],custom:[]};
   }
   return ed.progressive;
 }
@@ -11687,7 +11703,7 @@ function renderOpsEditor(){
   if(!ed) return "";
   var found = ed.mode === "edit" ? findOpsTask(ed.ticketId, ed.taskId) : null;
   if(ed.mode === "edit" && !found){ UI.operaciones.editor = null; return ""; }
-  var x = found ? found.task : { desc: "", tipoOperacion: "", responsable: "", estado: "pendiente", progreso: 0 };
+  var x = found ? found.task : { desc: "", tipoOperacion: "", responsable: "", estado: "pendiente", progreso: 0, area: "planeacion" };
   if(ed.draft)x=Object.assign({},x,ed.draft);
   var t = ed.ticketId ? findTicket(ed.ticketId) : null;
   var ticketBlock;
@@ -11729,26 +11745,28 @@ function renderOpsEditor(){
     : "";
   return (
     '<div class="cierre-modal-overlay" id="ops-editor-overlay">' +
-      '<div class="cierre-modal ops-editor" role="dialog" aria-modal="true" aria-label="' + (ed.mode === "edit" ? "Editar tarea de operación" : "Nueva tarea de operación") + '">' +
-        '<div class="modal-head"><div class="cierre-modal-title">' + icon("factory") + " " + (ed.mode === "edit" ? "Tarea de operación" : "Nueva tarea de operación") + "</div>" +
+      '<div class="cierre-modal ops-editor" role="dialog" aria-modal="true" aria-label="' + (ed.mode === "edit" ? "Editar tarea" : "Nueva tarea") + '">' +
+        '<div class="modal-head"><div class="cierre-modal-title">' + icon("factory") + " " + (ed.mode === "edit" ? "Editar tarea" : "Nueva tarea") + "</div>" +
           '<button type="button" class="icon-btn" data-action="ops-ed-close" aria-label="Cerrar">' + icon("x") + "</button></div>" +
         '<div class="ops-ed-body">' +
           ticketBlock +
-          opsRelationHTML(ed, x, t) + actionMenu +
           '<label class="ops-ed-label" for="ops-f-desc">Tarea</label>' +
           '<input type="text" id="ops-f-desc" class="field-input" maxlength="120" placeholder="Ej. Imprimir DTF, Coser bandera…" value="' + escapeHtml(x.desc || "") + '">' +
           '<div class="ops-ed-grid">' +
-            '<div><label class="ops-ed-label" for="ops-f-tipo">Tipo</label>' + tipoSel + "</div>" +
             '<div><label class="ops-ed-label" for="ops-f-resp">Responsable de la tarea</label>' + respSel + "</div>" +
           "</div>" +
-          '<div class="ops-ed-grid"><div><label class="ops-ed-label" for="ops-f-area">Pantalla</label><select class="field-input" id="ops-f-area"><option value="">Elegir área…</option><option value="planeacion"' + (x.area === 'planeacion' ? ' selected' : '') + '>Planeación</option><option value="produccion"' + (x.area === 'produccion' ? ' selected' : '') + '>Producción</option></select></div>' +
-          '<div><label class="ops-ed-label" for="ops-f-date">Atender esta tarea</label><input type="date" class="field-input" id="ops-f-date" value="' + escapeHtml(x.fechaAtencion || '') + '"></div></div>' +
+          '<div class="ops-ed-grid"><div><label class="ops-ed-label" for="ops-f-area">Destino</label><select class="field-input" id="ops-f-area"><option value="">Elegir área…</option><option value="planeacion"' + (x.area === 'planeacion' ? ' selected' : '') + '>Planeación</option><option value="produccion"' + (x.area === 'produccion' ? ' selected' : '') + '>Producción</option></select></div>' +
+          '</div>' +
+          '<details class="task-more"' + (ed.confirmDelete ? ' open' : '') + '><summary>Más opciones</summary>' +
+          '<label class="ops-ed-label" for="ops-f-date">Atender esta tarea</label><input type="date" class="field-input" id="ops-f-date" value="' + escapeHtml(x.fechaAtencion || '') + '">' +
+          opsRelationHTML(ed, x, t) + actionMenu +
+          '<div><label class="ops-ed-label" for="ops-f-tipo">Tipo</label>' + tipoSel + "</div>" +
           '<div class="ops-ed-label">Estado</div>' + estadoSeg +
           '<label class="ops-ed-label" for="ops-f-progreso">Progreso <span id="ops-f-progreso-val" class="ops-ed-progress-val">' + v + "%</span></label>" +
           '<input type="range" id="ops-f-progreso" min="0" max="100" step="5" value="' + v + '" class="range">' +
-          '<div class="ops-ed-note">El estado y el progreso son independientes. Terminar una tarea no cierra, no entrega y no cobra el ticket.</div>' +
+          '<div class="ops-ed-note">Terminar una tarea no cierra el ticket.</div>' + deleteZone + "</details>" +
         "</div>" +
-        '<div class="popover-actions ops-ed-actions">' + deleteZone +
+        '<div class="popover-actions ops-ed-actions">' +
           '<span class="spacer"></span><button type="button" class="btn btn-ghost" data-action="ops-ed-close">Cancelar</button>' +
           '<button type="button" class="btn btn-primary" data-action="ops-ed-save">' + (ed.mode === "edit" ? "Guardar" : "Crear tarea") + "</button>" +
         "</div>" +
@@ -14893,7 +14911,6 @@ function renderChatMsgMenu(p){
   items.push(['astra-reply', 'message', 'Responder', '']);
   items.push(['astra-thread', 'message', 'Abrir hilo', '']);
   items.push(['astra-create-followup', 'clock', 'Crear seguimiento', '']);
-  items.push(['astra-create-task', 'check', 'Crear tarea', '']);
   items.push(['astra-remind', 'clock', 'Recordarme', '']);
   items.push(['astra-save', 'pin', 'Guardar para después', '']);
   items.push(['astra-select', 'check', 'Seleccionar', '']);
@@ -14940,6 +14957,7 @@ function renderChatMessage(item){
     "</div>";
   var actions = p.pending ? "" :
     '<div class="chat-msg-actions">' +
+      '<button type="button" class="icon-btn" data-action="astra-create-task" data-post-id="' + p.id + '" aria-label="Crear tarea desde mensaje" title="Crear tarea">' + icon("check") + "</button>" +
       '<button type="button" class="icon-btn" data-action="chat-react-open" data-post-id="' + p.id + '" aria-label="Reaccionar" title="Reaccionar" aria-haspopup="true" aria-expanded="' + (UI.chatReactFor === p.id ? "true" : "false") + '">' + icon("smile-plus") + "</button>" +
       '<button type="button" class="icon-btn" data-action="chat-menu-open" data-post-id="' + p.id + '" aria-label="Más acciones" title="Más acciones" aria-haspopup="true" aria-expanded="' + (UI.chatMenuFor === p.id ? "true" : "false") + '">' + icon("more-h") + "</button>" +
       renderChatReactionPalette(p) + renderChatMsgMenu(p) +
@@ -24242,7 +24260,7 @@ document.addEventListener("click", function(e){
   /* Identity Foundation §6: menú corto de cuenta — mismo patrón "toggle +
      cerrar con clic afuera" que el "⋯" de Miniaturas. */
   var acctToggleBtn = e.target.closest && e.target.closest('[data-action="toggle-account-menu"]');
-  if(acctToggleBtn){ UI.accountMenuOpen = !UI.accountMenuOpen; render(); return; }
+  if(acctToggleBtn){ e.preventDefault(); setAccountMenuOpen(!UI.accountMenuOpen); return; }
   var logoutBtn = e.target.closest && e.target.closest('[data-action="logout"]');
   if(logoutBtn){ UI.accountMenuOpen = false; signOut(); return; }
   /* X1.3 — el número suelto se vuelve precio SOLO si la persona lo toca. */
@@ -24358,7 +24376,7 @@ document.addEventListener("click", function(e){
   var editNameSaveBtn = e.target.closest && e.target.closest('[data-action="edit-name-save"]');
   if(editNameSaveBtn){ saveDisplayName(); return; }
   if(UI.accountMenuOpen && !(e.target.closest && e.target.closest(".sidebar-account-wrap"))){
-    UI.accountMenuOpen = false; UI.editingDisplayName = false; render();
+    UI.editingDisplayName = false; setAccountMenuOpen(false);
   }
   /* v0.20 — picker de marcadores (toggle). Corre en CAPTURA y hace
      stopPropagation: el botón de chips vive dentro de tarjetas cuyo resto
@@ -25527,12 +25545,12 @@ function astraReviewOverlay(){
   var suggestedTicket=conversationTicketId(p.conversationId)||p.ticketId || (ticketRef && ticketRef.id) || '';
   var candidates=(STATE.tickets||[]).filter(dtgIsVivo);
   return '<div class="cierre-modal-overlay astra-review-backdrop"><div class="cierre-modal astra-review" role="dialog" aria-modal="true" aria-label="Revisar antes de guardar">' +
-    '<h2>Revisar '+(r.kind==='ticket'?'ticket':r.kind==='followup'?'seguimiento':'tarea')+'</h2>'+
-    '<div class="astra-review-source"><strong>Origen · '+items.length+' mensaje'+(items.length===1?'':'s')+'</strong>'+
+    '<h2>'+(r.kind==='task'?'Crear tarea':'Revisar '+(r.kind==='ticket'?'ticket':'seguimiento'))+'</h2>'+
+    '<details class="task-more"><summary>Ver mensaje original</summary><div class="astra-review-source"><strong>Origen · '+items.length+' mensaje'+(items.length===1?'':'s')+'</strong>'+
     items.slice(0,8).map(function(x){return '<p>'+escapeHtml(x.autor||'Equipo')+' · '+
       escapeHtml(fmtDateShort(x.createdAt))+' '+escapeHtml(fmtTime(x.createdAt))+
       ': '+escapeHtml((x.text||x.transcript||'Audio/archivo').slice(0,220))+'</p>';}).join('')+
-    (items.length>8?'<small>Y '+(items.length-8)+' mensajes más</small>':'')+'</div>'+
+    (items.length>8?'<small>Y '+(items.length-8)+' mensajes más</small>':'')+'</div></details>'+
     (p.conversationId&&!conversationTicketId(p.conversationId)?'<p>Chat personal: los demás mensajes permanecen privados. Solo se guarda lo que confirmes aquí.</p>':'')+
     (r.kind==='ticket'
       ? '<label>Cliente (opcional)<input id="astra-review-client" value="'+escapeHtml(clientRef?clientRef.label:'')+'" placeholder="Sin cliente"></label>'+
@@ -25542,14 +25560,14 @@ function astraReviewOverlay(){
           (t.id===suggestedTicket?' selected':'')+'>#'+escapeHtml(String(t.seq))+' · '+escapeHtml(t.cliente||'Sin cliente')+'</option>';}).join('')+
         '</select></label>'+
         '<label>Acción<input id="astra-review-desc" value="'+escapeHtml(items.map(function(x){return x.transcript||x.text||'';}).filter(Boolean).join(' · ').slice(0,500))+'" placeholder="Qué debe hacerse"></label>'+
-        (r.kind==='task'?'<label>Área<select id="astra-review-area"><option value="normal">Tarea interna</option>'+
-          '<option value="produccion">Producción</option><option value="planeacion">Planeación</option></select></label>':'')+
+        (r.kind==='task'?'<label>Destino<select id="astra-review-area"><option value="planeacion">Planeación</option>'+
+          '<option value="produccion">Producción</option><option value="normal">Tarea interna</option></select></label><details class="task-more"><summary>Más opciones</summary>':'')+
         '<label>Fecha de atención (opcional)<input id="astra-review-date" type="date"></label>'+
-        '<label>Responsable (opcional)<select id="astra-review-owner"><option value="">Sin asignar</option>'+
+        (r.kind==='task'?'</details>':'')+'<label>Responsable (opcional)<select id="astra-review-owner"><option value="">Sin asignar</option>'+
         activeAssignableProfiles().map(function(q){return '<option>'+escapeHtml(q.displayName)+'</option>';}).join('')+
         '</select></label>')+
     '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-astra-action="review-cancel">Cancelar</button>'+
-    '<button type="button" class="btn btn-primary" data-astra-action="review-confirm">Confirmar</button></div></div></div>';
+    '<button type="button" class="btn btn-primary" data-astra-action="review-confirm">'+(r.kind==='task'?'Crear tarea':'Confirmar')+'</button></div></div></div>';
 }
 async function astraConfirmReview(){
   var r=UI.astraReview;if(!r || r.busy)return;
@@ -25601,7 +25619,9 @@ async function astraConfirmReview(){
           source_post_id:p.id,source_post_ids:items.map(function(x){return x.id;}),
           source_snapshot:items.map(function(x){return x.transcript||x.text||'';}).join('\n').slice(0,5000)}});
       UI.astraSelected=[];
-      UI.astraReview=null;openTicketById(t.id);
+      UI.astraReview=null;
+      if(r.kind==='task'){render();showToast('Tarea creada en #'+t.seq);}
+      else openTicketById(t.id);
     }
   }catch(e){userError('Crear desde conversación',e);}
   finally{if(UI.astraReview)UI.astraReview.busy=false;}
@@ -26153,7 +26173,7 @@ document.addEventListener("click",function(e){
     (async function(){for(var sid of (UI.astraSelected||[]).slice()) await astraSaveMessage(sid);UI.astraSelected=[];render();})();
   }
   if(action==='astra-create-ticket' || action==='astra-create-task' || action==='astra-create-followup'){
-    UI.chatMenuFor=null; UI.astraReview={postId:id,kind:action.slice('astra-create-'.length)};render();
+    UI.chatMenuFor=null; UI.chatReactFor=null; UI.astraReview={postId:id,kind:action.slice('astra-create-'.length)};render();
   }
   if(action==='review-cancel'){UI.astraReview=null;render();}
   if(action==='review-confirm') astraConfirmReview();
