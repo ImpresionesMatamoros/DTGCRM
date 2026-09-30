@@ -4090,6 +4090,24 @@ button.tk-task-open:hover{background:var(--surface-3)}
 .tk-line1 .comanda-identity .comanda-cliente-btn{min-width:0;text-align:left}
 .tk-line1 .comanda-contact-btn,.tk-line1 .comanda-clientename-edit-btn{min-width:32px;min-height:32px;width:32px;height:32px;flex-shrink:0}
 
+
+/* Chat compacto: herramientas secundarias fuera del espacio de lectura. */
+.chat-header{padding-bottom:10px}
+.astra-utilities{padding:0 20px 10px;gap:8px}
+.astra-utilities input{min-width:0;flex:1;max-width:280px;padding:6px 10px;font-size:12px;background:transparent}
+.astra-utilities button{font-size:12px;color:var(--text-muted)}
+.chat-ticket-chip{max-width:100%;text-align:left}
+.chat-ticket-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-msg:focus-within .chat-msg-actions{display:flex}
+@media(max-width:700px){
+  .astra-utilities{display:none}
+  .chat-header{padding:12px 14px 8px}
+  .chat-msg-actions{position:relative;grid-column:2;justify-self:end;top:auto;right:auto;display:flex;background:transparent;border:0;box-shadow:none}
+  .chat-msg-actions .icon-btn{width:36px;height:36px;opacity:.7}
+  .chat-msg.is-active .chat-msg-actions{background:transparent;border:0;box-shadow:none}
+  .chat-react-palette,.chat-msg-menu{top:auto;bottom:calc(100% + 6px);max-width:calc(100vw - 32px)}
+  .chat-react-palette{grid-template-columns:repeat(6,minmax(0,1fr));width:min(360px,calc(100vw - 32px))}
+}
 </style>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
@@ -14740,16 +14758,7 @@ function renderFeedPostItem(item){
   );
 }
 
-function renderFeedFilterBar(){
-  /* v0.20: mismo UI.feedFilter de siempre ("todo"|"posts"|"eventos"|
-     "aibridge"), ahora como control segmentado compacto dentro de la
-     cabecera del chat — filtra qué se MUESTRA, nunca qué se guarda. */
-  var opts = [["todo","Todo"],["posts","Mensajes"],["eventos","Sistema"],["aibridge","AI Bridge"]];
-  return '<div class="seg chat-filter" role="tablist" aria-label="Filtrar el chat">' + opts.map(function(o){
-    var on = UI.feedFilter === o[0];
-    return '<button type="button" role="tab" aria-selected="' + (on?"true":"false") + '" class="seg-btn' + (on?" active":"") + '" data-action="feed-filter" data-value="' + o[0] + '">' + o[1] + "</button>";
-  }).join("") + "</div>";
-}
+function renderFeedFilterBar(){ return ""; }
 
 /* ================= v0.20 — INICIO = CHAT GRUPAL DEL EQUIPO =================
    Una conversación continua (orden cronológico natural, lo más nuevo abajo)
@@ -14850,7 +14859,9 @@ function chatLinkifyText(text, post){
 }
 function renderChatTicketChip(t){
   if(!t) return "";
-  return '<button type="button" class="chat-ticket-chip" data-action="open-ticket" data-id="' + t.id + '">' + icon("ticket") + "<span>#" + t.seq + (t.cliente ? " · " + escapeHtml(t.cliente) : "") + "</span></button>";
+  var summary = ticketTrabajoResumen(t);
+  var label = "Este mensaje es parte del ticket #" + t.seq + (t.cliente ? " · " + t.cliente : "") + (summary ? " — " + summary : "");
+  return '<button type="button" class="chat-ticket-chip" data-action="open-ticket" data-id="' + t.id + '" title="' + escapeHtml(label) + '">' + icon("ticket") + "<span>" + escapeHtml(label) + "</span></button>";
 }
 function renderChatReactions(p){
   if(p.pending) return "";
@@ -14885,16 +14896,14 @@ function renderChatMsgMenu(p){
   items.push(['astra-create-task', 'check', 'Crear tarea', '']);
   items.push(['astra-remind', 'clock', 'Recordarme', '']);
   items.push(['astra-save', 'pin', 'Guardar para después', '']);
-  items.push(['chat-react-open', 'smile-plus', 'Reaccionar', '']);
   items.push(['astra-select', 'check', 'Seleccionar', '']);
   if(!inTicket){
     items.push(['astra-create-ticket', 'ticket', 'Crear ticket', '']);
-    if(!p.conversationId) items.push(['astra-link', 'link', p.threadRootId ? 'Vincular hilo a ticket' : 'Agregar a ticket', '']);
+    if(!p.conversationId) items.push(['astra-link', 'link', 'Adjuntar a ticket', '']);
     if(p.pinLevel === "none" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Fijar arriba", 'data-level="pin"']);
     if(p.pinLevel === "pin" && !p.conversationId && !p.threadRootId) items.push(['feed-post-pin', 'pin', "Quitar fijado", 'data-level="none"']);
     if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel !== "megapin") items.push(['feed-post-pin', 'star', "Megapin (anuncio)", 'data-level="megapin"']);
     if(isAdmin() && !p.conversationId && !p.threadRootId && p.pinLevel === "megapin") items.push(['feed-post-pin', 'star', "Quitar Megapin", 'data-level="none"']);
-    if(!p.conversationId && !p.ticketId) items.push(['feed-photo-relacionar-open', 'link', "Vincular a un ticket", ""]);
   }
   items.push(['chat-copy-text', 'copy', "Copiar texto", ""]);
   if(mineOrAdmin) items.push(['feed-post-delete', 'trash', "Eliminar", 'data-danger="1"']);
@@ -14931,6 +14940,7 @@ function renderChatMessage(item){
     "</div>";
   var actions = p.pending ? "" :
     '<div class="chat-msg-actions">' +
+      '<button type="button" class="icon-btn" data-action="chat-react-open" data-post-id="' + p.id + '" aria-label="Reaccionar" title="Reaccionar" aria-haspopup="true" aria-expanded="' + (UI.chatReactFor === p.id ? "true" : "false") + '">' + icon("smile-plus") + "</button>" +
       '<button type="button" class="icon-btn" data-action="chat-menu-open" data-post-id="' + p.id + '" aria-label="Más acciones" title="Más acciones" aria-haspopup="true" aria-expanded="' + (UI.chatMenuFor === p.id ? "true" : "false") + '">' + icon("more-h") + "</button>" +
       renderChatReactionPalette(p) + renderChatMsgMenu(p) +
     "</div>";
@@ -15010,18 +15020,13 @@ function isChatComposerContext(){
    efímero en la consola de Inicio); BAJAR reusa buildDtgState tal cual. */
 var AIBRIDGE_SCOPES = [["","Vivos"],["today","Hoy"],["overdue","Vencidos"],["ytd","Año en curso"],["all","Todos"]];
 
-function renderAiBridgePanel(){
-  var mode = UI.aiBridge.mode;
-  if(mode === "subir") return renderAiBridgeSubir();
-  if(mode === "bajar") return renderAiBridgeBajar();
-  if(mode === "fallback") return renderAiBridgeFallback();
-  return renderAiBridgeMenu();
-}
+function renderAiBridgePanel(){ return ""; /* AI Bridge en pausa. */ }
 
 /* v0.21: la acción principal es UNA sola — copiar el contexto completo. No
    pregunta scope, no pagina, no pide decisiones. "Bajar" (scopes) pasa a
    ser un atajo avanzado. */
 function renderAiBridgeMenu(){
+  return ""; /* Controles de AI Bridge en pausa. */
   var vivos = STATE.tickets.filter(dtgIsVivo).length;
   return (
     '<div class="aibridge-panel aibridge-menu">' +
@@ -15039,6 +15044,7 @@ function renderAiBridgeMenu(){
 /* El portapapeles puede fallar (permisos, navegador embebido, PWA sin
    gesto). El texto nunca se pierde: aquí está, listo para seleccionar. */
 function renderAiBridgeFallback(){
+  return ""; /* Controles de AI Bridge en pausa. */
   var text = UI.aiBridge.fallbackText || "";
   return (
     '<div class="aibridge-panel">' +
@@ -15054,6 +15060,7 @@ function renderAiBridgeFallback(){
 }
 
 function renderAiBridgeSubir(){
+  return ""; /* Controles de AI Bridge en pausa. */
   return (
     '<div class="aibridge-panel">' +
       '<div class="aibridge-panel-header"><button type="button" class="btn-plain" data-action="aibridge-mode" data-value="menu">&larr; AI Bridge</button><h2>Subir bloque</h2></div>' +
@@ -15065,6 +15072,7 @@ function renderAiBridgeSubir(){
 }
 
 function renderAiBridgeBajar(){
+  return ""; /* Controles de AI Bridge en pausa. */
   var ab = UI.aiBridge;
   var scopeBtns = AIBRIDGE_SCOPES.map(function(s){
     return '<button type="button" class="aibridge-scope-btn' + (ab.bajarScope === s[0] && ab.bajarBlock ? " active" : "") + '" data-action="aibridge-scope" data-value="' + s[0] + '">' + s[1] + "</button>";
@@ -15108,19 +15116,17 @@ function renderChatComposerOptions(){
   );
 }
 function renderInicioFeed(){
+  UI.feedFilter = "todo";
+  if(typeof window.matchMedia === "function" && window.matchMedia("(max-width: 700px)").matches) UI.astraLaterOpen = false;
   var header =
     '<div class="home-header chat-header">' +
       '<div class="view-title">' + icon("message", { cls: "view-title-ic" }) + "<h1>Equipo</h1></div>" +
       '<div class="chat-header-actions">' +
         /* v0.21 §13: acción principal de AI Bridge — un toque copia todo el
            contexto. No pregunta scope ni páginas. */
-        '<button type="button" class="btn btn-sm btn-ghost aibridge-quick" data-action="aibridge-copy-context" title="Copiar el contexto de DTG para una IA" aria-label="Copiar el contexto de DTG para una IA">' + icon("sparkles") + "<span>AI Bridge</span></button>" +
         renderFeedFilterBar() +
       "</div>" +
     "</div>";
-  if(UI.feedFilter === "aibridge"){
-    return header + '<div class="feed-scroll" id="feed-scroll">' + renderAiBridgePanel() + "</div>";
-  }
   header += '<div class="astra-utilities"><button type="button" class="astra-later-toggle" data-astra-action="later">Para después</button>' +
     '<input type="search" id="astra-search" aria-label="Buscar mensajes y transcripciones" placeholder="Buscar conversación o transcripción" value="' +
     escapeHtml(UI.astraSearch||'') + '"><button type="button" data-astra-action="search">Buscar</button></div>';
@@ -22302,6 +22308,7 @@ function parseDtgPatch(raw){
    .popover-actions), estado y wiring separados para no complicar el
    mecanismo existente de un solo ticket. */
 function dtgPatchPreviewPopover(){
+  return ""; /* Controles de AI Bridge en pausa. */
   var p = UI.dtgPatchPreview;
   if(!p) return "";
   var totalChanges = 0, sensitiveCount = 0;
@@ -22409,6 +22416,8 @@ function dtgLooksLikePatch(text){
   return firstLine === "DTG_PATCH v1";
 }
 function handleDtgPatchPaste(text){
+  showToast("AI Bridge está en pausa.");
+  return;
   var parsed = parseDtgPatch(text);
   if(!parsed.ok){
     showToast("Patch inválido — línea " + parsed.errors[0].line + ": " + parsed.errors[0].message + (parsed.errors.length > 1 ? " (+" + (parsed.errors.length - 1) + " más, ver detalle abajo)" : ""));
@@ -26229,3 +26238,4 @@ boot();
 
 })();
 </script>
+
