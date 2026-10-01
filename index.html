@@ -4254,6 +4254,8 @@ button.tk-task-open:hover{background:var(--surface-3)}
  .board-search{flex-basis:100%;width:100%;}
  .board-tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:4px 12px;gap:6px;}
  .board-tab{flex:0 0 auto;white-space:nowrap;border-radius:22px;}
+ /* The tabs already identify the responsible person on mobile. */
+ .kanban-column-header.board-col-head{display:none;}
  .board-col{scroll-margin-left:12px;}
  .board-col-cards{padding-bottom:calc(16px + env(safe-area-inset-bottom));}
  .tickets-toolbar-row{gap:8px;flex-wrap:wrap;}
