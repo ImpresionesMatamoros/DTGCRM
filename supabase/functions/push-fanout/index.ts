@@ -10,24 +10,23 @@ function b64u(bytes: Uint8Array) {
   for (const b of bytes) s += String.fromCharCode(b);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
-function decodeB64u(s: string) {
-  const padded = s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - s.length % 4) % 4);
-  return Uint8Array.from(atob(padded), c => c.charCodeAt(0));
-}
+
 async function generateVapid() {
   const kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
   const jwk = await crypto.subtle.exportKey("jwk", kp.privateKey);
-  const x = decodeB64u(jwk.x!);
-  const y = decodeB64u(jwk.y!);
+  const x = Uint8Array.from(atob(jwk.x!.replace(/-/g, "+").replace(/_/g, "/") + "==".slice((jwk.x!.length + 2) % 4)), c => c.charCodeAt(0));
+  const y = Uint8Array.from(atob(jwk.y!.replace(/-/g, "+").replace(/_/g, "/") + "==".slice((jwk.y!.length + 2) % 4)), c => c.charCodeAt(0));
   const pub = new Uint8Array(65); pub[0] = 4; pub.set(x, 1); pub.set(y, 33);
   const webhook = new Uint8Array(32); crypto.getRandomValues(webhook);
   return { publicKey: b64u(pub), privateKey: jwk.d!, webhookSecret: b64u(webhook) };
 }
+
 async function config() {
   const { data, error } = await admin.rpc("push_delivery_config");
   if (error) throw error;
   return Array.isArray(data) ? data[0] : data;
 }
+
 async function ensureConfig() {
   let cfg = await config();
   if (cfg?.vapid_public && cfg?.vapid_private && cfg?.webhook_secret) return cfg;
@@ -43,9 +42,11 @@ async function ensureConfig() {
   });
   if (error) throw error;
   await admin.from("app_settings").upsert({ key: "push_vapid_public", values: [g.publicKey] }, { onConflict: "key" });
+  const baseline = new Date().toISOString();
   const current = await admin.from("app_settings").select("key").eq("key", "chat_unread_baseline").maybeSingle();
-  if (!current.data) await admin.from("app_settings").insert({ key: "chat_unread_baseline", values: [new Date().toISOString()] });
-  return await config();
+  if (!current.data) await admin.from("app_settings").insert({ key: "chat_unread_baseline", values: [baseline] });
+  cfg = await config();
+  return cfg;
 }
 
 Deno.serve(async (req) => {
@@ -75,7 +76,10 @@ Deno.serve(async (req) => {
     for (const t of targets) {
       const { data: unreadData } = await admin.rpc("chat_unread_count_for_user", { p_user_id: t.user_id });
       const unread = Number(unreadData || 0);
-      const kind = t.es_mencion ? "mencion" : t.es_equipo ? "equipo" : "mensaje";
+      const { data: relevantKind, error: kindError } = await admin.rpc("chat_notification_kind_for_user", { p_id: postId, p_user: t.user_id });
+      if (kindError) throw kindError;
+      if (!relevantKind) continue;
+      const kind = relevantKind;
       const payload = JSON.stringify({
         postId,
         autor: t.autor || "Equipo",
@@ -88,7 +92,7 @@ Deno.serve(async (req) => {
         await webpush.sendNotification({
           endpoint: t.endpoint,
           keys: { p256dh: t.p256dh, auth: t.auth }
-        }, payload, { TTL: 60 * 60 * 12, urgency: kind === "mencion" || kind === "equipo" ? "high" : "normal" });
+        }, payload, { TTL: 60, urgency: kind === "mencion" || kind === "equipo" ? "high" : "normal" });
         delivered++;
         await admin.from("push_subscriptions").update({ last_ok_at: new Date().toISOString(), failures: 0 }).eq("endpoint", t.endpoint);
       } catch (err: any) {

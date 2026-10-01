@@ -4111,8 +4111,41 @@ button.tk-task-open:hover{background:var(--surface-3)}
   .chat-msg-actions{position:relative;grid-column:2;justify-self:end;top:auto;right:auto;display:flex;background:transparent;border:0;box-shadow:none}
   .chat-msg-actions .icon-btn{width:36px;height:36px;opacity:.7}
   .chat-msg.is-active .chat-msg-actions{background:transparent;border:0;box-shadow:none}
-  .chat-react-palette,.chat-msg-menu{top:auto;bottom:calc(100% + 6px);max-width:calc(100vw - 32px)}
+  .chat-react-palette{top:auto;bottom:calc(100% + 6px);max-width:calc(100vw - 32px)}
+  .chat-msg-menu{top:auto;bottom:calc(84px + var(--safe-bottom));max-width:calc(100vw - 16px);z-index:1000}
   .chat-react-palette{grid-template-columns:repeat(6,minmax(0,1fr));width:min(360px,calc(100vw - 32px))}
+}
+
+/* Conversation cards, readable message bubbles, attachment queue. */
+.chat-conversations{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;flex-shrink:0}
+.chat-conversation{display:flex;align-items:center;gap:8px;min-width:190px;max-width:250px;text-align:left;padding:8px 10px}
+.chat-conversation-copy{display:flex;flex-direction:column;min-width:0;flex:1}
+.chat-conversation-copy small{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--text-muted);font-size:11px;max-width:150px}
+.chat-conversation-meta{display:flex;align-items:flex-end;flex-direction:column;gap:3px;font-size:10px;color:var(--text-faint)}
+.chat-msg{max-width:90%;background:var(--surface-2);margin-right:auto;margin-bottom:8px;padding:10px 12px;border-radius:14px}
+.chat-msg-mine{margin-left:auto;margin-right:0;background:var(--accent-soft);grid-template-columns:minmax(0,1fr)}
+.chat-msg-mine>.chat-msg-gutter{display:none}
+.chat-msg-mine>.chat-msg-actions{grid-column:1}
+.chat-msg-deleted{font-style:italic;color:var(--text-muted);background:transparent}
+.chat-seen{font-size:10px;color:var(--text-faint);margin-top:3px}
+.chat-file-queue{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;max-height:200px;overflow:auto}
+.chat-file-preview,.chat-file-card{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;max-width:100%;background:var(--surface)}
+.chat-file-preview>span,.chat-file-card>span{display:flex;flex-direction:column;min-width:0;text-align:left}
+.chat-file-preview b,.chat-file-card b{font-size:12px;overflow-wrap:anywhere}
+.chat-file-preview small,.chat-file-card small{font-size:11px;color:var(--text-muted)}
+.chat-file-preview img{width:46px;height:46px;object-fit:cover;border-radius:6px}
+.chat-file-preview.failed{border-color:var(--danger)}
+.chat-client-results{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}
+.chat-client-results button{text-align:left;white-space:normal}
+.chat-msg:focus-within{z-index:5}
+.chat-msg-actions{gap:3px}
+.chat-react-palette{grid-template-columns:repeat(7,50px)}
+@media(max-width:700px){
+ .chat-msg{max-width:96%;padding:8px 10px}
+ .chat-conversation{min-width:170px}
+ .chat-conversations{padding:6px 10px}
+ .chat-react-palette{grid-template-columns:repeat(7,minmax(0,1fr))}
+ .chat-react-opt-label{font-size:10px}
 }
 </style>
 <script src="mobile-viewport.js?v=1"></script>
@@ -5149,6 +5182,9 @@ async function saveMyColor(colorId){
    siguiente persona que inicia sesión vería, por un instante, el ticket o
    la vista que dejó abierta la anterior. */
 async function signOut(){
+  Object.keys(UI.chatFileDrafts||{}).forEach(function(key){(UI.chatFileDrafts[key]||[]).forEach(function(x){if(x.previewUrl)URL.revokeObjectURL(x.previewUrl);});});
+  CHAT_RECEIPTS={};CHAT_RECEIPTS_LAST=0;
+  Object.keys(chatScopeSeenTimers||{}).forEach(function(key){clearTimeout(chatScopeSeenTimers[key]);});chatScopeSeenTimers={};
   /* v0.23: soltar la suscripción push ANTES de salir. Si no, el siguiente
      que use esta computadora recibiría los avisos de quien se fue. */
   try{ await pushSoltarDispositivo(); }catch(e){}
@@ -5252,7 +5288,7 @@ async function fetchTicketMarkers(){
 async function fetchTeamPosts(){
   try{
     /* X1.9: selectAll ya revienta si la consulta falla. */
-    return { rows: await selectAll("team_posts", { isNull: "deleted_at", order: "created_at", ascending: false }), missing: false };
+    return { rows: await selectAll("team_posts", { order: "created_at", ascending: false }), missing: false };
   }catch(e){
     return { rows: [], missing: true };
   }
@@ -5909,6 +5945,7 @@ function dtgRtSet(estado, detalle){
 }
 /* El chat aplica el payload al instante; el resto solo pide un refresh. */
 function dtgRtHandler(tabla){
+  if(tabla==="chat_read_state")return function(){chatReceiptInvalidated();};
   if(tabla !== "team_posts") return scheduleRefresh;
   /* v0.20 — chat: un mensaje nuevo de otra persona aparece AL INSTANTE con
      el payload del propio evento (Realtime ya aplica RLS), sin esperar el
@@ -6017,7 +6054,9 @@ function unsubscribeRealtime(){
 }
 
 function applyTeamPostRealtime(payload){
-  if(!payload || payload.eventType !== "INSERT" || !payload.new) return;
+  if(!payload||!payload.new)return;
+  if(payload.eventType==="UPDATE"){var updated=mapTeamPostRow(payload.new);STATE.teamPosts=STATE.teamPosts.map(function(p){return p.id===updated.id?updated:p;});if(!UI.displayMode)renderKeepingLiveInputs();return;}
+  if(payload.eventType!=="INSERT")return;
   var row = payload.new;
   if(row.deleted_at) return;
   if(STATE.teamPosts.some(function(p){ return p.id === row.id; })) return;
@@ -7171,20 +7210,15 @@ function ticketChatPosts(){
   if(UI.selectedTicketId&&!cid)return [];
   return (STATE.teamPosts||[]).filter(function(p){return (p.conversationId||null)===(cid||null)&&!p.pending&&!isPostExpired(p)&&(!UI.astraThreadRoot?!p.threadRootId:p.id===UI.astraThreadRoot||p.threadRootId===UI.astraThreadRoot);});
 }
-function ticketFileMarkup(p){return p.filePath?'<button type="button" class="btn btn-sm" data-ticket-ux="file-open" data-post="'+escapeHtml(p.id)+'">Archivo · '+escapeHtml(p.fileName||'Descargar')+'</button>':'';}
+function ticketFileMarkup(p){
+  if(p.deletedAt||!p.filePath)return "";
+  var ext=(p.fileName||"").split(".").pop().toUpperCase();
+  return '<button type="button" class="chat-file-card" data-ticket-ux="file-open" data-post="'+escapeHtml(p.id)+'">'+icon("file")+'<span><b>'+escapeHtml(p.fileName||"Archivo")+'</b><small>'+escapeHtml(ext)+' · '+chatFileSize(p.fileSize)+'</small></span>'+icon("arrow-down")+'</button>';
+}
 async function ticketPublishFile(text){
-  if(UI.feedComposerBusy||!UI.ticketChatFile)return false;
-  var file=UI.ticketChatFile,cid=UI.astraConversationId,ctx=cid,reply=UI.astraReplyTo,root=UI.astraThreadRoot,mm=mentionsForText(text);
-  if(!cid)return false;
-  UI.feedComposerBusy=true;
-  var path=cid+'/'+uuid4();
-  try{
-    var up=await sb.storage.from('chat-private').upload(path,file,{contentType:file.type||'application/octet-stream'});if(up.error)throw up.error;
-    var row=await createTeamPostCore({text:text,conversationId:cid,replyToId:reply,threadRootId:root,refs:astraRefsForText(text),mentions:mm.mentions,filePath:path,fileName:file.name,fileMime:file.type});
-    STATE.teamPosts.unshift(mapTeamPostRow(row));DTG_POSTS_AVISADOS[row.id]=1;
-    if(UI.astraConversationId===ctx){UI.ticketChatFile=null;UI.astraReplyTo=null;UI.chatMention=null;UI.chatMentionPicks=[];UI.astraRefPicks=[];restoreComposerText('');UI.chatStickBottom=true;render();}
-    return true;
-  }catch(e){userError('Enviar archivo',e);return false;}finally{UI.feedComposerBusy=false;}
+  if(!UI.ticketChatFile)return false;
+  chatQueueFiles([UI.ticketChatFile]);UI.ticketChatFile=null;
+  return chatPublishBatch(text);
 }
 document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-ticket-ux]');if(!b)return;
@@ -7215,7 +7249,7 @@ document.addEventListener('mousedown',function(e){
   // Elegir una mención/sugerencia no debe quitarle el foco al composer (el teclado móvil se cerraría).
   if(e.target.closest&&e.target.closest('.mention-pop,.slash-menu,.smart-actions'))e.preventDefault();
 });
-document.addEventListener('change',function(e){if(e.target.id!=='ticket-chat-file')return;var f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>25*1024*1024){showToast('El archivo debe ser menor a 25 MB.');return;}UI.ticketChatFile=f;e.target.value='';renderKeepingLiveInputs();});
+document.addEventListener('change',function(e){if(e.target.id!=='ticket-chat-file')return;var files=Array.from(e.target.files||[]);e.target.value='';chatQueueFiles(files);});
 // Al saltar de campo con Enter se selecciona el contenido (igual que con Tab): escribir reemplaza el valor por defecto.
 function tkFocusField(el){el.focus();try{if(el.select&&(el.tagName==='TEXTAREA'||/^(text|number|search|tel|email|url)$/.test(el.type)))el.select();}catch(e){}}
 // Single owner for Enter in explicit forms. Native buttons/selects and multiline
@@ -7999,7 +8033,7 @@ function chatPrefs(){
   return {
     notifMensajes: s.notifMensajes !== false,
     notifMenciones: s.notifMenciones !== false,
-    notifPush: s.notifPush === true,
+    notifAfterHours:s.notifAfterHours===true, notifPush: s.notifPush === true,
     sonidos: s.sonidos !== false
   };
 }
@@ -8008,7 +8042,7 @@ function mapChatStateRow(row){
   return {
     lastSeenAt: row.last_seen_at || null, lastMentionSeenAt: row.last_mention_seen_at || null,
     notifMensajes: row.notif_mensajes !== false, notifMenciones: row.notif_menciones !== false,
-    notifPush: row.notif_push === true, sonidos: row.sonidos !== false
+    notifAfterHours:row.notif_after_hours===true, notifPush: row.notif_push === true, sonidos: row.sonidos !== false
   };
 }
 async function fetchChatState(){
@@ -8044,7 +8078,7 @@ async function saveChatPrefs(patch){
     var row = {
       user_id: currentActorId(),
       notif_mensajes: STATE.chatState.notifMensajes, notif_menciones: STATE.chatState.notifMenciones,
-      notif_push: STATE.chatState.notifPush, sonidos: STATE.chatState.sonidos, updated_at: new Date().toISOString()
+      notif_after_hours:STATE.chatState.notifAfterHours===true, notif_push: STATE.chatState.notifPush, sonidos: STATE.chatState.sonidos, updated_at: new Date().toISOString()
     };
     var r = await sb.from("chat_user_state").upsert(row, { onConflict: "user_id" });
     if(r.error) throw r.error;
@@ -8233,13 +8267,16 @@ function onNuevoMensajeChat(post, opts){
   var esMencion = postMencionaA(post, yo) && !post.mentionsAll;
   var esEquipo = !!post.mentionsAll;
   var prefs = chatPrefs();
-  var quiere = esMencion || esEquipo ? prefs.notifMenciones : prefs.notifMensajes;
-  if(!quiere) return;
+  var relevant=chatRelevantKind(post,yo);
+  if(!relevant||!chatWithinNotificationHours(new Date(),prefs.notifAfterHours))return;
+  if(Date.now()-Date.parse(post.createdAt)>300000)return;
+  var quiere=relevant==="personal"?prefs.notifMensajes:prefs.notifMenciones;
+  if(!quiere)return;
 
   /* Una sola pestaña habla por todas. */
   if(!dtgTabEsVocera()) return;
 
-  var kind = esMencion ? "mencion" : post.conversationId && !conversationTicketId(post.conversationId) ? "personal" : esEquipo ? "equipo" : "mensaje";
+  var kind = relevant;
   var viendo = chatViendoConversacion(post);
   /* Si ya está mirando la conversación no hace falta ninguna alarma. */
   if(!viendo){
@@ -8468,7 +8505,7 @@ function wirePushMessages(){
    Derivados, nunca guardados aparte: se comparan contra la marca de lectura
    que vive en chat_user_state (y que viaja entre dispositivos). */
 function chatScopeReadRow(conversationId){
-  return (STATE.chatReadState || []).find(function(r){ return (r.conversationId || null) === (conversationId || null); }) || null;
+  return (STATE.chatReadState || []).find(function(r){ return r.userId===currentActorId() && (r.conversationId || null) === (conversationId || null); }) || null;
 }
 function chatUnreadBaseline(){
   var v = STATE.meta && STATE.meta.chatUnreadBaseline;
@@ -8528,7 +8565,9 @@ var chatScopeSeenTimers={};
 function chatMarkScopeSeen(conversationId, opts){
   opts=opts||{};
   var ts=chatNewestTsForScope(conversationId);
-  if(!ts) return;
+  if(!ts)return;
+  var readEl=document.getElementById("chat-scroll");
+  if(!opts.force && (document.hidden||UI.astraThreadRoot||!readEl||(readEl.getAttribute("data-read-scope")||"team")!==(conversationId||"team")||readEl.scrollHeight-readEl.scrollTop-readEl.clientHeight>80))return;
   var row=chatScopeReadRow(conversationId);
   if(row && row.lastSeenAt && new Date(row.lastSeenAt).getTime() >= new Date(ts).getTime() && !opts.force) return;
   if(row){
@@ -8700,8 +8739,9 @@ function renderChatPrefsPanel(){
     '<div class="cierre-modal-overlay" id="chat-prefs-overlay">' +
       '<div class="cierre-modal chat-prefs">' +
         '<div class="cierre-modal-title">Avisos del equipo</div>' +
-        fila("notifMensajes", "Mensajes del equipo", "Cualquier mensaje nuevo en la conversación.", p.notifMensajes) +
-        fila("notifMenciones", "Cuando te mencionan", "Solo si alguien escribe @" + escapeHtml(currentActorName() || "tu nombre") + " o @Equipo.", p.notifMenciones) +
+        fila("notifMensajes", "Mensajes directos", "Avisos de conversaciones personales.", p.notifMensajes) +
+        fila("notifMenciones", "Cuando te mencionan", "Menciones explícitas y respuestas en las que participas.", p.notifMenciones) +
+        fila("notifAfterHours","Fuera de horario","Recibir avisos relevantes fuera de 7 AM–6 PM (Brownsville).",p.notifAfterHours) +
         fila("sonidos", "Sonidos", "Puedes silenciar sin dejar de recibir mensajes.", p.sonidos) +
         '<div class="pref-sep"></div>' +
         '<div class="pref-row pref-row-push"><span><b>Avisos con la app cerrada</b><small>' + escapeHtml(estTexto) + "</small></span>" +
@@ -8738,7 +8778,7 @@ function renderChatPrefsPanel(){
 
 function tkComposerHasContent(){
   var inp=document.getElementById('composer-input');
-  return !!(inp&&inp.value.trim())||!!(isChatComposerContext()&&(UI.feedComposerPhoto||UI.astraAudioBlob||UI.ticketChatFile));
+  return !!(inp&&inp.value.trim())||!!(isChatComposerContext()&&(chatHasAttachments()||UI.astraAudioBlob));
 }
 /* Envío y micrófono comparten lugar: sin contenido se ofrece grabar, con
    contenido enviar. Una sola función decide, para que ningún render la pise. */
@@ -8781,20 +8821,22 @@ function renderComposer(){
     }
     if(UI.astraAudioBlob && !recording) chatExtra += '<div class="tk-audio-ready">' + tkAudioBubble({ key: "local", seconds: UI.astraAudioSeconds }) +
       '<button type="button" class="icon-btn" data-astra-action="audio-clear" aria-label="Descartar audio" title="Descartar audio">' + icon("trash") + '</button></div>';
-    if(!hasTicket && !(UI.astraConversationId)) chatAttach = '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar foto" title="Adjuntar foto">' + icon("camera") + '</button>';
-    chatAttach += '<input type="file" id="feed-composer-photo-input" accept="image/*" hidden>';
+    chatAttach = '<button type="button" class="icon-btn chat-attach-btn" data-action="feed-composer-attach" aria-label="Adjuntar fotos o archivos" title="Adjuntar fotos o archivos">' + icon("plus") + '</button>';
+    chatAttach += '<input type="file" id="feed-composer-photo-input" multiple hidden>';
     if(hasTicket){
-      chatAttach += '<input type="file" id="ticket-chat-file" hidden>';
+      chatAttach += '<input type="file" id="ticket-chat-file" multiple hidden>';
       if(UI.ticketChatFile) chatExtra += '<div class="astra-compose-reply">' + escapeHtml(UI.ticketChatFile.name) + '<button type="button" data-ticket-ux="file-clear" aria-label="Quitar archivo">×</button></div>';
     }
     var optsOn = UI.chatOptionsOpen || UI.feedComposerPin !== "none" || UI.feedComposerExpires !== "never";
     chatOpts = UI.astraConversationId || hasTicket ? "" : '<button type="button" class="icon-btn chat-options-btn' + (optsOn ? " active" : "") + '" data-action="chat-options-toggle" aria-expanded="' + (UI.chatOptionsOpen ? "true" : "false") + '" aria-label="Opciones del mensaje: fijar o vencimiento" title="Fijar / vencimiento">' + icon("pin") + "</button>";
     var ph = UI.feedComposerPhoto;
     if(ph) chatExtra += '<div class="chat-attach-preview"><img src="' + escapeHtml(ph.previewUrl) + '" alt=""><span>Foto lista para enviar</span><button type="button" class="icon-btn" data-action="feed-composer-remove-photo" aria-label="Quitar foto" title="Quitar foto">' + icon("x") + "</button></div>";
+    chatExtra += chatQueuedMarkup();
+    plusBtn="";
     if(UI.chatOptionsOpen) chatExtra += renderChatComposerOptions();
     if(ASTRA_CONVERSATIONS_AVAILABLE) micBtn = '<button type="button" id="composer-mic" class="tk-mic' + (UI.astraStarting ? ' busy' : '') + '" data-astra-action="audio-start" aria-label="Grabar mensaje de voz" title="Grabar mensaje de voz"' + (UI.astraStarting ? ' aria-busy="true" disabled' : '') + '>' + icon("mic") + '</button>';
   }
-  var hasContent = chatMode && !!(UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile);
+  var hasContent = chatMode && !!(chatHasAttachments() || UI.astraAudioBlob);
   var showMic = !!micBtn && !hasContent;
   var recBar = '';
   if(recording){
@@ -14255,7 +14297,8 @@ var REACTIONS = [
   { type: "surprised", emoji: "👀", label: "Sorpresa" },
   { type: "oh_no",     emoji: "😱", label: "¡Oh no!" },
   { type: "im_in",     emoji: "🙋", label: "Me apunto" },
-  { type: "confused",  emoji: "🤔", label: "No entiendo" }
+  { type: "confused",  emoji: "🤔", label: "No entiendo" },
+  { type: "ack", emoji: "👀", label: "Enterado" }
 ];
 /* Ilustraciones de reacción — planas, color controlado, 24×24, legibles a
    18-20px. Cada una expresa su id sin depender del emoji del sistema:
@@ -14270,7 +14313,7 @@ var REACTION_ART = {
   confused: '<circle cx="10.6" cy="13" r="9" fill="#FBBF24"/><circle cx="7.6" cy="11.6" r="1.15" fill="#3B2A06"/><circle cx="13.4" cy="11.1" r="1.15" fill="#3B2A06"/><path d="M7.4 17.1c1.9-1.1 4-1.3 6.2-.5" stroke="#3B2A06" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M17.3 3.3a2.6 2.6 0 0 1 4.7 1.6c0 1.7-2.3 2.1-2.3 3.5" stroke="#4F8CFF" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="19.7" cy="10.6" r="1.05" fill="#4F8CFF"/>'
 };
 function reactionArt(type, size){
-  var art = REACTION_ART[type];
+  var art = REACTION_ART[type==="ack"?"surprised":type];
   if(!art) return "";
   return '<svg class="reaction-art" viewBox="0 0 24 24" width="' + (size||18) + '" height="' + (size||18) + '" aria-hidden="true" focusable="false">' + art + "</svg>";
 }
@@ -14424,9 +14467,7 @@ function closeFeedComposer(){
   render();
 }
 function setFeedComposerPhoto(file){
-  if(UI.feedComposerPhoto && UI.feedComposerPhoto.previewUrl){ try{ URL.revokeObjectURL(UI.feedComposerPhoto.previewUrl); }catch(e){} }
-  UI.feedComposerPhoto = file ? { file: file, previewUrl: URL.createObjectURL(file) } : null;
-  render();
+  if(file)chatQueueFiles([file]);
 }
 
 /* v0.20 — núcleo ÚNICO de "publicar en el chat del equipo" (team_posts).
@@ -14436,18 +14477,22 @@ function setFeedComposerPhoto(file){
    ticketId }. Devuelve la fila insertada o lanza el error real. */
 async function createTeamPostCore(opts){
   opts = opts || {};
+  var sendingActor=currentActorId();
   var wantsMegapin = opts.pinLevel === "megapin" && isAdmin();
   var pinLevel = opts.pinLevel === "pin" ? "pin" : "none";
-  var imagePath = null;
+  var imagePath = null, filePath=opts.filePath||null, uploadedStorage=null;
+  if(opts.file){filePath=(opts.conversationId||"team")+"/"+uuid4();var fileUpload=await sb.storage.from("chat-private").upload(filePath,opts.file,{contentType:opts.file.type||"application/octet-stream"});if(fileUpload.error)throw fileUpload.error;uploadedStorage={bucket:"chat-private",path:filePath};opts.fileName=opts.file.name;opts.fileMime=opts.file.type;}
   if(opts.photoFile){
     var blob = await resizeImageToBlob(opts.photoFile, 1280, 0.8);
     imagePath = (opts.conversationId ? opts.conversationId+"/" : "feed/") + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
     var up = await sb.storage.from(opts.conversationId ? 'chat-private' : FILES_BUCKET).upload(imagePath, blob, { contentType: "image/jpeg" });
     if(up.error) throw up.error;
+    uploadedStorage={bucket:opts.conversationId?'chat-private':FILES_BUCKET,path:imagePath};
   }
+  if(currentActorId()!==sendingActor){if(uploadedStorage)await sb.storage.from(uploadedStorage.bucket).remove([uploadedStorage.path]);throw new Error("La sesión cambió durante el envío.");}
   var row = {
     author_user_id: currentActorId(), author_name_snapshot: currentActorName() || "",
-    text: opts.text || "", image_storage_path: imagePath, ticket_id: opts.ticketId || null,
+    text: opts.text || "", no_ticket_required:!!opts.noTicketRequired, image_storage_path: imagePath, ticket_id: opts.ticketId || null,
     conversation_id: opts.conversationId || null, reply_to_id: opts.replyToId || null,
     thread_root_id: opts.threadRootId || null, references_data: opts.refs || [],
     audio_storage_path: opts.audioPath || null, audio_mime: opts.audioMime || null,
@@ -14459,7 +14504,7 @@ async function createTeamPostCore(opts){
   };
   /* v0.23: las menciones elegidas del menú viajan con el mensaje. Si 0019
      no está aplicada, se reintenta sin ellas: el mensaje SIEMPRE se manda. */
-  if(opts.filePath){row.file_storage_path=opts.filePath;row.file_name=opts.fileName;row.file_mime=opts.fileMime||null;}
+  if(filePath){row.file_storage_path=filePath;row.file_name=opts.fileName;row.file_mime=opts.fileMime||null;row.file_size=opts.fileSize==null?null:opts.fileSize;}
   if(opts.mentions && opts.mentions.length) row.mentions = opts.mentions;
   if(opts.mentionsAll) row.mentions_all = true;
   var ins = await sb.from("team_posts").insert(row).select().single();
@@ -14472,7 +14517,7 @@ async function createTeamPostCore(opts){
     adminNote("Falta aplicar la migración 0019: las menciones no se están guardando.", ins.error);
     ins = await sb.from("team_posts").insert(row).select().single();
   }
-  if(ins.error) throw ins.error;
+  if(ins.error){if(uploadedStorage)await sb.storage.from(uploadedStorage.bucket).remove([uploadedStorage.path]);throw ins.error;}
   if(wantsMegapin && ins.data && ins.data.id){
     /* team_posts_insert (0013) nunca acepta megapin directo en el INSERT —
        siempre vía set_post_pin(). Si esto falla, el mensaje ya se publicó. */
@@ -14502,7 +14547,8 @@ function resolveChatTicketLink(text){
 function mapTeamPostRow(row){
   return {
     id: row.id, authorUserId: row.author_user_id || null, autor: row.author_name_snapshot || "",
-    text: row.text || "", imageStoragePath: row.image_storage_path || null,
+    text: row.deleted_at ? "" : row.text || "", imageStoragePath: row.deleted_at ? null : row.image_storage_path || null,
+    deletedAt:row.deleted_at||null,deletedBy:row.deleted_by||null,fileSize:row.file_size==null?null:Number(row.file_size),
     ticketId: row.ticket_id || null, noTicketRequired: !!row.no_ticket_required,
     pinLevel: row.pin_level || "none", pinnedBy: row.pinned_by || "", pinnedAt: row.pinned_at || null,
     expiresAt: row.expires_at || null, createdAt: row.created_at,
@@ -14512,9 +14558,9 @@ function mapTeamPostRow(row){
     mentionsAll: row.mentions_all === true,
     conversationId: row.conversation_id || null, replyToId: row.reply_to_id || null,
     threadRootId: row.thread_root_id || null, refs: Array.isArray(row.references_data) ? row.references_data : [],
-    audioPath: row.audio_storage_path || null, audioMime: row.audio_mime || null,
-    audioSeconds: row.audio_seconds || null, transcript: row.transcript || null,
-    transcriptStatus: row.transcript_status || null, filePath:row.file_storage_path||null,fileName:row.file_name||null,fileMime:row.file_mime||null
+    audioPath: row.deleted_at ? null : row.audio_storage_path || null, audioMime: row.audio_mime || null,
+    audioSeconds: row.audio_seconds || null, transcript: row.deleted_at ? null : row.transcript || null,
+    transcriptStatus: row.transcript_status || null, filePath:row.deleted_at?null:row.file_storage_path||null,fileName:row.deleted_at?null:row.file_name||null,fileMime:row.deleted_at?null:row.file_mime||null
   };
 }
 /* Enviar desde el composer del chat: optimista (el mensaje aparece al
@@ -14523,6 +14569,7 @@ function mapTeamPostRow(row){
    nunca se pierde lo que alguien escribió. */
 async function publishChatMessage(text){
   text = String(text || "").trim();
+  if(chatQueuedFiles().length)return chatPublishBatch(text);
   var photo = UI.feedComposerPhoto;
   if(!text && !photo && !UI.astraAudioBlob && !UI.ticketChatFile) return false;
   if(UI.ticketChatFile&&(photo||UI.astraAudioBlob)){showToast('Envía el archivo separado de la foto o audio.');return false;}
@@ -14855,7 +14902,7 @@ function buildChatTimeline(filter){
   return items;
 }
 function chatPinnedPosts(){
-  return STATE.teamPosts.filter(function(p){ return !p.conversationId && !p.threadRootId && p.pinLevel && p.pinLevel !== "none" && !isPostExpired(p); })
+  return STATE.teamPosts.filter(function(p){ return !p.deletedAt && !p.conversationId && !p.threadRootId && p.pinLevel && p.pinLevel !== "none" && !isPostExpired(p); })
     .sort(function(a, b){
       if(a.pinLevel !== b.pinLevel) return a.pinLevel === "megapin" ? -1 : 1;
       return new Date(b.pinnedAt || b.createdAt).getTime() - new Date(a.pinnedAt || a.createdAt).getTime();
@@ -14891,7 +14938,7 @@ function renderChatReactions(p){
     var list = byType[meta.type];
     var on = mine === meta.type;
     var names = list.map(function(r){ return r.autor || "Alguien"; }).join(", ");
-    return '<button type="button" class="reaction-pill' + (on ? " on" : "") + '" data-action="feed-reaction" data-target-type="post" data-target-id="' + escapeHtml(String(p.id)) + '" data-reaction="' + meta.type + '" aria-pressed="' + (on?"true":"false") + '" title="' + escapeHtml(meta.label + " · " + names) + '" aria-label="' + escapeHtml(meta.label + ", " + list.length + (on ? ", incluye tu reacción" : "")) + '">' + reactionArt(meta.type, 16) + '<span class="reaction-count">' + list.length + "</span></button>";
+    return '<button type="button" class="reaction-pill' + (on ? " on" : "") + '" data-action="feed-reaction" data-target-type="post" data-target-id="' + escapeHtml(String(p.id)) + '" data-reaction="' + meta.type + '" aria-pressed="' + (on?"true":"false") + '" title="' + escapeHtml(meta.label + " · " + names) + '" aria-label="' + escapeHtml(meta.label + ", " + list.length + (on ? ", incluye tu reacción" : "")) + '">' + reactionArt(meta.type, 16) + '<span class="reaction-count">' + (meta.type==='ack'?escapeHtml(names):list.length) + "</span></button>";
   }).join("");
   return pills ? '<div class="chat-reactions">' + pills + "</div>" : "";
 }
@@ -14930,6 +14977,7 @@ function renderChatMsgMenu(p){
 }
 function renderChatMessage(item){
   var p = item.post;
+  if(p.deletedAt)return chatDeletedMarkup(p);
   var focoPost = UI.chatFocusPost === p.id;
   var t = p.ticketId ? findTicket(p.ticketId) : null;
   var mine = p.authorUserId && p.authorUserId === currentActorId();
@@ -14957,6 +15005,7 @@ function renderChatMessage(item){
     "</div>";
   var actions = p.pending ? "" :
     '<div class="chat-msg-actions">' +
+      '<button type="button" class="icon-btn" data-action="feed-reaction" data-target-type="post" data-target-id="'+p.id+'" data-reaction="ack" title="Enterado" aria-label="Enterado" aria-pressed="'+(currentUserReactionType('post',p.id)==='ack')+'">'+reactionArt('ack',18)+'</button>' +
       '<button type="button" class="icon-btn" data-action="astra-create-task" data-post-id="' + p.id + '" aria-label="Crear tarea desde mensaje" title="Crear tarea">' + icon("check") + "</button>" +
       '<button type="button" class="icon-btn" data-action="chat-react-open" data-post-id="' + p.id + '" aria-label="Reaccionar" title="Reaccionar" aria-haspopup="true" aria-expanded="' + (UI.chatReactFor === p.id ? "true" : "false") + '">' + icon("smile-plus") + "</button>" +
       '<button type="button" class="icon-btn" data-action="chat-menu-open" data-post-id="' + p.id + '" aria-label="Más acciones" title="Más acciones" aria-haspopup="true" aria-expanded="' + (UI.chatMenuFor === p.id ? "true" : "false") + '">' + icon("more-h") + "</button>" +
@@ -14977,7 +15026,7 @@ function renderChatMessage(item){
         img + astraRenderAudio(p) + ticketFileMarkup(p) +
         (t ? '<div class="chat-msg-ticket">' + renderChatTicketChip(t) + "</div>" : "") +
         resolution + relacionar + astraRenderLinkPicker(p) + astraRemindChoices(p) +
-        renderChatReactions(p) +
+        renderChatReactions(p) + chatSeenMarkup(p) +
       "</div>" + actions +
     "</div>"
   );
@@ -15138,7 +15187,7 @@ function renderInicioFeed(){
   if(typeof window.matchMedia === "function" && window.matchMedia("(max-width: 700px)").matches) UI.astraLaterOpen = false;
   var header =
     '<div class="home-header chat-header">' +
-      '<div class="view-title">' + icon("message", { cls: "view-title-ic" }) + "<h1>Equipo</h1></div>" +
+      '<div class="view-title">' + icon("message", { cls: "view-title-ic" }) + '<h1>'+escapeHtml(chatContextName())+'</h1></div>' +
       '<div class="chat-header-actions">' +
         /* v0.21 §13: acción principal de AI Bridge — un toque copia todo el
            contexto. No pregunta scope ni páginas. */
@@ -16344,6 +16393,7 @@ function render(){
   hydrateImages();
   astraHydrateAudios();
   restoreChatScroll(chatSnap);
+  var readNode=document.getElementById("chat-scroll");if(readNode){readNode.setAttribute("data-read-scope",chatCurrentScopeId()||"team");chatMarkScopeSeen(chatCurrentScopeId());chatRefreshReceipts();}
   /* §128: un solo punto sincroniza la URL con "qué ticket está abierto
      ahora" — se apoya en que TODA navegación de la app ya termina en
      render(), así que ninguna función de navegación (goHome/goToTickets/
@@ -16818,6 +16868,7 @@ function restoreComposerText(v){
   var el = document.getElementById("composer-input");
   if(!el) return;
   el.value = v;
+  UI.chatTextDrafts=UI.chatTextDrafts||{};UI.chatTextDrafts[el.getAttribute("data-ctx")||""]={value:v};
   el.focus();
   el.selectionStart = el.selectionEnd = v.length;
   var sendBtn = document.getElementById("composer-send");
@@ -16840,15 +16891,19 @@ function restoreComposerText(v){
    la restaura después, sin tocar STATE/UI ni la lógica de guardado. */
 function captureComposerDraft(){
   var el = document.getElementById("composer-input");
-  if(!el || !el.value) return null;
+  if(!el)return null;
   var sel = null;
   try{ sel = [el.selectionStart, el.selectionEnd]; }catch(e){}
-  return { ctx: el.getAttribute("data-ctx") || "", value: el.value, sel: sel, focused: document.activeElement === el };
+  var draft={ ctx: el.getAttribute("data-ctx") || "", value: el.value, sel: sel, focused: document.activeElement === el };
+  UI.chatTextDrafts=UI.chatTextDrafts||{};UI.chatTextDrafts[draft.ctx]=draft;
+  return draft;
 }
 function restoreComposerDraft(snap){
-  if(!snap) return;
   var el = document.getElementById("composer-input");
-  if(!el || (el.getAttribute("data-ctx") || "") !== snap.ctx || el.value) return;
+  if(!el)return;
+  var ctx=el.getAttribute("data-ctx")||"";
+  if(!snap||snap.ctx!==ctx)snap=(UI.chatTextDrafts||{})[ctx];
+  if(!snap||el.value)return;
   el.value = snap.value;
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 120) + "px";
@@ -17204,7 +17259,8 @@ async function createTicketCore(initialData){
   initialData = initialData || {};
   try{
     var row = {};
-    if(initialData.cliente) row.cliente = initialData.cliente;
+    var known=initialData.clienteId?(STATE.clientes||[]).find(function(c){return c.id===initialData.clienteId;}):resolveClienteExactMatch(initialData.cliente||"");
+    if(known){row.cliente_id=known.id;row.cliente=known.nombre;}else if(initialData.cliente)row.cliente=initialData.cliente;
     var ins = await sb.from("tickets").insert(row).select().single();
     if(ins.error) throw ins.error;
     var newId = ins.data.id;
@@ -17623,7 +17679,7 @@ async function submitNote(){
   var text = input.value.trim();
   if(!text){
     /* v0.20: en el chat, una foto sola (sin texto) también se puede enviar. */
-    if(isChatComposerContext() && (UI.feedComposerPhoto || UI.astraAudioBlob || UI.ticketChatFile)) publishChatMessage("");
+    if(isChatComposerContext() && (chatHasAttachments() || UI.astraAudioBlob)) publishChatMessage("");
     return;
   }
   if(isChatComposerContext() && UI.astraAudioBlob){
@@ -18849,7 +18905,7 @@ function handleComposerPasteEvent(e){
   }
   if(!imageFiles.length) return;
   e.preventDefault();
-  addImagesToPhotoBatch(imageFiles);
+  if(isChatComposerContext())chatQueueFiles(imageFiles);else addImagesToPhotoBatch(imageFiles);
 }
 
 /* Quitar una foto de la selección ANTES de subir (sección 11) — nunca
@@ -23039,9 +23095,9 @@ function wireEvents(){
   var feedPhotoInput = document.getElementById("feed-composer-photo-input");
   if(feedPhotoInput){
     feedPhotoInput.addEventListener("change", function(){
-      var f = feedPhotoInput.files && feedPhotoInput.files[0];
-      if(f) setFeedComposerPhoto(f);
+      var files = Array.from(feedPhotoInput.files||[]);
       feedPhotoInput.value = "";
+      chatQueueFiles(files);
     });
   }
   var feedRelacionarInput = document.getElementById("feed-relacionar-input");
@@ -25553,7 +25609,7 @@ function astraReviewOverlay(){
     (items.length>8?'<small>Y '+(items.length-8)+' mensajes más</small>':'')+'</div></details>'+
     (p.conversationId&&!conversationTicketId(p.conversationId)?'<p>Chat personal: los demás mensajes permanecen privados. Solo se guarda lo que confirmes aquí.</p>':'')+
     (r.kind==='ticket'
-      ? '<label>Cliente (opcional)<input id="astra-review-client" value="'+escapeHtml(clientRef?clientRef.label:'')+'" placeholder="Sin cliente"></label>'+
+      ? chatClientPicker(r,clientRef)+
         '<label><input type="checkbox" id="astra-review-excerpt"> Agregar el texto del mensaje como nota visible en el ticket</label>'
       : '<label>Ticket<select id="astra-review-ticket"><option value="">Seleccionar ticket</option>'+
         candidates.map(function(t){return '<option value="'+escapeHtml(t.id)+'"'+
@@ -25578,7 +25634,7 @@ async function astraConfirmReview(){
     if(r.kind==='ticket'){
       var cliente=(document.getElementById('astra-review-client').value||'').trim();
       var include=document.getElementById('astra-review-excerpt').checked;
-      var id=await createTicketCore({cliente:cliente});
+      var id=await createTicketCore({cliente:cliente,clienteId:r.clientId||null});
       if(!id)return;
       if(include){
         var note=await sb.from('bitacora').insert({ticket_id:id,tipo:'nota',autor:currentActorName()||null,
@@ -25992,17 +26048,18 @@ function astraCheckReminders(){
 setInterval(astraCheckReminders,30000);
 function astraPost(id){ return (STATE.teamPosts || []).find(function(p){ return p.id === id; }); }
 function astraConversationTabs(){
-  if(!ASTRA_CONVERSATIONS_AVAILABLE) return "";
-  var me = currentActorId();
-  var peers = activeAssignableProfiles().filter(function(p){ return p.id !== me; });
-  var teamUnread=chatUnreadForConversation(null);
-  var current=(STATE.conversations||[]).find(function(x){return x.id===UI.astraConversationId;});
-  var currentPeer=current&&current.kind==="direct"?(current.member_a===me?current.member_b:current.member_a):null;
-  return '<nav class="astra-tabs" aria-label="Conversaciones"><button type="button" data-astra-action="team" class="astra-tab' +
-    (!UI.astraConversationId ? ' active' : '') + '">Equipo'+(teamUnread?'<span class="chat-peer-badge">'+teamUnread+'</span>':'')+'</button>' +
-    peers.map(function(p){ var n=chatUnreadForPeer(p.id); return '<button type="button" class="astra-tab'+(currentPeer===p.id?' active':'')+'" data-astra-action="dm" data-user-id="' +
-      escapeHtml(p.id) + '">' + escapeHtml(p.displayName) + (n?'<span class="chat-peer-badge">'+n+'</span>':'') + '</button>'; }).join("") + '</nav>';
+  if(!ASTRA_CONVERSATIONS_AVAILABLE)return "";
+  var me=currentActorId(),peers=activeAssignableProfiles().filter(function(p){return p.id!==me;});
+  function latest(scope){return (STATE.teamPosts||[]).filter(function(p){return !p.threadRootId&&!p.pending&&(p.conversationId||null)===(scope||null)&&!isPostExpired(p);}).sort(function(a,b){return Date.parse(b.createdAt)-Date.parse(a.createdAt);})[0];}
+  function tile(name,scope,userId){
+    var p=latest(scope),count=chatUnreadForConversation(scope),active=(UI.astraConversationId||null)===(scope||null);
+    var preview=p?(p.deletedAt?"Mensaje eliminado":p.text||p.fileName||(p.audioPath?"Audio":"Foto")):"Iniciar conversación";
+    return '<button type="button" class="astra-tab chat-conversation'+(active?' active':'')+'" data-astra-action="'+(userId?'dm':'team')+'"'+(userId?' data-user-id="'+escapeHtml(userId)+'"':'')+'>'+personAvatar(name,{size:"sm"})+'<span class="chat-conversation-copy"><b>'+escapeHtml(name)+'</b><small>'+escapeHtml(preview.slice(0,70))+'</small></span><span class="chat-conversation-meta">'+(p?'<time>'+fmtChatTime(p.createdAt)+'</time>':'')+(count?'<span class="chat-peer-badge">'+count+'</span>':'')+'</span></button>';
+  }
+  peers.sort(function(a,b){var ca=chatDirectConversationWith(a.id),cb=chatDirectConversationWith(b.id),pa=ca&&latest(ca.id),pb=cb&&latest(cb.id);return (pb?Date.parse(pb.createdAt):0)-(pa?Date.parse(pa.createdAt):0);});
+  return '<nav class="astra-tabs chat-conversations" aria-label="Conversaciones">'+tile("Equipo",null,null)+peers.map(function(p){var c=chatDirectConversationWith(p.id);return tile(p.displayName,c?c.id:"new:"+p.id,p.id);}).join("")+'</nav>';
 }
+
 function astraRenderConversation(header){
   var root = UI.astraThreadRoot && astraPost(UI.astraThreadRoot);
   var id = UI.astraConversationId;
@@ -26014,12 +26071,18 @@ function astraRenderConversation(header){
     (root && id ? 'back-dm' : 'team') + '">← ' + (root && id ? 'Chat personal' : 'Equipo') +
     '</button><strong>' + escapeHtml(label) + '</strong></div>';
   var posts = (STATE.teamPosts || []).filter(function(p){
-    return !isPostExpired(p) && !p.deletedAt && (p.conversationId || null) === (id || null) &&
+    return !isPostExpired(p) && (p.conversationId || null) === (id || null) &&
       (root ? (p.id === root.id || p.threadRootId === root.id) : (!p.threadRootId)) &&
       (!UI.astraSearch || normalizeWord((p.text||'')+' '+(p.transcript||''))
         .indexOf(normalizeWord(UI.astraSearch))>=0);
   }).sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
-  var body = posts.map(function(p){ return renderChatMessage({kind:'post',post:p,continued:false}); }).join("");
+  var body="",previous=null,lastDay=null;
+  posts.forEach(function(p){
+    var day=chatDayKey(p.createdAt);
+    if(day!==lastDay){body+=daySeparatorHtml(p.createdAt);lastDay=day;}
+    var continued=!!(previous&&previous.authorUserId===p.authorUserId&&chatDayKey(previous.createdAt)===day&&Date.parse(p.createdAt)-Date.parse(previous.createdAt)<CHAT_GROUP_MINUTES*60000);
+    body+=renderChatMessage({kind:"post",post:p,continued:continued});previous=p;
+  });
   if(!body) body = '<div class="chat-empty">Todavía no hay mensajes.</div>';
   return header + (root ? back : astraConversationTabs() + back) +
     '<div class="chat-scroll-wrap"><div class="chat-scroll" id="chat-scroll" aria-label="' +
@@ -26063,7 +26126,7 @@ function astraReplyPreview(p){
   var original = astraPost(p.replyToId);
   return '<button type="button" class="astra-reply" data-astra-action="jump" data-post-id="' +
     escapeHtml(p.replyToId) + '">↳ ' + escapeHtml(original
-      ? (original.autor + ': ' + (original.text || 'Foto').slice(0,90))
+      ? (original.autor + ': ' + (original.deletedAt?'MENSAJE ELIMINADO':original.text||original.fileName||(original.audioPath?'Audio':'Foto')).slice(0,90))
       : 'Mensaje no disponible') + '</button>';
 }
 function astraComposerReply(){
@@ -26253,6 +26316,169 @@ async function boot(){
     render();
   }
 }
+
+/* Chat improvements share the existing post/storage/read-state infrastructure. */
+function chatDraftKey(){return (UI.selectedTicketId?"ticket:"+UI.selectedTicketId:chatCurrentScopeId()||"team")+":"+(UI.astraThreadRoot||"root");}
+function chatQueuedFiles(){UI.chatFileDrafts=UI.chatFileDrafts||{};return UI.chatFileDrafts[chatDraftKey()]||[];}
+function chatHasAttachments(){return chatQueuedFiles().length>0||!!UI.feedComposerPhoto||!!UI.ticketChatFile;}
+function chatRaster(file){return /^image\/(png|jpeg|webp)$/.test(file.type||"");}
+function chatFileSize(n){return n==null?"":n>=1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";}
+function chatQueueFiles(files){
+  if(UI.feedComposerBusy){showToast("Espera a que termine el envío.");return;}
+  if(UI.astraAudioBlob){showToast("Envía o descarta el audio antes de adjuntar archivos.");return;}
+  var key=chatDraftKey(),items=chatQueuedFiles().slice(),errors=[];
+  Array.from(files||[]).forEach(function(file){
+    if(items.length>=20){errors.push("Máximo 20 archivos por envío.");return;}
+    if(file.size>25*1024*1024){errors.push(file.name+": máximo 25 MB.");return;}
+    items.push({id:uuid4(),file:file,previewUrl:chatRaster(file)?URL.createObjectURL(file):null,status:"ready"});
+  });
+  UI.chatFileDrafts[key]=items;
+  if(errors.length)showToast(errors.join(" "));
+  renderKeepingLiveInputs();
+}
+function chatRemoveQueuedFile(id){
+  if(UI.feedComposerBusy)return;
+  var key=chatDraftKey();
+  UI.chatFileDrafts[key]=chatQueuedFiles().filter(function(x){if(x.id!==id)return true;if(x.previewUrl)URL.revokeObjectURL(x.previewUrl);return false;});
+  renderKeepingLiveInputs();
+}
+function chatQueuedMarkup(){
+  var files=chatQueuedFiles();
+  return files.length?'<div class="chat-file-queue" aria-label="Archivos para enviar">'+files.map(function(x){
+    return '<div class="chat-file-preview'+(x.status==="failed"?" failed":"")+'">'+
+      (x.previewUrl?'<img src="'+escapeHtml(x.previewUrl)+'" alt="">':icon("file"))+
+      '<span><b>'+escapeHtml(x.file.name)+'</b><small>'+chatFileSize(x.file.size)+
+      (x.status==="sending"?" · Enviando…":x.status==="failed"?" · No enviado. Reintenta con Enviar.":"")+
+      '</small></span><button type="button" class="icon-btn" data-chat-remove-file="'+x.id+'" aria-label="Quitar '+escapeHtml(x.file.name)+'"'+(UI.feedComposerBusy?' disabled':'')+'>'+icon("x")+'</button></div>';
+  }).join("")+"</div>":"";
+}
+async function chatPublishBatch(text){
+  if(UI.feedComposerBusy)return false;
+  var key=chatDraftKey(),batch=chatQueuedFiles().slice(),actor=currentActorId(),ticketId=UI.selectedTicketId;
+  if(!batch.length)return false;
+  var ctx={conversationId:chatCurrentScopeId(),replyToId:UI.astraReplyTo||null,threadRootId:UI.astraThreadRoot||null,refs:astraRefsForText(text)};
+  var mentions=mentionsForText(text),captionSent=false,sent=0;
+  UI.feedComposerBusy=true;renderKeepingLiveInputs();
+  try{
+    if(ticketId)ctx.conversationId=await ensureTicketConversation(ticketId);
+    for(var item of batch){
+      if(currentActorId()!==actor||AUTH_STATUS!=="signed_in")break;
+      item.status="sending";renderKeepingLiveInputs();
+      try{
+        var caption=captionSent?"":text;
+        var row=await createTeamPostCore(Object.assign({},ctx,{text:caption,
+          photoFile:chatRaster(item.file)?item.file:null,file:chatRaster(item.file)?null:item.file,
+          fileSize:item.file.size,mentions:caption?mentions.mentions:[],mentionsAll:false,pinLevel:"none",expiresChoice:"never",noTicketRequired:true}));
+        if(currentActorId()!==actor||AUTH_STATUS!=="signed_in")break;
+        DTG_POSTS_AVISADOS[row.id]=1;
+        if(!STATE.teamPosts.some(function(p){return p.id===row.id;}))STATE.teamPosts.unshift(mapTeamPostRow(row));
+        UI.chatFileDrafts[key]=(UI.chatFileDrafts[key]||[]).filter(function(x){return x.id!==item.id;});
+        if(item.previewUrl)URL.revokeObjectURL(item.previewUrl);
+        captionSent=true;sent++;UI.chatStickBottom=true;
+      }catch(e){item.status="failed";item.error=String(e.message||e);showToast(item.file.name+": "+item.error);}
+    }
+  }catch(batchError){showToast("No se pudo abrir el chat: "+String(batchError.message||batchError));}
+  finally{
+    if(currentActorId()!==actor||AUTH_STATUS!=="signed_in")return sent>0;
+    UI.feedComposerBusy=false;
+    if(chatDraftKey()===key&&sent){UI.astraReplyTo=null;UI.chatMentionPicks=[];UI.astraRefPicks=[];renderKeepingLiveInputs();restoreComposerText("");}
+    else renderKeepingLiveInputs();
+    if(chatQueuedFiles().length)showToast(sent+" enviados; quedan archivos para reintentar.");
+    refreshFromServer({background:true});
+  }
+  return sent>0;
+}
+function chatDeletedMarkup(p){
+  return '<div class="chat-msg chat-msg-deleted" data-chat-key="p:'+escapeHtml(p.id)+'" data-post-id="'+escapeHtml(p.id)+'"><div class="chat-msg-gutter">'+personAvatar(p.autor||"?",{size:"md"})+'</div><div class="chat-msg-main"><span class="chat-msg-author">'+escapeHtml(p.autor||"Equipo")+'</span><span>MENSAJE ELIMINADO</span><time class="chat-msg-time">'+fmtChatTime(p.createdAt)+'</time></div></div>';
+}
+function chatRelevantKind(p,userId){
+  if(!p||p.deletedAt||p.pending||p.authorUserId===userId||isPostExpired(p))return null;
+  if(!p.text&&(p.imageStoragePath||p.filePath))return null;
+  var conversation=(STATE.conversations||[]).find(function(c){return c.id===p.conversationId;});
+  if(conversation&&conversation.kind==="direct"&&(conversation.member_a===userId||conversation.member_b===userId))return "personal";
+  if((p.mentions||[]).some(function(m){return m.id===userId;}))return "mencion";
+  var reply=astraPost(p.replyToId),same=function(q){return q&&(q.conversationId||null)===(p.conversationId||null)&&!q.deletedAt;};
+  if(same(reply)&&reply.authorUserId===userId)return "respuesta";
+  var root=p.threadRootId||(same(reply)&&(reply.threadRootId||reply.id));
+  if(root&&(STATE.teamPosts||[]).some(function(q){return same(q)&&(q.id===root||q.threadRootId===root)&&Date.parse(q.createdAt)<=Date.parse(p.createdAt)&&(q.mentions||[]).some(function(m){return m.id===userId;});}))return "respuesta";
+  return null;
+}
+function chatWithinNotificationHours(date,allHours){
+  if(allHours)return true;
+  var parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",hour:"2-digit",hourCycle:"h23"}).formatToParts(date||new Date());
+  var hour=Number(parts.find(function(p){return p.type==="hour";}).value);
+  return hour>=7&&hour<18;
+}
+var CHAT_RECEIPTS={},CHAT_RECEIPTS_INFLIGHT=false,CHAT_RECEIPTS_LAST=0;
+async function chatRefreshReceipts(force){
+  if(!sb||AUTH_STATUS!=="signed_in"||CHAT_RECEIPTS_INFLIGHT||(!force&&Date.now()-CHAT_RECEIPTS_LAST<3000))return;
+  var actor=currentActorId(),scope=chatCurrentScopeId(),ids=(STATE.teamPosts||[]).filter(function(p){return !p.pending&&!p.deletedAt&&(p.conversationId||null)===(scope||null);}).slice(0,250).map(function(p){return p.id;});
+  if(!ids.length)return;
+  CHAT_RECEIPTS_INFLIGHT=true;
+  try{
+    var r=await sb.rpc("chat_read_receipts",{p_post_ids:ids});
+    if(r.error)throw r.error;
+    if(currentActorId()!==actor||AUTH_STATUS!=="signed_in")return;
+    ids.forEach(function(id){CHAT_RECEIPTS[id]=[];});
+    (r.data||[]).forEach(function(x){(CHAT_RECEIPTS[x.post_id]=CHAT_RECEIPTS[x.post_id]||[]).push(x.display_name||"Equipo");});
+    CHAT_RECEIPTS_LAST=Date.now();
+    document.querySelectorAll("[data-chat-seen]").forEach(function(el){el.innerHTML=chatSeenLabel(el.getAttribute("data-chat-seen"));});
+  }catch(e){schemaGapFrom(e);}
+  finally{CHAT_RECEIPTS_INFLIGHT=false;}
+}
+function chatSeenLabel(id){
+  var names=Array.from(new Set(CHAT_RECEIPTS[id]||[]));
+  return names.length?"Visto por "+escapeHtml(names.slice(0,2).join(", ")+(names.length>2?" y "+(names.length-2)+" más":"")):"";
+}
+function chatSeenMarkup(p){return p.pending?"":(p.authorUserId===currentActorId()?'<small class="chat-seen chat-delivered" aria-label="Enviado">✓ Enviado</small>':"")+'<small class="chat-seen" data-chat-seen="'+escapeHtml(p.id)+'">'+chatSeenLabel(p.id)+'</small>';}
+function chatContextName(){
+  if(UI.astraThreadRoot)return "Hilo";
+  var c=(STATE.conversations||[]).find(function(x){return x.id===UI.astraConversationId;});
+  if(!c)return "Equipo";
+  var peer=c.member_a===currentActorId()?c.member_b:c.member_a;
+  var p=(STATE.profiles||[]).find(function(x){return x.id===peer;});
+  return p?(p.displayName||p.display_name):"Chat personal";
+}
+function chatReceiptInvalidated(){CHAT_RECEIPTS_LAST=0;chatRefreshReceipts(true);}
+function chatClientPicker(r,ref){
+  var q=r.clientQuery||"",picked=r.clientId&&(STATE.clientes||[]).find(function(c){return c.id===r.clientId;});
+  var matches=rankClientes(q).slice(0,8);
+  return '<label>Cliente<input id="astra-review-client" value="'+escapeHtml(picked?picked.nombre:q||(ref?ref.label:""))+'" placeholder="Buscar nombre, empresa o teléfono" autocomplete="off"></label>'+
+    '<details class="task-more"'+(r.clientSearchOpen?' open':'')+'><summary>Buscar cliente existente</summary><div class="chat-client-results">'+matches.map(function(c){
+      return '<button type="button" class="btn btn-ghost" data-chat-client="'+escapeHtml(c.id)+'">'+escapeHtml(clienteLabel(c)+(c.telefono?" · "+c.telefono:""))+'</button>';
+    }).join("")+'</div></details>'+(picked?'<small>Cliente existente seleccionado</small>':'<small>Si existe una coincidencia exacta, se reutilizará.</small>');
+}
+document.addEventListener("click",function(e){
+  var remove=e.target.closest&&e.target.closest("[data-chat-remove-file]");
+  if(remove){e.preventDefault();chatRemoveQueuedFile(remove.getAttribute("data-chat-remove-file"));return;}
+  var client=e.target.closest&&e.target.closest("[data-chat-client]");
+  if(client&&UI.astraReview){UI.astraReview.clientId=client.getAttribute("data-chat-client");UI.astraReview.clientQuery="";renderKeepingLiveInputs();var c=(STATE.clientes||[]).find(function(x){return x.id===UI.astraReview.clientId;});var f=document.getElementById("astra-review-client");if(c&&f)f.value=c.nombre;return;}
+},true);
+document.addEventListener("input",function(e){
+  if(e.target.id==="astra-review-client"&&UI.astraReview){UI.astraReview.clientQuery=e.target.value;UI.astraReview.clientId=null;UI.astraReview.clientSearchOpen=true;renderKeepingLiveInputs();}
+});
+var CHAT_TOUCH=null,CHAT_TOUCH_TIMER=null;
+document.addEventListener("pointerdown",function(e){
+  if(e.pointerType!=="touch")return;
+  var node=e.target.closest&&e.target.closest(".chat-msg:not(.chat-msg-deleted)");
+  if(!node||e.target.closest("button,a,input,textarea"))return;
+  CHAT_TOUCH={id:node.getAttribute("data-post-id"),x:e.clientX,y:e.clientY,at:Date.now()};
+  clearTimeout(CHAT_TOUCH_TIMER);
+  CHAT_TOUCH_TIMER=setTimeout(function(){if(!CHAT_TOUCH)return;UI.chatMenuFor=CHAT_TOUCH.id;UI.chatReactFor=null;CHAT_TOUCH=null;renderKeepingLiveInputs();},550);
+},{passive:true});
+document.addEventListener("pointermove",function(e){
+  if(!CHAT_TOUCH)return;
+  if(Math.abs(e.clientY-CHAT_TOUCH.y)>15||Math.abs(e.clientX-CHAT_TOUCH.x)>15)clearTimeout(CHAT_TOUCH_TIMER);
+},{passive:true});
+document.addEventListener("pointerup",function(e){
+  clearTimeout(CHAT_TOUCH_TIMER);
+  if(CHAT_TOUCH&&e.clientX-CHAT_TOUCH.x>65&&Math.abs(e.clientY-CHAT_TOUCH.y)<35){
+    UI.astraReplyTo=CHAT_TOUCH.id;UI.pendingFocus={elId:"composer-input",userInitiated:true};renderKeepingLiveInputs();
+  }
+  CHAT_TOUCH=null;
+},{passive:true});
+document.addEventListener("pointercancel",function(){clearTimeout(CHAT_TOUCH_TIMER);CHAT_TOUCH=null;});
+setInterval(function(){if(!document.hidden&&AUTH_STATUS==="signed_in")chatRefreshReceipts();},10000);
 
 boot();
 
