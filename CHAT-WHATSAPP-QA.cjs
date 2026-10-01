@@ -1,6 +1,6 @@
 const fs=require('fs'),assert=require('assert'),{chromium}=require('playwright');
 const fixture=`
-AUTH_STATUS='signed_in';AUTH_SESSION={user:{id:'martin'}};CURRENT_PROFILE={id:'martin',display_name:'Martin'};
+UI.waChatOpen=true;AUTH_STATUS='signed_in';AUTH_SESSION={user:{id:'martin'}};CURRENT_PROFILE={id:'martin',display_name:'Martin'};
 STATE.teamPosts=[];STATE.feedReactions=[];STATE.profiles=[];STATE.tickets=[];STATE.clientes=[];STATE.conversations=[{id:'dm',kind:'direct',member_a:'martin',member_b:'ceci'}];
 var writes=[],uploads=[],removals=[],failFile='',failInsert=false;
 sb={storage:{from:bucket=>({upload:async(path,file)=>{uploads.push({bucket,path,name:file.name});return file.name===failFile?{error:{message:'QA fallo parcial'}}:{error:null};},remove:async paths=>{removals.push({bucket,paths});return {error:null};}})},from:table=>({insert:row=>({select:()=>({single:async()=>{if(failInsert)return {error:{message:'QA insert fail'}};var r=Object.assign({id:'sent-'+writes.length,created_at:new Date().toISOString()},row);writes.push(r);return {data:r,error:null};}})})}),rpc:async()=>({data:[],error:null})};

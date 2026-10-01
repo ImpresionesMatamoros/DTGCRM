@@ -3,7 +3,7 @@ const setup=`
 window.qa={openOpsEditor,getState:()=>STATE,getWrites:()=>writes,setFailure:(v)=>fail=v};
 var writes=[],fail=false;
 STATE={tickets:[{id:'11111111-1111-4111-8111-111111111111',seq:1330,cliente:'Angela',estado:'abierto',productos:[{id:'p1',desc:'Camisas',cantidad:24}],tareas:[],markers:[],thread:[]}],clientes:[],profiles:[],meta:{opsProviders:[]}};
-AUTH_STATUS='signed_in';
+AUTH_STATUS='signed_in';UI.waChatOpen=true;
 sb={from:table=>({insert:async row=>{writes.push({table,row});return fail?{error:{message:'fallo simulado'}}:{error:null}},update:row=>({eq:async()=>({error:null})})})};
 refreshFromServer=async()=>{};showToast=()=>{};userError=()=>{};adminNote=()=>{};
 STATE.meta.teamNames=[];STATE.feedReactions=[];STATE.conversations=[];
@@ -47,7 +47,8 @@ try{
  // One click on the message action, one on Create; real persistence and source snapshot.
  await page.evaluate(()=>qa.setView('chat'));
  await page.locator('.chat-msg').hover();
- await page.getByRole('button',{name:'Crear tarea desde mensaje',exact:true}).click();
+ await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();
+ await page.getByRole('menuitem',{name:'Crear tarea',exact:true}).click();
  assert.equal(await page.locator('#astra-review-desc').inputValue(),'Ocupo más vinil negro');
  assert.equal(await page.locator('#astra-review-ticket').inputValue(),await page.evaluate(()=>qa.getState().tickets[0].id));
  assert.equal(await page.locator('#astra-review-date').isVisible(),false);
@@ -78,7 +79,8 @@ try{
  // An unlinked message must ask for a ticket; it never guesses one.
  await page.evaluate(()=>{qa.getState().teamPosts[0].ticketId=null;qa.setView('chat');});
  await page.locator('.chat-msg').hover();
- await page.getByRole('button',{name:'Crear tarea desde mensaje',exact:true}).click();
+ await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();
+ await page.getByRole('menuitem',{name:'Crear tarea',exact:true}).click();
  assert.equal(await page.locator('#astra-review-ticket').inputValue(),'');
  await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
  assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas.length),4);
@@ -107,6 +109,6 @@ try{
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  if(process.env.QA_SCREENSHOT)await page.screenshot({path:process.env.QA_SCREENSHOT});
  assert.deepEqual(errors,[]);
- console.log('PASS: task creation in two clicks from Kanban and linked messages, real save/source context, edits preserve hidden data, failed save/retry, mobile account scroll unchanged, mobile form.');
+ console.log('PASS: task creation in two clicks from Kanban and three from linked message menu, real save/source context, edits preserve hidden data, failed save/retry, mobile account scroll unchanged, mobile form.');
 }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

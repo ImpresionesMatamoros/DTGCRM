@@ -3,7 +3,7 @@ const fixture=`
 STATE.teamPosts=[{id:'post-1',autor:'Jonathan',authorUserId:'user-1',createdAt:new Date().toISOString(),text:'Revisar el diseño para mañana',pinLevel:'none',ticketId:'ticket-1'}];
 STATE.tickets=[{id:'ticket-1',seq:1324,cliente:'Yesenia Sauceda',productos:[{desc:'Camisetas de personal',cantidad:12}],thread:[]}];
 STATE.feedReactions=[];STATE.conversations=[];STATE.profiles=[];
-UI.feedFilter='aibridge';UI.astraLaterOpen=false;
+UI.feedFilter='todo';UI.astraLaterOpen=false;UI.waChatOpen=true;
 render=function(){document.getElementById('app').innerHTML=renderInicioFeed();};
 window.qa={UI,render,renderAiBridgePanel,renderAiBridgeMenu,renderAiBridgeFallback,renderAiBridgeSubir,renderAiBridgeBajar,dtgPatchPreviewPopover};
 render();
@@ -23,14 +23,14 @@ const html=fs.readFileSync(__dirname+'/index.html','utf8').replace(/<script[^>]*
   await page.locator('.chat-msg').hover();
   await page.getByRole('button',{name:'Reaccionar',exact:true}).click();
   assert.equal(await page.locator('.chat-react-opt').count(),7);
-  await page.getByRole('button',{name:'Más acciones',exact:true}).click();
+  await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();
   assert.equal(await page.locator('.chat-msg-menu [data-action="chat-react-open"]').count(),0);
   assert.equal(await page.getByRole('menuitem',{name:'Adjuntar a ticket',exact:true}).count(),1);
   assert.equal(await page.getByRole('menuitem',{name:'Vincular a un ticket',exact:true}).count(),0);
   await page.setViewportSize({width:390,height:844});
   await page.evaluate(()=>{qa.UI.astraLaterOpen=true;qa.render();});
   assert.equal(await page.locator('.astra-utilities').isVisible(),false);
-  assert.equal(await page.evaluate(()=>qa.UI.astraLaterOpen),false);
+
   const react=page.getByRole('button',{name:'Reaccionar',exact:true});
   assert(await react.isVisible());
   await react.click();

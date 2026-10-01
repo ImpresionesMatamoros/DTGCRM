@@ -1,5 +1,7 @@
 # Simplificación de tareas y menú de cuenta
 
+Actualización 2026-10-01: el rediseño de chat solicitado retira la acción permanente de tarea del mensaje; se crea desde Opciones → Crear tarea → confirmar (tres clics). Kanban conserva dos. Ver CHAT-INBOX-UX.md para el comportamiento actual.
+
 ## Plan implementado
 
 - Abrir/cerrar el menú de cuenta modifica únicamente su contenedor; conserva el DOM, el scroll y el borrador de la pantalla.
