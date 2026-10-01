@@ -3979,6 +3979,15 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
  .wa-bubble{max-width:86%}.wa-text{font-size:15px}
 }
 
+/* Touch gestures and actionable, readable ticket badges. */
+@media(pointer:coarse){.chat-msg{touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.chat-msg img{-webkit-user-drag:none}.chat-msg.chat-swipe-ready .wa-bubble{box-shadow:0 0 0 2px var(--accent)} }
+.kanban-card.has-thumb .kanban-card-main{flex-direction:column}
+.kanban-card.has-thumb .kanban-card-thumb-btn{width:100%;height:160px;border-radius:12px;overflow:hidden;background:var(--surface-2)}
+.kanban-card.has-thumb .kanban-card-thumb-photo{object-fit:contain}
+.kanban-card.has-thumb .kanban-card-text{width:100%}
+.dq-warns{display:flex;flex-wrap:wrap;gap:6px}.dq-warn{width:auto!important;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px;font-size:11px;border:1px solid var(--border)}
+.dq-warn-label,.mk-chip-label{display:inline!important;white-space:normal}.mk-chips{height:auto;flex-wrap:wrap;gap:5px}.mk-chip{display:inline-flex;gap:5px;align-items:center;border-radius:9px;padding:4px 7px}
+.tickets-quickcreate-panel{flex-shrink:0;max-height:75dvh;overflow-y:auto}.contact-panel input[type=tel]{width:100%;min-height:44px;font-size:16px}
 </style>
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
@@ -9888,6 +9897,7 @@ function closeClienteAutocomplete(key){
 function pickClienteAutocomplete(key, inputId, client){
   var el = document.getElementById(inputId);
   if(el) el.value = client.nombre;
+  if(key==='quickcreate'){var phone=document.getElementById('quickcreate-telefono');if(phone&&!phone.value)phone.value=client.telefono||'';}
   UI.clienteAutocompletePicked[key] = { id: client.id, nombre: client.nombre };
   closeClienteAutocomplete(key);
   if(el) el.focus();
@@ -10293,10 +10303,10 @@ function ticketBadDateFields(t){
 function ticketHasValidCompromiso(t){ return !!(t.fechaCompromiso && isSaneDateOnly(t.fechaCompromiso)); }
 
 var TICKET_WARNING_META = {
-  phone:      { icon: "phone-off",   tone: "warn",   label: "Falta teléfono",                  short: "tel" },
-  location:   { icon: "map-pin-off", tone: "warn",   label: "Falta ubicación de entrega",      short: "zona" },
-  commitment: { icon: "calendar-x",  tone: "warn",   label: "Falta fecha de compromiso",       short: "compromiso" },
-  money:      { icon: "dollar-off",  tone: "danger", label: "No se puede determinar el saldo", short: "saldo" },
+  phone:      { icon: "phone",      tone: "warn",   label: "Falta teléfono",                  short: "tel" },
+  location:   { icon: "map-pin",    tone: "warn",   label: "Falta ubicación de entrega", badge: "Falta ubicación", short: "zona" },
+  commitment: { icon: "calendar",   tone: "warn",   label: "Falta fecha de compromiso", badge: "Falta fecha", short: "compromiso" },
+  money:      { icon: "wallet",     tone: "danger", label: "No se puede determinar el saldo", badge: "Revisar saldo", short: "saldo" },
   baddate:    { icon: "alert-triangle", tone: "danger", label: "Fecha guardada inválida — revísala", short: "fecha inválida" }
 };
 /* ÚNICA definición de "a este ticket le falta información importante".
@@ -10338,7 +10348,7 @@ function renderTicketWarnings(t, opts){
     var label = ticketWarningLabel(k, t);
     /* El pulso es de APARICIÓN, no de repintado (ver claseAlAparecer). */
     return '<button type="button" class="dq-warn dq-tone-' + meta.tone + claseAlAparecer("dq:" + t.id + ":" + k, "dq-aparece") + '" data-action="ticket-warning" data-warn="' + k + '" data-ticket="' + t.id + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label + " — #" + t.seq) + '">' +
-      icon(meta.icon) + (opts.labels ? '<span class="dq-warn-label">' + escapeHtml(label) + "</span>" : "") +
+      icon(meta.icon) + (opts.labels !== false ? '<span class="dq-warn-label">' + escapeHtml(meta.badge || label) + "</span>" : "") +
     "</button>";
   }).join("") + "</span>";
 }
@@ -10348,8 +10358,7 @@ function openTicketWarningAction(key, ticketId, anchorEl){
   var t = findTicket(ticketId);
   if(!t) return;
   if(key === "phone"){
-    if(t.clienteId) openContactPanel(t.clienteId, t.id);
-    else openCellEditor("cliente", t.id); /* sin cliente vinculado no hay dónde guardar un teléfono */
+    UI.contactPanel={clienteId:t.clienteId||null,ticketId:t.id};UI.clienteFichaEditField='telefono';UI.pendingFocus={elId:t.clienteId?'cliente-ficha-field-telefono':'ticket-phone-input',userInitiated:true};render();
     return;
   }
   if(key === "location"){ openZonePicker(t.id, anchorEl); return; }
@@ -10697,30 +10706,18 @@ function ticketsExplorerSortCompare(sort){
    descarga/copia la imagen: solo regresa el storage_path, que se hidrata
    con el MISMO signedUrlCache/hydrateImages que ya usa cualquier otra
    <img data-storage-path> del archivo (composer, hilo, avatar). */
-function ticketThumbPhotoPath(t){
-  var thread = t.thread || [];
-  for(var i = thread.length - 1; i >= 0; i--){
-    /* Parte P §95: una foto eliminada nunca vuelve a aparecer como
-       thumbnail — si era la última, el thumbnail cae a la anterior activa
-       (o a ninguna, si no queda otra), nunca revive la eliminada. */
-    if(thread[i].type === "archivo" && thread[i].storage_path && !thread[i].deleted_at) return thread[i].storage_path;
-  }
-  return null;
+function ticketPhotos(t){
+  if(!t)return [];var photos=[],seen={};
+  var links=(STATE.conversationLinks||[]).filter(function(x){return x.ticket_id===t.id;});
+  function belongs(p){return conversationTicketId(p.conversationId)===t.id||(!p.conversationId&&(p.ticketId===t.id||links.some(function(x){return x.post_id===p.id||(x.link_kind==='thread'&&x.post_id===p.threadRootId);})));}
+  function add(p){var key=p.bucket+':'+p.storagePath;if(!seen[key]){seen[key]=true;photos.push(p);}}
+  (t.thread||[]).forEach(function(ev){if(ev.type==='archivo'&&ev.storage_path&&!ev.deleted_at)add({id:ev.id,ticketId:t.id,storagePath:ev.storage_path,bucket:FILES_BUCKET,filename:ev.filename||'',caption:ev.caption||'',autor:ev.autor||'',ts:ev.ts});});
+  (STATE.teamPosts||[]).forEach(function(p){if(!p.pending&&!p.deletedAt&&p.imageStoragePath&&belongs(p))add({id:p.id,postId:p.id,ticketId:t.id,storagePath:p.imageStoragePath,bucket:p.conversationId?'chat-private':FILES_BUCKET,filename:p.fileName||'',caption:p.text||'',autor:p.autor||'',ts:p.createdAt});});
+  return photos.sort(function(a,b){return (Date.parse(b.ts)||0)-(Date.parse(a.ts)||0);});
 }
-/* Tickets Workbench §22 (badge opcional): cuenta de fotos del ticket para
-   el numerito discreto sobre la miniatura de una tarjeta con más de una
-   foto. Cuenta SOBRE t.thread (ya en memoria, mismo criterio que
-   ticketThumbPhotoPath de arriba) en vez de bibliotecaAllPhotos()+filter —
-   esa función escanea TODOS los tickets; llamarla una vez por tarjeta en la
-   grilla sería exactamente el patrón "por-tarjeta" que la auditoría de esta
-   ronda pide evitar (§98). bibliotecaAllPhotos() se sigue usando tal cual
-   para la Galería en sí (ticketGalleryPhotos), que solo corre UNA vez, no
-   una vez por tarjeta. */
-function ticketPhotoCount(t){
-  var n = 0;
-  (t.thread || []).forEach(function(ev){ if(ev.type === "archivo" && ev.storage_path && !ev.deleted_at) n++; });
-  return n;
-}
+function ticketThumbPhotoPath(t){var p=ticketPhotos(t)[0];return p?p.storagePath:null;}
+function ticketThumbPhotoBucket(t){var p=ticketPhotos(t)[0];return p?p.bucket:FILES_BUCKET;}
+function ticketPhotoCount(t){return ticketPhotos(t).length;}
 
 /* Búsqueda determinista (folio, cliente, empresa, teléfono tolerante a
    formato, producto/trabajo, responsable, texto de notas ya en bitácora) —
@@ -11030,7 +11027,7 @@ function renderTicketsThumbCard(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
   var photoPath = ticketThumbPhotoPath(t);
   var mediaHtml = photoPath
-    ? '<img class="tickets-thumb-photo" data-storage-path="' + escapeHtml(photoPath) + '" alt="">'
+    ? '<img class="tickets-thumb-photo" data-storage-bucket="' + escapeHtml(ticketThumbPhotoBucket(t)) + '" data-storage-path="' + escapeHtml(photoPath) + '" alt="">'
     : (c ? clientAvatar(c, {size:"lg", degrade:"compact"}) : '<span class="tickets-thumb-noimg" aria-hidden="true">' + icon("image") + "</span>");
   var estado = ticketEstado(t);
   var identityStyle = c ? clienteIdentityStyle(c, "compact") : null;
@@ -11203,7 +11200,7 @@ function renderTicketsListRow(t){
   var v = ticketOperationalCellValues(t);
   var photoPath = ticketThumbPhotoPath(t);
   var photoCell = photoPath
-    ? '<button type="button" class="list-thumb" data-action="tickets-thumb-gallery" data-id="' + t.id + '" aria-label="Ver fotos del ticket #' + t.seq + '"><img data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt=""></button>'
+    ? '<button type="button" class="list-thumb" data-action="tickets-thumb-gallery" data-id="' + t.id + '" aria-label="Ver fotos del ticket #' + t.seq + '"><img data-storage-bucket="' + escapeHtml(ticketThumbPhotoBucket(t)) + '" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt=""></button>'
     : '<span class="list-thumb list-thumb-empty">' + (v.c ? clientAvatar(v.c, { size: "md", degrade: "compact" }) : icon("image")) + "</span>";
   var cells = [
     photoCell,
@@ -11254,7 +11251,7 @@ function renderTicketsListPreview(){
     : v.muted;
   var photos = ticketGalleryPhotos(t.id).slice(0, 6);
   var photosHtml = photos.length
-    ? '<div class="tickets-list-preview-photos">' + photos.map(function(p){ return '<img data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">'; }).join("") + "</div>"
+    ? '<div class="tickets-list-preview-photos">' + photos.map(function(p){ return '<img data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">'; }).join("") + "</div>"
     : v.muted;
   var docs = t.documentos.slice().sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
   var docsHtml = docs.length
@@ -11701,7 +11698,7 @@ function renderKanbanCard(t){
   var photoCount = photoPath ? ticketPhotoCount(t) : 0;
   var thumbHtml = photoPath
     ? '<button type="button" class="kanban-card-thumb-btn" draggable="false" data-action="tickets-thumb-gallery" data-id="' + t.id + '" aria-label="Ver fotos del ticket #' + t.seq + '">' +
-        '<img class="kanban-card-thumb-photo" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt="">' +
+        '<img class="kanban-card-thumb-photo" data-storage-bucket="' + escapeHtml(ticketThumbPhotoBucket(t)) + '" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt="">' +
         (photoCount > 1 ? '<span class="kanban-card-thumb-count" aria-hidden="true">' + photoCount + "</span>" : "") +
       "</button>"
     : "";
@@ -11907,7 +11904,7 @@ function renderOpsCard(it){
   var urgent = ticketIsUrgente(t);
   var photoPath = ticketThumbPhotoPath(t);
   var thumb = photoPath
-    ? '<button type="button" class="ops-thumb" draggable="false" data-action="tickets-thumb-gallery" data-id="' + t.id + '" aria-label="Ver fotos del ticket #' + t.seq + '"><img data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt=""></button>'
+    ? '<button type="button" class="ops-thumb" draggable="false" data-action="tickets-thumb-gallery" data-id="' + t.id + '" aria-label="Ver fotos del ticket #' + t.seq + '"><img data-storage-bucket="' + escapeHtml(ticketThumbPhotoBucket(t)) + '" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt=""></button>'
     : "";
   var ctx = kanbanCardProductosContext(t);
   var resp = x.responsable
@@ -13548,7 +13545,7 @@ function renderCalendarSinFechaCard(t){
   /* Miniatura "si es razonable" (§4, literal): mismo criterio que Kanban —
      SOLO si existe una foto activa, sin placeholder cuando no la hay. */
   var photoPath = ticketThumbPhotoPath(t);
-  var thumbHtml = photoPath ? '<img class="calendar-sinfecha-thumb" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt="">' : "";
+  var thumbHtml = photoPath ? '<img class="calendar-sinfecha-thumb" data-storage-bucket="' + escapeHtml(ticketThumbPhotoBucket(t)) + '" data-storage-path="' + escapeHtml(photoPath) + '" loading="lazy" alt="">' : "";
   return (
     '<div class="calendar-sinfecha-card' + themeClass + '" draggable="true" data-calendar-sinfecha-card="' + t.id + '">' +
       '<button type="button" class="calendar-entry-open" draggable="false" data-action="open-ticket" data-id="' + t.id + '">' +
@@ -13728,11 +13725,11 @@ function renderBibliotecaPhotoTile(p){
   return (
     '<button type="button" class="biblioteca-tile" data-action="biblioteca-open-photo" ' +
       'data-photo-id="' + escapeHtml(p.id||"") + '" ' +
-      'data-ticket-id="' + p.ticketId + '" data-storage-path="' + escapeHtml(p.storagePath) + '" ' +
+      'data-ticket-id="' + p.ticketId + '" data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(p.storagePath) + '" ' +
       'data-cliente-id="' + (p.clienteId||"") + '" data-ts="' + escapeHtml(p.ts||"") + '" ' +
       'data-autor="' + escapeHtml(p.autor||"") + '" data-caption="' + escapeHtml(p.caption||"") + '" ' +
       'data-filename="' + escapeHtml(p.filename||"") + '" aria-label="' + escapeHtml((p.clienteNombre||"Sin cliente") + ", ticket #" + p.ticketSeq) + '">' +
-      '<img class="biblioteca-tile-img" data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
+      '<img class="biblioteca-tile-img" data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
     "</button>"
   );
 }
@@ -13839,7 +13836,7 @@ function renderBibliotecaViewer(){
    solo lo filtra por ticket_id. Como Biblioteca ya ordena "más nueva
    primero", la galería nace mostrando la foto más reciente. */
 function ticketGalleryPhotos(ticketId){
-  return bibliotecaAllPhotos().filter(function(p){ return p.ticketId === ticketId; });
+  var t=findTicket(ticketId);return ticketPhotos(t).map(function(p){return Object.assign({ticketSeq:t.seq,clienteId:t.clienteId,clienteNombre:t.cliente||""},p);});
 }
 function openTicketGallery(ticketId, startIndex){
   var photos = ticketGalleryPhotos(ticketId);
@@ -13889,7 +13886,7 @@ function renderTicketGalleryOverlay(){
   var titleLine = c ? clienteLabel(c) : (p.clienteNombre || (t && t.cliente) || "Sin cliente vinculado");
   var thumbsHtml = photos.map(function(ph, i){
     return '<button type="button" class="ticket-gallery-thumb' + (i===idx?" active":"") + '" data-action="ticket-gallery-thumb" data-index="' + i + '" aria-label="Imagen ' + (i+1) + ' de ' + photos.length + '" aria-current="' + (i===idx?"true":"false") + '">' +
-      '<img data-storage-path="' + escapeHtml(ph.storagePath) + '" alt="">' +
+      '<img data-storage-bucket="' + escapeHtml(ph.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(ph.storagePath) + '" alt="">' +
     "</button>";
   }).join("");
   return (
@@ -13898,7 +13895,7 @@ function renderTicketGalleryOverlay(){
         '<button type="button" class="btn-plain ticket-gallery-close" data-action="ticket-gallery-close" aria-label="Cerrar">&times;</button>' +
         '<div class="ticket-gallery-media">' +
           (photos.length > 1 ? '<button type="button" class="ticket-gallery-nav-btn ticket-gallery-prev" data-action="ticket-gallery-prev" aria-label="Imagen anterior">' + icon("chevron-left") + "</button>" : "") +
-          '<img data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
+          '<img data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
           (photos.length > 1 ? '<button type="button" class="ticket-gallery-nav-btn ticket-gallery-next" data-action="ticket-gallery-next" aria-label="Imagen siguiente">' + icon("chevron-right") + "</button>" : "") +
         "</div>" +
         (photos.length > 1 ? '<div class="ticket-gallery-counter">' + (idx+1) + " de " + photos.length + "</div>" : "") +
@@ -13908,7 +13905,7 @@ function renderTicketGalleryOverlay(){
         (photos.length > 1 ? '<div class="ticket-gallery-thumbs">' + thumbsHtml + "</div>" : "") +
         '<div class="popover-actions">' +
           '<button type="button" class="btn btn-ghost" data-action="ticket-gallery-add">+ Agregar imágenes</button>' +
-          '<button type="button" class="btn btn-ghost" data-action="delete-photo-open" data-photo-id="' + escapeHtml(p.id||"") + '" data-ticket-id="' + g.ticketId + '">Eliminar</button>' +
+          (p.postId ? '<button type="button" class="btn btn-ghost" data-astra-action="ticket-conversation" data-post-id="'+escapeHtml(p.postId)+'">Ver mensaje original</button>' : '<button type="button" class="btn btn-ghost" data-action="delete-photo-open" data-photo-id="' + escapeHtml(p.id||"") + '" data-ticket-id="' + g.ticketId + '">Eliminar</button>') +
           (t ? '<button type="button" class="btn btn-ghost" data-action="open-ticket" data-id="' + t.id + '">Abrir ticket</button>' : "") +
         "</div>" +
       "</div>" +
@@ -16402,7 +16399,7 @@ function renderKdsDetail(){
         "</div>" +
         '<div class="kds-detail-accion">' + escapeHtml(kdsAccion(it)) + "</div>" +
         '<div class="kds-detail-grid">' +
-          (photo ? '<div class="kds-detail-photo"><h3>REFERENCIA</h3><img data-storage-path="' + escapeHtml(photo.storagePath) + '" alt="Referencia de trabajo; tocar para ampliar" style="width:100%;max-height:45vh;object-fit:contain;cursor:zoom-in"></div>' : "") +
+          (photo ? '<div class="kds-detail-photo"><h3>REFERENCIA</h3><img data-storage-bucket="' + escapeHtml(photo.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(photo.storagePath) + '" alt="Referencia de trabajo; tocar para ampliar" style="width:100%;max-height:45vh;object-fit:contain;cursor:zoom-in"></div>' : "") +
           "<div><h3>TRABAJO</h3>" + (order ? '<p>' + escapeHtml(order.title) + '</p>' : '') + '<ul>' + (prods || "<li>Sin producto vinculado</li>") + "</ul>" + (order && order.instructions ? '<p>' + escapeHtml(order.instructions) + '</p>' : '') + '</div>' +
           "<div><h3>PASO</h3><p>" + escapeHtml(it.task.desc || "—") + "</p>" + (taskContext.details ? "<p>" + escapeHtml(taskContext.details) + "</p>" : "") +
             "<p>Responsable: <b>" + escapeHtml(it.task.responsable || "sin asignar") + "</b></p>" +
@@ -17728,7 +17725,8 @@ function showTicketCreatedToast(ticketId){
   showActionToast("✓ Ticket #" + t.seq + " creado", actionsHtml);
 }
 
-async function createTicketFlow(){
+async function createTicketFlow(empty){
+  if(!empty){UI.mainView="tickets";UI.selectedTicketId=null;UI.sidebarOpen=false;UI.waChatOpen=false;UI.ticketsExplorer.quickCreateOpen=true;UI.ticketsExplorer.optionsOpen=false;render();return;}
   var newId = await createTicketCore();
   if(!newId) return;
   openTicketById(newId);
@@ -17750,6 +17748,7 @@ async function createTicketFlow(){
 async function createTicketFromNuevo(data){
   var newId = await createTicketCore({ cliente: data.identityTitle || "" });
   if(!newId) return;
+  await refreshFromServer({background:true});
   var failures = [];
   var t;
 
@@ -17808,8 +17807,11 @@ async function submitTicketQuickCreate(fields){
   var trabajo = (fields.trabajo || "").trim();
   var quesigue = (fields.quesigue || "").trim();
   var pickedClienteId = fields.clienteId || null;
+  if(telefono && !detectPhone(telefono)){showToast("Revisa el teléfono antes de crear el ticket.");return;}
   var newId = await createTicketCore({ cliente: cliente });
   if(!newId) return;
+  await refreshFromServer({background:true});
+  if(!findTicket(newId)){openTicketById(newId);showToast("Ticket creado. No se pudo cargar para agregar los datos; vuelve a abrirlo antes de crear otro.");return;}
   var failures = [];
   var t;
   /* RONDA SHORTCUTS+AUTOCOMPLETE §B (corrección post-revisión): "identidad
@@ -19000,7 +19002,7 @@ function renderMarkerChips(t, opts){
   var chips = shown.map(function(m){
     var lbl = markerLabel(m.type);
     return '<span class="mk-chip marker-tone-' + markerTone(m.type) + '" title="' + escapeHtml(lbl + (m.text ? ": " + truncateMarkerText(m.text) : "")) + '">' +
-      markerIcon(m.type) + (opts.labels ? '<span class="mk-chip-label">' + escapeHtml(lbl) + "</span>" : "") + "</span>";
+      markerIcon(m.type) + (opts.labels !== false ? '<span class="mk-chip-label">' + escapeHtml(lbl) + "</span>" : "") + "</span>";
   }).join("");
   if(extra > 0) chips += '<span class="mk-chip mk-chip-more">+' + extra + "</span>";
   var names = uniq.map(function(m){ return markerLabel(m.type); }).join(", ");
@@ -20613,8 +20615,8 @@ function renderQuickLogoPickerOverlay(){
   var photos = bibliotecaAllPhotos().filter(function(p){ return p.clienteId === qp.clienteId; }).slice(0, 24);
   var gridHtml = photos.length
     ? '<div class="quicklogo-grid">' + photos.map(function(p){
-        return '<button type="button" class="quicklogo-photo-btn" data-action="quicklogo-assign-existing" data-storage-path="' + escapeHtml(p.storagePath) + '" title="Usar como logotipo">' +
-          '<img data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
+        return '<button type="button" class="quicklogo-photo-btn" data-action="quicklogo-assign-existing" data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(p.storagePath) + '" title="Usar como logotipo">' +
+          '<img data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(p.storagePath) + '" alt="">' +
         "</button>";
       }).join("") + "</div>"
     : '<div class="quicklogo-empty">Este cliente todavía no tiene imágenes en su historial.</div>';
@@ -21126,8 +21128,9 @@ function closeContactPanel(){
 function renderContactPanel(){
   if(!UI.contactPanel) return "";
   var c = STATE.clientes.filter(function(x){ return x.id === UI.contactPanel.clienteId; })[0];
-  if(!c){ UI.contactPanel = null; return ""; }
   var t = UI.contactPanel.ticketId ? findTicket(UI.contactPanel.ticketId) : null;
+  if(!c&&t)return '<div class="cierre-modal-overlay" id="contact-panel-overlay"><form class="cierre-modal contact-panel" id="ticket-phone-form" data-ticket="'+escapeHtml(t.id)+'"><h2>Agregar teléfono</h2><p>'+escapeHtml(t.cliente||'Cliente del ticket #'+t.seq)+'</p><label>Teléfono<input id="ticket-phone-input" type="tel" autocomplete="tel" placeholder="868 123 4567" required></label><div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="contact-panel-close">Cancelar</button><button type="submit" class="btn btn-primary">Guardar teléfono</button></div></form></div>';
+  if(!c){UI.contactPanel=null;return '';}
   var verClienteBtn = '<button type="button" class="help-cmd-btn" data-action="open-cliente-ficha" data-client-id="' + c.id + '"' +
     (t ? ' data-ticket="' + t.id + '"' : "") + '><span class="desc">Ver cliente completo ' + icon("arrow-right") + "</span></button>";
   return (
@@ -23521,7 +23524,7 @@ function wireEvents(){
   }
 
   root.querySelectorAll('[data-action="new-ticket"]').forEach(function(b){
-    b.addEventListener("click", function(){ createTicketFlow(); });
+    b.addEventListener("click", function(){ createTicketFlow(!!b.closest(".tickets-quickcreate-panel")); });
   });
 
   root.querySelectorAll('[data-action="open-ticket"]').forEach(function(b){
@@ -26052,6 +26055,7 @@ function astraReviewOverlay(){
     (p.conversationId&&!conversationTicketId(p.conversationId)?'<p>Chat personal: los demás mensajes permanecen privados. Solo se guarda lo que confirmes aquí.</p>':'')+
     (r.kind==='ticket'
       ? chatClientPicker(r,clientRef)+
+        '<label>Teléfono (opcional)<input id="astra-review-phone" type="tel" autocomplete="tel" placeholder="868 123 4567" value="'+escapeHtml(r.telefono||'')+'"></label>'+
         '<label><input type="checkbox" id="astra-review-excerpt"> Agregar el texto del mensaje como nota visible en el ticket</label>'
       : '<label>Ticket<select id="astra-review-ticket"><option value="">Seleccionar ticket</option>'+
         candidates.map(function(t){return '<option value="'+escapeHtml(t.id)+'"'+
@@ -26075,9 +26079,13 @@ async function astraConfirmReview(){
   try{
     if(r.kind==='ticket'){
       var cliente=(document.getElementById('astra-review-client').value||'').trim();
+      var telefono=(document.getElementById('astra-review-phone').value||'').trim(),phone=telefono?detectPhone(telefono):null;
+      if(telefono&&!phone){showToast('Revisa el teléfono antes de crear el ticket.');return;}
       var include=document.getElementById('astra-review-excerpt').checked;
       var id=await createTicketCore({cliente:cliente,clienteId:r.clientId||null});
       if(!id)return;
+      var phoneFailure=false;
+      if(phone){await refreshFromServer({background:true});var created=findTicket(id);phoneFailure=!created||!(created.clienteId?await updateClienteCore(created.clienteId,{telefono:phone.formatted},id):await applyDetectedPhoneToTicket(created,phone));}
       if(include){
         var note=await sb.from('bitacora').insert({ticket_id:id,tipo:'nota',autor:currentActorName()||null,
           payload:{text:items.map(function(x){return x.transcript||x.text||'';}).join('\n').slice(0,5000),source_post_id:p.id,
@@ -26102,6 +26110,7 @@ async function astraConfirmReview(){
       await refreshFromServer({background:true});
       openTicketById(id);
       showTicketCreatedToast(id);
+      if(phoneFailure)showToast('Ticket creado. No se pudo guardar el teléfono; toca Falta teléfono para completarlo.');
     }else{
       var ticketId=document.getElementById('astra-review-ticket').value;
       var t=findTicket(ticketId), desc=(document.getElementById('astra-review-desc').value||'').trim();
@@ -26905,29 +26914,43 @@ document.addEventListener("click",function(e){
   if(client&&UI.astraReview){UI.astraReview.clientId=client.getAttribute("data-chat-client");UI.astraReview.clientQuery="";renderKeepingLiveInputs();var c=(STATE.clientes||[]).find(function(x){return x.id===UI.astraReview.clientId;});var f=document.getElementById("astra-review-client");if(c&&f)f.value=c.nombre;return;}
 },true);
 document.addEventListener("input",function(e){
+  if(e.target.id==="astra-review-phone"&&UI.astraReview)UI.astraReview.telefono=e.target.value;
   if(e.target.id==="astra-review-client"&&UI.astraReview){UI.astraReview.clientQuery=e.target.value;UI.astraReview.clientId=null;UI.astraReview.clientSearchOpen=true;renderKeepingLiveInputs();}
 });
-var CHAT_TOUCH=null,CHAT_TOUCH_TIMER=null;
-document.addEventListener("pointerdown",function(e){
-  if(e.pointerType!=="touch")return;
-  var node=e.target.closest&&e.target.closest(".chat-msg:not(.chat-msg-deleted)");
-  if(!node||e.target.closest("button,a,input,textarea"))return;
-  CHAT_TOUCH={id:node.getAttribute("data-post-id"),x:e.clientX,y:e.clientY,at:Date.now()};
-  clearTimeout(CHAT_TOUCH_TIMER);
-  CHAT_TOUCH_TIMER=setTimeout(function(){if(!CHAT_TOUCH)return;UI.chatMenuFor=CHAT_TOUCH.id;UI.chatReactFor=null;CHAT_TOUCH=null;renderKeepingLiveInputs();},550);
+document.addEventListener('submit',async function(e){
+  var form=e.target;if(form.id!=='ticket-phone-form')return;e.preventDefault();
+  if(form.dataset.saving)return;var phone=detectPhone(document.getElementById('ticket-phone-input').value);if(!phone){showToast('Escribe un teléfono válido de 10 dígitos, con lada si corresponde.');return;}
+  var t=findTicket(form.getAttribute('data-ticket'));if(!t)return;form.dataset.saving='true';form.querySelector('[type=submit]').disabled=true;
+  try{var ok=t.clienteId?await updateClienteCore(t.clienteId,{telefono:phone.formatted},t.id):await applyDetectedPhoneToTicket(t,phone);if(ok){UI.contactPanel=null;UI.clienteFichaEditField=null;render();showToast('Teléfono guardado.');}}
+  catch(err){userError('Guardar teléfono',err);}finally{delete form.dataset.saving;form.querySelector('[type=submit]').disabled=false;}
+},true);
+var CHAT_TOUCH=null,CHAT_TOUCH_TIMER=null,CHAT_TOUCH_SUPPRESS=0;
+function chatTouchReset(){clearTimeout(CHAT_TOUCH_TIMER);if(CHAT_TOUCH&&CHAT_TOUCH.node){CHAT_TOUCH.node.style.transform='';CHAT_TOUCH.node.classList.remove('chat-swipe-ready');}CHAT_TOUCH=null;}
+document.addEventListener('click',function(e){if(Date.now()<CHAT_TOUCH_SUPPRESS&&e.target.closest&&e.target.closest('.chat-msg')&&!e.target.closest('button,a,.chat-msg-menu,.chat-react-palette')){e.preventDefault();e.stopImmediatePropagation();}},true);
+document.addEventListener('contextmenu',function(e){if(e.target.closest&&e.target.closest('.chat-msg')&&matchMedia('(pointer:coarse)').matches)e.preventDefault();});
+document.addEventListener('pointerdown',function(e){
+  if(e.pointerType!=='touch'||e.isPrimary===false)return;
+  chatTouchReset();var node=e.target.closest&&e.target.closest('.chat-msg:not(.chat-msg-deleted)');
+  if(!node||e.target.closest('button,a,input,textarea')||node.querySelector('[aria-label="Enviando"]'))return;
+  CHAT_TOUCH={id:node.getAttribute('data-post-id'),actor:currentActorId(),node:node,pointerId:e.pointerId,x:e.clientX,y:e.clientY,dx:0,dy:0};
+  CHAT_TOUCH_TIMER=setTimeout(function(){if(!CHAT_TOUCH)return;var id=CHAT_TOUCH.id,actor=CHAT_TOUCH.actor;chatTouchReset();if(actor!==currentActorId())return;CHAT_TOUCH_SUPPRESS=Date.now()+900;UI.chatMenuFor=id;UI.chatReactFor=null;renderKeepingLiveInputs();},550);
 },{passive:true});
-document.addEventListener("pointermove",function(e){
-  if(!CHAT_TOUCH)return;
-  if(Math.abs(e.clientY-CHAT_TOUCH.y)>15||Math.abs(e.clientX-CHAT_TOUCH.x)>15)clearTimeout(CHAT_TOUCH_TIMER);
+document.addEventListener('pointermove',function(e){
+  var g=CHAT_TOUCH;if(!g||g.pointerId!==e.pointerId)return;
+  g.dx=e.clientX-g.x;g.dy=e.clientY-g.y;
+  if(Math.abs(g.dx)>10||Math.abs(g.dy)>10)clearTimeout(CHAT_TOUCH_TIMER);
+  if(Math.abs(g.dy)>18&&Math.abs(g.dy)>Math.abs(g.dx)){chatTouchReset();return;}
+  if(g.dx< -12&&Math.abs(g.dx)>Math.abs(g.dy)*1.5){g.swiping=true;g.node.style.transform='translateX('+Math.max(-90,g.dx*.65)+'px)';g.node.classList.toggle('chat-swipe-ready',g.dx<=-65);if(e.cancelable)e.preventDefault();}
+},{passive:false});
+document.addEventListener('pointerup',function(e){
+  var g=CHAT_TOUCH;if(!g||g.pointerId!==e.pointerId)return;
+  var reply=e.clientX-g.x<=-65&&Math.abs(e.clientY-g.y)<35;
+  if(g.swiping||reply)CHAT_TOUCH_SUPPRESS=Date.now()+650;
+  chatTouchReset();
+  if(reply&&g.actor===currentActorId()){UI.astraReplyTo=g.id;UI.chatMenuFor=null;UI.chatReactFor=null;UI.pendingFocus={elId:'composer-input',userInitiated:true};renderKeepingLiveInputs();}
 },{passive:true});
-document.addEventListener("pointerup",function(e){
-  clearTimeout(CHAT_TOUCH_TIMER);
-  if(CHAT_TOUCH&&e.clientX-CHAT_TOUCH.x>65&&Math.abs(e.clientY-CHAT_TOUCH.y)<35){
-    UI.astraReplyTo=CHAT_TOUCH.id;UI.pendingFocus={elId:"composer-input",userInitiated:true};renderKeepingLiveInputs();
-  }
-  CHAT_TOUCH=null;
-},{passive:true});
-document.addEventListener("pointercancel",function(){clearTimeout(CHAT_TOUCH_TIMER);CHAT_TOUCH=null;});
+document.addEventListener('pointercancel',chatTouchReset);
+window.addEventListener('blur',chatTouchReset);
 setInterval(function(){if(!document.hidden&&AUTH_STATUS==="signed_in")chatRefreshReceipts();},10000);
 
 /* Chat has two screens: inbox and focused conversation. Existing mutations remain shared. */
