@@ -4331,6 +4331,25 @@ button.tk-task-open:hover{background:var(--surface-3)}
  .mobile-disclosure-content{display:contents!important;}
 }
 
+.device-switch-button{width:44px;min-width:44px;height:44px;border-radius:50%;flex-shrink:0;}
+.device-switch-button .i{width:21px;height:21px;}
+.device-inbox-account-actions{display:flex;align-items:center;gap:10px;}
+.device-picker-overlay{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.65);}
+.device-picker{width:100%;max-width:520px;max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:20px;box-shadow:var(--shadow-pop);}
+.device-picker header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.device-picker h2{font-size:22px;margin:0 0 6px;}.device-picker p{color:var(--text-muted);font-size:13px;margin:0;line-height:1.5;}
+.device-account-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.device-account-row{display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:16px;padding:4px;background:var(--surface-2);}
+.device-account-pick{display:flex;align-items:center;gap:12px;border:0;background:transparent;text-align:left;color:var(--text);font:inherit;min-height:76px;flex:1;min-width:0;padding:10px;border-radius:12px;cursor:pointer;}
+.device-account-pick:hover,.device-account-pick:focus-visible{background:var(--surface-3);}
+.device-account-avatar{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--surface-3);color:var(--accent-ink);font-weight:750;font-size:18px;flex-shrink:0;}
+.device-account-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;}.device-account-copy strong{font-size:17px;overflow-wrap:anywhere;}.device-account-copy small{font-size:12px;color:var(--text-muted);overflow-wrap:anywhere;}
+.device-account-status{color:var(--accent-ink);font-size:12px;}.device-account-remove{min-width:44px;min-height:44px;color:var(--text-faint);}
+.device-account-add{width:100%;min-height:48px;justify-content:center;}.device-picker .device-account-note{margin-top:14px;font-size:12px;}
+.login-device-accounts{margin-bottom:18px;width:100%;min-height:44px;justify-content:center;}
+.device-picker :is(button,a):focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media(max-width:600px){.device-picker-overlay{align-items:flex-end;padding:8px;}.device-picker{padding:18px 14px calc(18px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px);}.device-picker h2{font-size:20px;}}
+
 </style>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
@@ -5209,6 +5228,138 @@ function currentActor(){
    recargas/PWA). Sin sesión, boot() deja AUTH_STATUS="signed_out" y
    renderLoginScreen() toma el control total de la pantalla (ver el nuevo
    gate al inicio de render()) hasta que submitLogin() tenga éxito. */
+/* Each remembered person has a real Supabase session in a distinct SDK
+   storageKey. The index contains presentation metadata, never passwords/tokens. */
+var DEVICE_ACCOUNTS_KEY='dtg-device-accounts-v1',DEVICE_ACTIVE_KEY='dtg-device-active-v1';
+var DEVICE_LEGACY_KEY='sb-'+new URL(SUPABASE_URL).hostname.split('.')[0]+'-auth-token';
+var DEVICE_CLIENTS=Object.create(null),DEVICE_AUTH_LISTENERS=Object.create(null);
+var DEVICE_CLIENT_KEY=DEVICE_LEGACY_KEY,DEVICE_SWITCH_BUSY=false,DEVICE_PICKER_OPEN=false,DEVICE_PICKER_ERROR='',DEVICE_LOGIN_EMAIL='';
+var AUTH_EPOCH=0,DTG_AUTH_WRITES=0,DEVICE_BROWSER_NOTIFICATIONS=[];
+function deviceAccounts(){
+  try{var list=JSON.parse(localStorage.getItem(DEVICE_ACCOUNTS_KEY)||'[]');return Array.isArray(list)?list.filter(function(a){return a&&typeof a.id==='string'&&typeof a.key==='string'&&(a.key===DEVICE_LEGACY_KEY||/^dtg-account-[a-z0-9-]+$/i.test(a.key));}):[];}catch(e){return [];}
+}
+function deviceWriteAccounts(list){try{localStorage.setItem(DEVICE_ACCOUNTS_KEY,JSON.stringify(list));return true;}catch(e){return false;}}
+function deviceSetActive(key){try{if(key)localStorage.setItem(DEVICE_ACTIVE_KEY,key);else localStorage.removeItem(DEVICE_ACTIVE_KEY);}catch(e){}}
+function deviceClient(key){
+  if(DEVICE_CLIENTS[key])return DEVICE_CLIENTS[key];
+  var client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:key,persistSession:true,autoRefreshToken:false,detectSessionInUrl:key===DEVICE_LEGACY_KEY}});
+  DEVICE_CLIENTS[key]=client;
+  if(client.auth.onAuthStateChange){
+    DEVICE_AUTH_LISTENERS[key]=client.auth.onAuthStateChange(function(event,session){
+      if(client!==sb)return;
+      if(event==='TOKEN_REFRESHED' && session)AUTH_SESSION=session;
+      if(event==='SIGNED_OUT' && !DEVICE_SWITCH_BUSY && AUTH_STATUS==='signed_in')setTimeout(function(){if(client===sb&&!DEVICE_SWITCH_BUSY)deviceSessionExpired();},0);
+    }).data.subscription;
+  }
+  return client;
+}
+function deviceRemember(session){
+  if(!session||!session.user||!CURRENT_PROFILE||!CURRENT_PROFILE.active)return;
+  var list=deviceAccounts(),prev=list.find(function(a){return a.id===session.user.id;});
+  if(prev && prev.key!==DEVICE_CLIENT_KEY)deviceForgetStorage(prev.key);
+  var row={id:session.user.id,key:DEVICE_CLIENT_KEY,name:CURRENT_PROFILE.display_name||session.user.email||'Cuenta',email:session.user.email||'',color:CURRENT_PROFILE.accent_color||'',lastUsed:Date.now()};
+  deviceWriteAccounts([row].concat(list.filter(function(a){return a.id!==row.id && a.key!==row.key;})));
+  deviceSetActive(DEVICE_CLIENT_KEY);
+}
+async function deviceForgetStorage(key){
+  var client=DEVICE_CLIENTS[key]||deviceClient(key);
+  try{await client.auth.signOut({scope:'local'});}catch(e){}
+  try{client.auth.stopAutoRefresh();}catch(e){}
+  try{localStorage.removeItem(key);localStorage.removeItem(key+'-code-verifier');}catch(e){}
+}
+function deviceWorkBusy(){return DTG_AUTH_WRITES>0 || UI.feedComposerBusy || UI.ticketSendBusy || UI.ticketProductBusy || UI.bugReportSaving || (UI.operaciones.editor&&UI.operaciones.editor.saving) || (UI.docDraft&&UI.docDraft.emitting) || (UI.astraReview&&UI.astraReview.busy) || (UI.docTermsEditor&&UI.docTermsEditor.saving);}
+function deviceSwitchButton(){return '<button type="button" class="device-switch-button icon-btn" data-device="open" aria-label="Cambiar usuario" title="Cambiar usuario">'+icon('users')+'</button>';}
+function devicePickerHtml(){
+  var current=currentActorId(),list=deviceAccounts();
+  return '<div class="device-picker-overlay" data-device="close"><section class="device-picker" role="dialog" aria-modal="true" aria-label="Cambiar usuario"><header><div><h2>¿Quién va a trabajar?</h2><p>Cuentas guardadas en este dispositivo</p></div><button type="button" class="icon-btn" data-device="close" aria-label="Cerrar selector">'+icon('x')+'</button></header>'+
+    (DEVICE_PICKER_ERROR?'<p class="login-error" role="alert">'+escapeHtml(DEVICE_PICKER_ERROR)+'</p>':'')+
+    '<div class="device-account-list">'+list.map(function(a){var color=isValidPersonColor(a.color)?' pc-'+a.color:'';return '<div class="device-account-row"><button type="button" class="device-account-pick" data-device="pick" data-account-id="'+escapeHtml(a.id)+'"'+(DEVICE_SWITCH_BUSY?' disabled':'')+'><span class="device-account-avatar'+color+'">'+escapeHtml(a.name.split(/\s+/).slice(0,2).map(function(n){return n[0];}).join('').toUpperCase())+'</span><span class="device-account-copy"><strong>'+escapeHtml(a.name)+'</strong><small>'+escapeHtml(a.email)+'</small></span><span class="device-account-status">'+(a.id===current?'Actual':icon('chevron-right'))+'</span></button><button type="button" class="device-account-remove icon-btn" data-device="forget" data-account-id="'+escapeHtml(a.id)+'" aria-label="Quitar '+escapeHtml(a.name)+' de este dispositivo"'+(DEVICE_SWITCH_BUSY?' disabled':'')+'>'+icon('x')+'</button></div>';}).join('')+(list.length?'':'<p class="wa-empty">Agrega una cuenta para cambiar rápidamente.</p>')+'</div>'+
+    '<button type="button" class="btn btn-primary device-account-add" data-device="add"'+(DEVICE_SWITCH_BUSY?' disabled':'')+'>'+icon('plus')+'Agregar cuenta</button><p class="device-account-note">Las cuentas guardadas pueden abrirse sin contraseña desde este dispositivo. Usa «Quitar» para dejar de recordarlas.</p></section></div>';
+}
+function deviceOpenPicker(){
+  if(DEVICE_SWITCH_BUSY)return;
+  if(AUTH_SESSION&&CURRENT_PROFILE)deviceRemember(AUTH_SESSION);
+  DEVICE_PICKER_OPEN=true;DEVICE_PICKER_ERROR='';setAccountMenuOpen(false);
+  var old=document.querySelector('.device-picker-overlay');if(old)old.remove();
+  document.getElementById('app').insertAdjacentHTML('beforeend',devicePickerHtml());
+  var first=document.querySelector('.device-account-pick,.device-account-add');if(first)first.focus({preventScroll:true});
+}
+function deviceClosePicker(){if(DEVICE_SWITCH_BUSY)return;DEVICE_PICKER_OPEN=false;var el=document.querySelector('.device-picker-overlay');if(el)el.remove();var button=document.querySelector('[data-device="open"]');if(button)button.focus({preventScroll:true});}
+function deviceResetIdentity(){
+  AUTH_EPOCH++;
+  clearTimeout(realtimeTimer);realtimeTimer=null;refreshPending=null;refreshInFlight=null;
+  Object.keys(chatScopeSeenTimers||{}).forEach(function(k){clearTimeout(chatScopeSeenTimers[k]);});chatScopeSeenTimers={};
+  if(ASTRA_RECORDER){try{ASTRA_RECORDER.onstop=null;ASTRA_RECORDER.stop();}catch(e){}}
+  astraRecordingCleanup();astraDropLocalAudio();astraPlayerStop();
+  Object.keys(UI.chatFileDrafts||{}).forEach(function(k){(UI.chatFileDrafts[k]||[]).forEach(function(x){if(x.previewUrl)URL.revokeObjectURL(x.previewUrl);});});
+  signedUrlCache={};CHAT_RECEIPTS={};CHAT_RECEIPTS_LAST=0;DTG_POSTS_AVISADOS={};DTG_CHAT_ARRANCADO=false;
+  DTG_ALERTS=[];DTG_OFFLINE=false;
+  if(DTG_TAB_CH){try{DTG_TAB_CH.close();}catch(e){}}DTG_TAB_CH=null;clearInterval(dtgTabTimer);dtgTabTimer=null;DTG_TABS={};
+  STATE={meta:{queSigueOptions:[],teamNames:[]},tickets:[],clientes:[],teamPosts:[],feedReactions:[],profiles:[],conversations:[],chatReadState:[],chatState:null};
+  AUTH_SESSION=null;CURRENT_PROFILE=null;AUTH_ERROR='';FATAL_ERROR=null;AUTH_STATUS='loading';
+  UI=JSON.parse(UI_INITIAL_SNAPSHOT);UI.mainView=null;UI.selectedTicketId=null;UI.selectedClienteId=null;UI.waChatOpen=false;MOBILE_DISCLOSURE=Object.create(null);
+  DEVICE_BROWSER_NOTIFICATIONS.forEach(function(n){try{n.close();}catch(e){}});DEVICE_BROWSER_NOTIFICATIONS=[];
+  closePhotoZoom();renderChatNotifs();renderAlerts();renderRtBadge();
+  try{history.replaceState(null,'',location.pathname);}catch(e){}
+}
+async function deviceLeaveIdentity(){
+  // Hide all previous-user content before awaiting cleanup/network requests.
+  var previous=sb;
+  AUTH_STATUS='loading';render();
+  try{unsubscribeRealtime();}catch(e){}
+  // Unsubscribe removes server mapping before reattaching under the new user.
+  try{await pushSoltarDispositivo();}catch(e){}
+  try{if(previous)previous.auth.stopAutoRefresh();}catch(e){}
+  if(AUTH_SESSION && !deviceAccounts().some(function(a){return a.key===DEVICE_CLIENT_KEY;}))await deviceForgetStorage(DEVICE_CLIENT_KEY);
+  deviceResetIdentity();render();
+}
+async function deviceSwitchAccount(id){
+  if(DEVICE_SWITCH_BUSY)return;
+  if(deviceWorkBusy()){DEVICE_PICKER_ERROR='Espera a que termine de guardar o enviar.';deviceOpenPicker();DEVICE_PICKER_ERROR='Espera a que termine de guardar o enviar.';renderDevicePicker();return;}
+  var row=deviceAccounts().find(function(a){return a.id===id;});if(!row)return;
+  if(id===currentActorId()){deviceClosePicker();return;}
+  DEVICE_SWITCH_BUSY=true;DEVICE_PICKER_OPEN=false;DEVICE_PICKER_ERROR='';
+  try{
+    await deviceLeaveIdentity();DEVICE_CLIENT_KEY=row.key;sb=deviceClient(row.key);
+    var res=await sb.auth.getSession();if(res.error)throw res.error;
+    if(!res.data.session || res.data.session.user.id!==row.id)throw Object.assign(new Error('Vuelve a autenticar esta cuenta.'),{status:401});
+    var verified=await sb.auth.getUser();if(verified.error)throw verified.error;
+    if(!verified.data.user || verified.data.user.id!==row.id)throw Object.assign(new Error('Vuelve a autenticar esta cuenta.'),{status:401});
+    await startAppForSession(res.data.session);
+  }catch(e){
+    AUTH_STATUS='signed_out';DEVICE_LOGIN_EMAIL=row.email;
+    AUTH_ERROR=(e.status===400||e.status===401||e.status===403)?'Esta sesión terminó. Ingresa la contraseña una vez para volver a guardar la cuenta.':'No se pudo conectar. Reintenta desde Cambiar usuario.';
+    render();
+  }finally{DEVICE_SWITCH_BUSY=false;}
+}
+async function deviceAddAccount(){
+  if(DEVICE_SWITCH_BUSY)return;
+  if(deviceWorkBusy()){DEVICE_PICKER_ERROR='Espera a que termine de guardar o enviar.';renderDevicePicker();return;}
+  DEVICE_SWITCH_BUSY=true;DEVICE_PICKER_OPEN=false;
+  try{await deviceLeaveIdentity();DEVICE_CLIENT_KEY='dtg-account-'+uuid4();sb=deviceClient(DEVICE_CLIENT_KEY);DEVICE_LOGIN_EMAIL='';AUTH_STATUS='signed_out';render();}finally{DEVICE_SWITCH_BUSY=false;}
+}
+async function deviceForgetAccount(id){
+  if(DEVICE_SWITCH_BUSY)return;
+  var row=deviceAccounts().find(function(a){return a.id===id;});if(!row)return;
+  if(id===currentActorId()){await signOut();DEVICE_PICKER_OPEN=false;return;}
+  DEVICE_SWITCH_BUSY=true;
+  // Remove the local credential immediately even if logout needs the network.
+  deviceWriteAccounts(deviceAccounts().filter(function(a){return a.id!==id;}));
+  try{await deviceForgetStorage(row.key);}finally{DEVICE_SWITCH_BUSY=false;renderDevicePicker();}
+}
+function renderDevicePicker(){var old=document.querySelector('.device-picker-overlay');if(old)old.remove();if(DEVICE_PICKER_OPEN)document.getElementById('app').insertAdjacentHTML('beforeend',devicePickerHtml());}
+async function deviceSessionExpired(){
+  var row=deviceAccounts().find(function(a){return a.key===DEVICE_CLIENT_KEY;});
+  DEVICE_SWITCH_BUSY=true;try{await deviceLeaveIdentity();AUTH_STATUS='signed_out';DEVICE_LOGIN_EMAIL=row?row.email:'';AUTH_ERROR='Esta sesión terminó. Vuelve a entrar o elige otra cuenta.';render();}finally{DEVICE_SWITCH_BUSY=false;}
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-device]');if(!b)return;
+  if(b.classList.contains('device-picker-overlay')&&e.target!==b)return;
+  e.preventDefault();e.stopImmediatePropagation();var action=b.dataset.device;
+  if(action==='open')deviceOpenPicker();if(action==='close')deviceClosePicker();if(action==='pick')deviceSwitchAccount(b.dataset.accountId);if(action==='add')deviceAddAccount();if(action==='forget')deviceForgetAccount(b.dataset.accountId);
+},true);
+document.addEventListener('keydown',function(e){if(!DEVICE_PICKER_OPEN)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();deviceClosePicker();return;}if(e.key==='Tab'){var all=Array.from(document.querySelectorAll('.device-picker button:not([disabled])'));if(!all.length)return;var first=all[0],last=all[all.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}},true);
+
 async function ensureSession(){
   var got = await sb.auth.getSession();
   return (got.data && got.data.session) || null;
@@ -5239,16 +5390,22 @@ async function fetchCurrentProfile(userId){
    persona ve el CRM (vacío un instante) en vez de una pantalla en blanco
    mientras refreshFromServer() todavía viaja. */
 async function startAppForSession(session){
+  var sessionEpoch=AUTH_EPOCH,sessionClient=sb;
   AUTH_SESSION = session;
-  CURRENT_PROFILE = await fetchCurrentProfile(session.user.id);
+  var profile = await fetchCurrentProfile(session.user.id);
+  if(sessionEpoch!==AUTH_EPOCH || sessionClient!==sb)return false;
+  CURRENT_PROFILE = profile;
   if(!CURRENT_PROFILE || !CURRENT_PROFILE.active){
     AUTH_STATUS = "inactive";
     render();
     return;
   }
+  deviceRemember(session);
+  try{sb.auth.startAutoRefresh();}catch(e){}
   AUTH_STATUS = "signed_in";
   render();
   await refreshFromServer();
+  if(sessionEpoch!==AUTH_EPOCH || sessionClient!==sb)return false;
   rememberName(currentActorName());
   subscribeRealtime();
   /* v0.23: se marca TODO lo que ya existe como "ya avisado" antes de abrir
@@ -5261,7 +5418,7 @@ async function startAppForSession(session){
   renderRtBadge();
   /* Si el push ya estaba activo en este dispositivo, se reengancha el
      service worker en silencio (sin volver a pedir permiso). */
-  if(chatPrefs().notifPush && pushSoportado() && Notification.permission === "granted") registrarSW();
+  if(chatPrefs().notifPush && pushSoportado() && Notification.permission === "granted") activarPush();
   /* visibilitychange/online se escuchan una sola vez más abajo, con el guard
      del selector de archivos. No se registran de nuevo por sesión: duplicar
      estos listeners multiplicaba refreshes completos después de relogins. */
@@ -5288,6 +5445,8 @@ function friendlyAuthError(e){
 }
 
 async function submitLogin(email, password){
+  if(DEVICE_SWITCH_BUSY)return;
+  DEVICE_SWITCH_BUSY=true;DEVICE_LOGIN_EMAIL=email;
   AUTH_STATUS = "signing_in";
   AUTH_ERROR = "";
   render();
@@ -5300,7 +5459,7 @@ async function submitLogin(email, password){
     AUTH_ERROR = friendlyAuthError(e);
     UI.pendingFocus = { elId: "login-email-input" };
     render();
-  }
+  }finally{DEVICE_SWITCH_BUSY=false;}
 }
 
 /* Cierra el modo "Editar nombre" del menú de cuenta sin guardar nada. */
@@ -5369,6 +5528,11 @@ async function saveMyColor(colorId){
    siguiente persona que inicia sesión vería, por un instante, el ticket o
    la vista que dejó abierta la anterior. */
 async function signOut(){
+  if(DEVICE_SWITCH_BUSY || deviceWorkBusy())return;
+  DEVICE_SWITCH_BUSY=true;
+  var logoutId=currentActorId(),logoutKey=DEVICE_CLIENT_KEY;
+  AUTH_EPOCH++;
+  AUTH_STATUS='loading';render();
   Object.keys(UI.chatFileDrafts||{}).forEach(function(key){(UI.chatFileDrafts[key]||[]).forEach(function(x){if(x.previewUrl)URL.revokeObjectURL(x.previewUrl);});});
   CHAT_RECEIPTS={};CHAT_RECEIPTS_LAST=0;
   Object.keys(chatScopeSeenTimers||{}).forEach(function(key){clearTimeout(chatScopeSeenTimers[key]);});chatScopeSeenTimers={};
@@ -5377,7 +5541,11 @@ async function signOut(){
   try{ await pushSoltarDispositivo(); }catch(e){}
   try{ DTG_POSTS_AVISADOS = {}; DTG_CHAT_ARRANCADO = false; UI.chatNotifs = []; renderChatNotifs(); }catch(e){}
   try{ unsubscribeRealtime(); }catch(e){}
-  try{ await sb.auth.signOut(); }catch(e){}
+  try{ await deviceForgetStorage(logoutKey); }catch(e){}
+  deviceWriteAccounts(deviceAccounts().filter(function(a){return a.id!==logoutId;}));
+  deviceSetActive(null);
+  deviceResetIdentity();
+  DEVICE_PICKER_OPEN=false;DEVICE_LOGIN_EMAIL="";DEVICE_SWITCH_BUSY=false;
   AUTH_SESSION = null;
   CURRENT_PROFILE = null;
   AUTH_STATUS = "signed_out";
@@ -5397,9 +5565,9 @@ var DTG_PAGE_SIZE = 1000;
 var DTG_MAX_ROWS = 200000; /* tope de cordura: nadie tiene 200k filas por tabla */
 async function selectAll(table, opts){
   opts = opts || {};
-  var rows = [];
+  var rows = [],queryClient=sb;
   for(var from = 0; from < DTG_MAX_ROWS; from += DTG_PAGE_SIZE){
-    var q = sb.from(table).select(opts.select || "*");
+    var q = queryClient.from(table).select(opts.select || "*");
     if(opts.isNull) q = q.is(opts.isNull, null);
     if(opts.order) q = q.order(opts.order, { ascending: opts.ascending !== false });
     var res = await q.range(from, from + DTG_PAGE_SIZE - 1);
@@ -5706,6 +5874,8 @@ function setSyncIndicator(show){
   if(dot) dot.hidden = !show;
 }
 async function refreshFromServer(opts){
+  if(AUTH_STATUS!=="signed_in")return;
+  var refreshEpoch=AUTH_EPOCH,refreshClient=sb;
   opts = opts || {};
   if(opts.refocus) UI.pendingFocus = UI.pendingFocus || "composer";
   if(refreshInFlight){
@@ -5719,6 +5889,7 @@ async function refreshFromServer(opts){
       setSyncIndicator(true);
       try{
         var fresh = await fetchAllState();
+        if(refreshEpoch!==AUTH_EPOCH || refreshClient!==sb)return;
         /* v0.23: un refresco NO es un mensaje nuevo. Lo que llegue aquí se
            marca como ya-avisado ANTES de reemplazar el estado, para que
            reconectar o volver de otra app no reproduzca la tanda entera de
@@ -5744,6 +5915,7 @@ async function refreshFromServer(opts){
         }
         if(background) renderKeepingLiveInputs(); else render();
       }catch(e){
+        if(refreshEpoch!==AUTH_EPOCH || refreshClient!==sb)return;
         try{ console.error("[DTG] sincronizar", e); }catch(x){}
         /* X1.1: la sincronización fallida nunca pisa un error de escritura;
            si es de red, lo dice la franja, no un toast. */
@@ -6943,6 +7115,7 @@ function renderSidebar(){
        nombre, que abre un menú corto con "Cerrar sesión" — nunca vuelve a
        ser un input permanente. */
     '<div class="sidebar-account-bar">' +
+      deviceSwitchButton() +
       '<div class="sidebar-account-wrap">' +
         '<button type="button" class="sidebar-account-btn" data-action="toggle-account-menu" aria-haspopup="true" aria-expanded="' + (UI.accountMenuOpen?"true":"false") + '">' +
           personAvatar(currentActorName() || "?", { size: "sm" }) +
@@ -7024,6 +7197,7 @@ function renderAccountMenu(){
       '<button type="button" class="menu-item" data-action="edit-name-open">' + icon("pencil") + "<span>Editar nombre</span></button>" +
       '<button type="button" class="menu-item" data-action="doc-terms-open">' + icon("file-text") + "<span>Términos de documentos</span></button>" +
       '<button type="button" class="menu-item" data-action="chat-prefs-open">' + icon("bell") + "<span>Avisos del equipo</span></button>" +
+      '<button type="button" class="menu-item" data-device="open">'+icon("users")+"<span>Cambiar usuario</span></button>"+
       '<button type="button" class="menu-item" data-action="logout">' + icon("logout") + "<span>Cerrar sesión</span></button>" +
     "</div>"
   );
@@ -7048,10 +7222,11 @@ function renderLoginScreen(){
         '<div class="login-brand">' + escapeHtml(DTG_IDENTITY.name) + '</div>' +
         '<div class="login-tagline">' + escapeHtml(DTG_IDENTITY.tagline) + '</div>' +
         (AUTH_ERROR ? '<div class="login-error" role="alert">' + escapeHtml(AUTH_ERROR) + "</div>" : "") +
+        (deviceAccounts().length?'<button type="button" class="btn btn-ghost login-device-accounts" data-device="open">'+icon("users")+'Elegir cuenta guardada</button>':'')+
         '<form class="login-form" id="login-form">' +
           '<label class="login-field">' +
             '<span>Correo</span>' +
-            '<input type="email" id="login-email-input" name="email" autocomplete="username" required' + (submitting?" disabled":"") + '>' +
+            '<input type="email" id="login-email-input" name="email" autocomplete="username" value="'+escapeHtml(DEVICE_LOGIN_EMAIL)+'" required' + (submitting?" disabled":"") + '>' +
           "</label>" +
           '<label class="login-field">' +
             '<span>Contraseña</span>' +
@@ -7081,6 +7256,7 @@ function renderInactiveScreen(){
           "Tu cuenta" + (email ? " (" + escapeHtml(email) + ")" : "") + " todavía no está activa en este CRM. " +
           "Pídele a un administrador que active tu perfil." +
         "</div>" +
+        '<button type="button" class="login-submit-btn" data-device="open">Cambiar usuario</button>'+
         '<button type="button" class="login-submit-btn" data-action="logout">Cerrar sesión</button>' +
       "</div>" +
     "</div>"
@@ -8386,7 +8562,7 @@ function dtgTabsStart(){
   DTG_TABS[DTG_TAB_ID] = Date.now();
   try{
     if(typeof BroadcastChannel === "function"){
-      DTG_TAB_CH = new BroadcastChannel("dtg-equipo");
+      DTG_TAB_CH = new BroadcastChannel("dtg-equipo:"+currentActorId());
       DTG_TAB_CH.onmessage = function(ev){ dtgTabOnMessage(ev && ev.data); };
     }
   }catch(e){ DTG_TAB_CH = null; }
@@ -8581,6 +8757,7 @@ function mostrarNotificacionNavegador(post, kind){
       body: String(post.text || "").slice(0, 140),
       tag: "dtg-chat-" + post.id, icon: "icons/icon-192.png"
     });
+    DEVICE_BROWSER_NOTIFICATIONS.push(n);
     n.onclick = function(){ try{ window.focus(); }catch(e){} abrirChatEnMensaje(post.id); n.close(); };
   }catch(e){ /* algunos navegadores lanzan si se construye sin service worker */ }
 }
@@ -8622,23 +8799,28 @@ async function registrarSW(){
   }catch(e){ console.error("[DTG] registrar sw", e); return null; }
 }
 async function activarPush(){
+  var pushEpoch=AUTH_EPOCH,pushClient=sb,pushActor=currentActorId();
   if(!pushSoportado()){ showToast("Este navegador no puede mandar avisos con la app cerrada."); return false; }
   if(!DTG_VAPID_PUBLIC){ adminNote("Falta configurar la llave pública VAPID en app_settings (clave push_vapid_public)."); showToast("Los avisos con la app cerrada todavía no están configurados."); return false; }
   var permiso = Notification.permission;
   if(permiso === "default") permiso = await Notification.requestPermission();
+  if(pushEpoch!==AUTH_EPOCH || pushClient!==sb)return false;
   if(permiso !== "granted"){ showToast("El navegador no dio permiso para avisar. El chat sigue funcionando igual."); return false; }
   var reg = await registrarSW();
+  if(pushEpoch!==AUTH_EPOCH || pushClient!==sb)return false;
   if(!reg) { showToast("No se pudo preparar los avisos en este dispositivo."); return false; }
   try{
     var sub = await reg.pushManager.getSubscription();
     if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(DTG_VAPID_PUBLIC) });
+    if(pushEpoch!==AUTH_EPOCH || pushClient!==sb)return false;
     var j = sub.toJSON();
-    var r = await sb.from("push_subscriptions").upsert({
-      user_id: currentActorId(), endpoint: j.endpoint,
+    var r = await pushClient.from("push_subscriptions").upsert({
+      user_id: pushActor, endpoint: j.endpoint,
       p256dh: j.keys.p256dh, auth: j.keys.auth,
       user_agent: String(navigator.userAgent || "").slice(0, 200)
     }, { onConflict: "endpoint" });
     if(r.error) throw r.error;
+    if(pushEpoch!==AUTH_EPOCH || pushClient!==sb)return false;
     await saveChatPrefs({ notifPush: true });
     showToast("Avisos activados en este dispositivo.");
     return true;
@@ -8664,6 +8846,7 @@ async function desactivarPush(opts){
 /* Al cerrar sesión hay que SOLTAR el dispositivo: si no, el siguiente que
    use esta computadora recibiría los avisos de quien se fue. */
 async function pushSoltarDispositivo(){
+  try{var noticeReg=DTG_SW_REG||(pushSoportado()?await navigator.serviceWorker.getRegistration():null);if(noticeReg&&noticeReg.getNotifications)(await noticeReg.getNotifications()).forEach(function(n){n.close();});}catch(e){}
   await desactivarPush({ silencioso: true });
   try{ if(DTG_SW_REG) await DTG_SW_REG.unregister(); }catch(e){}
   DTG_SW_REG = null;
@@ -16570,6 +16753,7 @@ function render(){
   }
   if(AUTH_STATUS === "signed_out" || AUTH_STATUS === "signing_in"){
     app.innerHTML = renderLoginScreen();
+    renderDevicePicker();
     wireEvents(); /* wireEvents() ya termina llamando a applyFocus() */
     return;
   }
@@ -16606,7 +16790,7 @@ function render(){
       '<div class="sidebar' + (UI.sidebarOpen?" open":"") + '" id="sidebar">' + renderSidebar() + "</div>" +
       (UI.sidebarOpen ? '<div class="sidebar-backdrop" data-action="close-sidebar"></div>' : "") +
       '<div class="main">' +
-        '<div class="mobile-topbar"><button class="sidebar-toggle" data-action="toggle-sidebar" aria-label="Abrir menú">' + icon("menu") + '</button><span class="mobile-topbar-brand">' + dtgLogoMark(22) + 'Design To Go</span>' + renderNotificationBell() + '</div>' +
+        '<div class="mobile-topbar"><button class="sidebar-toggle" data-action="toggle-sidebar" aria-label="Abrir menú">' + icon("menu") + '</button><span class="mobile-topbar-brand">' + dtgLogoMark(22) + 'Design To Go</span>' + deviceSwitchButton() + renderNotificationBell() + '</div>' +
         renderMain() +
       "</div>" +
     "</div>" +
@@ -16636,6 +16820,7 @@ function render(){
     renderDeletePhotoConfirmOverlay() +
     renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
+  renderDevicePicker();
   polishMobileUI();
   aparecidoPaseFin();
   restoreComposerDraft(composerSnap);
@@ -17257,6 +17442,7 @@ function pickSlashCommand(cmd){
 }
 
 function hydrateImages(){
+  var imageEpoch=AUTH_EPOCH,imageClient=sb;
   var imgs = document.querySelectorAll("img[data-storage-path]");
   imgs.forEach(async function(img){
     var path = img.getAttribute("data-storage-path");
@@ -17265,6 +17451,7 @@ function hydrateImages(){
     if(signedUrlCache[cacheKey]){ img.src = signedUrlCache[cacheKey]; return; }
     try{
       var res = await sb.storage.from(bucket).createSignedUrl(path, 3600);
+      if(imageEpoch!==AUTH_EPOCH || imageClient!==sb)return;
       if(res.data && res.data.signedUrl){
         signedUrlCache[cacheKey] = res.data.signedUrl;
         if(document.body.contains(img)) img.src = res.data.signedUrl;
@@ -17443,11 +17630,12 @@ function adminNote(msg, e){
 /* Núcleo único de escritura optimista. target: objeto que se marca como
    pendiente (reloj + opacidad) mientras viaja; revert: cómo deshacerlo. */
 async function optimisticWrite(o){
+  DTG_AUTH_WRITES++;
   var target = o.target || null;
-  if(target) target._pending = true;
-  if(o.apply) o.apply();
-  render();
   try{
+    if(target) target._pending = true;
+    if(o.apply) o.apply();
+    render();
     await o.persist();
     if(target) delete target._pending;
     if(o.after) o.after();
@@ -17460,7 +17648,7 @@ async function optimisticWrite(o){
     render();
     userError(o.label, e, o.retry || null);
     return false;
-  }
+  }finally{DTG_AUTH_WRITES--;}
 }
 function pendingMark(obj){
   return (obj && obj._pending) ? '<span class="pending-mark" title="Guardando…" aria-label="Guardando">' + icon("clock") + "</span>" : "";
@@ -26083,6 +26271,7 @@ function astraPlayerStop(){
   ASTRA_PLAYER.key=null;ASTRA_PLAYER.seek=null;astraPlayerSync();
 }
 async function astraPlayerLoad(key,path,autoplay){
+  var audioEpoch=AUTH_EPOCH,audioClient=sb;
   var a=astraPlayerAudio(),url=null;
   ASTRA_PLAYER.key=key;ASTRA_PLAYER.error=null;
   if(key==='local')url=UI.astraAudioUrl;
@@ -26090,6 +26279,7 @@ async function astraPlayerLoad(key,path,autoplay){
     url=signedUrlCache[path];
     if(!url){
       var r=await sb.storage.from('chat-private').createSignedUrl(path,3600);
+      if(audioEpoch!==AUTH_EPOCH || audioClient!==sb)return;
       if(r.error||!r.data||!r.data.signedUrl){if(ASTRA_PLAYER.key===key){ASTRA_PLAYER.error=key;ASTRA_PLAYER.key=null;showToast('No se pudo cargar el audio.');astraPlayerSync();}return;}
       url=signedUrlCache[path]=r.data.signedUrl;
     }
@@ -26553,7 +26743,10 @@ async function boot(){
     return;
   }
   try{
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    var remembered=deviceAccounts(),activeKey=null;
+    try{activeKey=localStorage.getItem(DEVICE_ACTIVE_KEY);}catch(e){}
+    DEVICE_CLIENT_KEY=remembered.some(function(a){return a.key===activeKey;})?activeKey:DEVICE_LEGACY_KEY;
+    sb=deviceClient(DEVICE_CLIENT_KEY);
     var session = await ensureSession();
     if(!session){
       /* Identity Foundation §7: sin sesión guardada -> pantalla de login.
@@ -26763,7 +26956,7 @@ function waInbox(){
   rows.forEach(function(r){r.last=(STATE.teamPosts||[]).filter(function(p){return !p.threadRootId&&!p.pending&&!isPostExpired(p)&&(p.conversationId||null)===(r.scope||null);}).sort(function(a,b){return Date.parse(b.createdAt)-Date.parse(a.createdAt);})[0];});
   rows.sort(function(a,b){return (b.last?Date.parse(b.last.createdAt):0)-(a.last?Date.parse(a.last.createdAt):0)||a.name.localeCompare(b.name);});
   if(UI.waSearch)rows=rows.filter(function(r){return normalizeWord(r.name+" "+waPreview(r.last)).indexOf(normalizeWord(UI.waSearch))>=0;});
-  return '<section class="wa-inbox" aria-label="Lista de chats"><header class="wa-inbox-header"><button class="wa-circle" data-action="toggle-sidebar" aria-label="Abrir menú">'+icon("menu")+'</button><button class="wa-circle" data-wa="profile" aria-label="Mi perfil">'+waAvatar(currentActorName(),currentActorId())+'</button></header><h1>Chats</h1>'+
+  return '<section class="wa-inbox" aria-label="Lista de chats"><header class="wa-inbox-header"><button class="wa-circle" data-action="toggle-sidebar" aria-label="Abrir menú">'+icon("menu")+'</button><div class="device-inbox-account-actions">'+deviceSwitchButton()+'<button class="wa-circle" data-wa="profile" aria-label="Mi perfil">'+waAvatar(currentActorName(),currentActorId())+'</button></div></header><h1>Chats</h1>'+
     '<div class="wa-inbox-scroll" id="wa-inbox-scroll"><div class="wa-discover'+(UI.waToolsOpen?' shown':'')+'" id="wa-discover"><label>'+icon("search")+'<input id="wa-search" type="search" placeholder="Buscar chats" aria-label="Buscar chats" value="'+escapeHtml(UI.waSearch||"")+'"></label><button class="btn btn-ghost" data-action="go-tickets">Tickets</button><button class="btn btn-ghost" data-action="ops-task-new">Nueva tarea</button></div>'+rows.map(function(r){var n=chatUnreadForConversation(r.scope);return '<button class="wa-chat-row" data-wa="open"'+(r.id?' data-user="'+escapeHtml(r.id)+'"':'')+'>'+waAvatar(r.name,r.id)+'<span class="wa-row-copy"><span class="wa-row-head"><b>'+escapeHtml(r.name)+'</b><time>'+escapeHtml(waDate(r.last&&r.last.createdAt))+'</time></span><span class="wa-row-preview"><span>'+escapeHtml(waPreview(r.last))+'</span>'+(n?'<b class="wa-unread">'+n+'</b>':'')+'</span></span></button>';}).join("")+(rows.length?"":'<p class="wa-empty">No se encontraron chats.</p>')+'</div></section>';
 }
 function waReceiptTitle(id){var names=Array.from(new Set(CHAT_RECEIPTS[id]||[]));return names.length?"Visto por "+names.join(", "):"Enviado al servidor";}
