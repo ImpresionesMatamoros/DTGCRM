@@ -4223,6 +4223,112 @@ button.tk-task-open:hover{background:var(--surface-3)}
  .chat-react-palette{grid-template-columns:repeat(7,minmax(0,1fr))}
  .chat-react-opt-label{font-size:10px}
 }
+/* Mobile app polish. Desktop and the dedicated Chats surface retain their layout. */
+@media(max-width:880px){
+ .app:not(.wa-home) .main{min-width:0;}
+ .app:not(.wa-home) .mobile-topbar{min-height:56px;padding:6px 12px;gap:10px;}
+ .mobile-page-title{font-size:18px!important;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+ .mobile-title-merged .view-title,.mobile-title-merged > h1{display:none!important;}
+ .home-header.mobile-title-merged{min-height:0;padding:8px 12px;justify-content:flex-end;gap:8px;}
+ .home-header.mobile-title-merged:has(>h1:only-child),.home-header.mobile-title-merged:has(>.view-title:only-child){display:none;}
+ .app:not(.wa-home) :is(button,.btn,a.btn,summary){min-height:44px;}
+ .app:not(.wa-home) :is(.icon-btn,.sidebar-toggle,.notification-bell,.tk-icon,.calendar-nav-btn,.calendar-entry-more,.cliente-contact-edit){min-width:44px;}
+ #app :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea){font-size:16px!important;max-width:100%;min-width:0;}
+ .app:not(.wa-home) :is(.search-wrap,.board-search){min-height:44px;}
+ .mobile-choice{min-height:44px;padding:8px 12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;max-width:100%;}
+ .mobile-original-control{display:none!important;}
+ .mobile-disclosure{min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--surface);flex:0 0 auto;}
+ .mobile-disclosure summary{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:14px;color:var(--text-muted);cursor:pointer;list-style:none;}
+ .mobile-disclosure summary::-webkit-details-marker{display:none;}
+ .mobile-disclosure summary::after{content:'⌄';margin-left:auto;font-size:18px;}
+ .mobile-disclosure[open] > summary::after{content:'⌃';}
+ .mobile-disclosure-content{padding:0 10px 10px;display:flex;flex-wrap:wrap;gap:8px;min-width:0;}
+ .mobile-disclosure:not([open]) > .mobile-disclosure-content{display:none;}
+ .mobile-disclosure-content > select{flex:1 1 140px;min-height:44px;}
+ .board-toolbar > .mobile-disclosure{flex-basis:100%;}
+ .ops-header-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
+ .ops-header-actions > .mobile-disclosure{order:2;}
+ .ops-header-actions .mobile-disclosure-content{flex-direction:column;}
+ .ops-header-actions > .btn-primary{order:1;}
+ .board-toolbar{padding:8px 12px;gap:8px;}
+ .board-search{flex-basis:100%;width:100%;}
+ .board-tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:4px 12px;gap:6px;}
+ .board-tab{flex:0 0 auto;white-space:nowrap;border-radius:22px;}
+ .board-col{scroll-margin-left:12px;}
+ .board-col-cards{padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+ .tickets-toolbar-row{gap:8px;flex-wrap:wrap;}
+ .tickets-toolbar-row > .mobile-choice{flex:1 1 150px;}
+ .tickets-list-wrap,.tickets-details-wrap,.report-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;}
+ .mobile-table-hint{color:var(--text-faint);font-size:12px;padding:4px 12px;flex-basis:100%;}
+ .tickets-list-splitview{min-width:0;}
+ .tickets-list-preview{max-width:100%;min-width:0;}
+ .tk-head > .mobile-disclosure{margin:8px 0 0;}
+ .tk-head .tk-line1{flex-wrap:wrap;gap:8px;}
+ .tk-line1 > .mobile-disclosure{margin-left:auto;order:3;}
+ .tk-line1 > .mobile-disclosure > summary{padding:8px;font-size:13px;}
+ .tk-line1 .comanda-identity-cliente-row{min-width:0;flex:1;}
+ .tk-line1 .comanda-cliente-name{display:block;font-size:17px;overflow-wrap:anywhere;}
+ .tk-line1 .cliente-chip-empresa{display:block;font-size:12px;}
+ .tk-line1 .comanda-cliente-chevron{flex-shrink:0;}
+ .tk-line1 .comanda-contact-btn,.tk-line1 .comanda-clientename-edit-btn{width:44px;min-width:44px;min-height:44px;}
+ .tk-chips{padding:0!important;gap:8px!important;flex-wrap:wrap!important;}
+ .tk-chips-end{flex-basis:100%;display:flex;gap:8px;flex-wrap:wrap;}
+ .tk-chips-end .tk-act{flex:1;justify-content:center;}
+ .ficha-header > .mobile-disclosure{margin:12px 0;}
+ .ficha-identity-controls{width:100%;}
+ .cid-swatch-row{display:flex;flex-wrap:wrap;gap:8px;}
+ .cid-swatch{width:44px;min-width:44px;height:44px;min-height:44px;flex-shrink:0;border-radius:50%;}
+ .ficha-view .mobile-choice{width:100%;margin-bottom:10px;}
+ .ficha-name,.cliente-row-body,.ficha-identity-main{min-width:0;overflow-wrap:anywhere;}
+ .clientes-search-wrap{position:sticky;top:0;z-index:2;background:var(--surface);}
+ .tickets-toolbar > .mobile-disclosure{margin:8px 0;}
+ .biblioteca-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+ .biblioteca-tile{min-width:0;border-radius:12px;aspect-ratio:1;}
+ .biblioteca-tile-img{width:100%;height:100%;object-fit:cover;}
+ .calendar-toolbar{padding:8px 12px;gap:8px;}
+ .calendar-toolbar-top{flex-wrap:wrap;gap:8px;}
+ .calendar-nav{flex:1 1 100%;justify-content:space-between;gap:4px;}
+ .calendar-period-label{min-width:0;text-align:center;white-space:normal;}
+ .calendar-toolbar-bottom{gap:8px;flex-wrap:wrap;}
+ .calendar-toolbar > .mobile-disclosure{width:100%;}
+ .calendar-toolbar-bottom > .mobile-disclosure{flex:1;}
+ .calendar-toolbar-bottom:has(> .mobile-disclosure[open]) > .mobile-disclosure{flex-basis:100%;order:2;}
+ .calendar-toolbar .mobile-choice{flex:1 1 100%;}
+ .calendar-tipo-switch{width:100%;display:flex;flex-wrap:wrap;}
+ .calendar-entry-open{text-align:left;min-width:0;}
+ .calendar-entry-cliente,.calendar-entry-work{overflow-wrap:anywhere;}
+ .cxc-summary > .mobile-disclosure{width:100%;}
+ .cxc-aging{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px;}
+ .cxc-row{gap:10px;padding:14px;min-width:0;}
+ .cxc-row-actions{display:flex;flex-wrap:wrap;gap:8px;}
+ .cxc-row-actions .btn-primary{flex:1 1 100%;justify-content:center;}
+ .cxc-row-cliente,.cxc-row-work,.cxc-contacts{overflow-wrap:anywhere;}
+ .report-view > .mobile-disclosure{margin-bottom:10px;}
+ .report-view .mobile-disclosure-content{display:block;}
+ .report-card{width:100%;margin:0;border:0;padding:4px 0;}
+ .mobile-disclosure .report-card-head{display:none;}
+ .report-view .kpi-row{gap:8px;}
+ .report-view .stat-tile{padding:12px;min-width:0;}
+ .report-view .stat-value{font-size:22px;overflow-wrap:anywhere;}
+ .report-range{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+ .cierre-modal-overlay,.docform-overlay{padding:8px!important;align-items:center;}
+ .cierre-modal,.docform-modal,.calendar-sinfecha-drawer{width:100%!important;max-width:560px;max-height:calc(100dvh - 16px)!important;overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;}
+ .ops-ed-grid,.docform-grid{grid-template-columns:minmax(0,1fr);}
+ .ops-editor .popover-actions,.docform-actions{position:sticky;bottom:0;z-index:3;background:var(--surface);padding:12px 0 calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;}
+ .ops-editor .popover-actions .btn,.docform-actions .btn{flex:1;min-height:44px;}
+ .docform-actions .btn{width:auto;}
+ .docform-actions{padding-left:12px;padding-right:12px;}
+ .docform-fee-row{grid-template-columns:minmax(0,1fr) 60px 84px;}
+ .docform-fee-row > button{grid-column:3;justify-self:end;}
+ #app :is(.cierre-modal,.docform-modal,.calendar-sinfecha-drawer) :is(button,.btn,summary){min-height:44px;}
+ #app :is(button,input,select,textarea,summary,a):focus-visible{outline:2px solid var(--accent,#4f8cff);outline-offset:2px;}
+}
+@media(min-width:881px){
+ .mobile-choice,.mobile-table-hint,.mobile-disclosure > summary{display:none!important;}
+ .mobile-disclosure{display:contents;}
+ .mobile-disclosure-content{display:contents!important;}
+}
+
 </style>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
@@ -16218,6 +16324,91 @@ function renderKdsView(){
   );
 }
 
+/* Progressive disclosure uses the existing controls and handlers. No duplicate
+   form state or mutations: moving a control does not change its identity. */
+var MOBILE_DISCLOSURE = Object.create(null);
+function mobilePageKey(){ return (UI.selectedTicketId || UI.selectedClienteId || UI.mainView || 'home'); }
+function captureMobilePageScroll(){
+  if(!isMobileViewport() || waHome()) return null;
+  var positions=[];
+  document.querySelectorAll('.main .page-scroll,.main .clientes-view,.main .calendar-scroll,.main .tickets-explorer-scroll,.main .board-scroll').forEach(function(el,i){positions.push({index:i,top:el.scrollTop});});
+  return {key:mobilePageKey(),positions:positions};
+}
+function restoreMobilePageScroll(snap){
+  if(!snap || snap.key!==mobilePageKey()) return;
+  var nodes=document.querySelectorAll('.main .page-scroll,.main .clientes-view,.main .calendar-scroll,.main .tickets-explorer-scroll,.main .board-scroll');
+  snap.positions.forEach(function(p){if(nodes[p.index]) nodes[p.index].scrollTop=p.top;});
+}
+function polishMobileBoards(previous){
+  if(!isMobileViewport()) return;
+  [['kanban-board','kanban-board-tabs'],['ops-board','ops-board-tabs']].forEach(function(pair){
+    var board=document.getElementById(pair[0]),tabs=document.getElementById(pair[1]);
+    if(!board || !tabs || Object.prototype.hasOwnProperty.call(previous||{},pair[0])) return;
+    var cols=Array.from(board.children),index=cols.findIndex(function(col){return !!col.querySelector('.kanban-card,.ops-card');});
+    if(index<0)index=0;
+    board.scrollLeft=Math.max(0,cols[index].offsetLeft-board.offsetLeft-12);
+    tabs.querySelectorAll('.board-tab').forEach(function(button,i){button.classList.toggle('active',i===index);button.setAttribute('aria-selected',i===index?'true':'false');});
+  });
+}
+function polishMobileUI(){
+  if(!isMobileViewport()) return;
+  var root=document.getElementById('app'),main=root.querySelector('.app:not(.wa-home) .main');
+  function fold(nodes,label,key,active){
+    nodes=Array.from(nodes).filter(Boolean);
+    if(!nodes.length) return null;
+    var savedKey=mobilePageKey()+':'+key,first=nodes[0],box=document.createElement('details'),summary=document.createElement('summary'),content=document.createElement('div');
+    box.className='mobile-disclosure';box.dataset.mobileDisclosure=key;
+    summary.textContent=label+(active?' · '+active:'');content.className='mobile-disclosure-content';
+    box.append(summary,content);first.parentNode.insertBefore(box,first);
+    nodes.forEach(function(node){content.appendChild(node);});
+    box.open=!!MOBILE_DISCLOSURE[savedKey];
+    summary.addEventListener('click',function(){MOBILE_DISCLOSURE[savedKey]=!box.open;});
+    box.addEventListener('toggle',function(){if(box.isConnected) MOBILE_DISCLOSURE[savedKey]=box.open;});
+    return box;
+  }
+  function compactChoice(node,label,key){
+    if(!node) return;
+    var buttons=Array.from(node.querySelectorAll('button'));if(!buttons.length) return;
+    var select=document.createElement('select');select.className='mobile-choice';select.setAttribute('aria-label',label);select.dataset.mobileChoice=key;
+    buttons.forEach(function(button,i){var option=document.createElement('option');option.value=String(i);option.textContent=button.textContent.trim();option.selected=button.classList.contains('active') || button.getAttribute('aria-selected')==='true';select.appendChild(option);});
+    node.parentNode.insertBefore(select,node);node.classList.add('mobile-original-control');
+    select.addEventListener('change',function(){buttons[Number(select.value)].click();});
+  }
+  if(main){
+    var title=main.querySelector('.home-header h1'),brand=main.querySelector('.mobile-topbar-brand');
+    if(brand){
+      var ticket=UI.selectedTicketId?findTicket(UI.selectedTicketId):null;
+      var pageTitle=title?title.textContent:ticket?'Ticket #'+ticket.seq:UI.selectedClienteId?'Cliente':null;
+      if(pageTitle){brand.textContent=pageTitle;brand.classList.add('mobile-page-title');}
+      if(title)title.closest('.home-header').classList.add('mobile-title-merged');
+    }
+    compactChoice(main.querySelector('.tickets-view-switch'),'Vista de tickets','tickets-view');
+    compactChoice(main.querySelector('.report-view') && main.querySelector('.home-header .seg'),'Periodo del informe','report-period');
+    compactChoice(main.querySelector('.ficha-view .ficha-tabs'),'Filtrar historia del cliente','client-history');
+    var ops=main.querySelector('.board-toolbar');
+    if(UI.mainView==='operaciones' && !UI.selectedTicketId && ops){
+      var o=UI.operaciones,active=(o.responsable?1:0)+(o.tipo?1:0)+(o.urgentes?1:0)+(o.mostrar==='todas'?1:0);
+      fold(ops.querySelectorAll(':scope > select,:scope > .chip-toggle,:scope > .seg'),'Filtros de tareas','ops-filters',active);
+      fold(main.querySelectorAll('.ops-header-actions a'),'Pantallas del taller','ops-tv',0);
+    }
+    var library=main.querySelector('.tickets-filters-row');
+    if(UI.mainView==='biblioteca' && library){var b=UI.biblioteca;fold([library],'Filtrar fotos','photo-filters',(b.clienteId?1:0)+(b.subidoPor?1:0)+(b.fecha!=='todas'?1:0));}
+    var calendar=main.querySelector('.calendar-toolbar');
+    if(calendar){
+      compactChoice(calendar.querySelector('.calendar-view-switch'),'Vista del calendario','calendar-view');
+      var calOptions=Array.from(calendar.querySelectorAll('.mobile-choice,.calendar-toolbar-tipo-row,.calendar-toolbar-bottom > button:not(.btn-primary)'));
+      var calFold=fold(calOptions,'Opciones · '+({agenda:'Agenda',month:'Mes',week:'Semana'}[UI.calendar.view]||'Agenda'),'calendar-dates',(UI.calendar.tipo==='todos'?0:1)+(UI.calendar.mios?1:0)+(UI.calendar.responsable?1:0)+(UI.calendar.incluirCerrados?1:0)+(UI.calendar.search?1:0));
+      var calBottom=calendar.querySelector('.calendar-toolbar-bottom');if(calFold && calBottom) calBottom.insertBefore(calFold,calBottom.firstChild);
+    }
+    fold(main.querySelectorAll('.cxc-aging'),'Antigüedad del saldo','cxc-aging',0);
+    fold(main.querySelectorAll('.ficha-identity-controls'),'Personalizar cliente','client-style',0);
+    fold(main.querySelectorAll('.tk-chips'),'Fechas, documentos y estado','ticket-details',0);
+    fold(main.querySelectorAll('.tk-tools'),'Más acciones','ticket-tools',0);
+    main.querySelectorAll('.report-card').forEach(function(card,i){var head=card.querySelector('.report-card-head');if(!head)return;fold([card],head.textContent.trim(),'report-'+i,0);});
+    main.querySelectorAll('.tickets-list-wrap,.tickets-details-wrap,.report-table-wrap').forEach(function(table){table.setAttribute('tabindex','0');table.setAttribute('role','region');if(!table.getAttribute('aria-label'))table.setAttribute('aria-label','Tabla: desliza horizontalmente para ver más');var hint=document.createElement('div');hint.className='mobile-table-hint';hint.textContent='Desliza la tabla para ver más →';table.parentNode.insertBefore(hint,table);});
+  }
+}
+
 function renderMain(){
   ticketSyncContext();
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
@@ -16392,6 +16583,7 @@ function render(){
      pantalla). Así un clic en una reacción, un cambio de filtro o un evento
      de Realtime nunca se come lo que alguien estaba escribiendo ni lo
      arranca de donde estaba leyendo. */
+  var mobileScrollSnap = captureMobilePageScroll();
   var ticketScrollSnap = captureTicketScroll();
   var chatSnap = captureChatScroll();
   /* KDS: modo pantalla. Reemplaza TODO el árbol de la app — sin menú, sin
@@ -16442,13 +16634,16 @@ function render(){
     renderDeletePhotoConfirmOverlay() +
     renderProductoDeleteConfirmOverlay() +
     '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
+  polishMobileUI();
   aparecidoPaseFin();
   restoreComposerDraft(composerSnap);
   restoreHorizontalScrolls(hScrollSnap);
   wireEvents();
   hydrateImages();
   astraHydrateAudios();
+  polishMobileBoards(hScrollSnap);
   restoreChatScroll(chatSnap);
+  restoreMobilePageScroll(mobileScrollSnap);
   var readNode=document.getElementById("chat-scroll");if(readNode){readNode.setAttribute("data-read-scope",chatCurrentScopeId()||"team");chatMarkScopeSeen(chatCurrentScopeId());chatRefreshReceipts();}
   /* §128: un solo punto sincroniza la URL con "qué ticket está abierto
      ahora" — se apoya en que TODA navegación de la app ya termina en
