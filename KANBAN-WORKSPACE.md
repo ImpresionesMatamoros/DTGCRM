@@ -4,7 +4,7 @@ El inicio abre Tickets en Kanban. El buscador lateral y el del espacio de trabaj
 
 Las tarjetas permiten agregar fotos, ajustar ubicación y fechas, cobrar, marcar entrega y crear, editar o terminar tareas sin entrar al ticket. Entregado pendiente por pagar permanece en el Kanban. Las ocho etiquetas solicitadas sustituyen los antiguos marcadores y Qué sigue. Las dos etiquetas de entrega/pago se calculan con la entrega y el saldo real: elegirlas abre la acción correspondiente, sin inventar pagos. Los valores históricos se conservan, pero sus controles desaparecen.
 
-Ubicación presenta un mapa esquemático seleccionable con 26 ciudades y búsqueda. Es una orientación visual, no navegación GPS. La distribución regional se contrastó con el [mapa oficial del RGV MPO](https://www.rgvmpo.org/home/showpublisheddocument/1676/638555096878700000). Fechas guarda por separado Entrega prometida y Evento o uso del cliente, en una sola operación autorizada y con registro en bitácora.
+Ubicación presenta un mapa esquemático seleccionable con 26 ciudades y búsqueda. Es una orientación visual, no navegación GPS. La distribución regional se contrastó con el [mapa oficial del RGV MPO](https://www.rgvmpo.org/home/showpublisheddocument/1676/638555096878700000). Fecha de entrega es la fecha principal. Evento, parciales y deadlines son opcionales, quedan recogidos y no aparecen en el calendario. Ver DELIVERY-CALENDAR.md para el modelo vigente.
 
 Tareas sustituye Operaciones y ofrece listas Activas, Planeación, Producción, Mis tareas y Terminadas. Las tareas cerradas desaparecen de las vistas habituales. Cada fila y las tareas de las tarjetas tienen un botón para terminarlas; un error de persistencia restaura la tarea.
 
