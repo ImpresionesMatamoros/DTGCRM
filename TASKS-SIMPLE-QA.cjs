@@ -13,7 +13,7 @@ openTicketById=id=>{qa.opened=id;render();};
 qa.renders=0;
 render=function(){
  qa.renders++;
- document.getElementById('app').innerHTML=qa.view==='chat'?renderInicioFeed()+astraReviewOverlay():
+ document.getElementById('app').innerHTML=qa.view==='chat'?renderInicioFeed()+renderOpsEditor()+astraReviewOverlay():
  qa.view==='kanban'?renderKanbanCard(STATE.tickets[0])+renderOpsEditor():
  qa.view==='account'?'<div id="account-scroll" style="height:600px;overflow:auto"><div style="height:1400px"></div><div class="sidebar-account-wrap" style="position:relative"><button data-action="toggle-account-menu" aria-expanded="false">Mi nombre</button></div></div>':
  renderOpsEditor();
@@ -28,66 +28,17 @@ try{
  const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',r=>r.abort());await page.setContent(html);
  assert.deepEqual(errors,[]);
+
  await page.getByRole('button',{name:/Crear tarea para ticket/}).click();
- assert(await page.locator('#ops-f-desc').isEditable());
- assert.equal(await page.locator('#ops-f-area').inputValue(),'planeacion');
- assert.equal(await page.locator('[data-ops-node]').first().isVisible(),false);
- await page.locator('#ops-f-desc').fill('Comprar vinil negro');
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===1);
- let task=await page.evaluate(()=>qa.getState().tickets[0].tareas[0]);
- assert.equal(task.desc,'Comprar vinil negro');assert.equal(task.area,'planeacion');
- assert.equal(task.estado,'pendiente');assert.equal(await page.locator('#ops-editor-overlay').count(),0);
- // Editing preserves hidden fields and saved metadata.
- await page.evaluate(()=>{const t=qa.getState().tickets[0].tareas[0];t.progreso=45;t.estado='en_proceso';t.fechaAtencion='2026-10-02';qa.view='editor';qa.openOpsEditor('edit',t.id,qa.getState().tickets[0].id);});
- await page.locator('#ops-f-desc').fill('Comprar dos rollos de vinil negro');
- await page.getByRole('button',{name:'Guardar',exact:true}).click();
- task=await page.evaluate(()=>qa.getState().tickets[0].tareas[0]);
- assert.equal(task.desc,'Comprar dos rollos de vinil negro');assert.equal(task.progreso,45);assert.equal(task.estado,'en_proceso');assert.equal(task.fechaAtencion,'2026-10-02');
- // One click on the message action, one on Create; real persistence and source snapshot.
- await page.evaluate(()=>qa.setView('chat'));
- await page.locator('.chat-msg').hover();
- await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();
- await page.getByRole('menuitem',{name:'Crear tarea',exact:true}).click();
- assert.equal(await page.locator('#astra-review-desc').inputValue(),'Ocupo más vinil negro');
- assert.equal(await page.locator('#astra-review-ticket').inputValue(),await page.evaluate(()=>qa.getState().tickets[0].id));
- assert.equal(await page.locator('#astra-review-date').isVisible(),false);
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);
- assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas[1].area),'planeacion');
- assert.equal(await page.locator('.chat-scroll').count(),1);
- assert(await page.evaluate(()=>qa.getWrites().some(w=>w.table==='bitacora'&&w.row.payload.source_post_id==='post-1')));
- // Failed persistence keeps draft; double clicks cannot create a second request.
- await page.evaluate(()=>{qa.setView('kanban');qa.setFailure(true);});
- await page.getByRole('button',{name:/Crear tarea para ticket/}).click();
- await page.locator('#ops-f-desc').fill('Borrador ante fallo');
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- assert.equal(await page.locator('#ops-f-desc').inputValue(),'Borrador ante fallo');
- assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas.length),2);
- await page.evaluate(()=>qa.setFailure(false));
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===3);
- // Advanced action catalog remains available when explicitly expanded.
- await page.getByRole('button',{name:/Crear tarea para ticket/}).click();
- await page.locator('.ops-editor summary').click();
- await page.getByRole('button',{name:'Por acción',exact:true}).click();
- await page.locator('[data-ops-node]').filter({hasText:'Cotizar'}).click();
- assert.equal(await page.locator('#ops-f-desc').inputValue(),'Cotizar');
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===4);
- assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas[3].area),'planeacion');
- // An unlinked message must ask for a ticket; it never guesses one.
- await page.evaluate(()=>{qa.getState().teamPosts[0].ticketId=null;qa.setView('chat');});
- await page.locator('.chat-msg').hover();
- await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();
- await page.getByRole('menuitem',{name:'Crear tarea',exact:true}).click();
- assert.equal(await page.locator('#astra-review-ticket').inputValue(),'');
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas.length),4);
- assert.equal(await page.locator('#astra-review-desc').inputValue(),'Ocupo más vinil negro');
- await page.locator('#astra-review-ticket').selectOption(await page.evaluate(()=>qa.getState().tickets[0].id));
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
- await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===5);
+ assert.equal(await page.locator('.ops-editor details,[data-ops-node]').count(),0);
+ await page.locator('#ops-f-desc').selectOption({label:'ORDENAR EN LINEA'});
+ await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===1);
+ let task=await page.evaluate(()=>qa.getState().tickets[0].tareas[0]);assert.equal(task.desc,'ORDENAR EN LINEA');assert.equal(task.area,'planeacion');
+ await page.evaluate(()=>{const t=qa.getState().tickets[0].tareas[0];t.progreso=45;t.estado='en_proceso';t.fechaAtencion='2026-10-02';t.actionPath=JSON.stringify({v:1,details:'conservar contexto'});qa.view='editor';qa.openOpsEditor('edit',t.id,qa.getState().tickets[0].id);});
+ await page.locator('#ops-f-desc').selectOption({label:'ORDENAR A MONTERREY'});await page.getByRole('button',{name:'Guardar',exact:true}).click();task=await page.evaluate(()=>qa.getState().tickets[0].tareas[0]);assert.equal(task.desc,'ORDENAR A MONTERREY');assert.equal(task.progreso,45);assert.equal(task.estado,'en_proceso');assert.equal(task.fechaAtencion,'2026-10-02');assert.equal(JSON.parse(task.actionPath).details,'conservar contexto');
+ await page.evaluate(()=>qa.setView('chat'));await page.locator('.chat-msg').hover();await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();await page.getByRole('menuitem',{name:'Crear tarea',exact:true}).click();assert.equal(await page.locator('#ops-f-desc option').count(),14);await page.locator('#ops-f-desc').selectOption({label:'ORDENAR EN LINEA'});await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);assert.deepEqual(await page.evaluate(()=>JSON.parse(qa.getState().tickets[0].tareas[1].actionPath).sourcePostIds),['post-1']);
+ await page.evaluate(()=>{qa.setView('kanban');qa.setFailure(true);});await page.getByRole('button',{name:/Crear tarea para ticket/}).click();await page.locator('#ops-f-desc').selectOption({label:'FABRICAR'});await page.getByRole('button',{name:'Crear tarea',exact:true}).click();assert.equal(await page.locator('#ops-f-desc').inputValue(),'FABRICAR');assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas.length),2);await page.evaluate(()=>qa.setFailure(false));await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===3);
+ await page.evaluate(()=>{qa.getState().teamPosts[0].ticketId=null;qa.setView('chat');});await page.locator('.chat-msg').hover();await page.getByRole('button',{name:'Opciones del mensaje',exact:true}).click();await page.getByRole('menuitem',{name:'Crear tarea',exact:true}).click();assert(await page.locator('#ops-f-ticket-q').isEditable());await page.locator('#ops-f-desc').selectOption({label:'RECOGER'});await page.getByRole('button',{name:'Crear tarea',exact:true}).click();assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas.length),3);await page.locator('[data-action="ops-ed-pick-ticket"]').first().click();await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===4);
  // Mobile account menu keeps the scroll container and current offset intact.
  await page.setViewportSize({width:390,height:844});
  await page.evaluate(()=>{qa.setView('account');document.getElementById('account-scroll').scrollTop=1400;qa.before=qa.renders;window.originalScroll=document.getElementById('account-scroll');});
@@ -101,7 +52,7 @@ try{
  await page.getByRole('button',{name:'Mi nombre',exact:true}).click();
  assert.equal(await page.locator('.sidebar-account-menu').count(),0);
   await page.getByRole('button',{name:'Mi nombre',exact:true}).click();
-  await page.locator('#account-scroll').click({position:{x:10,y:10}});
+  await page.locator('#account-scroll').click({position:{x:350,y:10}});
   assert.equal(await page.locator('.sidebar-account-menu').count(),0);
   assert.equal(await page.locator('#account-scroll').evaluate(el=>el.scrollTop),before);
  await page.evaluate(()=>{qa.setView('kanban');});
@@ -109,6 +60,6 @@ try{
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  if(process.env.QA_SCREENSHOT)await page.screenshot({path:process.env.QA_SCREENSHOT});
  assert.deepEqual(errors,[]);
- console.log('PASS: task creation in two clicks from Kanban and three from linked message menu, real save/source context, edits preserve hidden data, failed save/retry, mobile account scroll unchanged, mobile form.');
+ console.log('PASS: simple catalogue task creation from Kanban and linked message menu, real save/source context, edits preserve hidden data, failed save/retry, mobile account scroll unchanged, mobile form.');
 }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

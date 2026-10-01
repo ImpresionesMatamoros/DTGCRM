@@ -3988,6 +3988,24 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .dq-warns{display:flex;flex-wrap:wrap;gap:6px}.dq-warn{width:auto!important;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px;font-size:11px;border:1px solid var(--border)}
 .dq-warn-label,.mk-chip-label{display:inline!important;white-space:normal}.mk-chips{height:auto;flex-wrap:wrap;gap:5px}.mk-chip{display:inline-flex;gap:5px;align-items:center;border-radius:9px;padding:4px 7px}
 .tickets-quickcreate-panel{flex-shrink:0;max-height:75dvh;overflow-y:auto}.contact-panel input[type=tel]{width:100%;min-height:44px;font-size:16px}
+.work-kanban-toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.work-kanban-toolbar .search-wrap{flex:1;min-width:0}.work-kanban-toolbar input{width:100%;min-height:44px;font-size:16px}
+.work-discover{display:none}.work-discover.shown{display:block}
+.work-labels{display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:none;border:0;padding:0;text-align:left;color:var(--text);max-width:100%;min-height:44px}
+.work-label{display:inline-flex;align-items:center;gap:7px;padding:9px 10px;border-radius:10px;border:1px solid currentColor;background:var(--surface-2);font-size:11px;font-weight:750;letter-spacing:.025em;line-height:1.4;max-width:100%}.work-label span{white-space:normal}
+.work-label-add{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);padding:10px;border:1px dashed var(--border);border-radius:10px}
+.work-label-picker{display:grid;gap:8px}.work-label-picker .mk-toggle{min-height:52px;gap:10px;flex-wrap:wrap}.work-label-picker small{display:block;font-weight:400;color:var(--text-muted);width:100%}
+.work-ticket-actions{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border);margin-top:10px;padding-top:10px}.work-ticket-actions button{font-size:12px;min-height:44px}.work-ticket-actions small{display:block;font-size:11px}
+.work-add-photo{display:flex;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border);border-radius:12px;background:var(--surface-2);color:var(--text-muted);min-height:64px;width:100%;font-size:12px}.kanban-card-main:has(.work-add-photo){flex-direction:column}.kanban-card-main:has(.work-add-photo) .kanban-card-text{width:100%}
+.work-kanban-task{display:flex;align-items:center;gap:7px;border-top:1px solid var(--border);padding:5px 0}.work-kanban-task>button:not(.icon-btn){flex:1;text-align:left;background:none;border:0;color:var(--text);font-size:12px;min-height:44px}.work-kanban-task small{display:block;color:var(--text-muted)}
+.work-task-toolbar{padding:12px 16px;display:flex;flex-direction:column;gap:12px}.work-task-toolbar input{width:100%;min-height:44px}.work-task-views{display:flex;gap:6px;overflow-x:auto}.work-task-views button{white-space:nowrap;flex-shrink:0;min-height:44px}.work-task-list{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.work-task-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);width:100%}.work-task-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;text-align:left;background:none;border:0;color:var(--text);min-height:60px}.work-task-copy strong{font-size:14px;overflow-wrap:anywhere}.work-task-copy span,.work-task-copy small{color:var(--text-muted);font-size:12px}.work-task-done{border:1px solid var(--accent);border-radius:50%;color:var(--accent);flex-shrink:0}
+.ops-ed-body>label,.work-dates label,.work-default-setting label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;margin:12px 0}.ops-ed-body select,.work-dates input,.work-default-setting select{width:100%;min-height:44px;font-size:16px}.work-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.work-date-grid small{font-weight:400;color:var(--text-muted)}
+.work-map-sheet{width:min(800px,calc(100vw - 24px))!important;max-height:90dvh;overflow-y:auto}.work-map-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.work-map{display:block;width:910px;height:470px}.work-map g{cursor:pointer}.work-map g:focus rect{stroke:var(--accent);stroke-width:3}.work-city-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.work-city-list button{min-height:44px}.work-city-list [hidden]{display:none!important}.work-map-sheet input{width:100%;font-size:16px;min-height:44px}.work-map-sheet h2{font-size:17px}.work-default-setting{padding:8px 4px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.work-default-setting small{display:block;font-size:11px;color:var(--text-muted)}
+.tk-next,[data-field="quesigue"],.kanban-card-quesigue-cell,.cxc-quesigue{display:none!important}
+@media(max-width:640px){.work-date-grid{grid-template-columns:1fr}.work-kanban-toolbar{padding:8px 12px}.work-task-row{padding:10px}.work-task-toolbar{padding:10px 12px}.work-ticket-actions button{flex:1 1 120px}.work-map{width:820px;height:auto}}
+
+.work-label.marker-tone-danger{background:rgba(239,68,68,.15);color:#ff9393;border-color:rgba(239,68,68,.45)}.work-label.marker-tone-warn{background:rgba(245,158,11,.15);color:#efb64d;border-color:rgba(245,158,11,.5)}.work-label.marker-tone-ok{background:rgba(16,185,129,.15);color:#58d9ae;border-color:rgba(16,185,129,.45)}.work-label.marker-tone-info{background:rgba(59,130,246,.15);color:#90b9ff;border-color:rgba(59,130,246,.5)}.work-label.marker-tone-violet{background:rgba(139,92,246,.15);color:#c4a8ff;border-color:rgba(139,92,246,.45)}
 </style>
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
@@ -4569,7 +4587,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      localStorage): búsqueda/filtros/scroll de cada explorador sobreviven a
      abrir un ticket/foto y volver, pero no tienen por qué sobrevivir a
      cerrar la pestaña — no son una preferencia, son "dónde estabas". */
-  ticketsView: "thumbnails",
+  ticketsView: "kanban",
   /* Ronda "Refinamiento operativo" §17-21: optionsOpen/sort son estado de
      SESIÓN (como el resto de ticketsExplorer, no localStorage) — "abierto/
      cerrado el panel de opciones" y "cómo ordenar ahora" no son preferencias
@@ -5306,7 +5324,7 @@ function deviceResetIdentity(){
   if(DTG_TAB_CH){try{DTG_TAB_CH.close();}catch(e){}}DTG_TAB_CH=null;clearInterval(dtgTabTimer);dtgTabTimer=null;DTG_TABS={};
   STATE={meta:{queSigueOptions:[],teamNames:[]},tickets:[],clientes:[],teamPosts:[],feedReactions:[],profiles:[],conversations:[],chatReadState:[],chatState:null};
   AUTH_SESSION=null;CURRENT_PROFILE=null;AUTH_ERROR='';FATAL_ERROR=null;AUTH_STATUS='loading';
-  UI=JSON.parse(UI_INITIAL_SNAPSHOT);UI.mainView=null;UI.selectedTicketId=null;UI.selectedClienteId=null;UI.waChatOpen=false;MOBILE_DISCLOSURE=Object.create(null);
+  UI=JSON.parse(UI_INITIAL_SNAPSHOT);UI.mainView="tickets";UI.ticketsView="kanban";UI.selectedTicketId=null;UI.selectedClienteId=null;UI.waChatOpen=false;MOBILE_DISCLOSURE=Object.create(null);
   DEVICE_BROWSER_NOTIFICATIONS.forEach(function(n){try{n.close();}catch(e){}});DEVICE_BROWSER_NOTIFICATIONS=[];
   closePhotoZoom();renderChatNotifs();renderAlerts();renderRtBadge();
   try{history.replaceState(null,'',location.pathname);}catch(e){}
@@ -5726,7 +5744,7 @@ async function fetchAllState(){
     byTicket[row.id] = {
       id: row.id, seq: row.seq, createdAt: row.created_at, lastActivityAt: row.last_activity_at,
       pinned: row.pinned, cliente: row.cliente || "", clienteId: row.cliente_id || null, queSigue: row.que_sigue || "",
-      responsable: row.responsable || "", fechaAtencion: row.fecha_atencion || "", fechaCompromiso: row.fecha_compromiso || "",
+      responsable: row.responsable || "", fechaAtencion: row.fecha_atencion || "", fechaCompromiso: row.fecha_compromiso || "", fechaEvento:row.fecha_evento||"",
       /* v0.21: zona de entrega (0017). Tolerante igual que visibility: si la
          migración no está aplicada, row.delivery_zone es undefined y el
          ticket simplemente no tiene zona (aviso visible, nunca un error). */
@@ -5828,7 +5846,7 @@ async function fetchAllState(){
     };
   });
   var profiles = profilesInfo.rows.map(function(row){
-    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active, createdAt: row.created_at || null, canManagePrivacy: !!row.can_manage_privacy, accentColor: isValidPersonColor(row.accent_color) ? row.accent_color : null, avatarStoragePath:row.avatar_storage_path||null };
+    return { id: row.id, displayName: row.display_name || "", role: row.role || null, active: !!row.active, createdAt: row.created_at || null, canManagePrivacy: !!row.can_manage_privacy, accentColor: isValidPersonColor(row.accent_color) ? row.accent_color : null, avatarStoragePath:row.avatar_storage_path||null, defaultTaskArea:row.default_task_area||null };
   });
   return {
     meta: settings,
@@ -6805,7 +6823,7 @@ function ticketLabel(t){ return t.cliente ? t.cliente : ("Ticket #" + t.seq); }
    956-561-2970 y 9565612970 sean el mismo número. */
 function ticketSearchHaystack(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
-  var parts = ["#" + t.seq, String(t.seq || ""), t.cliente || "", t.responsable || "", t.queSigue || ""];
+  var parts = ["#" + t.seq, String(t.seq || ""), t.cliente || "", t.responsable || ""];
   if(c){ parts.push(c.nombre || ""); parts.push(c.empresa || ""); }
   (t.productos || []).forEach(function(p){ parts.push(p.desc || ""); });
   (t.tareas || []).forEach(function(x){ parts.push(x.desc || ""); });
@@ -6891,7 +6909,7 @@ function renderTicketRow(t, opts){
   opts = opts || {};
   var active = t.id === UI.selectedTicketId;
   var estado = ticketEstado(t);
-  var pill = t.queSigue ? '<span class="pill pill-accent">' + escapeHtml(t.queSigue) + "</span>" : "";
+  var pill = "";
   var estadoPill = estado !== "abierto" ? '<span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + "</span>" : "";
   var noCliente = !t.cliente;
   var noProducto = !(t.productos && t.productos.length);
@@ -10019,7 +10037,7 @@ function buildTicketCopyText(t){
      nunca uno nuevo solo para Copiar. */
   var estado = ticketEstado(t);
   if(estado !== "abierto") lines.push("Estado: " + ticketEstadoLabel(estado));
-  if(t.queSigue) lines.push("Qué sigue: " + t.queSigue);
+  
   if(t.responsable) lines.push("Responsable: " + t.responsable);
   if(t.fechaCompromiso) lines.push("Compromiso: " + fmtDateOnlyShort(t.fechaCompromiso));
   /* §119: marcadores activos importantes — con el set actual (6 tipos
@@ -10737,7 +10755,7 @@ function ticketMatchesExplorerQuery(t, qRaw){
    fecha de atención — todo derivado de STATE.tickets, cero tablas nuevas. */
 function ticketsExplorerFiltered(){
   var ui = UI.ticketsExplorer;
-  var qRaw = (ui.search || "").trim();
+  var qRaw = (UI.search || "").trim();
   var today = startOfDay(new Date());
   var filtered = ticketsExplorerBaseList().filter(function(t){
     if(ui.estado === "abierto" && ticketEstado(t) !== "abierto") return false;
@@ -10856,7 +10874,7 @@ function renderTicketsQuickCreatePanel(){
         "</div>" +
         '<label class="tickets-quickcreate-field"><span>Teléfono</span><input type="tel" id="quickcreate-telefono" placeholder="956 561 2970"></label>' +
         '<label class="tickets-quickcreate-field"><span>Trabajo</span><input type="text" id="quickcreate-trabajo" placeholder="Qué se va a hacer"></label>' +
-        '<label class="tickets-quickcreate-field"><span>Qué sigue</span>' + renderQuickCreateQueSigueSelect() + "</label>" +
+        "" +
       "</div>" +
       '<div class="tickets-quickcreate-actions">' +
         '<button type="button" class="btn btn-ghost" data-action="new-ticket" title="Crear el ticket sin llenar nada">Crear vacío</button>' +
@@ -10888,7 +10906,7 @@ function renderTicketsToolbar(list){
      (UI.ticketsExplorer.marker), solo cambia CÓMO se elige, nunca una
      segunda fuente de "qué marcadores existen". Vive en el segundo nivel
      ("Más filtros"), no permanente como antes. */
-  var markerOpts = MARKER_PICKABLE;
+  var markerOpts = MARKER_TYPES;
   var markerSelect =
     '<select class="tickets-filter-select" data-action="tickets-filter-marker-select" aria-label="Filtrar por marcador">' +
       '<option value="">Marcador: todos</option>' +
@@ -11150,7 +11168,7 @@ function renderTicketsIconCard(t){
    (§0.2: redundancia en los caminos, no en la lógica). PRECIO ≠ DEUDA: Total
    conocido y Cobrado son dos hechos separados, nunca una resta "saldo"
    inventada (mismo criterio que clienteFinancials). */
-var TICKETS_OPERATIONAL_COLS = ["Ticket","Cliente","Trabajo","Estado","Qué sigue","Responsable","Atender","Compromiso","Total","Cobrado","Marcadores","Última actividad"];
+var TICKETS_OPERATIONAL_COLS = ["Ticket","Cliente","Trabajo","Estado","Qué sigue","Responsable","Atender","Compromiso","Total","Cobrado","Etiquetas","Última actividad"];
 function ticketOperationalCellValues(t){
   var c = t.clienteId ? findCliente(t.clienteId) : null;
   var totals = computeTotals(t);
@@ -11378,7 +11396,7 @@ function renderTicketsExplorerView(){
     /* v0.20: un ticket Entregado que ya pertenece a Cuentas por cobrar deja
        de ser "trabajo activo" — su pendiente ahora es financiero. No se
        borra ni se esconde en otras vistas: vive en Cuentas por cobrar. */
-    var kanbanList = list.filter(function(t){ return !ticketInCxc(t); });
+    var kanbanList = list; /* Delivered unpaid tickets remain in the main workspace. */
     var inCxc = list.length - kanbanList.length;
     var cxSplit = cxcTickets();
     body = (inCxc ? '<div class="board-note">' + icon("wallet") + "<span><b>" + cxSplit.withSaldo.length + "</b> por cobrar y <b>" + cxSplit.unknown.length + "</b> entregados sin precio</span><button type=\"button\" class=\"btn btn-sm btn-plain\" data-action=\"go-cxc\">Ver</button></div>" : "") +
@@ -12086,7 +12104,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowLeft'||e.key==='Escape'){var prev=b.parentNode.previousElementSibling;if(prev){var parent=prev.querySelector('[aria-expanded=true]');if(parent){parent.focus();parent.setAttribute('aria-expanded','false');}var panel=b.parentNode;while(panel){var next=panel.nextElementSibling;panel.remove();panel=next;}}else b.closest('.ops-progressive').querySelector('[data-ops-mode]').focus();return;}
   peers[e.key==='Home'?0:e.key==='End'?peers.length-1:(i+(e.key==='ArrowDown'?1:-1)+peers.length)%peers.length].focus();
 },true);
-document.addEventListener('input',function(e){if(e.target.id==='ops-f-desc'&&UI.operaciones.editor&&UI.operaciones.editor.progressive.free)opsSyncPreview();});
+document.addEventListener('input',function(e){if(e.target.id==='ops-f-desc'&&UI.operaciones.editor&&UI.operaciones.editor.progressive&&UI.operaciones.editor.progressive.free)opsSyncPreview();});
 
 function openOpsEditor(mode, taskId, ticketId, workOrderId, productId){
   UI.operaciones.menuFor = null;
@@ -19008,7 +19026,7 @@ function renderMarkerChips(t, opts){
   var names = uniq.map(function(m){ return markerLabel(m.type); }).join(", ");
   var aria = uniq.length ? ("Marcadores: " + names + ". Editar") : "Agregar marcador";
   return '<button type="button" class="mk-chips' + (uniq.length ? "" : " mk-chips-empty") + (opts.cls ? " " + opts.cls : "") + '" draggable="false" data-action="marker-toggle-open" data-ticket="' + t.id + '" aria-label="' + escapeHtml(aria) + '" title="' + escapeHtml(uniq.length ? names : "Agregar marcador") + '">' +
-    chips + '<span class="mk-add" aria-hidden="true">' + icon("plus") + (uniq.length ? "" : '<span class="mk-add-label">Marcador</span>') + "</span></button>";
+    chips + '<span class="mk-add" aria-hidden="true">' + icon("plus") + (uniq.length ? "" : '<span class="mk-add-label">Etiqueta</span>') + "</span></button>";
 }
 function renderMarkerTogglePicker(){
   var mt = UI.markerToggle;
@@ -19038,7 +19056,7 @@ function renderMarkerTogglePicker(){
   return (
     '<div class="mk-picker-layer' + (sheet ? " mk-picker-layer-sheet" : "") + '" id="mk-picker-layer">' +
       '<div class="mk-picker' + (sheet ? " mk-picker-sheet" : "") + '" role="dialog" aria-modal="true" aria-label="Marcadores del ticket #' + t.seq + '"' + style + ">" +
-        '<div class="mk-picker-head"><div><div class="mk-picker-title">Marcadores</div><div class="mk-picker-sub">#' + t.seq + " · " + escapeHtml(sidebarClienteLabel(t)) + "</div></div>" +
+        '<div class="mk-picker-head"><div><div class="mk-picker-title">Etiquetas</div><div class="mk-picker-sub">#' + t.seq + " · " + escapeHtml(sidebarClienteLabel(t)) + "</div></div>" +
           '<button type="button" class="icon-btn" data-action="marker-toggle-close" aria-label="Cerrar">' + icon("x") + "</button></div>" +
         '<div class="mk-picker-grid">' + items + "</div>" +
         '<div class="mk-picker-foot">Toca para activar o quitar · varios a la vez</div>' +
@@ -21263,7 +21281,7 @@ function renderCellEditorMarcadores(t){
       }).join("")
     : '<div class="empty-list">Sin marcadores activos.</div>';
   return (
-    '<div class="cierre-modal-title">Marcadores</div>' +
+    '<div class="cierre-modal-title">Etiquetas</div>' +
     '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
     rows +
     '<button type="button" class="help-cmd-btn" data-action="cell-editor-add-marker" data-ticket="' + t.id + '"><span class="desc">+ Agregar marcador</span></button>'
@@ -24352,7 +24370,7 @@ function wireEvents(){
   var searchInput = document.getElementById("search-input");
   if(searchInput){
     searchInput.addEventListener("input", function(){
-      UI.search = searchInput.value;
+      UI.search = searchInput.value;UI.ticketsExplorer.search=UI.search;
       saveUi();
       render();
       var again = document.getElementById("search-input");
@@ -26735,8 +26753,8 @@ document.addEventListener('keydown',function(e){
 
 async function boot(){
   loadUi();
-  // Opening the app starts in Chats; explicit ticket/chat URLs still resolve below.
-  UI.selectedTicketId=null;UI.mainView=null;UI.selectedClienteId=null;UI.astraConversationId=null;UI.astraThreadRoot=null;UI.waChatOpen=false;UI.waToolsOpen=false;
+  // Kanban is the default workspace; explicit ticket/chat URLs still resolve below.
+  UI.selectedTicketId=null;UI.mainView="tickets";UI.ticketsView="kanban";UI.selectedClienteId=null;UI.astraConversationId=null;UI.astraThreadRoot=null;UI.waChatOpen=false;UI.waToolsOpen=false;
   /* PARTE E — ?display=produccion | planeacion | cxc encienden la TV en su
      tablero. `?display=1` y `#display` siguen entrando a Producción: hay PCs
      del taller configuradas así y romperlas no arregla nada. Mismo mecanismo
@@ -27063,6 +27081,98 @@ document.addEventListener("keydown",function(e){if(waHome()&&!waOpen()&&!e.targe
 var WA_PULL=null;
 document.addEventListener("pointerdown",function(e){if(e.target.closest&&e.target.closest(".wa-inbox"))WA_PULL=e.clientY;},{passive:true});
 document.addEventListener("pointerup",function(e){if(WA_PULL!==null&&e.clientY-WA_PULL>45)waShowTools();WA_PULL=null;},{passive:true});
+
+/* Kanban workspace: same tickets, tasks, RLS and mutation cores. */
+var WORK_TASK_NAMES=['ENVIAR DTF','ENVIAR DTF UV','IMPRIMIR LONA','ESTAMPAR DTF','ENTREGAR','ENVIAR TABLOIDES','RECOGER','CORTAR','FABRICAR','ORDENAR EN LINEA','ORDENAR A MONTERREY','REALIZAR DISENO','CREAR TICKET DE ENVIO'];
+function workDefaultArea(name){var p=(STATE.profiles||[]).find(function(p){return p.displayName===name;});return p&&TASK_AREAS.indexOf(p.defaultTaskArea)!==-1?p.defaultTaskArea:/^(israel|alex)(\s|$)/.test(normalizeWord(name||''))?'produccion':'planeacion';}
+var WORK_LABELS=[
+ {type:'urgente',label:'URGENTE',icon:'flame',tone:'danger'},
+ {type:'pagado_entregado',label:'PAGADO Y ENTREGADO',icon:'check-circle',tone:'ok',derived:true},
+ {type:'entregado_pendiente',label:'ENTREGADO PENDIENTE POR PAGAR',icon:'wallet',tone:'warn',derived:true},
+ {type:'bloqueado',label:'BLOQUEADO · PROBLEMA',icon:'alert-triangle',tone:'danger'},
+ {type:'cliente_molesto',label:'CLIENTE MOLESTO',icon:'user',tone:'danger'},
+ {type:'esperando_demo',label:'ESPERANDO DEMO',icon:'image',tone:'violet'},
+ {type:'entregar',label:'ESPERANDO ENTREGA',icon:'truck',tone:'info'},
+ {type:'esperando_cliente',label:'ESPERANDO AL CLIENTE',icon:'user-clock',tone:'warn'}
+];
+MARKER_TYPES=WORK_LABELS;MARKER_PICKABLE=WORK_LABELS.filter(function(m){return !m.derived;});
+WORK_LABELS.forEach(function(m){MARKER_META[m.type]=m;});
+activeMarkers=function(t){
+ var out=(t.markers||[]).filter(function(m){return !m.resolvedAt&&MARKER_PICKABLE.some(function(k){return k.type===m.type;});});
+ if(t.entregadoAt||t.cierreTipo==='pagado'){var f=ticketFinancials(t);out.push({type:f.saldo!==null&&f.saldo<=0?'pagado_entregado':'entregado_pendiente',derived:true});}
+ return out;
+};
+renderMarkerChips=function(t){var seen={};var labels=activeMarkers(t).filter(function(m){if(seen[m.type])return false;seen[m.type]=1;return true;});return '<button type="button" class="work-labels" data-action="marker-toggle-open" data-ticket="'+t.id+'" aria-label="Editar etiquetas del ticket #'+t.seq+'">'+labels.map(function(m){return '<span class="work-label marker-tone-'+markerTone(m.type)+'">'+markerIcon(m.type)+'<span>'+escapeHtml(markerLabel(m.type))+'</span></span>';}).join('')+'<span class="work-label-add">'+icon('plus')+(labels.length?'':' Etiqueta')+'</span></button>';};
+renderMarkerTogglePicker=function(){var mt=UI.markerToggle,t=mt&&findTicket(mt.ticketId);if(!t)return '';var types=activeMarkers(t).map(function(m){return m.type;});return '<div class="mk-picker-layer mk-picker-layer-sheet" id="mk-picker-layer"><div class="mk-picker mk-picker-sheet" role="dialog" aria-modal="true" aria-label="Etiquetas"><div class="mk-picker-head"><h2>Etiquetas · #'+t.seq+'</h2><button class="icon-btn" data-action="marker-toggle-close" aria-label="Cerrar">'+icon('x')+'</button></div><div class="work-label-picker">'+WORK_LABELS.map(function(m){return '<button type="button" class="mk-toggle marker-tone-'+m.tone+(types.indexOf(m.type)!==-1?' on':'')+'" '+(m.derived?'data-workspace="financial-label"':'data-action="marker-toggle"')+' data-ticket="'+t.id+'" data-type="'+m.type+'" aria-pressed="'+(types.indexOf(m.type)!==-1)+'">'+icon(m.icon)+'<span>'+escapeHtml(m.label)+'</span>'+(m.derived?'<small>Según entrega y saldo</small>':'')+'</button>';}).join('')+'</div><p class="small muted">Cobrar y marcar la entrega actualiza automáticamente las etiquetas de pago.</p></div></div>';};
+var workWarnings=ticketDataWarnings;
+ticketDataWarnings=function(t,opts){var out=workWarnings(t,opts);if(t&&!ticketIsCerrado(t)&&!t.fechaEvento&&out.indexOf('commitment')===-1)out.push('commitment');return out;};
+TICKET_WARNING_META.commitment.label='Completar entrega prometida y evento / uso';
+var workWarningAction=openTicketWarningAction;
+openTicketWarningAction=function(key,id,anchor){if(key==='commitment'||key==='baddate'){openCellEditor('workdates',id);return;}workWarningAction(key,id,anchor);};
+
+var WORK_CITIES=[['palmview','Palmview',20,75],['mission','Mission',20,130],['mcallen','McAllen',130,130],['edinburg','Edinburg',130,25],['hidalgo','Hidalgo',130,235],['pharr','Pharr',240,130],['san_juan','San Juan',240,185],['alamo','Alamo',350,185],['donna','Donna',350,130],['weslaco','Weslaco',460,130],['edcouch','Edcouch',350,25],['elsa','Elsa',460,25],['mercedes','Mercedes',460,185],['la_feria','La Feria',570,130],['harlingen','Harlingen',570,185],['san_benito','San Benito',570,240],['rio_hondo','Río Hondo',680,130],['los_fresnos','Los Fresnos',680,240],['olmito','Olmito',570,295],['brownsville','Brownsville',570,350],['matamoros','Matamoros',570,405],['port_isabel','Puerto Isabel',790,295],['south_padre_island','Isla del Padre',790,240],['starbase','Starbase',790,350],['reynosa','Reynosa',240,295],['rio_grande_city','Río Grande City',20,25]];
+DELIVERY_ZONES=WORK_CITIES.map(function(c){return {id:c[0],label:c[1],short:c[1]};}).concat([{id:'harlingen_area',label:'Área de Harlingen',short:'Harlingen',legacy:true},{id:'mcallen_area',label:'Área de McAllen',short:'McAllen',legacy:true},{id:'otra',label:'Otra ubicación',short:'Otra'}]);DELIVERY_ZONE_IDS=DELIVERY_ZONES.map(function(z){return z.id;});
+renderZonePicker=function(){var zp=UI.zonePicker,t=zp&&findTicket(zp.ticketId);if(!t)return '';var current=t.deliveryZone||'';return '<div class="mk-picker-layer mk-picker-layer-sheet" id="zone-picker-layer"><div class="mk-picker mk-picker-sheet work-map-sheet" role="dialog" aria-modal="true" aria-label="Ubicación de entrega"><div class="mk-picker-head"><div><h2>Ubicación de entrega</h2><p>#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</p></div><button class="icon-btn" data-action="zone-picker-close" aria-label="Cerrar">'+icon('x')+'</button></div><p class="small muted">Mapa esquemático · oeste a izquierda, costa a derecha. Desliza para recorrerlo o elige una ciudad abajo.</p><div class="work-map-scroll"><svg class="work-map" viewBox="0 0 910 470" role="group" aria-label="Ciudades del Valle"><path d="M10 210 Q160 350 340 360 T840 450" stroke="#37a8df" stroke-width="10" fill="none"/><path d="M890 0 L890 470" stroke="#37a8df" stroke-width="25"/><text x="25" y="435" fill="currentColor">RÍO GRANDE / RÍO BRAVO</text>'+WORK_CITIES.map(function(c){return '<g role="button" tabindex="0" data-workspace="map-city" data-zone="'+c[0]+'" data-ticket="'+t.id+'" aria-label="Elegir '+escapeHtml(c[1])+'" aria-pressed="'+(current===c[0])+'" transform="translate('+c[2]+','+c[3]+')"><rect width="105" height="44" rx="10" fill="'+(current===c[0]?'#2768cd':'var(--surface-2)')+'" stroke="var(--border)"/><text x="52" y="26" text-anchor="middle" fill="'+(current===c[0]?'white':'var(--text)')+'" font-size="12">'+escapeHtml(c[1])+'</text></g>';}).join('')+'</svg></div><label>Buscar ciudad<input id="work-city-search" type="search" placeholder="Matamoros, McAllen…"></label><div class="work-city-list">'+DELIVERY_ZONES.filter(function(z){return !z.legacy;}).map(function(z){return '<button type="button" class="btn '+(current===z.id?'btn-primary':'btn-ghost')+'" data-action="zone-pick" data-zone="'+z.id+'" data-ticket="'+t.id+'">'+escapeHtml(z.label)+'</button>';}).join('')+'<button class="btn btn-ghost" data-action="zone-pick" data-ticket="'+t.id+'" data-zone="">Sin definir</button></div></div></div>';};
+
+var workCellOverlay=renderCellEditorOverlay;
+renderCellEditorOverlay=function(){var ed=UI.cellEditor;if(!ed||ed.kind!=='workdates')return workCellOverlay();var t=findTicket(ed.ticketId);if(!t)return '';var draft=ed.dateDraft||{promised:t.fechaCompromiso||'',event:t.fechaEvento||''};return '<div class="cierre-modal-overlay"><form class="cierre-modal work-dates" id="work-dates-form" data-ticket="'+t.id+'" role="dialog" aria-modal="true" aria-label="Fechas del ticket"><h2>Fechas · #'+t.seq+'</h2><div class="work-date-grid"><label>Entrega prometida<input type="date" id="work-date-promised" data-work-date="promised" value="'+escapeHtml(draft.promised)+'"><small>Cuándo prometimos entregar el trabajo.</small></label><label>Evento / uso del cliente<input type="date" id="work-date-event" data-work-date="event" value="'+escapeHtml(draft.event)+'"><small>Cuándo lo necesita o lo va a usar.</small></label></div><p class="small muted">Ambas son opcionales. El evento puede ocurrir después de la entrega.</p><div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="cell-editor-close">Cancelar</button><button type="submit" class="btn btn-primary">Guardar fechas</button></div></form></div>';};
+
+var workTaskArea=taskArea;taskArea=function(x){return x&&x.tipo==='normal'&&!x.area?'planeacion':workTaskArea(x);};
+openOpsEditor=function(mode,taskId,ticketId,workOrderId,productId){UI.operaciones.menuFor=null;UI.operaciones.editor={mode:mode==='edit'?'edit':'create',taskId:taskId||null,ticketId:ticketId||null,workOrderId:workOrderId||null,productId:productId||null,ticketQuery:'',lockedTicket:!!ticketId,draft:{}};UI.composer=null;render();};
+function workTaskFields(ed,x){var names=WORK_TASK_NAMES.slice();if(ed.mode==='edit'&&x.desc&&names.indexOf(x.desc)===-1)names.unshift(x.desc);var roster=activeAssignableProfiles();var owner=x.responsable||'';return '<label>Nombre de tarea<select id="ops-f-desc" class="field-input"><option value="">Elegir tarea…</option>'+names.map(function(n){return '<option'+(x.desc===n?' selected':'')+'>'+escapeHtml(n)+'</option>';}).join('')+'</select></label><label>Responsable<select id="ops-f-resp" class="field-input"><option value="">Sin asignar</option>'+roster.map(function(p){return '<option'+(p.displayName===owner?' selected':'')+'>'+escapeHtml(p.displayName)+'</option>';}).join('')+(owner&&!roster.some(function(p){return p.displayName===owner;})?'<option selected>'+escapeHtml(owner)+'</option>':'')+'</select></label><label>Destino<select id="ops-f-area" class="field-input"><option value="planeacion"'+(x.area!=='produccion'?' selected':'')+'>Planeación</option><option value="produccion"'+(x.area==='produccion'?' selected':'')+'>Producción</option></select></label>';}
+renderOpsEditor=function(){var ed=UI.operaciones.editor;if(!ed)return '';var found=ed.mode==='edit'?findOpsTask(ed.ticketId,ed.taskId):null;if(ed.mode==='edit'&&!found)return '';var x=Object.assign({},found?found.task:{desc:'',responsable:currentActorName(),area:workDefaultArea(currentActorName())},ed.draft||{}),t=ed.ticketId&&findTicket(ed.ticketId);if(found&&!x.area)x.area=taskArea(found.task);var ticket=t?'<div class="ops-ed-ticket">#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</div>':'<label>Ticket<input id="ops-f-ticket-q" class="field-input" placeholder="Buscar cliente o folio" value="'+escapeHtml(ed.ticketQuery||'')+'"></label><div class="ops-ed-ticket-list">'+STATE.tickets.filter(function(t){return !ticketIsCerrado(t)&&ticketMatchesSearch(t,ed.ticketQuery||'');}).slice(0,8).map(function(t){return '<button class="btn btn-ghost" data-action="ops-ed-pick-ticket" data-ticket="'+t.id+'">#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</button>';}).join('')+'</div>';return '<div class="cierre-modal-overlay" id="ops-editor-overlay"><div class="cierre-modal ops-editor" role="dialog" aria-modal="true" aria-label="'+(found?'Editar tarea':'Nueva tarea')+'"><div class="modal-head"><h2>'+(found?'Editar tarea':'Nueva tarea')+'</h2><button class="icon-btn" data-action="ops-ed-close" aria-label="Cerrar">'+icon('x')+'</button></div><div class="ops-ed-body">'+ticket+workTaskFields(ed,x)+'</div><div class="popover-actions"><button class="btn btn-ghost" data-action="ops-ed-close">Cancelar</button><button class="btn btn-primary" data-action="ops-ed-save"'+(ed.saving?' disabled':'')+'>'+(found?'Guardar':'Crear tarea')+'</button></div></div></div>';};
+submitOpsEditor=async function(){var ed=UI.operaciones.editor;if(!ed||ed.saving)return;var t=findTicket(ed.ticketId);if(!t){showToast('Elige un ticket.');return;}var get=function(id){return document.getElementById(id).value;};var found=ed.mode==='edit'?findOpsTask(ed.ticketId,ed.taskId):null;var desc=get('ops-f-desc'),owner=get('ops-f-resp'),area=get('ops-f-area');if(!desc||(!found&&WORK_TASK_NAMES.indexOf(desc)===-1)||TASK_AREAS.indexOf(area)===-1){showToast('Elige nombre de tarea y destino.');return;}ed.draft={desc:desc,responsable:owner,area:area};ed.saving=true;var button=document.querySelector('[data-action="ops-ed-save"]');if(button)button.disabled=true;var ok=false;try{ok=found?await updateTareaCore(t,ed.taskId,ed.draft):await addTareaCore(t,'produccion',desc,owner,'',{area:area,workOrderId:ed.workOrderId,actionPath:ed.sourceIds?JSON.stringify({v:1,sourcePostIds:ed.sourceIds}):null});}finally{ed.saving=false;if(ok&&UI.operaciones.editor===ed){UI.operaciones.editor=null;UI.astraSelected=[];}render();}};
+var workAddTask=addTareaCore;
+addTareaCore=async function(t,tipo,desc,owner,date,extra){if(WORK_TASK_NAMES.indexOf(desc)===-1){showToast('Elige una de las nuevas tareas del catálogo.');return false;}owner=owner||currentActorName();extra=Object.assign({},extra||{});if(!extra.area)extra.area=workDefaultArea(owner);DTG_AUTH_WRITES++;try{return await workAddTask(t,'produccion',desc,owner,'',extra);}finally{DTG_AUTH_WRITES--;}};
+function workTaskRow(t,x){return '<article class="work-task-row" data-work-task="'+x.id+'"><button type="button" class="work-task-done icon-btn" data-workspace="task-done" data-ticket="'+t.id+'" data-task="'+x.id+'" aria-label="'+(x.estado==='terminado'?'Reabrir ':'Terminar ')+escapeHtml(x.desc)+'">'+icon(x.estado==='terminado'?'refresh':'check')+'</button><button type="button" class="work-task-copy" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'"><strong>'+escapeHtml(x.desc)+'</strong><span>#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</span><small>'+escapeHtml(x.responsable||'Sin asignar')+' · '+AREA_LABEL[taskArea(x)]+'</small></button></article>';}
+renderTasksPanel=function(t){var tasks=(t.tareas||[]).filter(function(x){return x.estado!=='terminado';});return '<section class="tk-tasks"><div class="tk-sec-head"><h2>Tareas · '+tasks.length+'</h2><button class="btn btn-ghost" data-action="ops-task-new" data-ticket="'+t.id+'">+ Tarea</button></div>'+tasks.map(function(x){return workTaskRow(t,x);}).join('')+'</section>';};
+renderOperacionesView=function(){var o=UI.operaciones,view=o.workView||'todas',rows=[];STATE.tickets.forEach(function(t){if(UI.search&&!ticketMatchesSearch(t,UI.search))return;(t.tareas||[]).forEach(function(x){if(view==='terminadas'?x.estado!=='terminado':x.estado==='terminado'||ticketIsCerrado(t))return;if((view==='planeacion'||view==='produccion')&&taskArea(x)!==view)return;if(view==='mias'&&x.responsable!==currentActorName())return;if(o.query&&normalizeWord(x.desc+' '+t.seq+' '+t.cliente+' '+x.responsable).indexOf(normalizeWord(o.query))===-1)return;rows.push({t:t,task:x});});});rows.sort(compareOpsItems);return '<div class="home-header"><h1>Tareas</h1><button class="btn btn-primary" data-action="ops-task-new">+ Tarea</button></div><div class="work-task-toolbar"><label class="search-wrap">'+icon('search')+'<input id="ops-search" placeholder="Buscar tarea, cliente o responsable" value="'+escapeHtml(o.query||'')+'"></label><div class="work-task-views" role="tablist" aria-label="Vistas de tareas">'+[['todas','Activas'],['planeacion','Planeación'],['produccion','Producción'],['mias','Mis tareas'],['terminadas','Terminadas']].map(function(v){return '<button type="button" role="tab" aria-selected="'+(view===v[0])+'" class="btn '+(view===v[0]?'btn-primary':'btn-ghost')+'" data-workspace="task-view" data-view="'+v[0]+'">'+v[1]+'</button>';}).join('')+'</div></div><div class="page-scroll work-task-list">'+(rows.length?rows.map(function(r){return workTaskRow(r.t,r.task);}).join(''):'<p class="empty-list">No hay tareas en esta vista.</p>')+'</div>';};
+var workAstraReview=astraReviewOverlay;
+astraReviewOverlay=function(){var r=UI.astraReview;if(!r||r.kind!=='task')return workAstraReview();var p=astraPost(r.postId);if(!p)return '';if(!UI.operaciones.editor)UI.operaciones.editor={mode:'create',ticketId:conversationTicketId(p.conversationId)||p.ticketId||null,draft:{},ticketQuery:'',sourceIds:r.selectedIds||[r.postId]};UI.astraReview=null;return renderOpsEditor();};
+
+var workMarkerToggle=toggleMarkerTypeCore;toggleMarkerTypeCore=async function(t,type){if(!MARKER_PICKABLE.some(function(m){return m.type===type;}))return false;DTG_AUTH_WRITES++;try{return await workMarkerToggle(t,type);}finally{DTG_AUTH_WRITES--;}};
+var workKanbanCard=renderKanbanCard;
+kanbanCardProductosContext=function(t){var products=t.productos||[];return {text:products.length?products.slice(0,3).map(function(p){return (p.cantidad?p.cantidad+' ':'')+p.desc;}).join(' · '):'Agregar trabajo',empty:!products.length};};
+renderKanbanCard=function(t){var html=workKanbanCard(t);var start=html.indexOf('<div class="kanban-card-quesigue-cell');var end=html.indexOf('<div class="kanban-card-markers-row',start);if(start!==-1&&end!==-1)html=html.slice(0,start)+html.slice(end);if(!ticketThumbPhotoPath(t))html=html.replace('<div class="kanban-card-main" draggable="false">','<div class="kanban-card-main" draggable="false"><button class="work-add-photo" data-action="tickets-thumb-photo" data-ticket="'+t.id+'" aria-label="Agregar foto al ticket #'+t.seq+'">'+icon('image')+'<span>Agregar foto</span></button>');var f=ticketFinancials(t),tasks=(t.tareas||[]).filter(function(x){return x.estado!=='terminado';});var extra='<div class="work-ticket-actions"><button class="btn btn-ghost" data-workspace="dates" data-ticket="'+t.id+'">'+icon('calendar')+'<span>'+(t.fechaCompromiso?'Entrega '+fmtDateOnlyShort(t.fechaCompromiso):'Entrega prometida')+(t.fechaEvento?'<small>Evento '+fmtDateOnlyShort(t.fechaEvento)+'</small>':'')+'</span></button><button class="btn btn-ghost" data-action="cxc-pago-open" data-ticket="'+t.id+'">'+icon('wallet')+(f.saldo==null?'Revisar cobro':f.saldo>0?'Cobrar '+fmtMoney(f.saldo):'Pagado')+'</button>'+(!t.entregadoAt&&!ticketIsCerrado(t)?'<button class="btn btn-ghost" data-action="cell-editor-marcar-entregado" data-ticket="'+t.id+'">'+icon('truck')+'Marcar entregado</button>':'')+'</div>'+(tasks.length?'<div class="work-kanban-tasks">'+tasks.map(function(x){return '<div class="work-kanban-task"><button class="icon-btn" data-workspace="task-done" data-ticket="'+t.id+'" data-task="'+x.id+'" aria-label="Terminar '+escapeHtml(x.desc)+'">'+icon('check')+'</button><button data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+'<small>'+escapeHtml(x.responsable||'Sin asignar')+'</small></button></div>';}).join('')+'</div>':'');return html.slice(0,html.lastIndexOf('</div>'))+extra+'</div>';};
+var workToolbar=renderTicketsToolbar;
+renderTicketsToolbar=function(list){var toolbar=workToolbar(list);return '<div class="work-kanban-toolbar"><label class="search-wrap">'+icon('search')+'<input id="workspace-search" type="search" placeholder="Buscar cliente, folio o responsable" aria-label="Buscar en todos los tickets" value="'+escapeHtml(UI.search||'')+'"></label><button class="btn btn-primary" data-action="tickets-quickcreate-toggle" aria-label="Crear ticket">'+icon('plus')+'</button><button class="icon-btn" data-workspace="tools" aria-label="Mostrar vistas y filtros" aria-expanded="'+!!UI.workToolsOpen+'">'+icon('sliders')+'</button></div><div class="work-discover'+(UI.workToolsOpen||UI.ticketsExplorer.quickCreateOpen?' shown':'')+'">'+toolbar+'</div>';};
+var workFiltered=ticketsExplorerFiltered;
+ticketsExplorerFiltered=function(){return workFiltered().filter(function(t){return ticketMatchesSearch(t,UI.search||'');});};
+var workKanbanColumns=kanbanColumns;
+kanbanColumns=function(list){var cols=workKanbanColumns(list);return UI.search?cols.filter(function(c){return c.tickets.length;}):cols;};
+NAV_ITEMS.forEach(function(n){if(n.view==='operaciones'){n.label='Tareas';n.icon='check';}});
+
+document.addEventListener('input',function(e){
+ if(e.target.id==='workspace-search'){UI.search=e.target.value;UI.ticketsExplorer.search=UI.search;saveUi();render();var f=document.getElementById('workspace-search');if(f)f.focus({preventScroll:true});}
+ if(e.target.id==='search-input')UI.ticketsExplorer.search=e.target.value;
+ if(e.target.id==='tickets-explorer-search'){UI.search=e.target.value;saveUi();}
+ if(e.target.id==='work-city-search'){var q=normalizeWord(e.target.value);document.querySelectorAll('.work-city-list button').forEach(function(b){b.hidden=normalizeWord(b.textContent).indexOf(q)===-1;});}
+ if(e.target.hasAttribute('data-work-date')&&UI.cellEditor){UI.cellEditor.dateDraft=UI.cellEditor.dateDraft||{promised:document.getElementById('work-date-promised').value,event:document.getElementById('work-date-event').value};UI.cellEditor.dateDraft[e.target.getAttribute('data-work-date')]=e.target.value;}
+},true);
+document.addEventListener('change',function(e){var ed=UI.operaciones.editor;if(ed&&['ops-f-desc','ops-f-resp','ops-f-area'].indexOf(e.target.id)!==-1){ed.draft=ed.draft||{};ed.draft.desc=document.getElementById('ops-f-desc').value;ed.draft.responsable=document.getElementById('ops-f-resp').value;if(e.target.id==='ops-f-resp'&&ed.mode!=='edit')document.getElementById('ops-f-area').value=workDefaultArea(e.target.value);ed.draft.area=document.getElementById('ops-f-area').value;}},true);
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-open-form="tarea"]');if(b){e.preventDefault();e.stopImmediatePropagation();openOpsEditor('create',null,UI.selectedTicketId);}},true);
+var WORK_PENDING_TASKS={};
+document.addEventListener('click',async function(e){var b=e.target.closest&&e.target.closest('[data-workspace]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();var a=b.getAttribute('data-workspace'),id=b.getAttribute('data-ticket'),t=id&&findTicket(id);
+ if(a==='tools'){UI.workToolsOpen=!UI.workToolsOpen;render();}
+ if(a==='dates')openCellEditor('workdates',id);
+ if(a==='map-city')await setDeliveryZone(id,b.getAttribute('data-zone'));
+ if(a==='financial-label'){closeMarkerToggle();if(t&&!t.entregadoAt)openCellEditor('estado',id);else if(t)openCellEditor('cobrado',id);}
+ if(a==='task-view'){UI.operaciones.workView=b.getAttribute('data-view');render();}
+ if(a==='task-done'&&t){var task=(t.tareas||[]).find(function(x){return x.id===b.getAttribute('data-task');});if(!task||WORK_PENDING_TASKS[task.id])return;WORK_PENDING_TASKS[task.id]=true;b.disabled=true;DTG_AUTH_WRITES++;try{await updateTareaCore(t,task.id,{estado:task.estado==='terminado'?'pendiente':'terminado'});}finally{DTG_AUTH_WRITES--;delete WORK_PENDING_TASKS[task.id];render();}}
+ if(a==='save-default'){var select=document.getElementById('work-default-area'),actor=currentActorId(),epoch=AUTH_EPOCH,client=sb;if(!select||TASK_AREAS.indexOf(select.value)===-1)return;b.disabled=true;DTG_AUTH_WRITES++;try{var res=await client.from('profiles').update({default_task_area:select.value}).eq('id',actor);if(res.error)throw res.error;if(epoch!==AUTH_EPOCH)return;CURRENT_PROFILE.default_task_area=select.value;var p=(STATE.profiles||[]).find(function(p){return p.id===actor;});if(p)p.defaultTaskArea=select.value;showToast('Destino predeterminado guardado. Se aplica solo a nuevas tareas.');}catch(err){userError('Destino de tareas',err);}finally{DTG_AUTH_WRITES--;b.disabled=false;}}
+},true);
+document.addEventListener('keydown',function(e){var b=e.target.closest&&e.target.closest('[data-workspace="map-city"]');if(b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();b.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
+document.addEventListener('submit',async function(e){if(e.target.id!=='work-dates-form')return;e.preventDefault();var form=e.target,ed=UI.cellEditor,t=findTicket(form.getAttribute('data-ticket'));if(!t||!ed||ed.saving)return;var promised=document.getElementById('work-date-promised').value,event=document.getElementById('work-date-event').value;if((promised&&!isSaneDateOnly(promised))||(event&&!isSaneDateOnly(event))){showToast('Revisa las fechas.');return;}ed.saving=true;form.querySelector('[type="submit"]').disabled=true;var epoch=AUTH_EPOCH;DTG_AUTH_WRITES++;try{var res=await sb.rpc('set_ticket_work_dates',{p_ticket_id:t.id,p_promised:promised||null,p_event:event||null});if(res.error)throw res.error;if(!res.data)throw Error('No se pudieron guardar las fechas de este ticket.');if(epoch!==AUTH_EPOCH)return;t.fechaCompromiso=promised;t.fechaEvento=event;if(UI.cellEditor===ed)UI.cellEditor=null;await refreshFromServer({background:true});render();showToast('Fechas guardadas.');}catch(err){userError('Guardar fechas',err);}finally{DTG_AUTH_WRITES--;ed.saving=false;var button=form.querySelector('[type="submit"]');if(button)button.disabled=false;}},true);
+function workRevealTools(){if(UI.mainView!=='tickets'||UI.selectedTicketId||UI.workToolsOpen)return;UI.workToolsOpen=true;renderKeepingLiveInputs();}
+var WORK_PULL=null;
+document.addEventListener('pointerdown',function(e){if(e.pointerType==='touch'&&e.target.closest&&e.target.closest('.tickets-explorer'))WORK_PULL={x:e.clientX,y:e.clientY};},{passive:true});
+document.addEventListener('pointerup',function(e){var p=WORK_PULL;WORK_PULL=null;if(p&&e.clientY-p.y>65&&Math.abs(e.clientX-p.x)<40)workRevealTools();},{passive:true});
+document.addEventListener('pointercancel',function(){WORK_PULL=null;});
+document.addEventListener('wheel',function(e){if(e.deltaY< -20&&e.target.closest&&e.target.closest('.tickets-explorer')){var col=e.target.closest('.kanban-column-cards');if(!col||col.scrollTop<=0)workRevealTools();}},{passive:true});
+var workAccountMenu=renderAccountMenu;
+renderAccountMenu=function(){var html=workAccountMenu();if(UI.editNameOpen)return html;var area=workDefaultArea(currentActorName());var settings='<div class="work-default-setting"><label>Destino de mis nuevas tareas<select id="work-default-area"><option value="planeacion"'+(area==='planeacion'?' selected':'')+'>Planeación</option><option value="produccion"'+(area==='produccion'?' selected':'')+'>Producción</option></select></label><button class="btn btn-ghost" data-workspace="save-default">Guardar destino</button><small>No mueve tareas existentes.</small></div>';return html.replace('<div class="account-menu-section-label">',settings+'<div class="account-menu-section-label">');};
+var workRender=render;
+render=function(){workRender();var drawer=document.querySelector('.sidebar');if(drawer){var hidden=isMobileViewport()&&!UI.sidebarOpen;drawer.inert=hidden;if(hidden)drawer.setAttribute('aria-hidden','true');else drawer.removeAttribute('aria-hidden');}document.querySelectorAll('[data-field="quesigue"],[data-action="field-quesigue"],.tk-next,.cxc-quesigue,.calendar-entry-quesigue,.kanban-card-quesigue-cell').forEach(function(n){n.remove();});document.querySelectorAll('th').forEach(function(th){if(normalizeWord(th.textContent)==='que sigue'){var i=th.cellIndex;th.closest('table').querySelectorAll('tr').forEach(function(r){if(r.children[i])r.children[i].remove();});}});document.querySelectorAll('.quickedit-row,.tickets-list-preview-row,.calendar-entrypanel-row').forEach(function(r){if(normalizeWord(r.textContent).indexOf('que sigue')===0)r.remove();});};
 
 boot();
 
