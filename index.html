@@ -17868,7 +17868,7 @@ async function submitTicketQuickCreate(fields){
   var quesigue = (fields.quesigue || "").trim();
   var pickedClienteId = fields.clienteId || null;
   if(telefono && !detectPhone(telefono)){showToast("Revisa el teléfono antes de crear el ticket.");return;}
-  var newId = await createTicketCore({ cliente: cliente });
+  var newId = await createTicketCore({ cliente: cliente, clienteId: pickedClienteId });
   if(!newId) return;
   await refreshFromServer({background:true});
   if(!findTicket(newId)){openTicketById(newId);showToast("Ticket creado. No se pudo cargar para agregar los datos; vuelve a abrirlo antes de crear otro.");return;}

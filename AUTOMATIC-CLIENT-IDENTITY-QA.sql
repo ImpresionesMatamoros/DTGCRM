@@ -1,0 +1,33 @@
+begin;
+select set_config('request.jwt.claim.sub',(select id::text from public.profiles where active=true order by id limit 1),true);
+select set_config('request.jwt.claim.role','authenticated',true);
+set local role authenticated;
+do $$
+declare label text:='QA identidad '||gen_random_uuid()::text; second_label text:='QA otro '||gen_random_uuid()::text;
+ a uuid; b uuid; t1 uuid; t2 uuid; blank uuid; old_name text; before_time timestamptz; denied boolean:=false;
+begin
+ insert into public.tickets(cliente) values(label) returning id,cliente_id into t1,a;
+ if a is null or not exists(select 1 from public.clientes where id=a) then raise exception 'Ticket nuevo sin ficha'; end if;
+ insert into public.tickets(cliente) values('  '||upper(label)||'   ') returning id,cliente_id into t2,b;
+ if a<>b then raise exception 'Nombre equivalente duplicó ficha'; end if;
+ insert into public.tickets(cliente) values('') returning id into blank;
+ if (select cliente_id from public.tickets where id=blank) is not null then raise exception 'Se inventó un cliente'; end if;
+ update public.tickets set cliente=second_label where id=blank returning cliente_id into b;
+ if b is null then raise exception 'Editar nombre no creó ficha'; end if;
+ update public.tickets set cliente_id=null where id=t1;
+ if (select cliente_id from public.tickets where id=t1)<>a then raise exception 'Se permitió dejar nombre sin ficha'; end if;
+ select nombre into old_name from public.clientes where id=a;
+ update public.tickets set cliente=second_label where id=t1;
+ if (select cliente_id from public.tickets where id=t1)<>b or (select nombre from public.clientes where id=a)<>old_name then raise exception 'Cambio de identidad incorrecto'; end if;
+ update public.tickets set cliente_id=a,cliente='texto viejo' where id=t1;
+ if (select cliente from public.tickets where id=t1)<>old_name then raise exception 'ID explícito no fue autoritativo'; end if;
+ update public.clientes set nombre=label||' renombrado' where id=a;
+ update public.tickets set cliente=label||' renombrado' where cliente_id=a;
+ if (select cliente_id from public.tickets where id=t1)<>a then raise exception 'Renombrar desvinculó la ficha'; end if;
+ perform public.client_workspace_merge(b,array[a]);
+ insert into public.tickets(cliente_id,cliente) values(a,label) returning cliente_id into a;
+ if a<>b then raise exception 'ID fusionado no redirige al cliente principal'; end if;
+ if exists(select 1 from public.tickets where nullif(trim(cliente),'') is not null and cliente_id is null) then raise exception 'Todavía existen nombres sin ficha'; end if;
+end $$;
+select 'PASS: new/existing names, case/spacing match, unnamed drafts, edit/unlink protection, authoritative selection, rename, merged-ID redirect, zero named tickets without profile' as result;
+rollback;
