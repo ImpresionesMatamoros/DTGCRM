@@ -1,0 +1,158 @@
+[
+  {
+    "id": "palmview",
+    "label": "Palmview",
+    "lat": 26.231926,
+    "lon": -98.381638
+  },
+  {
+    "id": "mission",
+    "label": "Mission",
+    "lat": 26.20406,
+    "lon": -98.325221
+  },
+  {
+    "id": "mcallen",
+    "label": "McAllen",
+    "lat": 26.224966,
+    "lon": -98.246083
+  },
+  {
+    "id": "edinburg",
+    "label": "Edinburg",
+    "lat": 26.318285,
+    "lon": -98.153449
+  },
+  {
+    "id": "hidalgo",
+    "label": "Hidalgo",
+    "lat": 26.108943,
+    "lon": -98.24616
+  },
+  {
+    "id": "pharr",
+    "label": "Pharr",
+    "lat": 26.163436,
+    "lon": -98.19389
+  },
+  {
+    "id": "san_juan",
+    "label": "San Juan",
+    "lat": 26.189414,
+    "lon": -98.151817
+  },
+  {
+    "id": "alamo",
+    "label": "Alamo",
+    "lat": 26.180987,
+    "lon": -98.11753
+  },
+  {
+    "id": "donna",
+    "label": "Donna",
+    "lat": 26.16105,
+    "lon": -98.038929
+  },
+  {
+    "id": "weslaco",
+    "label": "Weslaco",
+    "lat": 26.160549,
+    "lon": -97.987654
+  },
+  {
+    "id": "edcouch",
+    "label": "Edcouch",
+    "lat": 26.293723,
+    "lon": -97.963091
+  },
+  {
+    "id": "elsa",
+    "label": "Elsa",
+    "lat": 26.297814,
+    "lon": -97.993562
+  },
+  {
+    "id": "mercedes",
+    "label": "Mercedes",
+    "lat": 26.153818,
+    "lon": -97.912907
+  },
+  {
+    "id": "la_feria",
+    "label": "La Feria",
+    "lat": 26.155307,
+    "lon": -97.825027
+  },
+  {
+    "id": "harlingen",
+    "label": "Harlingen",
+    "lat": 26.191204,
+    "lon": -97.697383
+  },
+  {
+    "id": "san_benito",
+    "label": "San Benito",
+    "lat": 26.129398,
+    "lon": -97.64405
+  },
+  {
+    "id": "rio_hondo",
+    "label": "Río Hondo",
+    "lat": 26.234627,
+    "lon": -97.581466
+  },
+  {
+    "id": "los_fresnos",
+    "label": "Los Fresnos",
+    "lat": 26.074062,
+    "lon": -97.488017
+  },
+  {
+    "id": "olmito",
+    "label": "Olmito",
+    "lat": 26.027593,
+    "lon": -97.540059
+  },
+  {
+    "id": "brownsville",
+    "label": "Brownsville",
+    "lat": 25.995689,
+    "lon": -97.450848
+  },
+  {
+    "id": "matamoros",
+    "label": "Matamoros",
+    "lat": 25.88,
+    "lon": -97.5047
+  },
+  {
+    "id": "port_isabel",
+    "label": "Puerto Isabel",
+    "lat": 26.063045,
+    "lon": -97.24669
+  },
+  {
+    "id": "south_padre_island",
+    "label": "Isla del Padre",
+    "lat": 26.120465,
+    "lon": -97.170703
+  },
+  {
+    "id": "starbase",
+    "label": "Starbase",
+    "lat": 25.9914,
+    "lon": -97.1836
+  },
+  {
+    "id": "reynosa",
+    "label": "Reynosa",
+    "lat": 26.0922,
+    "lon": -98.277
+  },
+  {
+    "id": "rio_grande_city",
+    "label": "Río Grande City",
+    "lat": 26.380999,
+    "lon": -98.821478
+  }
+]

@@ -4026,6 +4026,8 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .ux-ticket-visible{border-left:3px solid var(--accent)!important;background:var(--accent-soft)!important}
 .ux-task-group{grid-column:1/-1;display:flex;gap:7px;align-items:center;padding:9px 2px 3px;font-size:12px;font-weight:600;color:var(--text-muted)}
 
+.pirate-cat{overflow:visible;vertical-align:middle;flex-shrink:0;filter:drop-shadow(0 1px 1px #0003)}.chat-react-opt .pirate-cat{width:32px;height:32px}.reaction-pill .pirate-cat{width:24px;height:24px}.chat-react-opt:hover .pirate-cat,.chat-react-opt:focus-visible .pirate-cat{transform:translateY(-2px) rotate(-5deg);transition:transform .16s}.valley-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}.valley-toolbar>span{flex:1;min-width:180px;font-size:12px;color:var(--text-muted)}.valley-toolbar button{min-height:44px;min-width:44px}.work-map-scroll:has(.valley-map){height:350px;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;border-radius:14px;background:#15232b}.valley-map{max-width:none!important;flex-shrink:0}.valley-map g:focus rect{stroke:#fff;stroke-width:3}.valley-map g:hover rect{fill:#305166}.valley-hint{font-size:11px;color:var(--text-muted);line-height:1.5}@media(prefers-reduced-motion:reduce){.pirate-cat{transition:none!important;transform:none!important}}@media(max-width:640px){.work-map-scroll:has(.valley-map){height:290px}.work-map-sheet{padding:12px!important}}
+
 </style>
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
@@ -27482,6 +27484,191 @@ var uxRenderObserve=render;render=function(){var r=uxRenderObserve.apply(this,ar
 
 document.addEventListener('keydown',function(e){if(e.key!=='Tab'||!UI.uxTicketPreview)return;var dialog=document.querySelector('#ux-ticket-full [role=dialog]');if(!dialog)return;var buttons=dialog.querySelectorAll('button'),first=buttons[0],last=buttons[buttons.length-1];if(!dialog.contains(document.activeElement)||(e.shiftKey&&document.activeElement===first)){e.preventDefault();(e.shiftKey?last:first).focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
 var uxBasicSummary=uxTicketSummary;uxTicketSummary=function(t){var html=uxBasicSummary(t);if(UI.uxTicketPreview!==t.id)return html;var client=t.clienteId&&findCliente(t.clienteId),extra='<div class="ux-ticket-details"><h3>Detalle del ticket</h3><p>Estado: '+escapeHtml(t.estado||'abierto')+'</p>'+(client&&client.telefono?'<p>Teléfono: '+escapeHtml(client.telefono)+'</p>':'')+'<h3>Productos</h3>'+(t.productos||[]).map(function(p){return '<p>'+escapeHtml(p.desc||'Sin descripción')+' · '+(p.cantidad||1)+' unidades · '+(p.precio==null?'Sin precio':fmtMoney(p.precio))+'</p>';}).join('')+'<h3>Notas y actividad</h3>'+(t.thread||[]).filter(function(x){return x.type==='nota'||x.type==='sistema';}).map(function(x){var text=x.text||x.payload&&x.payload.text||'';return text?'<p>'+escapeHtml(text)+'</p>':'';}).join('')+'</div>';return html.replace('</div>',extra+'</div>');};
+
+/* Tiny pirate cat reaction family: native vectors, consistent anatomy. */
+function pirateCatArt(type,size){var meta=reactionMeta(type);if(!meta)return '';var eye='<ellipse cx="25" cy="17" rx="2.3" ry="3.3" fill="#292833"/><circle cx="25.6" cy="16" r=".8" fill="white"/>',mouth='<path d="M17 24q3 4 7 0" fill="none" stroke="#403449" stroke-width="1.7" stroke-linecap="round"/>',accessory='';
+ if(type==='ack'){eye='<path d="M22 17q3-3 6 0" stroke="#403449" stroke-width="2" fill="none" stroke-linecap="round"/>';accessory='<path d="m29 28 2 2 5-6" stroke="#68d4af" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';}
+ if(type==='im_in'){eye='<path d="m22 14 6-1" stroke="#403449" stroke-width="1.7"/><circle cx="25" cy="18" r="2" fill="#292833"/>';accessory='<ellipse cx="33" cy="22" rx="4" ry="6" fill="#ffd29c" stroke="#634854" stroke-width="1.2"/><path d="M31 18v3m2-3v3m2-2v2" stroke="#ae7c69" stroke-width="1"/>';}
+ if(type==='celebrate'){eye='<path d="M22 18q3-6 6 0" stroke="#403449" stroke-width="2" fill="none" stroke-linecap="round"/>';mouth='<path d="M16 23q5 9 10 0Z" fill="#713d4e"/><path d="M18 25h6" stroke="#fff2df" stroke-width="2"/>';accessory='<path d="m33 3 1.3 3.5L38 8l-3.7 1.4L33 13l-1.4-3.6L28 8l3.6-1.5Z" fill="#f7c75f"/><circle cx="5" cy="7" r="1.6" fill="#8bd6cd"/>';}
+ if(type==='love'){eye='<path d="M22 17q3-4 6 0" stroke="#403449" stroke-width="2" fill="none" stroke-linecap="round"/>';accessory='<path d="M21 36 12 29c-6-6 2-12 9-6 7-6 15 0 9 6Z" fill="#f184a8" stroke="#b75278" stroke-width="1.2"/><ellipse cx="12" cy="30" rx="3" ry="2" fill="#ffdaad"/><ellipse cx="30" cy="30" rx="3" ry="2" fill="#ffdaad"/>';}
+ if(type==='laugh'){eye='<path d="m23 14 5 3-5 3" stroke="#403449" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';mouth='<path d="M16 23q5 10 10 0Z" fill="#713d4e"/><ellipse cx="21" cy="28" rx="2.6" ry="1.2" fill="#f294a6"/>';accessory='<path d="M30 20q6 5 3 7-4 1-3-7Z" fill="#75c8ef"/>';}
+ if(type==='surprised'){eye='<ellipse cx="25" cy="17" rx="3.9" ry="4.8" fill="#fff6e8"/><ellipse cx="25" cy="17" rx="2.2" ry="3" fill="#403449"/><circle cx="25.8" cy="16" r=".9" fill="white"/>';mouth='<ellipse cx="21" cy="25" rx="2.2" ry="2.8" fill="#713d4e"/>';}
+ if(type==='oh_no'){eye='<path d="M23 14q3-2 5 0" stroke="#403449" stroke-width="1.8" fill="none"/><ellipse cx="25" cy="18" rx="1.5" ry="2.6" fill="#403449"/>';mouth='<path d="M18 26q3-4 6 0" stroke="#403449" stroke-width="1.7" fill="none" stroke-linecap="round"/>';accessory='<path d="M31 12q-3-9-8-7-4 2 0 5l8 5" fill="#ffd29c" stroke="#634854" stroke-width="1.2"/>';}
+ if(type==='terrible'||type==='confused'){eye='<path d="m22 15 6 2" stroke="#403449" stroke-width="2"/><circle cx="25" cy="19" r="1.4" fill="#403449"/>';mouth='<path d="M18 26q3-3 6 0" fill="none" stroke="#403449" stroke-width="1.7"/>';}
+ var body='<path d="M8 14 7 4q7 0 11 7h5q4-7 10-7l-1 12q5 7 0 13-4 5-13 5S5 30 5 23q0-6 3-9Z" fill="#ffc78e" stroke="#634854" stroke-width="1.4" stroke-linejoin="round"/><path d="m10 8 1 7 5-3Zm18 4 3-4-1 7Z" fill="#e9989d"/><ellipse cx="21" cy="26" rx="10" ry="6" fill="#ffe3ba"/><path d="m10 13 20 10" stroke="#403449" stroke-width="2"/><path d="M9 14q4-3 9 1v6q-5 5-9-1Z" fill="#34313f"/><path d="M11 16h3" stroke="#666171" stroke-width="1" stroke-linecap="round"/><path d="m19 21 2 2 2-2Z" fill="#b9747c"/><path d="m5 22 5 1m-5 2h5m23-2 4-1m-4 3h5" stroke="#a87567" stroke-width="1" stroke-linecap="round"/>';
+ return '<svg class="reaction-art pirate-cat" viewBox="0 0 40 40" width="'+Math.max(size||24,22)+'" height="'+Math.max(size||24,22)+'" aria-hidden="true" focusable="false" data-cat-reaction="'+type+'">'+body+eye+mouth+accessory+'</svg>';
+}
+reactionArt=pirateCatArt;
+var VALLEY_CITIES=[
+  {
+    "id": "palmview",
+    "label": "Palmview",
+    "lat": 26.231926,
+    "lon": -98.381638
+  },
+  {
+    "id": "mission",
+    "label": "Mission",
+    "lat": 26.20406,
+    "lon": -98.325221
+  },
+  {
+    "id": "mcallen",
+    "label": "McAllen",
+    "lat": 26.224966,
+    "lon": -98.246083
+  },
+  {
+    "id": "edinburg",
+    "label": "Edinburg",
+    "lat": 26.318285,
+    "lon": -98.153449
+  },
+  {
+    "id": "hidalgo",
+    "label": "Hidalgo",
+    "lat": 26.108943,
+    "lon": -98.24616
+  },
+  {
+    "id": "pharr",
+    "label": "Pharr",
+    "lat": 26.163436,
+    "lon": -98.19389
+  },
+  {
+    "id": "san_juan",
+    "label": "San Juan",
+    "lat": 26.189414,
+    "lon": -98.151817
+  },
+  {
+    "id": "alamo",
+    "label": "Alamo",
+    "lat": 26.180987,
+    "lon": -98.11753
+  },
+  {
+    "id": "donna",
+    "label": "Donna",
+    "lat": 26.16105,
+    "lon": -98.038929
+  },
+  {
+    "id": "weslaco",
+    "label": "Weslaco",
+    "lat": 26.160549,
+    "lon": -97.987654
+  },
+  {
+    "id": "edcouch",
+    "label": "Edcouch",
+    "lat": 26.293723,
+    "lon": -97.963091
+  },
+  {
+    "id": "elsa",
+    "label": "Elsa",
+    "lat": 26.297814,
+    "lon": -97.993562
+  },
+  {
+    "id": "mercedes",
+    "label": "Mercedes",
+    "lat": 26.153818,
+    "lon": -97.912907
+  },
+  {
+    "id": "la_feria",
+    "label": "La Feria",
+    "lat": 26.155307,
+    "lon": -97.825027
+  },
+  {
+    "id": "harlingen",
+    "label": "Harlingen",
+    "lat": 26.191204,
+    "lon": -97.697383
+  },
+  {
+    "id": "san_benito",
+    "label": "San Benito",
+    "lat": 26.129398,
+    "lon": -97.64405
+  },
+  {
+    "id": "rio_hondo",
+    "label": "Río Hondo",
+    "lat": 26.234627,
+    "lon": -97.581466
+  },
+  {
+    "id": "los_fresnos",
+    "label": "Los Fresnos",
+    "lat": 26.074062,
+    "lon": -97.488017
+  },
+  {
+    "id": "olmito",
+    "label": "Olmito",
+    "lat": 26.027593,
+    "lon": -97.540059
+  },
+  {
+    "id": "brownsville",
+    "label": "Brownsville",
+    "lat": 25.995689,
+    "lon": -97.450848
+  },
+  {
+    "id": "matamoros",
+    "label": "Matamoros",
+    "lat": 25.88,
+    "lon": -97.5047
+  },
+  {
+    "id": "port_isabel",
+    "label": "Puerto Isabel",
+    "lat": 26.063045,
+    "lon": -97.24669
+  },
+  {
+    "id": "south_padre_island",
+    "label": "Isla del Padre",
+    "lat": 26.120465,
+    "lon": -97.170703
+  },
+  {
+    "id": "starbase",
+    "label": "Starbase",
+    "lat": 25.9914,
+    "lon": -97.1836
+  },
+  {
+    "id": "reynosa",
+    "label": "Reynosa",
+    "lat": 26.0922,
+    "lon": -98.277
+  },
+  {
+    "id": "rio_grande_city",
+    "label": "Río Grande City",
+    "lat": 26.380999,
+    "lon": -98.821478
+  }
+];
+function valleyPoint(lat,lon){return {x:65+(lon+98.9)*510,y:75+(26.52-lat)*568};}
+function valleyLine(points){return points.map(function(p,i){var xy=valleyPoint(p[0],p[1]);return (i?'L':'M')+xy.x.toFixed(1)+' '+xy.y.toFixed(1);}).join(' ');}
+function valleyLabels(){var occupied=[],positions={};VALLEY_CITIES.slice().sort(function(a,b){return a.lon-b.lon;}).forEach(function(c){var p=valleyPoint(c.lat,c.lon),w=Math.max(76,c.label.length*7.5+18),chosen;var candidates=[[12,-45],[12,9],[-w-12,-45],[-w-12,9],[12,-90],[-w-12,-90],[12,55],[-w-12,55],[12,-135],[-w-12,100]];for(var d of candidates){var r={x:Math.max(8,Math.min(1090-w,p.x+d[0])),y:Math.max(36,Math.min(556,p.y+d[1])),w:w,h:44};if(!occupied.some(function(o){return r.x<o.x+o.w+5&&r.x+r.w+5>o.x&&r.y<o.y+o.h+5&&r.y+r.h+5>o.y;})){chosen=r;break;}}if(!chosen){var best=Infinity;for(var yy=40;yy<=550;yy+=49)for(var xx=8;xx<=1090-w;xx+=14){var r={x:xx,y:yy,w:w,h:44};if(occupied.some(function(o){return r.x<o.x+o.w+5&&r.x+r.w+5>o.x&&r.y<o.y+o.h+5&&r.y+r.h+5>o.y;}))continue;var distance=Math.pow(xx+w/2-p.x,2)+Math.pow(yy+22-p.y,2);if(distance<best){best=distance;chosen=r;}}}chosen=chosen||{x:p.x+12,y:p.y+10,w:w,h:44};occupied.push(chosen);positions[c.id]=chosen;});return positions;}
+renderZonePicker=function(){var zp=UI.zonePicker,t=zp&&findTicket(zp.ticketId);if(!t)return '';var current=t.deliveryZone||'',labels=valleyLabels(),zoom=UI.valleyZoom||1;
+ var river=valleyLine([[26.4,-98.9],[26.32,-98.73],[26.26,-98.58],[26.17,-98.42],[26.10,-98.30],[26.07,-98.25],[26.07,-98.1],[26.04,-97.96],[26.02,-97.84],[25.99,-97.74],[25.94,-97.65],[25.9,-97.56],[25.88,-97.50],[25.86,-97.44],[25.88,-97.36],[25.90,-97.28],[25.96,-97.15]]);
+ var coast=valleyLine([[26.55,-97.26],[26.35,-97.23],[26.2,-97.17],[26.1,-97.15],[26.0,-97.14],[25.8,-97.12]]),road=valleyLine(['mission','mcallen','pharr','donna','weslaco','mercedes','la_feria','harlingen','san_benito','brownsville'].map(function(id){var c=VALLEY_CITIES.find(function(x){return x.id===id;});return [c.lat,c.lon];}));
+ return '<div class="mk-picker-layer mk-picker-layer-sheet" id="zone-picker-layer"><div class="mk-picker mk-picker-sheet work-map-sheet" role="dialog" aria-modal="true" aria-label="Ubicación de entrega"><div class="mk-picker-head"><div><h2>Ubicación de entrega</h2><p>#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</p></div><button class="icon-btn" data-action="zone-picker-close" aria-label="Cerrar">'+icon('x')+'</button></div><div class="valley-toolbar"><span>Valle del Río Grande · elige una ciudad</span><button class="icon-btn" data-valley="out" aria-label="Alejar mapa">'+icon('minus')+'</button><button class="icon-btn" data-valley="in" aria-label="Acercar mapa">'+icon('plus')+'</button><button class="btn" data-valley="reset">Vista general</button></div><div class="work-map-scroll"><svg class="work-map valley-map" font-family="system-ui, sans-serif" viewBox="0 0 1100 620" style="width:'+1100*zoom+'px;height:'+620*zoom+'px" role="group" aria-label="Mapa de ciudades del Valle"><rect width="1100" height="620" fill="#15232b"/><path d="'+coast+'L1100 620L1100 0Z" fill="#163c51"/><path d="'+river+'L1100 620H0V520Z" fill="#293039"/><path d="'+road+'" stroke="#7c8490" stroke-width="6" opacity=".55" fill="none"/><path d="'+river+'" stroke="#58bad5" stroke-width="4" fill="none"/><path d="'+coast+'" stroke="#77cad7" stroke-width="3" fill="none"/><text x="72" y="30" fill="#a3b7ba" font-size="14" letter-spacing="3">TEXAS · ESTADOS UNIDOS</text><text x="240" y="530" fill="#b7aeb5" font-size="14" letter-spacing="3">TAMAULIPAS · MÉXICO</text><text x="970" y="480" fill="#8cbdd1" font-size="14" transform="rotate(-90 970 480)">GOLFO DE MÉXICO</text><text x="540" y="416" fill="#81cbdf" font-size="12">Río Bravo / Río Grande</text><path d="M1045 70v-34m-7 9 7-9 7 9" stroke="#c4d5de" stroke-width="2" fill="none"/><text x="1040" y="27" fill="#c4d5de" font-size="13">N</text><path d="M72 581h103m-103-5v10m103-10v10" stroke="#c4d5de" stroke-width="2"/><text x="72" y="606" fill="#b3c4ca" font-size="12">20 km aprox.</text>'+VALLEY_CITIES.map(function(c){var p=valleyPoint(c.lat,c.lon),r=labels[c.id],on=current===c.id;return '<g role="button" tabindex="0" data-workspace="map-city" data-zone="'+c.id+'" data-ticket="'+t.id+'" aria-label="Elegir '+escapeHtml(c.label)+'" aria-pressed="'+on+'"><title>'+escapeHtml(c.label)+'</title><path d="M'+p.x+' '+p.y+'L'+(r.x+r.w/2)+' '+(r.y+22)+'" stroke="'+(on?'#72b3ff':'#667c85')+'" stroke-width="1"/><circle cx="'+p.x+'" cy="'+p.y+'" r="'+(on?7:4)+'" fill="'+(on?'#72b3ff':'#d4e3df')+'"/><rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="44" rx="10" fill="'+(on?'#286ed2':'#20343f')+'" stroke="'+(on?'#a2ccff':'#49616d')+'"/><text x="'+(r.x+r.w/2)+'" y="'+(r.y+27)+'" text-anchor="middle" fill="#edf6f7" font-size="13">'+escapeHtml(c.label)+'</text></g>';}).join('')+'</svg></div><p class="valley-hint">Ciudades ubicadas por coordenadas. Río, costa y corredor vial simplificados. Desliza el mapa o busca abajo.</p><label>Buscar ciudad<input id="work-city-search" type="search" placeholder="Matamoros, McAllen…"></label><div class="work-city-list">'+DELIVERY_ZONES.filter(function(z){return !z.legacy;}).map(function(z){return '<button class="btn '+(current===z.id?'btn-primary':'btn-ghost')+'" data-action="zone-pick" data-zone="'+z.id+'" data-ticket="'+t.id+'">'+escapeHtml(z.label)+'</button>';}).join('')+'<button class="btn" data-action="zone-pick" data-ticket="'+t.id+'" data-zone="">Sin definir</button></div></div></div>';
+};
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-valley]');if(!b)return;e.preventDefault();var scroll=document.querySelector('.work-map-scroll'),left=scroll?scroll.scrollLeft:0,top=scroll?scroll.scrollTop:0,old=UI.valleyZoom||1;UI.valleyZoom=b.dataset.valley==='reset'?1:Math.max(1,Math.min(2,old+(b.dataset.valley==='in'?.25:-.25)));render();var next=document.querySelector('.work-map-scroll');if(next){next.scrollLeft=left*(UI.valleyZoom/old);next.scrollTop=top*(UI.valleyZoom/old);}},true);
+
+var valleyOpenZone=openZonePicker;openZonePicker=function(id){valleyOpenZone(id);requestAnimationFrame(function(){var t=findTicket(id),c=t&&VALLEY_CITIES.find(function(x){return x.id===t.deliveryZone;}),scroll=document.querySelector('.work-map-scroll');if(c&&scroll){var p=valleyPoint(c.lat,c.lon),z=UI.valleyZoom||1;scroll.scrollLeft=p.x*z-scroll.clientWidth/2;scroll.scrollTop=p.y*z-scroll.clientHeight/2;}});};
+
 
 boot();
 
