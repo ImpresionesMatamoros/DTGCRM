@@ -4048,6 +4048,7 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .dc-month-event{display:flex;align-items:center;gap:5px}.dc-month-event img{width:22px;height:22px;object-fit:cover;border-radius:4px;flex-shrink:0}.dc-month-event span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dc-month-number{flex-shrink:0}
 @media(min-width:881px){.dc-selected-day{overflow:hidden}.dc-selected-day .dc-day-tickets,.dc-week-agenda .dc-day-tickets{max-height:calc(100dvh - 300px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}.dc-selected-day .dc-day-head{position:sticky;top:0;background:var(--bg);z-index:1}}
 
+@media(max-width:880px){.kanban-card{content-visibility:auto;contain-intrinsic-size:auto 260px}}
 </style>
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
@@ -5765,21 +5766,18 @@ async function fetchAllState(){
     selectAll("pagos"),
     selectAll("bitacora", { order: "ts", ascending: false }),
     selectAll("app_settings"),
-    selectAll("documentos")
+    selectAll("documentos"),
+    fetchClientes(), fetchTicketMarkers(), fetchTeamPosts(), fetchFeedReactions(),
+    fetchProfiles(), fetchChatState(), fetchChatReadState(), fetchTicketAccess(),
+    fetchWorkOrders(), fetchAstraConversations(), fetchAstraLinks(), fetchAstraLater()
   ]);
   var ticketsRows = results[0], productosRows = results[1], tareasRows = results[2],
       pagosRows = results[3], bitacoraRows = results[4].slice().reverse(), settingsRows = results[5],
       documentosRows = results[6];
   loadPushConfig(settingsRows);   /* v0.23: llave PÚBLICA VAPID (la privada jamás llega aquí) */
-  var clientesInfo = await fetchClientes();
-  var markersInfo = await fetchTicketMarkers();
-  var teamPostsInfo = await fetchTeamPosts();
-  var feedReactionsInfo = await fetchFeedReactions();
-  var profilesInfo = await fetchProfiles();
-  var chatStateRow = await fetchChatState();   /* v0.23: lectura + preferencias */
-  var chatReadStateRows = await fetchChatReadState();
-  var ticketAccessInfo = await fetchTicketAccess();
-  var workOrdersInfo = await fetchWorkOrders();
+  var clientesInfo=results[7], markersInfo=results[8], teamPostsInfo=results[9],
+      feedReactionsInfo=results[10], profilesInfo=results[11], chatStateRow=results[12],
+      chatReadStateRows=results[13], ticketAccessInfo=results[14], workOrdersInfo=results[15];
 
   var byTicket = {};
   ticketsRows.forEach(function(row){
@@ -5877,9 +5875,7 @@ async function fetchAllState(){
     if(row.key === "chat_unread_baseline") settings.chatUnreadBaseline = (row.values || [])[0] || null;
   });
   var teamPosts = teamPostsInfo.rows.map(mapTeamPostRow);
-  var conversations = await fetchAstraConversations();
-  var conversationLinks = await fetchAstraLinks();
-  var astraLater = await fetchAstraLater();
+  var conversations=results[16], conversationLinks=results[17], astraLater=results[18];
   var feedReactions = feedReactionsInfo.rows.map(function(row){
     return {
       id: row.id, targetType: row.target_type, targetId: row.target_id,
@@ -27183,9 +27179,7 @@ kanbanColumns=function(list){var cols=workKanbanColumns(list);return UI.search?c
 NAV_ITEMS.forEach(function(n){if(n.view==='operaciones'){n.label='Tareas';n.icon='check';}});
 
 document.addEventListener('input',function(e){
- if(e.target.id==='workspace-search'){UI.search=e.target.value;UI.ticketsExplorer.search=UI.search;saveUi();render();var f=document.getElementById('workspace-search');if(f)f.focus({preventScroll:true});}
- if(e.target.id==='search-input')UI.ticketsExplorer.search=e.target.value;
- if(e.target.id==='tickets-explorer-search'){UI.search=e.target.value;saveUi();}
+ if(ticketSearchField(e.target)){e.stopImmediatePropagation();ticketSearchInput(e);return;}
  if(e.target.id==='work-city-search'){var q=normalizeWord(e.target.value);document.querySelectorAll('.work-city-list button').forEach(function(b){b.hidden=normalizeWord(b.textContent).indexOf(q)===-1;});}
  if(e.target.hasAttribute('data-work-date')&&UI.cellEditor){UI.cellEditor.dateDraft=UI.cellEditor.dateDraft||{promised:document.getElementById('work-date-promised').value,event:document.getElementById('work-date-event').value};UI.cellEditor.dateDraft[e.target.getAttribute('data-work-date')]=e.target.value;}
 },true);
@@ -27707,7 +27701,7 @@ var CX={selected:[],merge:false,panel:false,query:'',pending:null,busy:false,tar
 var cxMap=mapClienteRow;
 mapClienteRow=function(r){var c=cxMap(r);c.frequentClient=!!r.frequent_client;c.highTicket=!!r.high_ticket;c.archivedAt=r.archived_at||null;c.mergedInto=r.merged_into||null;return c;};
 var cxFetch=fetchAllState;
-fetchAllState=async function(){var state=await cxFetch(),extra=await Promise.all([selectAll('client_notes',{order:'created_at'}),selectAll('client_tasks',{order:'created_at'})]);state.clientNotes=extra[0];state.clientTasks=extra[1];return state;};
+fetchAllState=async function(){var results=await Promise.all([cxFetch(),selectAll('client_notes',{order:'created_at'}),selectAll('client_tasks',{order:'created_at'})]);var state=results[0];state.clientNotes=results[1];state.clientTasks=results[2];return state;};
 DTG_RT_TABLAS.push({t:'client_notes',que:'las notas de clientes'},{t:'client_tasks',que:'las tareas de clientes'});
 clienteIdentityControlsHtml=function(){return '';};
 function cxClients(){return (STATE.clientes||[]).filter(function(c){return !c.archivedAt;});}
@@ -27781,6 +27775,17 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
 document.addEventListener('pointerover',function(e){var card=e.target.closest&&e.target.closest('.dc-card-main,.dc-month-event');if(!card||!matchMedia('(hover:hover)').matches||e.pointerType==='touch')return;uxShowHover(card);});
 document.addEventListener('pointerout',function(e){var card=e.target.closest&&e.target.closest('.dc-card-main,.dc-month-event');if(card&&!card.contains(e.relatedTarget)){var pop=document.getElementById('ux-ticket-hover');if(pop)pop.remove();}});
 document.addEventListener('wheel',function(e){var box=e.target.closest&&e.target.closest('.dc-day-tickets');if(!box||isMobileViewport()||e.ctrlKey||!e.deltaY||box.scrollHeight<=box.clientHeight)return;var delta=e.deltaY*(e.deltaMode===1?18:e.deltaMode===2?box.clientHeight:1),next=Math.max(0,Math.min(box.scrollHeight-box.clientHeight,box.scrollTop+delta));if(next!==box.scrollTop){e.preventDefault();e.stopPropagation();box.scrollTop=next;}},{passive:false});
+
+/* Keep the keyboard/input alive while typing; filter once the user pauses. */
+var TS_TIMER=null,TS_DIRTY=false,TS_COMPOSING=false,TS_RENDER_DEPTH=0,TS_PHOTOS=null;
+function ticketSearchField(el){return el&&['workspace-search','search-input','tickets-explorer-search'].indexOf(el.id)>=0;}
+function ticketSearchFlush(){clearTimeout(TS_TIMER);TS_TIMER=null;if(!TS_DIRTY)return;TS_DIRTY=false;saveUi();renderKeepingLiveInputs();}
+function ticketSearchInput(e){UI.search=e.target.value;UI.ticketsExplorer.search=UI.search;TS_DIRTY=true;clearTimeout(TS_TIMER);TS_TIMER=null;var view=document.querySelector('.tickets-explorer');if(view)view.setAttribute('aria-busy','true');if(TS_COMPOSING||e.isComposing)return;TS_TIMER=setTimeout(ticketSearchFlush,UI.search?150:0);}
+document.addEventListener('compositionstart',function(e){if(ticketSearchField(e.target)){TS_COMPOSING=true;clearTimeout(TS_TIMER);TS_TIMER=null;}},true);
+document.addEventListener('compositionend',function(e){if(ticketSearchField(e.target)){TS_COMPOSING=false;ticketSearchInput(e);}},true);
+document.addEventListener('keydown',function(e){if(ticketSearchField(e.target)&&e.key==='Enter'&&!TS_COMPOSING){e.preventDefault();ticketSearchFlush();}},true);
+var TS_PHOTO_CORE=ticketPhotos;ticketPhotos=function(t){if(!TS_RENDER_DEPTH||!t)return TS_PHOTO_CORE(t);var photos=TS_PHOTOS.get(t);if(!photos){photos=TS_PHOTO_CORE(t);TS_PHOTOS.set(t,photos);}return photos.slice();};
+var TS_RENDER_CORE=render;render=function(){if(TS_COMPOSING&&ticketSearchField(document.activeElement)&&UI.mainView==='tickets'&&!UI.selectedTicketId)return;if(TS_TIMER!==null){clearTimeout(TS_TIMER);TS_TIMER=null;}if(TS_DIRTY){TS_DIRTY=false;saveUi();}if(!TS_RENDER_DEPTH)TS_PHOTOS=new WeakMap();TS_RENDER_DEPTH++;try{return TS_RENDER_CORE();}finally{TS_RENDER_DEPTH--;if(!TS_RENDER_DEPTH)TS_PHOTOS=null;var view=document.querySelector('.tickets-explorer');if(view)view.setAttribute('aria-busy','false');}};
 
 boot();
 
