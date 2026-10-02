@@ -1,0 +1,6 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const listeners={},shown=[],opened=[];
+const self={addEventListener:(name,fn)=>listeners[name]=fn,skipWaiting(){},registration:{scope:'https://example.invalid/crm/',showNotification:async(title,options)=>shown.push({title,options})},navigator:{setAppBadge:async()=>{}},clients:{claim:async()=>{},matchAll:async()=>[],openWindow:async url=>opened.push(url)}};
+vm.runInNewContext(fs.readFileSync(__dirname+'/sw.js','utf8'),{self,Date,Number,JSON});
+(async()=>{for(const kind of ['mensaje','equipo','general',undefined,'personal','mencion','respuesta']){var pending;listeners.push({data:{json:()=>({kind,postId:'p-'+kind,autor:'QA',cuerpo:'Aviso',url:'./?chat_post=p-'+kind})},waitUntil:p=>pending=p});if(pending)await pending;}
+assert.equal(shown.length,3);assert(shown.every(n=>n.options.silent===false));assert(shown[2].title.includes('te respondió'));var pending;listeners.notificationclick({notification:{close(){},data:shown[2].options.data},waitUntil:p=>pending=p});await pending;assert.equal(opened[0],'./?chat_post=p-respuesta');console.log('PASS push worker: only direct/mention/reply, sound enabled, message dedup tags and notification deep link.');})().catch(e=>{console.error(e);process.exit(1);});

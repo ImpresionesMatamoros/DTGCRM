@@ -20,9 +20,10 @@ self.addEventListener("push", function(event){
   try{ d = event.data ? event.data.json() : {}; }catch(e){ d = {}; }
   var autor = d.autor || "Equipo";
   var cuerpo = d.cuerpo || "";
-  var kind = d.kind || "mensaje";           /* mensaje | mencion | equipo */
+  var kind = d.kind;
+  if(["personal","mencion","respuesta"].indexOf(kind)===-1) return;           /* mensaje | mencion | equipo */
   var titulo = kind === "mencion" ? (autor + " te mencionó")
-             : kind === "equipo"  ? (autor + " · para todo el equipo")
+             : kind === "respuesta" ? (autor + " te respondió")
              : autor;
   event.waitUntil((async function(){
     try{
@@ -73,3 +74,4 @@ self.addEventListener("pushsubscriptionchange", function(){
     lista.forEach(function(c){ try{ c.postMessage({ type: "dtg-resubscribe" }); }catch(e){} });
   });
 });
+
