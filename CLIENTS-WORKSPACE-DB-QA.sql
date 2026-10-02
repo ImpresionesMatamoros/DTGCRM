@@ -1,0 +1,32 @@
+begin;
+select set_config('request.jwt.claim.sub',(select id::text from public.profiles where active=true order by id limit 1),true);
+select set_config('request.jwt.claim.role','authenticated',true);
+set local role authenticated;
+do $$
+declare a uuid; b uuid; c uuid; t uuid; t2 uuid; failed boolean=false;
+begin
+ insert into public.clientes(nombre) values('QA transaccional A') returning id into a;
+ insert into public.clientes(nombre) values('QA transaccional B') returning id into b;
+ insert into public.clientes(nombre) values('QA transaccional C') returning id into c;
+ insert into public.tickets(cliente_id,cliente) values(a,'QA transaccional A') returning id into t;
+ insert into public.tickets(cliente_id,cliente) values(a,'QA transaccional A') returning id into t2;
+ insert into public.client_notes(client_id,body,author_name) values(a,'Nota que debe conservarse','QA');
+ insert into public.client_tasks(client_id,description,responsable,area) values(a,'COBRAR','QA','planeacion');
+ perform public.client_workspace_flag(a,'frequent_client',true,false);
+ begin perform public.client_workspace_reassign(t,b,a,'delete'); exception when others then failed=true; end;
+ if not failed or (select cliente_id from public.tickets where id=t)<>a then raise exception 'La eliminación parcial no se rechazó'; end if;
+ perform public.client_workspace_reassign(t,b,a,'keep');
+ if (select cliente_id from public.tickets where id=t)<>b or (select archived_at from public.clientes where id=a) is not null then raise exception 'Asociación incorrecta'; end if;
+ failed=false;
+ begin perform public.client_workspace_reassign(t,c,a,'keep'); exception when others then failed=true; end;
+ if not failed or (select cliente_id from public.tickets where id=t)<>b then raise exception 'CAS no rechazó edición obsoleta'; end if;
+ perform public.client_workspace_merge(b,array[a]);
+ if (select count(*) from public.tickets where cliente_id=b)<>2 or (select count(*) from public.client_notes where client_id=b)<>1 or (select count(*) from public.client_tasks where client_id=b)<>1 or not (select frequent_client from public.clientes where id=b) or (select merged_into from public.clientes where id=a)<>b then raise exception 'Fusión no conservó datos'; end if;
+ perform public.client_workspace_reassign(t,c,b,'keep');
+ perform public.client_workspace_reassign(t2,c,b,'delete');
+ if (select archived_at from public.clientes where id=b) is null then raise exception 'El cliente vacío no fue retirado'; end if;
+ if (select count(*) from public.client_notes where client_id=c)<>1 or (select count(*) from public.client_tasks where client_id=c)<>1 then raise exception 'Eliminar no conservó las tareas y notas del cliente vacío'; end if;
+ raise notice 'PASS: active authenticated RLS, assignment, stale source rejection, nonempty delete rejection, atomic merge, flags, notes/tasks retained, empty client archive';
+end $$;
+select 'PASS: authenticated assignment, stale source conflict, nonempty delete rejection, merge and delete preserve notes/tasks, flags; all test data rolled back' as result;
+rollback;
