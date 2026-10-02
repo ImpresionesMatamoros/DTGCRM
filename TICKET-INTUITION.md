@@ -1,0 +1,9 @@
+# Ticket navigation and task discovery
+
+Desktop Kanban columns extend to the tallest column, so sticky owner headers and empty drop zones remain available through the entire board. Sidebar rows show total and balance from the existing financial calculator in Accounts receivable, or an explicit missing-price message. Tasks prioritizes tickets by open task count, breaking ties by oldest open task. Calendar hover/focus highlights the delivery date, or the previous/next period arrow if outside the visible period. Visible Kanban cards highlight their sidebar rows. Desktop Home preserves the sidebar; mobile keeps the focused chat experience.
+
+Task creation offers minimal line icons, a catalogue ordered by the number of distinct tickets using each task, and the original selector for keyboard navigation. Added COBRAR, LLEVAR A TALLER, MEJORAR CALIDAD, CONTACTAR CLIENTE, ENVIAR COTIZACION, EMPAQUETAR, REVISAR ARCHIVO, CONFIRMAR DISENO and COMPRAR MATERIAL. Optional short notes have a 240-character limit and persist as note metadata in the existing action_path JSON, preserving sourcePostIds and other context through creation and edits. No schema migration is required.
+
+Searching tickets in the task form shows a small image/financial/owner/date summary on desktop hover. Clicking opens a large read-only ticket preview with products and activity. Explicit Usar este ticket confirms the choice; Volver preserves the task draft. Preview images use the existing authenticated signed-image loader.
+
+Validation: TICKET-INTUITION-QA.cjs tests deep scrolling, financial context, task priorities, calendar highlights, desktop Home and responsive layouts with prior workspace assertions. TASKS-QA.cjs tests persisted notes, source metadata preservation, creation/editing, retry and preview selection. Calendar, Kanban workspace, chat inbox and mobile-app regressions pass.
