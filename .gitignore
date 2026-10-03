@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+staging/environment.local.json
+staging/*secrets*
+supabase/.temp/
+supabase/.branches/
+*.log
+outputs/
+
+# New root QA screenshots are not deployment assets. Existing tracked assets stay tracked.
+/*.png

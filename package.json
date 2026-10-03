@@ -1,0 +1,18 @@
+{
+  "name": "dtg-crm-staging-tooling",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "staging:build": "node scripts/staging/build.cjs",
+    "staging:test": "node STAGING-QA.cjs",
+    "test:pe": "node PRODUCT-ENGINE-PROXY-QA.cjs && node PRODUCT-ENGINE-QA.cjs"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "jsdom": "26.1.0",
+    "pg": "8.16.3",
+    "playwright": "1.56.1"
+  },
+  "packageManager": "pnpm@11.19.0"
+}

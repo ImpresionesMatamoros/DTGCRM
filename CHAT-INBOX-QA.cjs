@@ -12,7 +12,7 @@ window.qa={UI,STATE,render,waShowTools,waPauseRecording,waSaveAvatar,setStorage:
 render();
 `;
 let html=fs.readFileSync(__dirname+'/index.html','utf8').replace(/<script[^>]*src=[^>]*><\/script>/g,'').replace(/\bboot\(\);(?=\s*\n\}\)\(\);)/,fixture);
-html=html.replace('<script>','<script>'+fs.readFileSync(__dirname+'/ops-menu.js','utf8')+'</script><script>');
+html=html.replace('<script>','<script>window.DTG_STAGING_VALIDATED=true;window.DTG_ENV={supabaseUrl:"https://"+ "a".repeat(20)+".supabase.co",supabasePublishableKey:"sb_publishable_fixture"};'+fs.readFileSync(__dirname+'/ops-menu.js','utf8')+'</script><script>');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
  try{

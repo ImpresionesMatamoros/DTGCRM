@@ -1,0 +1,8 @@
+{
+  "contract_version": "1",
+  "schema": "crm-api.v1.schema.json",
+  "schema_sha256": "188e38edaf8dd5c69c360411d8b3cf22590055298d3d2dda19f43714f129f91c",
+  "generated_from": "dtg-product-engine contracts/crm-api.v1.schema.json (zod source: src/api/crm-contracts.ts + src/api/contracts.ts)",
+  "regenerate": "In the Product Engine repo: pnpm crm-api:schema, then copy the file here and update schema_sha256. Fixtures: tools/step10/record-fixtures.ts against a running Product Engine.",
+  "fixtures": "pe-recorded-v1.json — REAL responses of the Product Engine API, replayed offline by PRODUCT-ENGINE-QA.cjs"
+}

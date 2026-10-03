@@ -1,0 +1,924 @@
+{
+  "recorded_from": "real Product Engine API v1",
+  "contract_version": "1",
+  "entries": [
+    {
+      "name": "search:bu",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items?q=bu&market=USA&limit=8"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "items": [
+            {
+              "id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+              "public_code": "DTG-00002",
+              "canonical_name": "Tarjeta de presentación Premium / Gloss",
+              "display_name": "Tarjeta de presentación Premium / Gloss",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            },
+            {
+              "id": "9a7f52f4-b893-5808-bfa2-21ccace19965",
+              "public_code": "DTG-00001",
+              "canonical_name": "Tarjeta de presentación Tradicional",
+              "display_name": "Tarjeta de presentación Tradicional",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            }
+          ],
+          "page": {
+            "limit": 8,
+            "offset": 0,
+            "total": 2,
+            "next_offset": null
+          }
+        }
+      }
+    },
+    {
+      "name": "search:bus",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items?q=bus&market=USA&limit=8"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "items": [
+            {
+              "id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+              "public_code": "DTG-00002",
+              "canonical_name": "Tarjeta de presentación Premium / Gloss",
+              "display_name": "Tarjeta de presentación Premium / Gloss",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            },
+            {
+              "id": "9a7f52f4-b893-5808-bfa2-21ccace19965",
+              "public_code": "DTG-00001",
+              "canonical_name": "Tarjeta de presentación Tradicional",
+              "display_name": "Tarjeta de presentación Tradicional",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            }
+          ],
+          "page": {
+            "limit": 8,
+            "offset": 0,
+            "total": 2,
+            "next_offset": null
+          }
+        }
+      }
+    },
+    {
+      "name": "search:business",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items?q=business&market=USA&limit=8"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "items": [
+            {
+              "id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+              "public_code": "DTG-00002",
+              "canonical_name": "Tarjeta de presentación Premium / Gloss",
+              "display_name": "Tarjeta de presentación Premium / Gloss",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            },
+            {
+              "id": "9a7f52f4-b893-5808-bfa2-21ccace19965",
+              "public_code": "DTG-00001",
+              "canonical_name": "Tarjeta de presentación Tradicional",
+              "display_name": "Tarjeta de presentación Tradicional",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            }
+          ],
+          "page": {
+            "limit": 8,
+            "offset": 0,
+            "total": 2,
+            "next_offset": null
+          }
+        }
+      }
+    },
+    {
+      "name": "search:tarjeta",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items?q=tarjeta&market=USA&limit=8"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "items": [
+            {
+              "id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+              "public_code": "DTG-00002",
+              "canonical_name": "Tarjeta de presentación Premium / Gloss",
+              "display_name": "Tarjeta de presentación Premium / Gloss",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            },
+            {
+              "id": "9a7f52f4-b893-5808-bfa2-21ccace19965",
+              "public_code": "DTG-00001",
+              "canonical_name": "Tarjeta de presentación Tradicional",
+              "display_name": "Tarjeta de presentación Tradicional",
+              "item_type": "PRODUCT",
+              "sale_unit": "PIECE",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            }
+          ],
+          "page": {
+            "limit": 8,
+            "offset": 0,
+            "total": 2,
+            "next_offset": null
+          }
+        }
+      }
+    },
+    {
+      "name": "search:imanes",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items?q=imanes&market=USA&limit=8"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "items": [
+            {
+              "id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+              "public_code": "DTG-00004",
+              "canonical_name": "Imanes para vehículo — par 2 × 1 ft",
+              "display_name": "Imanes para vehículo — par 2 × 1 ft",
+              "item_type": "PRODUCT",
+              "sale_unit": "PAIR",
+              "description": null,
+              "markets": [
+                {
+                  "market": "USA",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "USD"
+                },
+                {
+                  "market": "MX",
+                  "is_available": true,
+                  "price_availability": "AUTHORIZED_PRICES",
+                  "currency": "MXN"
+                }
+              ]
+            }
+          ],
+          "page": {
+            "limit": 8,
+            "offset": 0,
+            "total": 1,
+            "next_offset": null
+          }
+        }
+      }
+    },
+    {
+      "name": "search:zzzz",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items?q=zzzz&market=USA&limit=8"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "items": [],
+          "page": {
+            "limit": 8,
+            "offset": 0,
+            "total": 0,
+            "next_offset": null
+          }
+        }
+      }
+    },
+    {
+      "name": "detail:premium",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items/ccabd035-6447-550f-b8be-08e8b6d8d0e2"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "item": {
+            "id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+            "public_code": "DTG-00002",
+            "canonical_name": "Tarjeta de presentación Premium / Gloss",
+            "item_type": "PRODUCT",
+            "status": "ACTIVE",
+            "description": null,
+            "sale_unit": "PIECE",
+            "measurement": null
+          },
+          "presentations": [],
+          "options": [
+            {
+              "key": "caras",
+              "label": "Caras impresas",
+              "value_kind": "ENUM",
+              "unit": null,
+              "is_required": true,
+              "selection_mode": "SINGLE",
+              "is_distributable": false,
+              "default_value_code": null,
+              "values": [
+                {
+                  "code": "1",
+                  "label": "1 cara",
+                  "spec": null
+                },
+                {
+                  "code": "2",
+                  "label": "2 caras",
+                  "spec": null
+                }
+              ]
+            }
+          ],
+          "decoration": null,
+          "components": [],
+          "markets": [
+            {
+              "market": "USA",
+              "is_available": true,
+              "price_availability": "AUTHORIZED_PRICES",
+              "currency": "USD"
+            },
+            {
+              "market": "MX",
+              "is_available": true,
+              "price_availability": "AUTHORIZED_PRICES",
+              "currency": "MXN"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "detail:magnets",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items/3e66e8e4-e365-5ee3-bf9f-30486288969d"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "item": {
+            "id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+            "public_code": "DTG-00004",
+            "canonical_name": "Imanes para vehículo — par 2 × 1 ft",
+            "item_type": "PRODUCT",
+            "status": "ACTIVE",
+            "description": null,
+            "sale_unit": "PAIR",
+            "measurement": null
+          },
+          "presentations": [],
+          "options": [],
+          "decoration": null,
+          "components": [],
+          "markets": [
+            {
+              "market": "USA",
+              "is_available": true,
+              "price_availability": "AUTHORIZED_PRICES",
+              "currency": "USD"
+            },
+            {
+              "market": "MX",
+              "is_available": true,
+              "price_availability": "AUTHORIZED_PRICES",
+              "currency": "MXN"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "detail:flyers",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items/bdf332e7-d03b-5223-bd25-4006aebb5885"
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "contract_version": "1",
+          "item": {
+            "id": "bdf332e7-d03b-5223-bd25-4006aebb5885",
+            "public_code": "DTG-00003",
+            "canonical_name": "Flyers",
+            "item_type": "PRODUCT",
+            "status": "ACTIVE",
+            "description": null,
+            "sale_unit": "PIECE",
+            "measurement": null
+          },
+          "presentations": [],
+          "options": [
+            {
+              "key": "papel",
+              "label": "Papel",
+              "value_kind": "ENUM",
+              "unit": null,
+              "is_required": true,
+              "selection_mode": "SINGLE",
+              "is_distributable": false,
+              "default_value_code": null,
+              "values": [
+                {
+                  "code": "Bond",
+                  "label": "Bond",
+                  "spec": null
+                },
+                {
+                  "code": "Premium",
+                  "label": "Premium",
+                  "spec": null
+                }
+              ]
+            },
+            {
+              "key": "tamano_papel",
+              "label": "Tamaño de papel",
+              "value_kind": "ENUM",
+              "unit": null,
+              "is_required": true,
+              "selection_mode": "SINGLE",
+              "is_distributable": false,
+              "default_value_code": null,
+              "values": [
+                {
+                  "code": "Carta",
+                  "label": "Carta",
+                  "spec": null
+                },
+                {
+                  "code": "Media carta",
+                  "label": "Media carta",
+                  "spec": null
+                },
+                {
+                  "code": "1/4 carta",
+                  "label": "1/4 carta",
+                  "spec": null
+                }
+              ]
+            },
+            {
+              "key": "caras",
+              "label": "Caras impresas",
+              "value_kind": "ENUM",
+              "unit": null,
+              "is_required": true,
+              "selection_mode": "SINGLE",
+              "is_distributable": false,
+              "default_value_code": null,
+              "values": [
+                {
+                  "code": "1",
+                  "label": "1 cara",
+                  "spec": null
+                },
+                {
+                  "code": "2",
+                  "label": "2 caras",
+                  "spec": null
+                }
+              ]
+            }
+          ],
+          "decoration": null,
+          "components": [],
+          "markets": [
+            {
+              "market": "USA",
+              "is_available": true,
+              "price_availability": "AUTHORIZED_PRICES",
+              "currency": "USD"
+            },
+            {
+              "market": "MX",
+              "is_available": true,
+              "price_availability": "AUTHORIZED_PRICES",
+              "currency": "MXN"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "detail:unknown",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/catalog/items/DTG-99999"
+      },
+      "response": {
+        "status": 404,
+        "contract_version": "1",
+        "body": {
+          "error": {
+            "code": "ITEM_NOT_FOUND",
+            "message": "Item not found"
+          }
+        }
+      }
+    },
+    {
+      "name": "price:premium-500-2",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pricing/resolve",
+        "body": {
+          "request": {
+            "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+            "market": "USA",
+            "quantity": 500,
+            "selections": [
+              {
+                "option_key": "caras",
+                "value_codes": [
+                  "2"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+          "market": "USA",
+          "quantity": 500,
+          "currency": "USD",
+          "policy": {
+            "market": "USA",
+            "price_book_code": "USA_MASTER",
+            "basis": "MASTER"
+          },
+          "effective_at": "2026-10-02T15:58:04.888Z",
+          "catalog_revision": 369,
+          "pricing_revision": 336,
+          "explanation": [
+            "Tarjeta de presentación Premium / Gloss × 500: total 120.00 USD."
+          ],
+          "status": "RESOLVED",
+          "total": {
+            "amount": "120.00",
+            "currency": "USD"
+          },
+          "breakdown": [
+            {
+              "kind": "BASE",
+              "label": "Tarjeta de presentación Premium / Gloss",
+              "quantity": 500,
+              "amount": {
+                "amount": "120.00",
+                "currency": "USD"
+              },
+              "source": {
+                "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+                "price_definition_id": "6b58997b-77a5-5651-bf42-a8016a0ab078",
+                "price_definition_version": 1,
+                "break_quantity": 500
+              }
+            }
+          ],
+          "rules_applied": [],
+          "derivation": null,
+          "components": []
+        }
+      }
+    },
+    {
+      "name": "price:premium-750-2",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pricing/resolve",
+        "body": {
+          "request": {
+            "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+            "market": "USA",
+            "quantity": 750,
+            "selections": [
+              {
+                "option_key": "caras",
+                "value_codes": [
+                  "2"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+          "market": "USA",
+          "quantity": 750,
+          "currency": "USD",
+          "policy": {
+            "market": "USA",
+            "price_book_code": "USA_MASTER",
+            "basis": "MASTER"
+          },
+          "effective_at": "2026-10-02T15:58:04.912Z",
+          "catalog_revision": 369,
+          "pricing_revision": 336,
+          "explanation": [
+            "La cantidad no está en la matriz de cantidades exactas (cantidad 750; disponibles: 100, 250, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000); no se interpola."
+          ],
+          "status": "QUOTE_ONLY",
+          "reason_code": "QUANTITY_NOT_IN_MATRIX",
+          "detail": "cantidad 750; disponibles: 100, 250, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000",
+          "known_lines": [],
+          "known_adjustments": []
+        }
+      }
+    },
+    {
+      "name": "price:premium-500-invalid",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pricing/resolve",
+        "body": {
+          "request": {
+            "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+            "market": "USA",
+            "quantity": 500,
+            "selections": [
+              {
+                "option_key": "caras",
+                "value_codes": [
+                  "9"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "catalog_item_id": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+          "market": "USA",
+          "quantity": 500,
+          "currency": "USD",
+          "policy": null,
+          "effective_at": "2026-10-02T15:58:04.928Z",
+          "catalog_revision": 369,
+          "pricing_revision": 336,
+          "explanation": [
+            "Configuración inválida: INVALID_VALUE en selections[0]"
+          ],
+          "status": "INVALID",
+          "errors": [
+            {
+              "code": "INVALID_VALUE",
+              "path": "selections[0]",
+              "detail": "caras=9"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "price:magnets-1",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pricing/resolve",
+        "body": {
+          "request": {
+            "catalog_item_id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+            "market": "USA",
+            "quantity": 1
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "catalog_item_id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+          "market": "USA",
+          "quantity": 1,
+          "currency": "USD",
+          "policy": {
+            "market": "USA",
+            "price_book_code": "USA_MASTER",
+            "basis": "MASTER"
+          },
+          "effective_at": "2026-10-02T15:58:04.947Z",
+          "catalog_revision": 369,
+          "pricing_revision": 336,
+          "explanation": [
+            "Imanes para vehículo — par 2 × 1 ft × 1: total 65.00 USD."
+          ],
+          "status": "RESOLVED",
+          "total": {
+            "amount": "65.00",
+            "currency": "USD"
+          },
+          "breakdown": [
+            {
+              "kind": "BASE",
+              "label": "Imanes para vehículo — par 2 × 1 ft",
+              "quantity": 1,
+              "amount": {
+                "amount": "65.00",
+                "currency": "USD"
+              },
+              "source": {
+                "catalog_item_id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+                "price_definition_id": "81d31998-26d4-52ef-988e-14d650a7734f",
+                "price_definition_version": 1
+              }
+            }
+          ],
+          "rules_applied": [],
+          "derivation": null,
+          "components": []
+        }
+      }
+    },
+    {
+      "name": "price:magnets-2",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pricing/resolve",
+        "body": {
+          "request": {
+            "catalog_item_id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+            "market": "USA",
+            "quantity": 2
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "catalog_item_id": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+          "market": "USA",
+          "quantity": 2,
+          "currency": "USD",
+          "policy": {
+            "market": "USA",
+            "price_book_code": "USA_MASTER",
+            "basis": "MASTER"
+          },
+          "effective_at": "2026-10-02T15:58:04.959Z",
+          "catalog_revision": 369,
+          "pricing_revision": 336,
+          "explanation": [
+            "Imanes para vehículo — par 2 × 1 ft: requiere cotización — FIXED_PRICE_QUANTITY_NOT_AUTHORIZED (máximo 1)."
+          ],
+          "status": "QUOTE_ONLY",
+          "reason_code": "FIXED_PRICE_QUANTITY_NOT_AUTHORIZED",
+          "detail": "máximo 1",
+          "known_lines": [],
+          "known_adjustments": []
+        }
+      }
+    },
+    {
+      "name": "price:flyers-1000",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pricing/resolve",
+        "body": {
+          "request": {
+            "catalog_item_id": "bdf332e7-d03b-5223-bd25-4006aebb5885",
+            "market": "USA",
+            "quantity": 1000,
+            "selections": [
+              {
+                "option_key": "papel",
+                "value_codes": [
+                  "Premium"
+                ]
+              },
+              {
+                "option_key": "caras",
+                "value_codes": [
+                  "2"
+                ]
+              },
+              {
+                "option_key": "tamano_papel",
+                "value_codes": [
+                  "Media carta"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "contract_version": "1",
+        "body": {
+          "catalog_item_id": "bdf332e7-d03b-5223-bd25-4006aebb5885",
+          "market": "USA",
+          "quantity": 1000,
+          "currency": "USD",
+          "policy": {
+            "market": "USA",
+            "price_book_code": "USA_MASTER",
+            "basis": "MASTER"
+          },
+          "effective_at": "2026-10-02T15:58:04.969Z",
+          "catalog_revision": 369,
+          "pricing_revision": 336,
+          "explanation": [
+            "Flyers × 1000: total 400.00 USD."
+          ],
+          "status": "RESOLVED",
+          "total": {
+            "amount": "400.00",
+            "currency": "USD"
+          },
+          "breakdown": [
+            {
+              "kind": "BASE",
+              "label": "Flyers",
+              "quantity": 1000,
+              "amount": {
+                "amount": "400.00",
+                "currency": "USD"
+              },
+              "source": {
+                "catalog_item_id": "bdf332e7-d03b-5223-bd25-4006aebb5885",
+                "price_definition_id": "9d97a3ce-c39c-5439-a730-0f84ed65772e",
+                "price_definition_version": 1,
+                "break_quantity": 1000
+              }
+            }
+          ],
+          "rules_applied": [],
+          "derivation": null,
+          "components": []
+        }
+      }
+    }
+  ]
+}

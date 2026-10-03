@@ -4049,6 +4049,8 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 @media(min-width:881px){.dc-selected-day{overflow:hidden}.dc-selected-day .dc-day-tickets,.dc-week-agenda .dc-day-tickets{max-height:calc(100dvh - 300px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}.dc-selected-day .dc-day-head{position:sticky;top:0;background:var(--bg);z-index:1}}
 
 @media(max-width:880px){.kanban-card{content-visibility:auto;contain-intrinsic-size:auto 260px}}
+
+body{padding-top:24px}#app{height:calc(100dvh - 24px)}
 </style>
 <div id="app"></div>
 <link rel="stylesheet" href="ops-menu.css?v=3">
@@ -4420,13 +4422,48 @@ button.tk-task-open:hover{background:var(--surface-3)}
 .device-picker :is(button,a):focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 @media(max-width:600px){.device-picker-overlay{align-items:flex-end;padding:8px;}.device-picker{padding:18px 14px calc(18px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px);}.device-picker h2{font-size:20px;}}
 
+
+/* STEP 10 — selector del catálogo y foto de precio por línea */
+.pe-suggest{position:relative}
+.pe-suggest-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:10px;background:var(--surface,#fff);margin:4px 0 8px;overflow:hidden}
+.pe-sug{display:flex;align-items:center;gap:8px;text-align:left;width:100%;background:none;border:0;border-bottom:1px solid var(--border);padding:8px 10px;cursor:pointer;color:var(--text);font:inherit;min-height:40px}
+.pe-sug:last-of-type{border-bottom:0}
+.pe-sug:hover,.pe-sug.active{background:var(--accent-soft)}
+.pe-sug[disabled]{opacity:.5;cursor:not-allowed}
+.pe-code,.pe-chip{font-family:var(--font-mono);font-size:12px;color:var(--accent-ink);background:var(--accent-soft);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.pe-chip{margin-left:6px}
+.pe-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pe-badge{font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap;margin-left:4px}
+.pe-badge.priced{background:#E3F6EA;color:#14653A}
+.pe-badge.quote{background:#FFF1D6;color:#8A5A00}
+.pe-badge.off{background:var(--border);color:var(--text-muted)}
+.pe-note,.pe-muted{color:var(--text-muted);font-size:13px}
+.pe-note{padding:6px 10px}
+.pe-warn{color:var(--danger,#B42318);font-size:13px}
+.pe-config{border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin:6px 0 8px;display:flex;flex-direction:column;gap:6px}
+.pe-config-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pe-unlink{margin-left:auto}
+.pe-field{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.pe-field.pe-check{flex-direction:row;align-items:center;gap:6px}
+.pe-meas{flex-direction:row;gap:8px}
+.pe-price{min-height:20px}
+.pe-total{font-family:var(--font-mono)}
+.pe-errors{margin:4px 0 0 18px;padding:0;font-size:13px;color:var(--danger,#B42318)}
+.pe-line{border-top:1px dashed var(--border);margin-top:8px;padding-top:8px;display:flex;flex-direction:column;gap:6px}
+.pe-line-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.pe-compare{background:var(--accent-soft);border-radius:8px;padding:8px 10px;font-size:13px}
+.pe-reason{display:block;width:100%;margin-top:6px}
 </style>
+<script src="environment.js"></script>
+<script src="staging/policy.js"></script>
+<script src="staging/guard.js"></script>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
 <script>
 (function(){
 "use strict";
+if(!window.DTG_STAGING_VALIDATED){var app=document.getElementById("app");if(app)app.textContent="STAGING sin configurar: "+(window.DTG_STAGING_ERROR||"Revisa environment.js y el runbook.");return;}
 
 /* Design To Go CRM = oscuro por defecto (V0.5 §2) — independiente del tema
    del sistema operativo. Se fija ANTES de cualquier render (y antes de que
@@ -4445,8 +4482,8 @@ document.documentElement.setAttribute("data-theme", "dark");
    genere sola — este archivo se sirve tal cual, sin bundler). */
 var APP_VERSION = "0.26.0";
 var APP_BUILD = "2026.09.29.ticket-ux";
-var SUPABASE_URL = "https://jpjpnxamiclvhmcywyhx.supabase.co";
-var SUPABASE_KEY = "sb_publishable_PlY_6wuWH4UDr012Re2CBA_eWg6MZBf";
+var SUPABASE_URL = window.DTG_ENV.supabaseUrl;
+var SUPABASE_KEY = window.DTG_ENV.supabasePublishableKey;
 var FILES_BUCKET = "ticket-files";
 /* Ronda "Fotos múltiples/Logo/Cabecera móvil/Affordances" §1-3: tope fijo y
    chico a propósito — nunca se arranca una carga silenciosa por encima de
@@ -5804,7 +5841,7 @@ async function fetchAllState(){
   });
   productosRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
-    t.productos.push({ id: row.id, desc: row.descripcion, cantidad: row.cantidad==null?1:Number(row.cantidad), precio: row.precio==null?null:Number(row.precio) });
+    t.productos.push({ id: row.id, desc: row.descripcion, cantidad: row.cantidad==null?1:Number(row.cantidad), precio: row.precio==null?null:Number(row.precio), pe: peFromRow(row) });
   });
   tareasRows.forEach(function(row){
     var t = byTicket[row.ticket_id]; if(!t) return;
@@ -7689,11 +7726,12 @@ function tkFocusField(el){el.focus();try{if(el.select&&(el.tagName==='TEXTAREA'|
 document.addEventListener('keydown',function(e){
   if(e.isComposing||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
   var el=e.target;
+  if(peHandleKey(e))return;
   if(e.key==='Escape'&&UI.composer&&el.closest&&el.closest('#composer-popover')){e.preventDefault();e.stopImmediatePropagation();UI.composer=null;UI.pendingFocus={elId:'composer-input',userInitiated:true};render();return;}
   if(e.key!=='Enter'||e.shiftKey||!el.matches||!el.matches('input:not([type=file]):not([type=checkbox]):not([type=radio])'))return;
   var form=el.closest('.popover-form');
   if(form){
-    var fields=Array.from(form.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(function(x){return !x.disabled;});
+    var fields=Array.from(form.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(function(x){return !x.disabled&&!x.closest('.pe-config');});
     var i=fields.indexOf(el);if(i<0)return;e.preventDefault();e.stopImmediatePropagation();
     if(i<fields.length-1)tkFocusField(fields[i+1]);else {var save=form.querySelector('[data-action="submit-form"]');if(save&&!save.disabled)save.click();}return;
   }
@@ -7749,11 +7787,12 @@ function ticketProductBar(t){
         '<label>Nombre<input type="text" id="tk-pe-desc-'+pid+'" class="pe-desc" data-producto-edit="'+pid+'" data-field="desc" data-ticket="'+t.id+'" value="'+escapeHtml(p.desc)+'"></label>'+
         '<label>Cantidad<input type="number" id="tk-pe-cant-'+pid+'" class="pe-cant" inputmode="decimal" min="0" step="1" data-producto-edit="'+pid+'" data-field="cantidad" data-ticket="'+t.id+'" value="'+escapeHtml(String(p.cantidad))+'"></label>'+
         '<label>Precio unitario<input type="number" id="tk-pe-precio-'+pid+'" class="pe-precio" inputmode="decimal" min="0" step="0.01" placeholder="pendiente" data-producto-edit="'+pid+'" data-field="precio" data-ticket="'+t.id+'" value="'+(p.precio==null?'':escapeHtml(String(p.precio)))+'"></label></div>'+
+        peLineBlock(t,p)+
         '<div class="tk-prod-tasks">'+(tasks.length?tasks.map(function(x){return '<button type="button" class="tk-task-chip'+(x.estado==='terminado'?' done':'')+'" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+' · '+escapeHtml(estadoLabel(x.estado))+'</button>';}).join(''):'<span class="tk-muted">Sin tareas para este producto</span>')+'</div>'+
         '<div class="tk-prod-actions"><button type="button" class="btn-plain" data-action="producto-duplicate" data-producto="'+pid+'" data-ticket="'+t.id+'">Duplicar</button><button type="button" class="btn-plain danger-text" data-action="producto-delete-open" data-producto="'+pid+'" data-ticket="'+t.id+'">Eliminar</button><button type="button" class="btn-plain" data-ticket-ux="product" data-product="'+pid+'">Cerrar</button></div></div>';
     }
     return '<div class="tk-prod'+(open?' open':'')+'"><div class="tk-prod-line">'+
-      '<button type="button" class="tk-prod-main" data-ticket-ux="product" data-product="'+pid+'" aria-expanded="'+open+'"><span class="tk-qty">'+escapeHtml(String(p.cantidad))+' ×</span> <span class="tk-name">'+escapeHtml(p.desc)+'</span> '+price+(tasks.length?' <span class="tk-count" title="'+tasks.length+' tarea'+(tasks.length===1?'':'s')+'">'+tasks.length+'</span>':'')+'</button>'+
+      '<button type="button" class="tk-prod-main" data-ticket-ux="product" data-product="'+pid+'" aria-expanded="'+open+'"><span class="tk-qty">'+escapeHtml(String(p.cantidad))+' ×</span> <span class="tk-name">'+escapeHtml(p.desc)+'</span> '+peChipHtml(p)+price+(tasks.length?' <span class="tk-count" title="'+tasks.length+' tarea'+(tasks.length===1?'':'s')+'">'+tasks.length+'</span>':'')+'</button>'+
       '<button type="button" class="tk-plus" data-ticket-ux="product-task" data-product="'+pid+'" aria-label="Crear tarea para '+escapeHtml(p.desc)+'" title="Crear tarea para este producto">+</button></div>'+editor+'</div>';
   }).join('');
   var form=UI.composer==='producto'?popoverForm('producto').replace('class="popover" id="composer-popover"','class="popover tk-inline-form" id="composer-popover"'):'';
@@ -8378,7 +8417,8 @@ function popoverForm(kind){
   var inner = "";
   if(kind === "producto"){
     inner =
-      '<label>Descripción<input type="text" id="f-desc" placeholder="Ej. 10 banners" autofocus></label>' +
+      '<label>Descripción<input type="text" id="f-desc" placeholder="Ej. 10 banners" autofocus autocomplete="off"></label>' +
+      peFormSlots().suggest + peFormSlots().config +
       '<div class="popover-row">' +
         '<label>Cantidad<input type="number" id="f-cantidad" value="1" min="0" step="1"></label>' +
         '<label>Precio unitario<input type="number" id="f-precio" placeholder="pendiente" min="0" step="0.01"></label>' +
@@ -9532,7 +9572,7 @@ function productoRow(t, p){
   return (
     '<div class="producto-compact-row' + (p._pending ? " is-pending" : "") + '">' +
       '<div class="producto-compact-main">' +
-        '<div class="producto-compact-desc">' + escapeHtml(p.desc) + pendingMark(p) + "</div>" +
+        '<div class="producto-compact-desc">' + escapeHtml(p.desc) + pendingMark(p) + peChipHtml(p) + "</div>" +
         '<div class="producto-compact-meta">' + p.cantidad + " × " + precioText + "</div>" +
       "</div>" +
       totalText +
@@ -17656,7 +17696,8 @@ var SCHEMA_REQUIREMENTS = {
   terminado_at:   { mig: "0016", que: "La hora de término de una operación" },
   client_op_id:   { mig: "0018", que: "El control de pagos repetidos" },
   area:           { mig: "0022", que: "El área de la tarea (Planeación o Producción)" },
-  visibility:     { mig: "0015", que: "La privacidad por ticket" }
+  visibility:     { mig: "0015", que: "La privacidad por ticket" },
+  pe_catalog_item_id: { mig: "20261003000000", que: "El vínculo del producto con el catálogo (se guarda como texto libre)" }
 };
 /* Columnas que esta sesión ya comprobó que faltan. Solo en memoria: al
    aplicar la migración y recargar, la app vuelve a ofrecerlo todo. */
@@ -18160,6 +18201,7 @@ function closeComposerOverlay(){
   }
   UI.composer = null;
   UI.docDraft = null;
+  peResetDraft();
   return true;
 }
 
@@ -18234,14 +18276,14 @@ async function submitNote(){
    así que nada existente cambia de comportamiento. Lo necesita /nuevo para
    poder reportar "qué sí se guardó y qué falló" sin inventar un segundo
    sistema de manejo de errores. */
-async function addProductoCore(t, desc, cantidad, precio){
-  var local = { id: uid(), desc: desc, cantidad: cantidad, precio: precio };
+async function addProductoCore(t, desc, cantidad, precio, pe){
+  var local = { id: uid(), desc: desc, cantidad: cantidad, precio: precio, pe: pe || null };
   return await optimisticWrite({
     label: "Producto " + desc + " · #" + t.seq,
     target: local,
     apply: function(){ t.productos.push(local); },
     revert: function(){ t.productos = t.productos.filter(function(p){ return p !== local; }); },
-    retry: function(){ addProductoCore(t, desc, cantidad, precio); },
+    retry: function(){ addProductoCore(t, desc, cantidad, precio, pe); },
     refreshOpts: { refocus: true },
     after: function(){
       /* X1.3: guardar sin confirmar está bien si deshacer es de un toque. */
@@ -18249,10 +18291,18 @@ async function addProductoCore(t, desc, cantidad, precio){
       showActionToast("Producto agregado", '<button type="button" class="toast-action-btn" data-action="undo-producto">Deshacer</button>', 6000);
     },
     persist: async function(){
-      var r1 = await sb.from("productos").insert({ ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio }).select("id").single();
+      var row = { ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio };
+      if(pe) Object.assign(row, peRowColumns(pe));
+      var r1 = await sb.from("productos").insert(row).select("id").single();
+      if(r1.error && pe && schemaGapFrom(r1.error)){
+        /* Base sin la migración del catálogo: la línea se guarda igual, como texto libre. */
+        local.pe = null; pe = null;
+        r1 = await sb.from("productos").insert({ ticket_id: t.id, descripcion: desc, cantidad: cantidad, precio: precio }).select("id").single();
+        if(!r1.error) showToast("Producto guardado como texto libre (falta actualizar la base de datos).");
+      }
       if(r1.error) throw r1.error;
       local.id=r1.data.id;
-      var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: currentActorName() || null, payload: { desc: desc, cantidad: cantidad, precio: precio } });
+      var r2 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "producto", autor: currentActorName() || null, payload: pe ? { desc: desc, cantidad: cantidad, precio: precio, catalogo: { code: pe.code, status: pe.status, total: pe.total, currency: pe.currency } } : { desc: desc, cantidad: cantidad, precio: precio } });
       if(r2.error)adminNote("Producto guardado; falló bitácora",r2.error);
     }
   });
@@ -18301,7 +18351,7 @@ async function updateProductoCore(t, productoId, patch, opts){
 async function duplicateProductoCore(t, productoId){
   var prod = t.productos.filter(function(p){ return p.id === productoId; })[0];
   if(!prod) return false;
-  return await addProductoCore(t, prod.desc, prod.cantidad, prod.precio);
+  return await addProductoCore(t, prod.desc, prod.cantidad, prod.precio, prod.pe || null);
 }
 
 /* Eliminar (§ "EDICIÓN DE PRODUCTOS + KANBAN"): DECISIÓN DOCUMENTADA — a
@@ -18339,6 +18389,605 @@ async function deleteProductoCore(t, productoId){
   if(ok) refreshFromServer();
   return ok;
 }
+
+/* ================= STEP 10 — Catálogo del Product Engine (picker + foto por línea) =================
+   Regla de oro: el CRM NO es un segundo catálogo. Esta sección solo (1) busca en el catálogo
+   a través del proxy Edge `product-engine-proxy` (nunca directo, nunca con secretos en el
+   navegador), (2) calcula un precio para una configuración elegida, y (3) guarda en la línea
+   una FOTO inmutable de lo que el catálogo respondió. Después de guardada, la línea NO vuelve a
+   consultar al catálogo: ni al pintar, ni al recargar, ni al editar. Solo el botón explícito
+   "Actualizar precio" lo hace. Texto libre sigue siendo un camino de primera clase: si el
+   catálogo no responde, todo lo manual funciona igual que antes. */
+var PE_PROXY_PATH = "/functions/v1/product-engine-proxy";
+var PE_CONTRACT = "1";
+var PE_MARKET = "USA";
+var PE_TIMEOUT_MS = 6000;
+var PE_DEBOUNCE_MS = 250;
+var PE_PRICE_DEBOUNCE_MS = 300;
+var peSearchSeq = 0, peSearchCtl = null, peSearchTimer = null;
+var pePriceSeq = 0, pePriceCtl = null, pePriceTimer = null;
+var peContractWarned = false;
+
+function peEnabled(){
+  return !(DTG_SCHEMA_GAPS && DTG_SCHEMA_GAPS.pe_catalog_item_id) && typeof fetch === "function";
+}
+
+/* ---- transporte: una sola función, siempre devuelve un objeto (nunca lanza) ---- */
+async function peCall(op, payload, ctl){
+  var timedOut = false, timer = null;
+  var c = ctl || new AbortController();
+  try{
+    var sess = await sb.auth.getSession();
+    var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!token) return { ok:false, unavailable:true, code:"NO_SESSION" };
+    timer = setTimeout(function(){ timedOut = true; c.abort(); }, PE_TIMEOUT_MS);
+    var res = await fetch(SUPABASE_URL + PE_PROXY_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token, "apikey": SUPABASE_KEY },
+      body: JSON.stringify(Object.assign({ op: op }, payload || {})),
+      signal: c.signal
+    });
+    var json = null;
+    try{ json = await res.json(); }catch(e){}
+    if(!json || res.status >= 500 || res.status === 404) return { ok:false, unavailable:true, code:(json && json.error && json.error.code) || "PE_UNAVAILABLE" };
+    if(!res.ok) return { ok:false, status:res.status, code:(json.error && json.error.code) || "ERROR", message:(json.error && json.error.message) || "", issues:(json.error && json.error.issues) || null };
+    return { ok:true, status:res.status, data:json };
+  }catch(e){
+    if(e && e.name === "AbortError" && !timedOut) return { ok:false, aborted:true, code:"ABORTED" };
+    return { ok:false, unavailable:true, code: timedOut ? "PE_TIMEOUT" : "PE_UNAVAILABLE" };
+  }finally{
+    if(timer) clearTimeout(timer);
+  }
+}
+
+/* ---- validación de contrato en el borde: respuesta incompatible = falla en voz alta, nunca se usa ---- */
+function peIsObj(v){ return v && typeof v === "object" && !Array.isArray(v); }
+function peValidMarkets(m){ return Array.isArray(m) && m.every(function(x){ return peIsObj(x) && (x.market === "USA" || x.market === "MX") && typeof x.is_available === "boolean" && typeof x.price_availability === "string"; }); }
+function peValidList(d){
+  return peIsObj(d) && d.contract_version === PE_CONTRACT && Array.isArray(d.items) && peIsObj(d.page) && typeof d.page.total === "number" &&
+    d.items.every(function(i){ return peIsObj(i) && typeof i.id === "string" && /^DTG-[0-9]{5,}$/.test(i.public_code || "") && typeof i.canonical_name === "string" && typeof i.display_name === "string" && peValidMarkets(i.markets); });
+}
+function peValidDetail(d){
+  return peIsObj(d) && d.contract_version === PE_CONTRACT && peIsObj(d.item) && typeof d.item.id === "string" && d.item.status === "ACTIVE" &&
+    /^DTG-[0-9]{5,}$/.test(d.item.public_code || "") && typeof d.item.canonical_name === "string" && Array.isArray(d.options) && Array.isArray(d.components) && peValidMarkets(d.markets) &&
+    d.options.every(function(o){ return peIsObj(o) && typeof o.key === "string" && typeof o.label === "string" && typeof o.value_kind === "string" && Array.isArray(o.values); });
+}
+function peValidMoney(m){ return peIsObj(m) && /^-?[0-9]+\.[0-9]{2}$/.test(m.amount || "") && typeof m.currency === "string"; }
+function peValidPrice(d){
+  if(!peIsObj(d) || typeof d.catalog_item_id !== "string" || typeof d.quantity !== "number" || typeof d.effective_at !== "string") return false;
+  if(typeof d.catalog_revision !== "number" || typeof d.pricing_revision !== "number") return false;
+  if(d.status === "RESOLVED") return peValidMoney(d.total);
+  if(d.status === "QUOTE_ONLY" || d.status === "AMBIGUOUS") return typeof d.reason_code === "string";
+  if(d.status === "INVALID") return Array.isArray(d.errors);
+  return false;
+}
+function peContractFail(what, d){
+  try{ console.error("[DTG] Product Engine: respuesta incompatible con el contrato v" + PE_CONTRACT + " (" + what + ")", d); }catch(e){}
+  if(!peContractWarned){ peContractWarned = true; try{ showToast("Catálogo con una versión incompatible — captura manual."); }catch(e){} }
+  return { ok:false, unavailable:true, code:"PE_CONTRACT_MISMATCH" };
+}
+async function peSearch(q, ctl){
+  var r = await peCall("search", { q: q, market: PE_MARKET, limit: 8 }, ctl);
+  if(r.ok && !peValidList(r.data)) return peContractFail("search", r.data);
+  return r;
+}
+async function peDetail(id, ctl){
+  var r = await peCall("detail", { id: id }, ctl);
+  if(r.ok && !peValidDetail(r.data)) return peContractFail("detail", r.data);
+  return r;
+}
+async function pePrice(req, ctl, asOf){
+  var payload = { request: req };
+  if(asOf) payload.as_of = asOf;
+  var r = await peCall("price", payload, ctl);
+  if(r.ok && !peValidPrice(r.data)) return peContractFail("price", r.data);
+  return r;
+}
+
+/* ---- dinero: total del catálogo -> precio unitario del CRM (sin flotantes) ---- */
+function peCents(amountStr){
+  var m = /^(-?)([0-9]+)\.([0-9]{2})$/.exec(String(amountStr || ""));
+  if(!m) return null;
+  var v = Number(m[2]) * 100 + Number(m[3]);
+  return m[1] ? -v : v;
+}
+/* total/cantidad redondeado a 4 decimales (half-up). null si la cantidad no es entera positiva. */
+function peUnitPrice(totalStr, qty){
+  var cents = peCents(totalStr);
+  if(cents == null || !Number.isInteger(qty) || qty <= 0) return null;
+  var num = cents * 100, den = qty; /* total*10^4/qty en unidades de 1e-4 */
+  var q4 = Math.floor((2 * num + den) / (2 * den));
+  return q4 / 10000;
+}
+
+/* ---- borrador del popover "+ Producto" ---- */
+function peDraft(){
+  var tid = UI.selectedTicketId || null;
+  if(!UI.peDraft || UI.peDraft.ticketId !== tid) UI.peDraft = { ticketId: tid, q: "", status: "idle", suggestions: [], active: -1, picked: null, precioTouched: false, descTouched: false };
+  return UI.peDraft;
+}
+function peResetDraft(){
+  peSearchSeq++; pePriceSeq++;
+  if(peSearchCtl){ try{ peSearchCtl.abort(); }catch(e){} peSearchCtl = null; }
+  if(pePriceCtl){ try{ pePriceCtl.abort(); }catch(e){} pePriceCtl = null; }
+  clearTimeout(peSearchTimer); clearTimeout(pePriceTimer);
+  UI.peDraft = null;
+}
+function peMarketInfo(item){
+  var ms = (item && item.markets) || [];
+  for(var i = 0; i < ms.length; i++) if(ms[i].market === PE_MARKET) return ms[i];
+  return null;
+}
+function peBadgeHtml(kind){
+  if(kind === "AUTHORIZED_PRICES") return '<span class="pe-badge priced">Con precio</span>';
+  if(kind === "UNAVAILABLE") return '<span class="pe-badge off">No disponible</span>';
+  return '<span class="pe-badge quote">Cotizar</span>';
+}
+function peSuggestHtml(d){
+  if(!peEnabled()) return "";
+  if(d.picked) return "";
+  if(d.status === "unavailable") return '<div class="pe-note" role="status">Catálogo no disponible — captura manual como siempre.</div>';
+  if(d.status === "loading") return '<div class="pe-note" role="status">Buscando en el catálogo…</div>';
+  if(d.status === "empty") return '<div class="pe-note" role="status">Sin coincidencias en el catálogo — agrégalo como texto libre.</div>';
+  if(d.status !== "ok" || !d.suggestions.length) return "";
+  return '<div class="pe-suggest-list" role="listbox" aria-label="Productos del catálogo">' + d.suggestions.map(function(s, i){
+    var mi = peMarketInfo(s);
+    var off = mi && !mi.is_available;
+    return '<button type="button" class="pe-sug' + (i === d.active ? " active" : "") + '" role="option" aria-selected="' + (i === d.active ? "true" : "false") + '"' + (off ? " disabled" : "") + ' data-pe-pick="' + escapeHtml(s.id) + '">' +
+      '<span class="pe-code">' + escapeHtml(s.public_code) + '</span><span class="pe-name">' + escapeHtml(s.display_name) + "</span>" + peBadgeHtml(mi ? mi.price_availability : "QUOTE_ONLY") + "</button>";
+  }).join("") + '<div class="pe-note">¿No está? Sigue escribiendo y agrégalo como texto libre.</div></div>';
+}
+function peOptionValues(o){ return (o.values || []).length > 0; }
+function peConfigHtml(d){
+  var p = d.picked;
+  if(!p) return "";
+  var det = p.detail, h = '<div class="pe-config" id="pe-config-inner">';
+  h += '<div class="pe-config-head"><span class="pe-code">' + escapeHtml(det.item.public_code) + '</span><b>' + escapeHtml(det.item.canonical_name) + '</b>' +
+    '<button type="button" class="btn-plain pe-unlink" data-pe-unlink="1">Usar como texto libre</button></div>';
+  det.options.forEach(function(o){
+    var cur = p.selections[o.key];
+    if(peOptionValues(o)){
+      h += '<label class="pe-field">' + escapeHtml(o.label) + (o.is_required ? " *" : "") + '<select data-pe-opt="' + escapeHtml(o.key) + '"><option value="">Elegir…</option>' +
+        o.values.map(function(v){ return '<option value="' + escapeHtml(v.code) + '"' + (cur === v.code ? " selected" : "") + ">" + escapeHtml(v.label) + "</option>"; }).join("") + "</select></label>";
+    } else if(o.value_kind === "BOOLEAN"){
+      h += '<label class="pe-field pe-check"><input type="checkbox" data-pe-opt-bool="' + escapeHtml(o.key) + '"' + (cur === true ? " checked" : "") + "> " + escapeHtml(o.label) + "</label>";
+    } else if(o.value_kind === "TEXT"){
+      h += '<label class="pe-field">' + escapeHtml(o.label) + (o.is_required ? " *" : "") + '<input type="text" data-pe-opt-text="' + escapeHtml(o.key) + '" value="' + escapeHtml(cur || "") + '"></label>';
+    }
+  });
+  var ms = det.item.measurement;
+  if(ms){
+    var dims = ms.kind === "AREA" ? ["width", "height"] : ["length"];
+    h += '<div class="pe-field pe-meas">' + dims.map(function(k){ return '<label>' + (k === "width" ? "Ancho" : k === "height" ? "Alto" : "Largo") + " (" + escapeHtml(ms.unit) + ') *<input type="number" min="0" step="any" data-pe-meas="' + k + '" value="' + escapeHtml(p.measurements && p.measurements[k] != null ? String(p.measurements[k]) : "") + '"></label>'; }).join("") + "</div>";
+  }
+  if(det.decoration){
+    h += '<label class="pe-field">Decoración' + (det.decoration.policy === "REQUIRED" ? " *" : "") + '<select data-pe-deco="1"><option value="">' + (det.decoration.policy === "REQUIRED" ? "Elegir…" : "Sin decoración") + "</option>" +
+      det.decoration.methods.map(function(m){ return '<option value="' + escapeHtml(m.key) + '"' + (p.decoration === m.key ? " selected" : "") + ">" + escapeHtml(m.name) + "</option>"; }).join("") + "</select></label>";
+  }
+  h += '<div class="pe-price" id="pe-price" role="status" aria-live="polite">' + pePriceHtml(d) + "</div></div>";
+  return h;
+}
+function peMissingRequired(p){
+  var miss = [];
+  p.detail.options.forEach(function(o){
+    if(!o.is_required) return;
+    var v = p.selections[o.key];
+    if(o.value_kind === "BOOLEAN") return;
+    if(v == null || v === "") miss.push(o.label);
+  });
+  var ms = p.detail.item.measurement;
+  if(ms){
+    var dims = ms.kind === "AREA" ? ["width", "height"] : ["length"];
+    dims.forEach(function(k){ if(!(p.measurements && Number(p.measurements[k]) > 0)) miss.push(k === "width" ? "Ancho" : k === "height" ? "Alto" : "Largo"); });
+  }
+  if(p.detail.decoration && p.detail.decoration.policy === "REQUIRED" && !p.decoration) miss.push("Decoración");
+  return miss;
+}
+function pePriceHtml(d){
+  var p = d.picked; if(!p) return "";
+  var pr = p.price || { state: "idle" };
+  if(pr.state === "idle") { var miss = peMissingRequired(p); return '<span class="pe-muted">' + (miss.length ? "Falta elegir: " + escapeHtml(miss.join(", ")) : "") + "</span>"; }
+  if(pr.state === "badqty") return '<span class="pe-warn">Para el catálogo la cantidad debe ser un número entero mayor a 0.</span>';
+  if(pr.state === "loading") return '<span class="pe-muted">Calculando precio…</span>';
+  if(pr.state === "unavailable") return '<span class="pe-warn">Catálogo no disponible. Se agregará como texto libre con el precio que captures.</span>';
+  var r = pr.result;
+  if(pr.state === "resolved"){
+    var unit = peUnitPrice(r.total.amount, pr.quantity);
+    return '<b class="pe-total">' + escapeHtml(fmtUsd(Number(r.total.amount))) + " " + escapeHtml(r.total.currency) + "</b> " + peBadgeHtml("AUTHORIZED_PRICES") +
+      ' <small class="pe-muted">' + (unit != null ? escapeHtml(fmtUsd(unit)) + " c/u · " : "") + escapeHtml(String(pr.quantity)) + " pzas</small>";
+  }
+  if(pr.state === "quote") return peBadgeHtml("QUOTE_ONLY") + ' <span class="pe-muted">No hay precio autorizado para esta configuración. Se agrega sin precio (pendiente).</span>';
+  if(pr.state === "ambiguous") return peBadgeHtml("QUOTE_ONLY") + ' <span class="pe-warn">El catálogo tiene esta configuración ambigua; avísale a quien lo administra. Se agrega sin precio.</span>';
+  if(pr.state === "invalid"){
+    return '<span class="pe-warn">Revisa la configuración:</span><ul class="pe-errors">' + (r.errors || []).slice(0, 5).map(function(e){ return "<li>" + escapeHtml(peErrorText(e)) + "</li>"; }).join("") + "</ul>";
+  }
+  return "";
+}
+function peErrorText(e){
+  var map = { REQUIRED_OPTION_MISSING: "falta una opción obligatoria", INVALID_OPTION_VALUE: "valor de opción no permitido", UNKNOWN_OPTION: "opción desconocida", INVALID_QUANTITY: "cantidad no válida", MEASUREMENTS_REQUIRED: "faltan medidas" };
+  var base = map[e.code] || String(e.code || "error").toLowerCase().replace(/_/g, " ");
+  return (e.path ? e.path + ": " : "") + base + (e.detail ? " — " + e.detail : "");
+}
+function peRepaint(){
+  var d = UI.peDraft; if(!d) return;
+  var s = document.getElementById("pe-suggest"), c = document.getElementById("pe-config");
+  if(s) s.innerHTML = peSuggestHtml(d);
+  if(c) c.innerHTML = peConfigHtml(d);
+}
+function peRepaintPrice(){
+  var d = UI.peDraft; var el = document.getElementById("pe-price");
+  if(el && d) el.innerHTML = pePriceHtml(d);
+}
+/* HTML inicial del popover (lo usa popoverForm) */
+function peFormSlots(){
+  if(!peEnabled()) return { suggest: "", config: "" };
+  var d = peDraft();
+  return { suggest: '<div class="pe-suggest" id="pe-suggest">' + peSuggestHtml(d) + "</div>", config: '<div id="pe-config">' + peConfigHtml(d) + "</div>" };
+}
+
+/* ---- búsqueda con debounce y descarte de respuestas viejas ---- */
+function peOnDescInput(value){
+  if(!peEnabled()) return;
+  var d = peDraft();
+  d.descTouched = true;
+  if(d.picked) return;
+  var q = String(value || "").trim();
+  d.q = q;
+  clearTimeout(peSearchTimer);
+  if(peSearchCtl){ try{ peSearchCtl.abort(); }catch(e){} peSearchCtl = null; }
+  peSearchSeq++;
+  if(q.length < 2){ d.status = "idle"; d.suggestions = []; d.active = -1; peRepaint(); return; }
+  d.status = "loading"; d.suggestions = []; d.active = -1; peRepaint();
+  var seq = peSearchSeq;
+  peSearchTimer = setTimeout(function(){ peRunSearch(q, seq); }, PE_DEBOUNCE_MS);
+}
+async function peRunSearch(q, seq){
+  var d = peDraft();
+  var ctl = new AbortController(); peSearchCtl = ctl;
+  var r = await peSearch(q, ctl);
+  if(seq !== peSearchSeq || !UI.peDraft) return; /* llegó tarde: ya hay una búsqueda más nueva */
+  if(r.aborted) return;
+  if(!r.ok){ d.status = "unavailable"; d.suggestions = []; }
+  else { d.suggestions = r.data.items; d.status = r.data.items.length ? "ok" : "empty"; d.active = -1; }
+  peRepaint();
+}
+/* Teclado sobre #f-desc: solo actúa si la lista está abierta. Devuelve true si consumió la tecla. */
+function peHandleKey(e){
+  var el = e.target;
+  if(!el || el.id !== "f-desc" || !UI.peDraft) return false;
+  var d = UI.peDraft;
+  var open = !d.picked && d.status === "ok" && d.suggestions.length > 0;
+  if(!open) return false;
+  var n = d.suggestions.length;
+  if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault(); e.stopImmediatePropagation();
+    d.active = e.key === "ArrowDown" ? (d.active + 1) % n : (d.active <= 0 ? n - 1 : d.active - 1);
+    peRepaint(); return true;
+  }
+  if(e.key === "Enter" && d.active >= 0){
+    e.preventDefault(); e.stopImmediatePropagation();
+    pePick(d.suggestions[d.active].id); return true;
+  }
+  if(e.key === "Escape"){
+    e.preventDefault(); e.stopImmediatePropagation();
+    d.status = "idle"; d.suggestions = []; d.active = -1; peRepaint(); return true;
+  }
+  return false;
+}
+
+/* ---- elegir un producto del catálogo ---- */
+async function pePick(id){
+  var d = peDraft();
+  var summary = d.suggestions.filter(function(s){ return s.id === id; })[0] || null;
+  d.status = "loading"; d.suggestions = []; peRepaint();
+  var r = await peDetail(id);
+  if(!UI.peDraft || UI.peDraft !== d) return;
+  if(!r.ok){ d.status = "unavailable"; peRepaint(); return; }
+  var det = r.data, sel = {};
+  det.options.forEach(function(o){
+    if(o.default_value_code) sel[o.key] = o.default_value_code;
+    else if(o.is_required && peOptionValues(o) && o.values.length === 1) sel[o.key] = o.values[0].code;
+  });
+  d.picked = { id: id, summary: summary, detail: det, selections: sel, measurements: {}, decoration: "", price: { state: "idle" } };
+  d.status = "idle";
+  var descEl = document.getElementById("f-desc");
+  if(descEl){ descEl.value = peDescribe(d.picked); d.descTouched = false; }
+  peRepaint();
+  var cant = document.getElementById("f-cantidad");
+  if(cant) tkFocusField(cant);
+  peSchedulePrice(0);
+}
+function peOptionLabel(det, key, code){
+  var o = det.options.filter(function(x){ return x.key === key; })[0];
+  if(!o) return null;
+  var v = (o.values || []).filter(function(x){ return x.code === code; })[0];
+  return { option: o, valueLabel: v ? v.label : String(code) };
+}
+function peDescribe(p){
+  var bits = [];
+  p.detail.options.forEach(function(o){
+    var v = p.selections[o.key];
+    if(v == null || v === "" || v === false) return;
+    if(v === true) { bits.push(o.label); return; }
+    var l = peOptionLabel(p.detail, o.key, v);
+    bits.push(o.label + ": " + (l ? l.valueLabel : v));
+  });
+  var base = (p.summary && p.summary.display_name) || p.detail.item.canonical_name;
+  return bits.length ? base + " — " + bits.join(" · ") : base;
+}
+function peBuildRequest(p, qty){
+  var req = { catalog_item_id: p.detail.item.id, market: PE_MARKET, quantity: qty };
+  var sels = [];
+  p.detail.options.forEach(function(o){
+    var v = p.selections[o.key];
+    if(v == null || v === "") return;
+    if(o.value_kind === "BOOLEAN") sels.push({ option_key: o.key, boolean: v === true });
+    else if(o.value_kind === "TEXT") sels.push({ option_key: o.key, text: String(v) });
+    else sels.push({ option_key: o.key, value_codes: [String(v)] });
+  });
+  if(sels.length) req.selections = sels;
+  var ms = p.detail.item.measurement;
+  if(ms){
+    var m = { unit: ms.unit };
+    (ms.kind === "AREA" ? ["width", "height"] : ["length"]).forEach(function(k){ var n = Number(p.measurements[k]); if(n > 0) m[k] = n; });
+    req.measurements = m;
+  }
+  if(p.detail.decoration && p.decoration) req.decorations = [{ method_key: p.decoration }];
+  return req;
+}
+function peDraftQty(){
+  var el = document.getElementById("f-cantidad");
+  var raw = el ? el.value : "1";
+  var n = Number(raw === "" ? 1 : raw);
+  return n;
+}
+function peSchedulePrice(delay){
+  var d = UI.peDraft; if(!d || !d.picked) return;
+  clearTimeout(pePriceTimer);
+  var p = d.picked;
+  if(pePriceCtl){ try{ pePriceCtl.abort(); }catch(e){} pePriceCtl = null; }
+  var seq = ++pePriceSeq;
+  var qty = peDraftQty();
+  if(!Number.isInteger(qty) || qty <= 0){ p.price = { state: "badqty" }; peRepaintPrice(); return; }
+  if(peMissingRequired(p).length){ p.price = { state: "idle" }; peRepaintPrice(); return; }
+  p.price = { state: "loading" }; peRepaintPrice();
+  p.pricePromise = new Promise(function(resolve){
+    pePriceTimer = setTimeout(async function(){
+      var ctl = new AbortController(); pePriceCtl = ctl;
+      var req = peBuildRequest(p, qty);
+      var r = await pePrice(req, ctl);
+      if(seq !== pePriceSeq || UI.peDraft !== d){ resolve(); return; }
+      if(r.aborted){ resolve(); return; }
+      if(!r.ok){
+        p.price = r.status === 400 || r.status === 404 ? { state: "invalid", result: { errors: [{ code: r.code, path: "", detail: r.message }] }, quantity: qty, request: req } : { state: "unavailable" };
+      } else {
+        var res = r.data, st = res.status;
+        p.price = { state: st === "RESOLVED" ? "resolved" : st === "QUOTE_ONLY" ? "quote" : st === "AMBIGUOUS" ? "ambiguous" : "invalid", result: res, quantity: qty, request: req, pricedAt: new Date().toISOString() };
+        if(st === "RESOLVED" || st === "QUOTE_ONLY" || st === "AMBIGUOUS"){
+          var precioEl = document.getElementById("f-precio");
+          if(precioEl && !d.precioTouched){ var u = st === "RESOLVED" ? peUnitPrice(res.total.amount, qty) : null; precioEl.value = u == null ? "" : String(u); }
+          var descEl = document.getElementById("f-desc");
+          if(descEl && !d.descTouched) descEl.value = peDescribe(p);
+        }
+      }
+      peRepaintPrice(); resolve();
+    }, delay == null ? PE_PRICE_DEBOUNCE_MS : delay);
+  });
+}
+function peUnlinkDraft(){
+  var d = UI.peDraft; if(!d) return;
+  pePriceSeq++; clearTimeout(pePriceTimer);
+  if(pePriceCtl){ try{ pePriceCtl.abort(); }catch(e){} pePriceCtl = null; }
+  d.picked = null; d.status = "idle"; d.suggestions = []; d.active = -1; d.precioTouched = false;
+  peRepaint();
+  var descEl = document.getElementById("f-desc"); if(descEl) descEl.focus();
+}
+
+/* ---- foto (snapshot) de una línea ---- */
+function peLabelSelections(p){
+  var out = [];
+  p.detail.options.forEach(function(o){
+    var v = p.selections[o.key];
+    if(v == null || v === "") return;
+    var l = peOptionLabel(p.detail, o.key, v);
+    out.push({ option_key: o.key, option_label: o.label, value: v, value_label: l && typeof v === "string" ? l.valueLabel : String(v) });
+  });
+  return out;
+}
+function peSnapshotFromPrice(p, price, qty){
+  var res = price.result;
+  var status = res.status;
+  return {
+    itemId: p.detail.item.id, code: p.detail.item.public_code, name: p.detail.item.canonical_name, desc: peDescribe(p),
+    config: { request: price.request, selections: peLabelSelections(p), contract_version: PE_CONTRACT },
+    quantity: qty, market: PE_MARKET, status: status,
+    total: status === "RESOLVED" ? res.total.amount : null, currency: status === "RESOLVED" ? res.total.currency : null,
+    catalogRevision: res.catalog_revision, pricingRevision: res.pricing_revision, effectiveAt: res.effective_at,
+    reason: status === "RESOLVED" ? null : res.reason_code, contractVersion: PE_CONTRACT, pricedAt: price.pricedAt || new Date().toISOString()
+  };
+}
+function peRowColumns(pe){
+  return {
+    line_source: "PRODUCT_ENGINE", pe_catalog_item_id: pe.itemId, pe_public_code: pe.code, pe_canonical_name_snapshot: pe.name,
+    pe_customer_description_snapshot: pe.desc, pe_configuration_snapshot: pe.config, pe_quantity: pe.quantity, pe_market: pe.market,
+    pe_pricing_status_snapshot: pe.status, pe_total_amount: pe.total == null ? null : Number(pe.total), pe_currency: pe.currency,
+    pe_catalog_revision: pe.catalogRevision, pe_pricing_revision: pe.pricingRevision, pe_effective_at: pe.effectiveAt,
+    pe_reason_code: pe.reason, pe_contract_version: pe.contractVersion, pe_priced_at: pe.pricedAt
+  };
+}
+function peFromRow(row){
+  if(!row || row.line_source !== "PRODUCT_ENGINE") return null;
+  return {
+    itemId: row.pe_catalog_item_id, code: row.pe_public_code, name: row.pe_canonical_name_snapshot, desc: row.pe_customer_description_snapshot,
+    config: row.pe_configuration_snapshot, quantity: row.pe_quantity == null ? null : Number(row.pe_quantity), market: row.pe_market,
+    status: row.pe_pricing_status_snapshot, total: row.pe_total_amount == null ? null : Number(row.pe_total_amount), currency: row.pe_currency,
+    catalogRevision: row.pe_catalog_revision, pricingRevision: row.pe_pricing_revision, effectiveAt: row.pe_effective_at,
+    reason: row.pe_reason_code, contractVersion: row.pe_contract_version, pricedAt: row.pe_priced_at
+  };
+}
+
+/* Resultado que submitForm usa: { linked:pe } | { manual:true, note } | { blocked:msg } */
+async function peDraftOutcome(){
+  var d = UI.peDraft;
+  if(!d || !d.picked) return { manual: true };
+  var p = d.picked;
+  if(p.pricePromise && p.price && p.price.state === "loading"){ try{ await p.pricePromise; }catch(e){} }
+  var pr = p.price || { state: "idle" };
+  var qty = peDraftQty();
+  if(pr.state === "unavailable") return { manual: true, note: "Guardado como texto libre (el catálogo no respondió)." };
+  if(pr.state === "idle") { var miss = peMissingRequired(p); return { blocked: miss.length ? "Falta elegir: " + miss.join(", ") + " — o usa texto libre." : "Revisa el producto del catálogo o usa texto libre." }; }
+  if(pr.state === "badqty") return { blocked: "Para el catálogo la cantidad debe ser un entero mayor a 0 — o usa texto libre." };
+  if(pr.state === "invalid") return { blocked: "El catálogo no acepta esta configuración — corrígela o usa texto libre." };
+  if(pr.quantity !== qty) return { blocked: "La cantidad cambió: espera a que se recalcule el precio." };
+  return { linked: peSnapshotFromPrice(p, pr, qty), unit: pr.state === "resolved" ? peUnitPrice(pr.result.total.amount, qty) : null, desc: peDescribe(p) };
+}
+
+/* ---- línea guardada: chip, comparación explícita, desvincular ---- */
+function peChipHtml(p){
+  if(!p || !p.pe) return "";
+  return '<span class="pe-chip" title="Producto del catálogo · precio guardado en esta línea">' + escapeHtml(p.pe.code) + "</span>" +
+    (p.pe.status === "RESOLVED" ? "" : peBadgeHtml("QUOTE_ONLY"));
+}
+function peFmtDate(iso){
+  try{ return new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }); }catch(e){ return String(iso || ""); }
+}
+function peLineBlock(t, p){
+  if(!p.pe) return "";
+  var pe = p.pe, st = UI.peLine && UI.peLine.productId === p.id ? UI.peLine : null;
+  var h = '<div class="pe-line" data-pe-line="' + escapeHtml(p.id) + '"><div class="pe-line-snap">' +
+    '<span class="pe-code">' + escapeHtml(pe.code) + "</span> " + escapeHtml(pe.name) + "<br>" +
+    '<small class="pe-muted">Precio guardado ' + escapeHtml(peFmtDate(pe.pricedAt)) + " · " +
+    (pe.status === "RESOLVED" ? escapeHtml(fmtUsd(pe.total)) + " " + escapeHtml(pe.currency || "") + " por " + escapeHtml(String(pe.quantity)) + " pzas" : "Cotizar (sin precio) para " + escapeHtml(String(pe.quantity)) + " pzas") + "</small></div>";
+  if(Number(p.cantidad) !== Number(pe.quantity)) h += '<div class="pe-warn">La cantidad cambió desde que se guardó el precio. Usa “Actualizar precio” si quieres recalcular.</div>';
+  if(st && st.state === "loading") h += '<div class="pe-muted">Consultando el catálogo…</div>';
+  else if(st && st.state === "compare"){
+    var r = st.result, newTxt = r.status === "RESOLVED" ? fmtUsd(Number(r.total.amount)) + " " + escapeHtml(r.total.currency) : "Cotizar (sin precio)";
+    var oldTxt = pe.status === "RESOLVED" ? fmtUsd(pe.total) : "Cotizar (sin precio)";
+    var same = r.status === "RESOLVED" && pe.status === "RESOLVED" && Number(r.total.amount) === Number(pe.total) && Number(st.quantity) === Number(pe.quantity);
+    h += '<div class="pe-compare">Antes <b>' + oldTxt + "</b> → ahora <b>" + newTxt + '</b> para ' + escapeHtml(String(st.quantity)) + " pzas" + (same ? " (sin cambios)" : "") +
+      '<div class="pe-line-actions"><button type="button" class="btn btn-sm btn-primary" data-pe-act="reprice-apply" data-producto="' + escapeHtml(p.id) + '" data-ticket="' + escapeHtml(t.id) + '">Aplicar</button>' +
+      '<button type="button" class="btn-plain" data-pe-act="reprice-cancel" data-producto="' + escapeHtml(p.id) + '">Cancelar</button></div></div>';
+  } else if(st && st.state === "detach"){
+    h += '<div class="pe-compare">¿Desvincular del catálogo? La línea queda como producto manual con su precio actual; se guarda quién y cuándo.' +
+      '<input type="text" class="pe-reason" data-pe-reason="1" placeholder="Motivo (opcional)" value="' + escapeHtml(st.reason || "") + '">' +
+      '<div class="pe-line-actions"><button type="button" class="btn btn-sm btn-danger" data-pe-act="detach-confirm" data-producto="' + escapeHtml(p.id) + '" data-ticket="' + escapeHtml(t.id) + '">Sí, desvincular</button>' +
+      '<button type="button" class="btn-plain" data-pe-act="detach-cancel" data-producto="' + escapeHtml(p.id) + '">Cancelar</button></div></div>';
+  } else {
+    if(st && st.state === "unavailable") h += '<div class="pe-warn">Catálogo no disponible; el precio guardado no cambió.</div>';
+    else if(st && st.state === "invalid") h += '<div class="pe-warn">El catálogo ya no acepta esta configuración; el precio guardado no cambió.</div>';
+    h += '<div class="pe-line-actions"><button type="button" class="btn-plain" data-pe-act="reprice" data-producto="' + escapeHtml(p.id) + '" data-ticket="' + escapeHtml(t.id) + '">Actualizar precio</button>' +
+      '<button type="button" class="btn-plain" data-pe-act="detach-open" data-producto="' + escapeHtml(p.id) + '" data-ticket="' + escapeHtml(t.id) + '">Desvincular</button></div>';
+  }
+  return h + "</div>";
+}
+async function peRepriceStart(t, p){
+  if(!p || !p.pe) return;
+  var qty = Number(p.cantidad);
+  if(!Number.isInteger(qty) || qty <= 0){ UI.peLine = { productId: p.id, state: "invalid" }; render(); return; }
+  var base = p.pe.config && p.pe.config.request;
+  if(!base){ UI.peLine = { productId: p.id, state: "invalid" }; render(); return; }
+  var req = JSON.parse(JSON.stringify(base)); req.quantity = qty;
+  var token = {}; UI.peLine = { productId: p.id, state: "loading", token: token }; render();
+  var r = await pePrice(req);
+  if(!UI.peLine || UI.peLine.token !== token) return;
+  if(!r.ok){ UI.peLine = { productId: p.id, state: r.status === 400 || r.status === 404 ? "invalid" : "unavailable" }; render(); return; }
+  if(r.data.status === "INVALID"){ UI.peLine = { productId: p.id, state: "invalid" }; render(); return; }
+  UI.peLine = { productId: p.id, state: "compare", result: r.data, request: req, quantity: qty, pricedAt: new Date().toISOString() };
+  render();
+}
+async function peRepriceApply(t, p){
+  var st = UI.peLine; if(!st || st.state !== "compare" || st.productId !== p.id) return false;
+  var res = st.result;
+  var snap = {
+    pe_quantity: st.quantity, pe_pricing_status_snapshot: res.status,
+    pe_total_amount: res.status === "RESOLVED" ? Number(res.total.amount) : null, pe_currency: res.status === "RESOLVED" ? res.total.currency : null,
+    pe_catalog_revision: res.catalog_revision, pe_pricing_revision: res.pricing_revision, pe_effective_at: res.effective_at,
+    pe_reason_code: res.status === "RESOLVED" ? null : res.reason_code, pe_contract_version: PE_CONTRACT, pe_priced_at: st.pricedAt,
+    pe_configuration_snapshot: Object.assign({}, p.pe.config, { request: st.request })
+  };
+  var unit = res.status === "RESOLVED" ? peUnitPrice(res.total.amount, st.quantity) : null;
+  var before = { cantidad: p.cantidad, precio: p.precio, pe: p.pe };
+  var expected = p.pe.pricedAt;
+  p.cantidad = st.quantity; p.precio = unit;
+  p.pe = Object.assign({}, p.pe, { quantity: st.quantity, status: res.status, total: snap.pe_total_amount, currency: snap.pe_currency, catalogRevision: res.catalog_revision, pricingRevision: res.pricing_revision, effectiveAt: res.effective_at, reason: snap.pe_reason_code, pricedAt: st.pricedAt, config: snap.pe_configuration_snapshot });
+  UI.peLine = null; render();
+  DTG_AUTH_WRITES++;
+  try{
+    var r1 = await sb.rpc("product_engine_reprice_line", { p_id: p.id, p_expected_priced_at: expected, p_change: { snapshot: snap, cantidad: st.quantity, precio: unit } });
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Precio de catálogo actualizado: " + p.desc + " — " + (res.status === "RESOLVED" ? st.quantity + " × " + fmtUsd(unit) : "cotizar") + " (" + p.pe.code + ")" } });
+    showToast("Precio actualizado desde el catálogo.");
+    refreshFromServer({ background: true });
+    return true;
+  }catch(e){
+    p.cantidad = before.cantidad; p.precio = before.precio; p.pe = before.pe; render();
+    if(/EDIT_CONFLICT/.test(String(e && e.message))){ showToast("Otra persona cambió el precio de este producto. Se recargó el valor actual."); refreshFromServer({ background: true }); }
+    else userError("Actualizar precio · #" + t.seq, e);
+    return false;
+  }finally{ DTG_AUTH_WRITES--; }
+}
+async function peDetachApply(t, p, reason){
+  if(!p || !p.pe) return false;
+  var before = { pe: p.pe }; var expected = p.pe.pricedAt;
+  p.pe = null; UI.peLine = null; render();
+  DTG_AUTH_WRITES++;
+  try{
+    var r1 = await sb.rpc("product_engine_detach_line", { p_id: p.id, p_expected_priced_at: expected, p_reason: reason || null });
+    if(r1.error) throw r1.error;
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Producto desvinculado del catálogo: " + p.desc + " (" + before.pe.code + ")" + (reason ? " — " + reason : "") } });
+    showToast("Producto desvinculado: ahora es manual.");
+    refreshFromServer({ background: true });
+    return true;
+  }catch(e){
+    p.pe = before.pe; render();
+    if(/EDIT_CONFLICT/.test(String(e && e.message))){ showToast("Otra persona cambió este producto. Se recargó el valor actual."); refreshFromServer({ background: true }); }
+    else userError("Desvincular · #" + t.seq, e);
+    return false;
+  }finally{ DTG_AUTH_WRITES--; }
+}
+
+/* ---- eventos delegados (captura, para convivir con el flujo de Enter/Escape existente) ---- */
+document.addEventListener("input", function(e){
+  var el = e.target; if(!el || !el.id && !el.getAttribute) return;
+  if(el.id === "f-desc" && UI.composer === "producto"){ peOnDescInput(el.value); return; }
+  if(el.id === "f-precio" && UI.peDraft){ UI.peDraft.precioTouched = true; return; }
+  if(el.id === "f-cantidad" && UI.peDraft && UI.peDraft.picked){ peSchedulePrice(); return; }
+  if(el.getAttribute && el.getAttribute("data-pe-opt-text") != null && UI.peDraft && UI.peDraft.picked){ UI.peDraft.picked.selections[el.getAttribute("data-pe-opt-text")] = el.value; peSchedulePrice(); return; }
+  if(el.getAttribute && el.getAttribute("data-pe-meas") != null && UI.peDraft && UI.peDraft.picked){ UI.peDraft.picked.measurements[el.getAttribute("data-pe-meas")] = el.value; peSchedulePrice(); return; }
+  if(el.getAttribute && el.getAttribute("data-pe-reason") != null && UI.peLine){ UI.peLine.reason = el.value; }
+});
+document.addEventListener("change", function(e){
+  var el = e.target; if(!el || !el.getAttribute) return;
+  var d = UI.peDraft;
+  if(d && d.picked){
+    var k = el.getAttribute("data-pe-opt");
+    if(k != null){ if(el.value === "") delete d.picked.selections[k]; else d.picked.selections[k] = el.value; peSchedulePrice(); return; }
+    var kb = el.getAttribute("data-pe-opt-bool");
+    if(kb != null){ d.picked.selections[kb] = !!el.checked; peSchedulePrice(); return; }
+    if(el.getAttribute("data-pe-deco") != null){ d.picked.decoration = el.value; peSchedulePrice(); return; }
+  }
+});
+document.addEventListener("click", function(e){
+  var t = e.target && e.target.closest ? e.target : null; if(!t) return;
+  var pick = t.closest("[data-pe-pick]");
+  if(pick){ e.preventDefault(); e.stopPropagation(); pePick(pick.getAttribute("data-pe-pick")); return; }
+  var un = t.closest("[data-pe-unlink]");
+  if(un){ e.preventDefault(); e.stopPropagation(); peUnlinkDraft(); return; }
+  var act = t.closest("[data-pe-act]");
+  if(act){
+    e.preventDefault(); e.stopPropagation();
+    var tk = findTicket(act.getAttribute("data-ticket") || UI.selectedTicketId);
+    var pid = act.getAttribute("data-producto");
+    var prod = tk && (tk.productos || []).filter(function(x){ return x.id === pid; })[0];
+    var a = act.getAttribute("data-pe-act");
+    if(!tk || !prod){ return; }
+    if(a === "reprice") peRepriceStart(tk, prod);
+    else if(a === "reprice-apply") peRepriceApply(tk, prod);
+    else if(a === "reprice-cancel" || a === "detach-cancel"){ UI.peLine = null; render(); }
+    else if(a === "detach-open"){ UI.peLine = { productId: pid, state: "detach", reason: "" }; render(); }
+    else if(a === "detach-confirm") peDetachApply(tk, prod, (UI.peLine && UI.peLine.reason || "").trim());
+  }
+}, true);
 
 /* ---------------- clientes (sección 8/9): entidad mínima, "no Salesforce" ----------------
    Crear y vincular son mutaciones explícitas de un clic (igual que agregar
@@ -19123,7 +19772,12 @@ async function submitForm(kind){
     var precio = precioRaw === "" ? null : parseFloat(precioRaw);
     if(!Number.isFinite(cantidad)||cantidad<=0||precio!==null&&(!Number.isFinite(precio)||precio<0)){showToast('Revisa cantidad y precio.');return;}
     UI.ticketProductBusy=true;
-    try{var ok=await addProductoCore(t, desc, cantidad, precio);if(ok){UI.composer=null;UI.pendingFocus={elId:'composer-input',userInitiated:true};render();}else{UI.composer='producto';render();document.getElementById('f-desc').value=desc;document.getElementById('f-cantidad').value=cantidad;document.getElementById('f-precio').value=precioRaw;document.getElementById('f-desc').focus();}}
+    var peOut = { manual: true };
+    try{ peOut = await peDraftOutcome(); }catch(peErr){ peOut = { manual: true }; }
+    if(peOut.blocked){ UI.ticketProductBusy=false; showToast(peOut.blocked); return; }
+    if(peOut.linked && precioRaw === "" && peOut.unit != null && !(UI.peDraft && UI.peDraft.precioTouched)){ precio = peOut.unit; }
+    if(peOut.manual && peOut.note) showToast(peOut.note);
+    try{var ok=await addProductoCore(t, desc, cantidad, precio, peOut.linked || null);if(ok){peResetDraft();UI.composer=null;UI.pendingFocus={elId:'composer-input',userInitiated:true};render();}else{UI.composer='producto';render();document.getElementById('f-desc').value=desc;document.getElementById('f-cantidad').value=cantidad;document.getElementById('f-precio').value=precioRaw;document.getElementById('f-desc').focus();}}
     finally{UI.ticketProductBusy=false;}
   } else if(kind === "tarea" || kind === "tarea_produccion"){
     var tdesc = (document.getElementById("f-desc").value || "").trim();
@@ -24489,7 +25143,7 @@ function wireEvents(){
     });
   }
   root.querySelectorAll('[data-open-form]').forEach(function(b){
-    b.addEventListener("click", function(){ UI.composer = b.getAttribute("data-open-form"); UI.pendingFocus={elId:UI.composer==="pago"?"f-monto":"f-desc",userInitiated:true};render(); });
+    b.addEventListener("click", function(){ UI.composer = b.getAttribute("data-open-form"); if(UI.composer === "producto") peResetDraft(); UI.pendingFocus={elId:UI.composer==="pago"?"f-monto":"f-desc",userInitiated:true};render(); });
   });
   var cancelBtn = root.querySelector('[data-action="cancel-form"]');
   if(cancelBtn) cancelBtn.addEventListener("click", function(){ if(closeComposerOverlay()) render(); });
@@ -25721,7 +26375,8 @@ document.addEventListener("click", function(e){
   if(UI.composer){
     var pop = document.getElementById("composer-popover");
     var plus = document.querySelector('[data-action="toggle-menu"]');
-    var clickedInsidePop = pop && pop.contains(e.target);
+    /* Un clic sobre un nodo que un handler ya reemplazó (p. ej. elegir una sugerencia del catálogo) no es un clic afuera. */
+    var clickedInsidePop = (pop && pop.contains(e.target)) || (e.target && e.target.isConnected === false);
     var clickedPlus = plus && (e.target === plus || plus.contains(e.target));
     if(!clickedInsidePop && !clickedPlus){ if(closeComposerOverlay()) render(); }
   }
@@ -27786,6 +28441,16 @@ document.addEventListener('compositionend',function(e){if(ticketSearchField(e.ta
 document.addEventListener('keydown',function(e){if(ticketSearchField(e.target)&&e.key==='Enter'&&!TS_COMPOSING){e.preventDefault();ticketSearchFlush();}},true);
 var TS_PHOTO_CORE=ticketPhotos;ticketPhotos=function(t){if(!TS_RENDER_DEPTH||!t)return TS_PHOTO_CORE(t);var photos=TS_PHOTOS.get(t);if(!photos){photos=TS_PHOTO_CORE(t);TS_PHOTOS.set(t,photos);}return photos.slice();};
 var TS_RENDER_CORE=render;render=function(){if(TS_COMPOSING&&ticketSearchField(document.activeElement)&&UI.mainView==='tickets'&&!UI.selectedTicketId)return;if(TS_TIMER!==null){clearTimeout(TS_TIMER);TS_TIMER=null;}if(TS_DIRTY){TS_DIRTY=false;saveUi();}if(!TS_RENDER_DEPTH)TS_PHOTOS=new WeakMap();TS_RENDER_DEPTH++;try{return TS_RENDER_CORE();}finally{TS_RENDER_DEPTH--;if(!TS_RENDER_DEPTH)TS_PHOTOS=null;var view=document.querySelector('.tickets-explorer');if(view)view.setAttribute('aria-busy','false');}};
+
+
+/* STAGING policy: UI remains usable; no external delivery or transcription. */
+window.DTGStagingNotice=function(){showToast('STAGING: envíos externos desactivados.');};
+pushSoportado=function(){return false;};
+pushEstado=function(){return 'no-soportado';};
+activarPush=async function(){showToast('STAGING: push externo desactivado.');return false;};
+registrarSW=async function(){return null;};
+mostrarNotificacionNavegador=function(){};
+// Tabs, unread counts and local UI remain enabled; no browser notification.
 
 boot();
 

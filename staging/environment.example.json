@@ -1,0 +1,12 @@
+{
+  "environment": "staging",
+  "appUrl": "OWNER_STAGING_APP_HTTPS_URL",
+  "crmProjectRef": "OWNER_NEW_CRM_STAGING_PROJECT_REF",
+  "peProjectRef": "OWNER_NEW_PE_STAGING_PROJECT_REF",
+  "supabaseUrl": "OWNER_CRM_STAGING_SUPABASE_HTTPS_URL",
+  "supabasePublishableKey": "OWNER_CRM_STAGING_PUBLISHABLE_KEY",
+  "productEngineUrl": "OWNER_PRODUCT_ENGINE_STAGING_HTTPS_URL",
+  "productionOrigins": ["https://impresionesmatamoros.github.io", "https://jpjpnxamiclvhmcywyhx.supabase.co"],
+  "ownerConfirmedIsolation": false,
+  "externalEffects": {"whatsapp": false, "email": false, "push": false, "payments": false, "webhooks": false, "transcription": false}
+}

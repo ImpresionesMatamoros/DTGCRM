@@ -1,0 +1,67 @@
+name: CRM STAGING validation and prepared deployment
+on:
+  push:
+    branches: [staging]
+  pull_request:
+    branches: [staging]
+permissions:
+  contents: read
+concurrency:
+  group: crm-staging-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Set installed browser path
+        run: node -e 'console.log("CHROME_BIN="+require("playwright").chromium.executablePath())' >> "$GITHUB_ENV"
+      - run: pnpm staging:test
+      - run: pnpm test:pe
+      - run: node TICKET-SEARCH-QA.cjs && node APP-STARTUP-QA.cjs
+  artifact:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging' && vars.STAGING_BUILD_ENABLED == 'true'
+    needs: validate
+    environment: staging
+    runs-on: ubuntu-latest
+    env:
+      STAGING_APP_URL: ${{ vars.STAGING_APP_URL }}
+      STAGING_CRM_PROJECT_REF: ${{ vars.STAGING_CRM_PROJECT_REF }}
+      STAGING_PE_PROJECT_REF: ${{ vars.STAGING_PE_PROJECT_REF }}
+      STAGING_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_PUBLISHABLE_KEY }}
+      STAGING_PE_BASE_URL: ${{ vars.STAGING_PE_BASE_URL }}
+      STAGING_PRODUCTION_ORIGINS: ${{ vars.STAGING_PRODUCTION_ORIGINS }}
+      STAGING_ISOLATION_CONFIRMED: ${{ vars.STAGING_ISOLATION_CONFIRMED }}
+      STAGING_CONFIG_FILE: staging/environment.local.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/staging/ci-config.cjs
+      - run: node scripts/staging/build.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DTG-CRM-STAGING-${{ github.sha }}
+          path: dist/staging/
+          retention-days: 14
+      - name: Request dedicated staging hosting deployment
+        if: vars.STAGING_DEPLOYMENT_ENABLED == 'true'
+        env:
+          STAGING_DEPLOYMENT_ENABLED: ${{ vars.STAGING_DEPLOYMENT_ENABLED }}
+          STAGING_HOSTING_PROJECT_CONFIRMED: ${{ vars.STAGING_HOSTING_PROJECT_CONFIRMED }}
+          STAGING_DEPLOY_HOOK_URL: ${{ secrets.STAGING_DEPLOY_HOOK_URL }}
+          STAGING_DEPLOY_HOOK_ORIGIN: ${{ vars.STAGING_DEPLOY_HOOK_ORIGIN }}
+        run: node scripts/staging/deploy-hook.cjs
+# No main trigger, no pages/id-token write permissions, no production environment.
+# DB migrations and function deployment are explicit guarded provisioning steps;
+# they do not run automatically on push. Enable artifact/deploy only after setup.
