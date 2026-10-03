@@ -1,0 +1,2316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "dtg.import-envelope"
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^1\\.\\d+\\.\\d+$"
+    },
+    "producer": {
+      "type": "object",
+      "properties": {
+        "exporter_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parser_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parser_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "exporter_version",
+        "parser_name",
+        "parser_version"
+      ],
+      "additionalProperties": false
+    },
+    "import_batch": {
+      "type": "object",
+      "properties": {
+        "source_batch_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{24}$"
+        },
+        "source_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "source_role": {
+          "type": "string",
+          "enum": [
+            "PRIMARY_RC",
+            "COMPARISON",
+            "SPECIALIZED_EVIDENCE"
+          ]
+        },
+        "data_class": {
+          "type": "string",
+          "enum": [
+            "REAL",
+            "FIXTURE"
+          ]
+        },
+        "fixture_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sheets_inspected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rows_inspected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "parser_counts": {
+          "type": "object",
+          "properties": {
+            "raw_records": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "candidates_produced": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "issue_counts": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "raw_records",
+            "candidates_produced",
+            "issue_counts"
+          ],
+          "additionalProperties": false
+        },
+        "record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "candidate_counts": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "issue_counts": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "historical_price_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "source_batch_id",
+        "source_file",
+        "source_sha256",
+        "source_role",
+        "data_class",
+        "fixture_name",
+        "sheets_inspected",
+        "rows_inspected",
+        "parser_counts",
+        "record_count",
+        "candidate_count",
+        "candidate_counts",
+        "issue_counts",
+        "historical_price_count"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "workbook": {
+          "type": "object",
+          "properties": {
+            "source_file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "title": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "version": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "reader_warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "source_file",
+            "sha256",
+            "title",
+            "version",
+            "reader_warnings"
+          ],
+          "additionalProperties": false
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "workbook",
+        "profile"
+      ],
+      "additionalProperties": false
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{24}$"
+          },
+          "record_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legacy_id": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "synthetic": {
+            "type": "boolean"
+          },
+          "raw_payload": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "normalized_payload": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "source": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source_file": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "workbook_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "source_sheet": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source_row": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "source_column": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "source_cell": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{1,3}[0-9]+$"
+                },
+                "raw_value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "normalized_value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "data_type": {
+                  "type": "string"
+                },
+                "formula": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cached_value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "number_format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_file",
+                "workbook_sha256",
+                "source_sheet",
+                "source_row",
+                "source_column",
+                "source_cell",
+                "raw_value",
+                "normalized_value",
+                "data_type",
+                "formula",
+                "cached_value",
+                "number_format"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "issue_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{24}$"
+            }
+          }
+        },
+        "required": [
+          "record_id",
+          "record_type",
+          "legacy_id",
+          "synthetic",
+          "raw_payload",
+          "normalized_payload",
+          "source",
+          "issue_ids"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              "record_ids": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "workflow_state": {
+                "type": "string",
+                "const": "PENDING_REVIEW"
+              },
+              "publishable": {
+                "type": "boolean",
+                "const": false
+              },
+              "validation_state": {
+                "type": "string",
+                "enum": [
+                  "VALID",
+                  "WARNING",
+                  "REJECTED"
+                ]
+              },
+              "issue_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "review": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "const": "catalog_item"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "legacy_id": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "legacy_sku": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "item_type_hypothesis": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "PRODUCT",
+                          "SERVICE",
+                          "BUNDLE"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "catalog_status_hypothesis": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "CANDIDATE",
+                          "PLANNED",
+                          "ACTIVE",
+                          "RETIRED"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "sale_unit_hypothesis": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "category_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "family_evidence": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "customer_supplied_evidence": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "notes_evidence": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "fixed_attribute_evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        },
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          }
+                        },
+                        "record_id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "values",
+                        "record_id"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "legacy_id",
+                  "legacy_sku",
+                  "name",
+                  "item_type_hypothesis",
+                  "catalog_status_hypothesis",
+                  "sale_unit_hypothesis",
+                  "category_legacy",
+                  "family_evidence",
+                  "customer_supplied_evidence",
+                  "notes_evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "candidate_id",
+              "record_ids",
+              "workflow_state",
+              "publishable",
+              "validation_state",
+              "issue_ids",
+              "review",
+              "kind",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              "record_ids": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "workflow_state": {
+                "type": "string",
+                "const": "PENDING_REVIEW"
+              },
+              "publishable": {
+                "type": "boolean",
+                "const": false
+              },
+              "validation_state": {
+                "type": "string",
+                "enum": [
+                  "VALID",
+                  "WARNING",
+                  "REJECTED"
+                ]
+              },
+              "issue_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "review": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "const": "option"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "item_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "capture_type": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "required": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        },
+                        "measurement": {
+                          "$ref": "#/$defs/__schema0"
+                        },
+                        "record_id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "measurement",
+                        "record_id"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "item_legacy",
+                  "name",
+                  "capture_type",
+                  "required",
+                  "values"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "candidate_id",
+              "record_ids",
+              "workflow_state",
+              "publishable",
+              "validation_state",
+              "issue_ids",
+              "review",
+              "kind",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              "record_ids": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "workflow_state": {
+                "type": "string",
+                "const": "PENDING_REVIEW"
+              },
+              "publishable": {
+                "type": "boolean",
+                "const": false
+              },
+              "validation_state": {
+                "type": "string",
+                "enum": [
+                  "VALID",
+                  "WARNING",
+                  "REJECTED"
+                ]
+              },
+              "issue_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "review": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "const": "decoration"
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "subtype": {
+                        "type": "string",
+                        "const": "method_association"
+                      },
+                      "item_legacy": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "method_legacy": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "method_labels": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "subtype",
+                      "item_legacy",
+                      "method_legacy",
+                      "method_labels"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "subtype": {
+                        "type": "string",
+                        "const": "policy_hypothesis"
+                      },
+                      "item_legacy": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "raw_option": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        }
+                      },
+                      "value_evidence": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "subtype",
+                      "item_legacy",
+                      "raw_option",
+                      "value_evidence"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "candidate_id",
+              "record_ids",
+              "workflow_state",
+              "publishable",
+              "validation_state",
+              "issue_ids",
+              "review",
+              "kind",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              "record_ids": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "workflow_state": {
+                "type": "string",
+                "const": "PENDING_REVIEW"
+              },
+              "publishable": {
+                "type": "boolean",
+                "const": false
+              },
+              "validation_state": {
+                "type": "string",
+                "enum": [
+                  "VALID",
+                  "WARNING",
+                  "REJECTED"
+                ]
+              },
+              "issue_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "review": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "const": "composition"
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "parent_legacy": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "child_legacy": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "quantity": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "value": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "RANGE"
+                              },
+                              "min": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "max": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "min",
+                              "max"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "MINIMUM"
+                              },
+                              "min": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "min"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "UNKNOWN",
+                                  "AMBIGUOUS"
+                                ]
+                              },
+                              "value": {
+                                "type": "null"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "role_hypothesis": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "INCLUDED",
+                              "OPTIONAL"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "parent_legacy",
+                      "child_legacy",
+                      "quantity",
+                      "role_hypothesis"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "subtype": {
+                        "type": "string",
+                        "const": "policy_hypothesis"
+                      },
+                      "item_legacy": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "raw_option": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        }
+                      },
+                      "value_evidence": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "subtype",
+                      "item_legacy",
+                      "raw_option",
+                      "value_evidence"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "candidate_id",
+              "record_ids",
+              "workflow_state",
+              "publishable",
+              "validation_state",
+              "issue_ids",
+              "review",
+              "kind",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              "record_ids": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "workflow_state": {
+                "type": "string",
+                "const": "PENDING_REVIEW"
+              },
+              "publishable": {
+                "type": "boolean",
+                "const": false
+              },
+              "validation_state": {
+                "type": "string",
+                "enum": [
+                  "VALID",
+                  "WARNING",
+                  "REJECTED"
+                ]
+              },
+              "issue_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "review": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "const": "price"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "item_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "price_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "classification": {
+                    "type": "string",
+                    "enum": [
+                      "FIXED",
+                      "EXACT_QUANTITY_MATRIX",
+                      "DERIVED",
+                      "HISTORICAL_EVIDENCE_ONLY",
+                      "UNKNOWN_REVIEW_REQUIRED"
+                    ]
+                  },
+                  "money": {
+                    "type": "object",
+                    "properties": {
+                      "amount": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^-?\\d+(\\.\\d+)?$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "currency": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "USD",
+                              "MXN"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "issues": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency",
+                      "issues"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "source_model": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "quantity_from": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "EXACT"
+                          },
+                          "value": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "RANGE"
+                          },
+                          "min": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "max": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "min",
+                          "max"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "MINIMUM"
+                          },
+                          "min": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "min"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "UNKNOWN",
+                              "AMBIGUOUS"
+                            ]
+                          },
+                          "value": {
+                            "type": "null"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "quantity_to": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "EXACT"
+                          },
+                          "value": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "RANGE"
+                          },
+                          "min": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "max": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "min",
+                          "max"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "MINIMUM"
+                          },
+                          "min": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "min"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "UNKNOWN",
+                              "AMBIGUOUS"
+                            ]
+                          },
+                          "value": {
+                            "type": "null"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "amount_basis_evidence": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "conditions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      }
+                    }
+                  },
+                  "authorization_evidence": {
+                    "type": "boolean"
+                  },
+                  "current": {
+                    "type": "boolean",
+                    "const": false
+                  },
+                  "mexico_evidence": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "item_legacy",
+                  "price_legacy",
+                  "classification",
+                  "money",
+                  "source_model",
+                  "quantity_from",
+                  "quantity_to",
+                  "amount_basis_evidence",
+                  "conditions",
+                  "authorization_evidence",
+                  "current",
+                  "mexico_evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "candidate_id",
+              "record_ids",
+              "workflow_state",
+              "publishable",
+              "validation_state",
+              "issue_ids",
+              "review",
+              "kind",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              "record_ids": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "workflow_state": {
+                "type": "string",
+                "const": "PENDING_REVIEW"
+              },
+              "publishable": {
+                "type": "boolean",
+                "const": false
+              },
+              "validation_state": {
+                "type": "string",
+                "enum": [
+                  "VALID",
+                  "WARNING",
+                  "REJECTED"
+                ]
+              },
+              "issue_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{24}$"
+                }
+              },
+              "review": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "const": "presentation"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "link_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "presentation_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "item_legacy": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "commercial_name": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "audience_or_use": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "channel": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "language": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "publication_state_evidence": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "role": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "order": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "suggested_quantity": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "notes_evidence": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "link_legacy",
+                  "presentation_legacy",
+                  "item_legacy",
+                  "commercial_name",
+                  "audience_or_use",
+                  "channel",
+                  "language",
+                  "publication_state_evidence",
+                  "role",
+                  "order",
+                  "suggested_quantity",
+                  "notes_evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "candidate_id",
+              "record_ids",
+              "workflow_state",
+              "publishable",
+              "validation_state",
+              "issue_ids",
+              "review",
+              "kind",
+              "data"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "historical_prices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{24}$"
+          },
+          "condition_record_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{24}$"
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "item_legacy": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "price_legacy": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "classification": {
+                "type": "string",
+                "const": "HISTORICAL_EVIDENCE_ONLY"
+              },
+              "money": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^-?\\d+(\\.\\d+)?$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "currency": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "USD",
+                          "MXN"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "issues": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency",
+                  "issues"
+                ],
+                "additionalProperties": false
+              },
+              "source_model": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "quantity_from": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "EXACT"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "RANGE"
+                      },
+                      "min": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "max": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "min",
+                      "max"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "MINIMUM"
+                      },
+                      "min": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "min"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "UNKNOWN",
+                          "AMBIGUOUS"
+                        ]
+                      },
+                      "value": {
+                        "type": "null"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "quantity_to": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "EXACT"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "RANGE"
+                      },
+                      "min": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "max": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "min",
+                      "max"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "MINIMUM"
+                      },
+                      "min": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "min"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "UNKNOWN",
+                          "AMBIGUOUS"
+                        ]
+                      },
+                      "value": {
+                        "type": "null"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "amount_basis_evidence": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "authorization_evidence": {
+                "type": "boolean"
+              },
+              "current": {
+                "type": "boolean",
+                "const": false
+              },
+              "mexico_evidence": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "item_legacy",
+              "price_legacy",
+              "classification",
+              "money",
+              "source_model",
+              "quantity_from",
+              "quantity_to",
+              "amount_basis_evidence",
+              "conditions",
+              "authorization_evidence",
+              "current",
+              "mexico_evidence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "record_id",
+          "condition_record_ids",
+          "data"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "duplicate_reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "EXACT_DUPLICATE",
+              "PROBABLE_DUPLICATE",
+              "RELATIONSHIP_NOT_DUPLICATE"
+            ]
+          },
+          "record_ids": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "legacy_ids": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "record_ids",
+          "legacy_ids",
+          "signals",
+          "recommendation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issue_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "IMPORT_MISSING_REQUIRED_SOURCE_VALUE",
+              "IMPORT_UNKNOWN_CURRENCY",
+              "IMPORT_CURRENCY_CONFLICT",
+              "IMPORT_INVALID_MONEY",
+              "IMPORT_INVALID_QUANTITY",
+              "IMPORT_DUPLICATE_IDENTIFIER",
+              "IMPORT_INVALID_IDENTIFIER",
+              "IMPORT_POSSIBLE_DUPLICATE",
+              "IMPORT_UNKNOWN_STATUS",
+              "IMPORT_PRICE_CONFLICT",
+              "IMPORT_UNMAPPED_CATEGORY",
+              "IMPORT_UNMAPPED_OPTION",
+              "IMPORT_DOMAIN_MAPPING_QUESTION",
+              "IMPORT_UNRESOLVED_REFERENCE",
+              "IMPORT_HEADER_MISMATCH",
+              "IMPORT_FORMULA_VALUE_UNRESOLVED",
+              "VARIANT_MATERIALIZATION_CANDIDATE"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "ERROR",
+              "WARNING",
+              "INFO"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{24}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "PARSER",
+              "INTERCHANGE"
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "source_file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "workbook_sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "source_sheet": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source_row": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "source_column": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "source_cell": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{1,3}[0-9]+$"
+                    },
+                    "raw_value": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "normalized_value": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "data_type": {
+                      "type": "string"
+                    },
+                    "formula": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "cached_value": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "number_format": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "source_file",
+                    "workbook_sha256",
+                    "source_sheet",
+                    "source_row",
+                    "source_column",
+                    "source_cell",
+                    "raw_value",
+                    "normalized_value",
+                    "data_type",
+                    "formula",
+                    "cached_value",
+                    "number_format"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "issue_id",
+          "code",
+          "severity",
+          "message",
+          "record_id",
+          "origin",
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "contract",
+    "contract_version",
+    "producer",
+    "import_batch",
+    "provenance",
+    "records",
+    "candidates",
+    "historical_prices",
+    "duplicate_reviews",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      ]
+    }
+  },
+  "$id": "https://dtg.local/contracts/import-envelope.v1.schema.json",
+  "title": "DTG ImportEnvelope v1",
+  "description": "Neutral interchange contract Excel importer → Product Engine staging (STEP 05B). Generated from src/import/contract.ts."
+}

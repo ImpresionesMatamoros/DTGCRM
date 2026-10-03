@@ -1,0 +1,68 @@
+{
+  "name": "dtg-product-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design To Go Product Engine — master source for catalog identity, configuration and pricing.",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:db": "vitest run --project db",
+    "test:all": "vitest run",
+    "db:start": "tsx scripts/db.ts start",
+    "db:stop": "tsx scripts/db.ts stop",
+    "db:reset": "tsx scripts/db.ts reset",
+    "db:migrate": "tsx scripts/db.ts migrate",
+    "db:seed": "tsx scripts/db.ts seed",
+    "db:status": "tsx scripts/db.ts status",
+    "db:rebuild": "tsx scripts/db.ts rebuild && vitest run --project db",
+    "seed:generate": "tsx scripts/generate-seeds.ts",
+    "seed:check": "tsx scripts/generate-seeds.ts --check",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "importer:test": "bash tools/excel-importer/run_tests.sh",
+    "importer:envelopes": "bash tools/excel-importer/export.sh",
+    "import:schema": "tsx scripts/generate-import-schema.ts",
+    "crm-api:schema": "tsx scripts/generate-crm-api-schema.ts",
+    "import:stage": "tsx scripts/import.ts stage",
+    "import:status": "tsx scripts/import.ts status",
+    "import:dry-run": "tsx scripts/import.ts dry-run",
+    "test:e2e": "next build && playwright test",
+    "quality:report": "tsx scripts/quality-report.ts"
+  },
+  "dependencies": {
+    "decimal.js": "10.6.0",
+    "next": "16.3.7",
+    "pg": "8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.7",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "unrs-resolver"
+    ]
+  }
+}

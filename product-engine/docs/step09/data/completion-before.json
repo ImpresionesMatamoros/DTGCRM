@@ -1,0 +1,444 @@
+{
+  "asOf": "2026-10-02T09:00:42.207Z",
+  "summary": {
+    "candidates": {
+      "total": 407,
+      "resolved": 32,
+      "unresolved": 375
+    },
+    "findings": {
+      "total": 1212,
+      "blockers": 989,
+      "warnings": 219,
+      "info": 4
+    },
+    "ownerDecisionRequired": 678,
+    "byArea": {
+      "CATALOG_ITEM": {
+        "total": 546,
+        "blockers": 542,
+        "warnings": 4,
+        "info": 0
+      },
+      "COMPOSITION": {
+        "total": 3,
+        "blockers": 3,
+        "warnings": 0,
+        "info": 0
+      },
+      "DECORATION": {
+        "total": 82,
+        "blockers": 82,
+        "warnings": 0,
+        "info": 0
+      },
+      "OPTION": {
+        "total": 312,
+        "blockers": 312,
+        "warnings": 0,
+        "info": 0
+      },
+      "PRESENTATION": {
+        "total": 24,
+        "blockers": 24,
+        "warnings": 0,
+        "info": 0
+      },
+      "PRICING": {
+        "total": 30,
+        "blockers": 26,
+        "warnings": 0,
+        "info": 4
+      },
+      "CATEGORY": {
+        "total": 215,
+        "blockers": 0,
+        "warnings": 215,
+        "info": 0
+      }
+    },
+    "byKind": {
+      "CATALOG_ITEM": {
+        "candidates": 220,
+        "resolved": 5,
+        "unresolved": 215
+      },
+      "COMPOSITION": {
+        "candidates": 5,
+        "resolved": 4,
+        "unresolved": 1
+      },
+      "DECORATION": {
+        "candidates": 86,
+        "resolved": 4,
+        "unresolved": 82
+      },
+      "OPTION": {
+        "candidates": 70,
+        "resolved": 5,
+        "unresolved": 65
+      },
+      "PRESENTATION": {
+        "candidates": 12,
+        "resolved": 0,
+        "unresolved": 12
+      },
+      "PRICE": {
+        "candidates": 14,
+        "resolved": 14,
+        "unresolved": 0
+      }
+    }
+  },
+  "gate": {
+    "scoped": 21,
+    "publishable": 5,
+    "published": 5,
+    "resolved": 0,
+    "blocked": 16,
+    "items": [
+      {
+        "legacyId": "MIG1-O-008",
+        "name": "Tarjeta Tradicional",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG1-O-009",
+        "name": "Tarjeta Premium / Gloss",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-036",
+        "name": "Flyers",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-037",
+        "name": "Tabloides",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-038",
+        "name": "Posters",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-039",
+        "name": "Menús",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-004", "D-005"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-040",
+        "name": "Postales",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-046",
+        "name": "Tarjetas complementarias",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-047",
+        "name": "Seating card / place card",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-048",
+        "name": "Thank-you card",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-008",
+        "name": "Invitación sencilla",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-009",
+        "name": "Invitación premium",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-010",
+        "name": "Invitación para evento",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-011",
+        "name": "Invitación con sobre",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-012",
+        "name": "Invitación con sello",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-013",
+        "name": "Invitación con acrílico",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-004", "D-005", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-014",
+        "name": "Invitación especial",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-015",
+        "name": "Imanes para vehículo — par de 2 × 1 ft",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "OWN-MT-O-046",
+        "name": "Periódico personalizado para eventos",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "Decisión abierta: D-003 — Alcance de tres tipos sin resolver",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-003"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "OWN-O-007",
+        "name": "Invitación formal",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "OWN-O-008",
+        "name": "Invitación casual",
+        "verdict": "BLOCKED",
+        "reasons": [
+          "Review no está READY",
+          "Domain no está READY",
+          "Decisión abierta: D-001 — Estado formal del catálogo",
+          "Decisión abierta: D-002 — Unidad de venta pendiente",
+          "El item está WARNING, no APPROVED",
+          "Sin categoría de Product Engine"
+        ],
+        "openDecisions": ["D-001", "D-002", "D-018"],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      }
+    ]
+  },
+  "cpTotals": {
+    "total": 21,
+    "staged": 21,
+    "reviewReady": 5,
+    "domainReady": 5,
+    "pricingReady": 4,
+    "quoteOnly": 17,
+    "publicationReadyIgnoringBarrier": 1,
+    "blockedByOwnerDecisions": 20,
+    "missingSaleUnit": 16,
+    "missingStatus": 16,
+    "missingCategory": 16,
+    "withOptionBlockers": 2,
+    "withUnresolvedPresentations": 2,
+    "brokenProvenance": 0,
+    "openDecisionCounts": {
+      "D-001": 16,
+      "D-002": 16,
+      "D-003": 1,
+      "D-004": 2,
+      "D-005": 2,
+      "D-009": 1,
+      "D-018": 9,
+      "D-022": 4
+    }
+  },
+  "counts": {
+    "catalog_items": 17,
+    "active_items": 13,
+    "candidate_items": 3,
+    "permits": 1,
+    "permit_items": 24,
+    "publications": 24,
+    "published_scope_items": 5,
+    "dispositions": 0,
+    "rejected_candidates": 6,
+    "published_candidates": 24,
+    "authorized_prices": 14,
+    "code_seq": 33
+  }
+}

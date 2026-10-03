@@ -1,0 +1,99 @@
+# STEP 06 — Admin Assessment (antes de tocar código)
+
+**Rama:** `step06/admin-mvp`, creada desde `step05b/import-pipeline` @ `fc0df10`.
+**Fecha:** 2026-09-30.
+
+## 0. Línea base verificada
+
+Se verificó en un clon limpio con PostgreSQL 16 nativo (puerto 5432, rol `dtg` con `CREATEDB` y sin superusuario) y Node 22.22 / pnpm 10.28.
+
+| Verificación                                                      | Resultado                                                              |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`                                  | OK                                                                     |
+| `pnpm db:rebuild` (reset → 13 migraciones → 2 seeds → pruebas BD) | **48/48**                                                              |
+| `pnpm verify` (lint + typecheck + unit + build)                   | **144/144** unitarias, build OK                                        |
+| `pnpm importer:test` con `DTG_SOURCES`                            | **39/39**                                                              |
+| `pnpm format:check` · `seed:check` · `import:schema --check`      | OK · sin drift · sin drift                                             |
+| `importer:envelopes` + `import:dry-run`                           | 5 lotes; **413 candidatos** en el lote v1.2; `sources_unchanged: true` |
+
+**Total de la línea base: 231 pruebas** (144 unitarias + 48 de BD + 39 Python), igual a lo reportado en 05B.
+
+## 1. Estructura UI actual
+
+- `src/app/layout.tsx` y `src/app/page.tsx` son mínimos, con estilos en línea. No hay rutas `/admin`.
+- `src/app/api/v1/health/route.ts` es el único endpoint.
+- No hay librería de componentes, CSS global, server actions, middleware ni autenticación.
+- Next 16.3.7 sin `cacheComponents`. `params` y `searchParams` son promesas; las Server Actions son POST alcanzables directamente, así que **toda validación tiene que vivir en el servidor**.
+
+## 2. Infraestructura reutilizable
+
+| Pieza                                                                                            | Uso en STEP 06                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `approveCandidate` / `rejectCandidate` (`src/db/import/review.ts`)                               | Aprobar y rechazar sin reimplementar (valida con Zod y exige cubrir `unresolved`)                    |
+| `previewCandidate` (`src/db/import/publish.ts`)                                                  | **Domain Preview real**: el adaptador en seco, sin escrituras                                        |
+| `publishCandidate` + `PUBLICATION_ENABLED_FOR = ['FIXTURE']`                                     | Publicar sólo FIXTURE; REAL sigue respondiendo `NOT_PUBLISHABLE_IN_THIS_STEP`                        |
+| `traceCandidate` / `traceEntity` (`src/db/import/provenance.ts`)                                 | Visor de procedencia en ambos sentidos (celda → entidad y entidad → celda)                           |
+| `validateBatch` / `batchStatistics`                                                              | Re-validación y métricas de lote                                                                     |
+| `unresolvedFields`, `blockingReasons`, `parseResolution`, `RESOLUTION_SCHEMAS` (`src/import`)    | Qué falta decidir, por qué está bloqueado y validación de resoluciones: **única fuente de verdad**   |
+| `loadCatalogSnapshot` + `resolvePrice` + `Derivation`                                            | Vista de precios y derivación México sin recalcular en React                                         |
+| `validateCatalogItem`, `canChangeStatus` (`src/domain/catalog.ts`)                               | Validar la edición del CatalogItem                                                                   |
+| Triggers de BD (`catalog_item_guard`, `import_candidate_guard`, `price_*_guard`, `change_event`) | Última línea de defensa: identidad inmutable, transiciones, precios AUTHORIZED congelados, auditoría |
+| `withRollback` + `import-helpers` (fixtures, `asReal`, `syntheticFixture`)                       | Pruebas de integración de la consola                                                                 |
+
+## 3. Endpoints y actions existentes
+
+Hoy sólo existe `GET /api/v1/health`. Todo lo demás es API programática (TypeScript que recibe un `Queryable`) usada por scripts y pruebas. No hay HTTP de negocio. STEP 06 **no** agrega API HTTP para el CRM: las Server Actions del Admin son internas.
+
+## 4. Qué falta
+
+1. Superficies `/admin`, `/admin/imports`, `/admin/review`, `/admin/catalog` y `/admin/pricing`, con navegación y estilos propios de una aplicación interna.
+2. **Resolución guardada sin aprobar.** Hoy la resolución sólo se escribe al aprobar.
+3. **Auditoría por campo con actor y motivo.** Hoy `change_event.changed_by = current_user`, es decir, el rol de BD, no la persona.
+4. **Cambios masivos** con vista previa, conteos y aviso de sobrescritura.
+5. **Categoría en la resolución** (§21). No existe en `CatalogItemResolutionSchema` ni en el adaptador.
+6. Consultas de lista paginadas y filtradas en el servidor (inbox y catálogo).
+7. Servicios de catálogo: crear un item mínimo y editar campos seguros con auditoría.
+8. Vista de precios: definiciones, breaks, condiciones, reglas, estado, procedencia, México e históricos.
+9. Contexto de actor local y un punto único de permisos preparado para roles futuros.
+10. Retirar una aprobación (APPROVED → VALID/WARNING). El trigger lo permite, pero no existe la función.
+
+## 5. Decisiones (resuelven los choques de `02_PROJECT_CONTEXT.md` §7)
+
+| #   | Tema                           | Decisión                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1  | Resolución parcial (§10/14/16) | El **borrador** vive en `import_candidate.resolution`, que ya existe y que el trigger de 0013 deja actualizar mientras el candidato no está APPROVED. Se valida con `RESOLUTION_SCHEMAS[kind].partial()` (cada campo con su esquema real). Aprobar reutiliza `approveCandidate` con ese borrador, así que `approval_sha256` no cambia de semántica. Un APPROVED sigue sin poder editarse: primero se retira la aprobación (auditado).                                                                                                                              |
+| A2  | Campos abiertos filtrables     | Nueva columna nullable `import_candidate.open_fields text[]`: los campos que siguen sin resolver **después** del borrador. La calcula `unresolvedFields(proposal, draft)` en TypeScript (no se duplica lógica en SQL) cada vez que cambia el borrador. `null` ⇒ igual a `unresolved_fields`.                                                                                                                                                                                                                                                                       |
+| A3  | Auditoría (§15/16)             | Migración **0014**: `review_event`, append-only, con candidato, campo, valor anterior, valor nuevo, acción, actor, motivo, operación masiva, origen y fecha. También `review_bulk_operation`, append-only, con actor, cambios, IDs, conteos, confirmación de sobrescritura, origen y referencia. No se crean más tablas.                                                                                                                                                                                                                                           |
+| A4  | Actor en `change_event`        | 0014 redefine `record_change()` con `create or replace`, en una migración nueva (0011 no se edita). `changed_by = coalesce(current_setting('dtg.actor', true), current_user)` y una columna nueva `change_event.context`. Cada transacción del Admin fija `dtg.actor`/`dtg.context` con `set_config(..., true)`. Así toda edición de catálogo, precios o staging queda atribuida a la persona sin tablas nuevas.                                                                                                                                                   |
+| A5  | Categoría (§21)                | Se agrega `categoryKey` opcional a `CatalogItemResolutionSchema` y un op `ASSIGN_CATEGORY` al adaptador y al ejecutor. `categoryLegacy` sigue como evidencia: **nunca se mapea automáticamente**. No resolverla no bloquea la aprobación (DTG evita obligatorios innecesarios). Con `LINK_EXISTING`, si el item ya tiene otra categoría primaria, el adaptador reporta conflicto en lugar de sobrescribir.                                                                                                                                                         |
+| A6  | Customer supplied (§10)        | No hay booleano. La UI usa el vocabulario del dominio (`ALLOWED`/`REQUIRED`, más `NOT_APPLICABLE` en la edición de catálogo) y sólo lo muestra para SERVICE. La evidencia del Excel (`Acepta material cliente = Sí`) se ve aparte, como evidencia.                                                                                                                                                                                                                                                                                                                 |
+| A7  | Composición (§24)              | Se muestran `INCLUDED`/`OPTIONAL`. No se agrega REQUIRED.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| A8  | Autorizar precios (§26)        | **No existe ninguna action de autorización.** El botón “Authorize price” se muestra deshabilitado con la razón (P1-06: no hay autorizador definido). La capacidad `price.authorize` no se otorga a nadie. Nada que saltarse desde el cliente.                                                                                                                                                                                                                                                                                                                      |
+| A9  | Editar CatalogItem (§20)       | Campos editables: nombre, estado (4 valores; nunca volver a null), unidad de venta, política de decoración (rechazada si se intenta `NONE` con capacidades existentes), customer supplied (sólo SERVICE), descripción interna y categoría primaria. `id`, `public_code` y `kind` **no** se editan (el cambio de kind rompe invariantes de customer supplied y precios). La auditoría va por `change_event` con actor (A4).                                                                                                                                         |
+| A10 | Crear item (§19)               | Obligatorios: nombre, kind, estado y política de decoración. Para SERVICE, además customer supplied. Estado y política van **sin preselección**, porque las columnas son NOT NULL o su null es “sólo migración” (ADR-0002) y dejar el default de la BD (`NONE`) sería un default silencioso. Opcionales: categoría, descripción y unidad de venta (null = sin precio automático).                                                                                                                                                                                  |
+| A11 | México (§27)                   | La vista llama a `resolvePrice` en el servidor y muestra el `Derivation`: fuente USD, factor y su origen, FX y su id, y redondeo. `HALF_UP_2` se marca **PROVISIONAL TECHNICAL BEHAVIOR**, con “IVA unresolved”. React no calcula.                                                                                                                                                                                                                                                                                                                                 |
+| A12 | Actor local (§32)              | Un único `getActor()` en el servidor: `DTG_ADMIN_ACTOR` del entorno o, si no existe, una cookie que se fija desde la cabecera del Admin. **Sin actor no hay mutaciones** (`ACTOR_REQUIRED`); no hay actor por defecto.                                                                                                                                                                                                                                                                                                                                             |
+| A13 | Permisos futuros (§32)         | Cada action declara una capacidad (`review.resolve`, `review.approve`, `review.bulk`, `catalog.edit`, `fixture.publish`, `price.authorize`) y pasa por `authorize(actor, capability)`. Hoy el actor local tiene todas menos `price.authorize`. Agregar `viewer/editor/price_authorizer/admin` será cambiar ese mapa, no las mutaciones.                                                                                                                                                                                                                            |
+| A14 | Masivos (§14/15/17)            | Sólo candidatos del mismo kind y sólo campos compatibles. No existe “aprobar masivo” ni “publicar masivo”. La vista previa la calcula el servidor: afectados, sin resolver, iguales, distintos y omitidos con motivo (bloqueado, aprobado, terminal, otro kind). Los distintos **no se sobrescriben** sin confirmación explícita. Al aplicar, el plan se recalcula; si difiere de la vista previa (hash), se rechaza. El servicio recibe `candidateIds` más un origen (`UI` o `DECISION_GROUP`, con referencia), que es el enganche para los paquetes de STEP 05C. |
+| A15 | Rendimiento (§37)              | Vista SQL `v_review_candidate` (proyección: etiqueta, legacy del item, hoja/fila primaria, conteos de issues por severidad, señales de precio, histórico y duplicado). Filtrado, orden y paginación en el servidor, 50 por página. El catálogo también pagina en el servidor.                                                                                                                                                                                                                                                                                      |
+| A16 | UI                             | Sin librería de componentes. Un CSS propio (`src/app/admin/admin.css`), denso y desktop-first. Filtros como formularios GET (estado en la URL, funciona sin JS). Componentes cliente sólo donde hace falta interacción: selección, masivos y panel de resolución.                                                                                                                                                                                                                                                                                                  |
+| A17 | Pruebas E2E (§35)              | Se agrega `@playwright/test` (devDependency, 1.56.x). Usa el Chromium preinstalado del entorno (`PLAYWRIGHT_BROWSERS_PATH`) para los flujos críticos. El E2E no entra al CI por defecto (necesita servidor y BD sembrada).                                                                                                                                                                                                                                                                                                                                         |
+
+## 6. Riesgos
+
+| Riesgo                                      | Mitigación                                                                                                                                         |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server Actions alcanzables por POST directo | Zod + capacidad + actor en cada action; los servicios validan estado y dominio; la BD tiene triggers                                               |
+| Duplicar lógica de dominio en React         | La UI sólo recibe DTOs ya calculados (`unresolvedFields`, preview, `resolvePrice`); una prueba de auto-audit busca imports prohibidos en `src/app` |
+| Habilitar REAL por accidente                | `PUBLICATION_ENABLED_FOR` intacto; una prueba lo fija; el botón REAL no existe y la action rechaza REAL antes de llamar a publish                  |
+| Filtración de históricos a precio vigente   | Sólo lectura, sección separada con etiqueta; el trigger de 0012 y ADR-0005 siguen; prueba dedicada                                                 |
+| `record_change()` redefinida                | Misma firma y columnas; `changed_by` cae a `current_user` si no hay actor; se re-ejecutan todas las pruebas de BD                                  |
+| Extender la resolución con `categoryKey`    | Opcional y aditivo; aprobaciones existentes sin cambio de hash; pruebas del adaptador                                                              |
+| `db:rebuild` borra el staging real          | Documentado en la guía de operación (volver a correr `importer:envelopes` + `import:dry-run`)                                                      |
+| Next 16 con cambios incompatibles           | Se siguió `node_modules/next/dist/docs` (params como promesa, `connection()`, Server Actions)                                                      |
+
+## 7. Límites de STEP 06
+
+**Dentro:** consola de revisión (inbox, detalle, resolución, preview, aprobar/rechazar/retirar, masivos, auditoría), lotes, admin básico de catálogo (buscar, ver, crear mínimo, editar seguro, categoría) y visor de precios (definiciones, breaks, condiciones, reglas, estado, procedencia, México, históricos).
+
+**Fuera (§39):** publicación REAL, CRM, Supabase remoto, deploy, Variant, Bundle, Supplier, Brand, inventario, compras, manufactura, work orders, catálogo público, dashboard completo de calidad de datos, migración completa de categorías, flujo final de autorización de precios, permisos empresariales, edición de precios, editor de BOM.

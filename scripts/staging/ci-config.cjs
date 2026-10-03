@@ -1,3 +1,4 @@
 const fs=require('fs');const {validate}=require('../../staging/policy.js');
 const config={environment:'staging',appUrl:process.env.STAGING_APP_URL,crmProjectRef:process.env.STAGING_CRM_PROJECT_REF,peProjectRef:process.env.STAGING_PE_PROJECT_REF,supabaseUrl:process.env.STAGING_SUPABASE_URL,supabasePublishableKey:process.env.STAGING_SUPABASE_PUBLISHABLE_KEY,productEngineUrl:process.env.STAGING_PE_BASE_URL,productionOrigins:JSON.parse(process.env.STAGING_PRODUCTION_ORIGINS||'[]'),ownerConfirmedIsolation:process.env.STAGING_ISOLATION_CONFIRMED==='true',externalEffects:{whatsapp:false,email:false,push:false,payments:false,webhooks:false,transcription:false}};
+config.databaseIsolation=process.env.STAGING_DATABASE_ISOLATION;config.crmSchema=process.env.STAGING_CRM_SCHEMA;config.peSchema=process.env.STAGING_PE_SCHEMA;
 validate(config);fs.writeFileSync(process.argv[2]||'staging/environment.local.json',JSON.stringify(config,null,2));

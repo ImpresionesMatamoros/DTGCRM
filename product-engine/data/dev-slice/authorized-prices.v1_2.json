@@ -1,0 +1,975 @@
+[
+{
+"item": "MIG1-O-008",
+"conditions": {
+"caras": "1"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 35.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 55.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 90.0
+},
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 25.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 120.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 150.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 180.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 210.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 270.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 330.0
+}
+],
+"lineage": [
+"MIG1-P-009",
+"MIG1-P-010",
+"MIG2-P-016",
+"OWN-P-091",
+"OWN-P-095",
+"OWN-P-099",
+"OWN-P-103",
+"OWN-P-107",
+"OWN-P-111",
+"OWN-P-115"
+]
+},
+{
+"item": "MIG1-O-008",
+"conditions": {
+"caras": "2"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 50.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 80.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 130.0
+},
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 35.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 175.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 220.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 265.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 310.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 400.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 490.0
+}
+],
+"lineage": [
+"MIG1-P-011",
+"MIG1-P-012",
+"MIG2-P-017",
+"OWN-P-092",
+"OWN-P-096",
+"OWN-P-100",
+"OWN-P-104",
+"OWN-P-108",
+"OWN-P-112",
+"OWN-P-116"
+]
+},
+{
+"item": "MIG1-O-009",
+"conditions": {
+"caras": "1"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 55.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 85.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 140.0
+},
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 35.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 185.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 230.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 275.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 320.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 410.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 500.0
+}
+],
+"lineage": [
+"MIG1-P-013",
+"MIG1-P-014",
+"MIG2-P-018",
+"OWN-P-093",
+"OWN-P-097",
+"OWN-P-101",
+"OWN-P-105",
+"OWN-P-109",
+"OWN-P-113",
+"OWN-P-117"
+]
+},
+{
+"item": "MIG1-O-009",
+"conditions": {
+"caras": "2"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 80.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 120.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 195.0
+},
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 50.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 255.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 315.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 375.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 435.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 555.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 675.0
+}
+],
+"lineage": [
+"MIG1-P-015",
+"MIG1-P-016",
+"MIG2-P-019",
+"OWN-P-094",
+"OWN-P-098",
+"OWN-P-102",
+"OWN-P-106",
+"OWN-P-110",
+"OWN-P-114",
+"OWN-P-118"
+]
+},
+{
+"item": "MIGF-O-015",
+"conditions": {
+"presentación": "Par",
+"tamaño": "2 × 1 ft"
+},
+"excel_model": "Fijo",
+"base": "Total",
+"breaks": [
+{
+"qty_from": null,
+"qty_to": null,
+"amount": 65.0
+}
+],
+"lineage": [
+"MIGF-P-001"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "1",
+"papel": "Bond",
+"tamaño": "Carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 40.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 70.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 110.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 180.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 250.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 320.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 390.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 460.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 600.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 740.0
+}
+],
+"lineage": [
+"OWN-P-001",
+"OWN-P-004",
+"OWN-P-007",
+"OWN-P-010",
+"OWN-P-013",
+"OWN-P-016",
+"OWN-P-019",
+"OWN-P-022",
+"OWN-P-025",
+"OWN-P-028"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "1",
+"papel": "Bond",
+"tamaño": "Media carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 30.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 45.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 70.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 115.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 155.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 195.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 235.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 275.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 350.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 425.0
+}
+],
+"lineage": [
+"OWN-P-002",
+"OWN-P-005",
+"OWN-P-008",
+"OWN-P-011",
+"OWN-P-014",
+"OWN-P-017",
+"OWN-P-020",
+"OWN-P-023",
+"OWN-P-026",
+"OWN-P-029"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "1",
+"papel": "Bond",
+"tamaño": "1/4 carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 25.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 35.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 50.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 80.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 105.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 130.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 155.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 180.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 230.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 280.0
+}
+],
+"lineage": [
+"OWN-P-003",
+"OWN-P-006",
+"OWN-P-009",
+"OWN-P-012",
+"OWN-P-015",
+"OWN-P-018",
+"OWN-P-021",
+"OWN-P-024",
+"OWN-P-027",
+"OWN-P-030"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "1",
+"papel": "Premium",
+"tamaño": "Carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 105.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 190.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 310.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 530.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 730.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 920.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 1110.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 1290.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 1640.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 1970.0
+}
+],
+"lineage": [
+"OWN-P-031",
+"OWN-P-034",
+"OWN-P-037",
+"OWN-P-040",
+"OWN-P-043",
+"OWN-P-046",
+"OWN-P-049",
+"OWN-P-052",
+"OWN-P-055",
+"OWN-P-058"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "1",
+"papel": "Premium",
+"tamaño": "Media carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 60.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 105.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 165.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 280.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 390.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 490.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 590.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 680.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 870.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 1050.0
+}
+],
+"lineage": [
+"OWN-P-032",
+"OWN-P-035",
+"OWN-P-038",
+"OWN-P-041",
+"OWN-P-044",
+"OWN-P-047",
+"OWN-P-050",
+"OWN-P-053",
+"OWN-P-056",
+"OWN-P-059"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "1",
+"papel": "Premium",
+"tamaño": "1/4 carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 35.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 60.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 90.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 150.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 210.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 260.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 320.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 370.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 460.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 560.0
+}
+],
+"lineage": [
+"OWN-P-033",
+"OWN-P-036",
+"OWN-P-039",
+"OWN-P-042",
+"OWN-P-045",
+"OWN-P-048",
+"OWN-P-051",
+"OWN-P-054",
+"OWN-P-057",
+"OWN-P-060"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "2",
+"papel": "Premium",
+"tamaño": "Carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 150.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 270.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 440.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 750.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 1030.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 1300.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 1570.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 1825.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 2320.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 2790.0
+}
+],
+"lineage": [
+"OWN-P-061",
+"OWN-P-064",
+"OWN-P-067",
+"OWN-P-070",
+"OWN-P-073",
+"OWN-P-076",
+"OWN-P-079",
+"OWN-P-082",
+"OWN-P-085",
+"OWN-P-088"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "2",
+"papel": "Premium",
+"tamaño": "Media carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 85.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 150.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 235.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 400.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 550.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 690.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 835.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 960.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 1230.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 1485.0
+}
+],
+"lineage": [
+"OWN-P-062",
+"OWN-P-065",
+"OWN-P-068",
+"OWN-P-071",
+"OWN-P-074",
+"OWN-P-077",
+"OWN-P-080",
+"OWN-P-083",
+"OWN-P-086",
+"OWN-P-089"
+]
+},
+{
+"item": "MIG2-O-036",
+"conditions": {
+"caras": "2",
+"papel": "Premium",
+"tamaño": "1/4 carta"
+},
+"excel_model": "Por tabla",
+"base": "Por paquete",
+"breaks": [
+{
+"qty_from": 100.0,
+"qty_to": 100.0,
+"amount": 50.0
+},
+{
+"qty_from": 250.0,
+"qty_to": 250.0,
+"amount": 85.0
+},
+{
+"qty_from": 500.0,
+"qty_to": 500.0,
+"amount": 130.0
+},
+{
+"qty_from": 1000.0,
+"qty_to": 1000.0,
+"amount": 220.0
+},
+{
+"qty_from": 1500.0,
+"qty_to": 1500.0,
+"amount": 300.0
+},
+{
+"qty_from": 2000.0,
+"qty_to": 2000.0,
+"amount": 370.0
+},
+{
+"qty_from": 2500.0,
+"qty_to": 2500.0,
+"amount": 450.0
+},
+{
+"qty_from": 3000.0,
+"qty_to": 3000.0,
+"amount": 525.0
+},
+{
+"qty_from": 4000.0,
+"qty_to": 4000.0,
+"amount": 650.0
+},
+{
+"qty_from": 5000.0,
+"qty_to": 5000.0,
+"amount": 790.0
+}
+],
+"lineage": [
+"OWN-P-063",
+"OWN-P-066",
+"OWN-P-069",
+"OWN-P-072",
+"OWN-P-075",
+"OWN-P-078",
+"OWN-P-081",
+"OWN-P-084",
+"OWN-P-087",
+"OWN-P-090"
+]
+}
+]

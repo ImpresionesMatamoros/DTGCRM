@@ -1,0 +1,625 @@
+{
+  "gate": {
+    "scoped": 21,
+    "publishable": 13,
+    "published": 5,
+    "resolved": 8,
+    "blocked": 0,
+    "items": [
+      {
+        "legacyId": "MIG1-O-008",
+        "name": "Tarjeta Tradicional",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG1-O-009",
+        "name": "Tarjeta Premium / Gloss",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-036",
+        "name": "Flyers",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-037",
+        "name": "Tabloides",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-038",
+        "name": "Posters",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-039",
+        "name": "Menús",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-040",
+        "name": "Postales",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-046",
+        "name": "Tarjetas complementarias",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "9e563222-2372-451d-bddb-31daeeaac3c7",
+          "itemLegacyId": "MIG2-O-046",
+          "disposition": "LEGACY_INVALID",
+          "canonicalLegacyIds": [],
+          "detail": "Tarjetas complementarias: concepto legacy no válido, no es un producto canónico",
+          "decisionId": "D-001",
+          "decisionAnswerId": "dc87cd8d-d113-4f6f-89d6-92402ee649c5",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Tarjetas complementarias: concepto legacy no válido, no es un producto canónico",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "MIG2-O-047",
+        "name": "Seating card / place card",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIG2-O-048",
+        "name": "Thank-you card",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-008",
+        "name": "Invitación sencilla",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-009",
+        "name": "Invitación premium",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "MIGF-O-010",
+        "name": "Invitación para evento",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "2f509b2c-2696-4ab9-b379-c760b4426c88",
+          "itemLegacyId": "MIGF-O-010",
+          "disposition": "ALIAS",
+          "canonicalLegacyIds": ["MIGF-O-008", "MIGF-O-009"],
+          "detail": "Invitación para evento: etiqueta genérica de la familia de invitaciones (Sencilla / Premium)",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación para evento: etiqueta genérica de la familia de invitaciones (Sencilla / Premium)",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "MIGF-O-011",
+        "name": "Invitación con sobre",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "b4a84e91-3a82-440b-a3f8-090872e5e713",
+          "itemLegacyId": "MIGF-O-011",
+          "disposition": "CONFIGURATION",
+          "canonicalLegacyIds": ["MIGF-O-008", "MIGF-O-009"],
+          "detail": "Invitación con sobre: configuración de la invitación, no un producto",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación con sobre: configuración de la invitación, no un producto",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "MIGF-O-012",
+        "name": "Invitación con sello",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "d5e8edc6-cec0-485e-9bb4-d315e5d69ab5",
+          "itemLegacyId": "MIGF-O-012",
+          "disposition": "CONFIGURATION",
+          "canonicalLegacyIds": ["MIGF-O-009"],
+          "detail": "Invitación con sello: configuración de Invitación Premium",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación con sello: configuración de Invitación Premium",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "MIGF-O-013",
+        "name": "Invitación con acrílico",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "bd8d238e-f2be-4263-8418-9fc2d922dd89",
+          "itemLegacyId": "MIGF-O-013",
+          "disposition": "CONFIGURATION",
+          "canonicalLegacyIds": ["MIGF-O-009"],
+          "detail": "Invitación con acrílico: configuración de Invitación Premium",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación con acrílico: configuración de Invitación Premium",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "MIGF-O-014",
+        "name": "Invitación especial",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "54d62e20-2e20-4844-a308-cb0b5d86b0c6",
+          "itemLegacyId": "MIGF-O-014",
+          "disposition": "LEGACY_INVALID",
+          "canonicalLegacyIds": [],
+          "detail": "Invitación especial: concepto legacy no válido",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación especial: concepto legacy no válido",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "MIGF-O-015",
+        "name": "Imanes para vehículo — par de 2 × 1 ft",
+        "verdict": "PUBLISHED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "READY",
+        "disposition": null
+      },
+      {
+        "legacyId": "OWN-MT-O-046",
+        "name": "Periódico personalizado para eventos",
+        "verdict": "PUBLISHABLE",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "QUOTE_ONLY",
+        "disposition": null
+      },
+      {
+        "legacyId": "OWN-O-007",
+        "name": "Invitación formal",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "5fbd4e54-cb48-4479-9c37-bd6c46f3a378",
+          "itemLegacyId": "OWN-O-007",
+          "disposition": "STYLE",
+          "canonicalLegacyIds": ["MIGF-O-008", "MIGF-O-009"],
+          "detail": "Invitación formal: estilo/diseño, no un producto",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación formal: estilo/diseño, no un producto",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      },
+      {
+        "legacyId": "OWN-O-008",
+        "name": "Invitación casual",
+        "verdict": "RESOLVED",
+        "reasons": [],
+        "openDecisions": [],
+        "pricing": "NOT_APPLICABLE",
+        "disposition": {
+          "id": "559e2c60-7e01-4cc7-900e-a46ffd987a32",
+          "itemLegacyId": "OWN-O-008",
+          "disposition": "STYLE",
+          "canonicalLegacyIds": ["MIGF-O-008", "MIGF-O-009"],
+          "detail": "Invitación casual: estilo/diseño, no un producto",
+          "decisionId": "D-018",
+          "decisionAnswerId": "bef2caf1-82b7-403a-b78e-1820e13d04fc",
+          "reason": "OWNER_DECISION_SPEC_v1.0: Invitación casual: estilo/diseño, no un producto",
+          "actor": "martin",
+          "decidedAt": "2026-10-02T09:00:44.000Z"
+        }
+      }
+    ]
+  },
+  "items": [
+    {
+      "itemLegacyId": "MIG1-O-008",
+      "ok": true,
+      "alreadyPublished": true,
+      "publicCode": "DTG-00001",
+      "catalogItemId": "9a7f52f4-b893-5808-bfa2-21ccace19965",
+      "candidates": [
+        {
+          "candidateId": "d449a80b-4cb8-468f-a7ec-b7175454a6e2",
+          "kind": "CATALOG_ITEM",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "68f00589-f0b6-479d-a8e6-69cb047add49",
+          "kind": "OPTION",
+          "linked": 3,
+          "created": 0
+        },
+        {
+          "candidateId": "38a92c51-0328-41f0-a028-edd51d7211ae",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "a19df951-56f3-4d32-80a9-3e031002a97b",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG1-O-009",
+      "ok": true,
+      "alreadyPublished": true,
+      "publicCode": "DTG-00002",
+      "catalogItemId": "ccabd035-6447-550f-b8be-08e8b6d8d0e2",
+      "candidates": [
+        {
+          "candidateId": "451e76c1-a94f-4b62-ab89-6ef480998f76",
+          "kind": "CATALOG_ITEM",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "ea6747cb-41b8-4df0-965b-1e032ea1dc9e",
+          "kind": "OPTION",
+          "linked": 3,
+          "created": 0
+        },
+        {
+          "candidateId": "856f00ff-7a24-4f37-bee0-5162604d83e4",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "ff969604-f4aa-4c2f-80bd-a2b12ff327fc",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-036",
+      "ok": true,
+      "alreadyPublished": true,
+      "publicCode": "DTG-00003",
+      "catalogItemId": "bdf332e7-d03b-5223-bd25-4006aebb5885",
+      "candidates": [
+        {
+          "candidateId": "bfea8275-5578-4717-b7d3-e95829787bd3",
+          "kind": "CATALOG_ITEM",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "3331c760-ed13-47cd-926d-8ed27d1d6f41",
+          "kind": "OPTION",
+          "linked": 3,
+          "created": 0
+        },
+        {
+          "candidateId": "af60a72f-0e41-43e6-84b3-4a1cc0e7b940",
+          "kind": "OPTION",
+          "linked": 3,
+          "created": 0
+        },
+        {
+          "candidateId": "c80a325f-04c0-4fb8-824a-09b963ad19f4",
+          "kind": "OPTION",
+          "linked": 4,
+          "created": 0
+        },
+        {
+          "candidateId": "1d977d46-8238-48ac-b5a6-21cf92789f33",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "4d948858-ebbe-4308-8f8b-c222f18006b2",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "56b3c269-a106-4a7b-a99f-6ff4fd021a54",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "5a09d9c0-e433-4ec3-a5c8-c86f9740bc81",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "a8001b05-a252-4fee-82f0-73747348d363",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "b1f4935b-203e-49f7-b7f8-9c856c623c16",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "bfeb9b7a-5319-498a-bf73-b1737b5de582",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "c6332e1f-3eb7-4ede-bbea-fe9bb1def86d",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "cd7935ba-d656-4ff8-9950-8a6c64edfe45",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-037",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00034",
+      "catalogItemId": "26c9f6ee-f420-4a73-b785-da5142ff703c",
+      "candidates": [
+        {
+          "candidateId": "b4e39835-c12d-4379-9bf4-229c92540f0f",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-038",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00035",
+      "catalogItemId": "873290bb-cefe-47ec-a1ee-09a55b4c51eb",
+      "candidates": [
+        {
+          "candidateId": "f359bffc-9d98-4bc4-832d-dc01f5dc4437",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-039",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00036",
+      "catalogItemId": "fca65292-43ce-4ebe-81dd-f807103b9805",
+      "candidates": [
+        {
+          "candidateId": "c3313089-7163-470d-9267-4a22663d728b",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        },
+        {
+          "candidateId": "faf559ae-0a3a-4eeb-8de9-f0000610b168",
+          "kind": "OPTION",
+          "linked": 0,
+          "created": 2
+        },
+        {
+          "candidateId": "c342f3d6-b2cf-4df9-969f-223257779d68",
+          "kind": "PRESENTATION",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-040",
+      "ok": true,
+      "alreadyPublished": true,
+      "publicCode": "DTG-00033",
+      "catalogItemId": "213d6e6e-3df3-48c4-aa53-adf49f459c8d",
+      "candidates": [
+        {
+          "candidateId": "77083505-1590-48da-ac56-4abc3309cdcc",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-047",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00037",
+      "catalogItemId": "d75c5d36-8e79-4e0b-8b5a-762d54fdadcc",
+      "candidates": [
+        {
+          "candidateId": "03e71645-e39e-45bf-a49a-2003b0ec8609",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIG2-O-048",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00038",
+      "catalogItemId": "79f9db81-083c-4ce9-9c06-a606a26102d1",
+      "candidates": [
+        {
+          "candidateId": "32aa7010-6a42-4f1e-98e0-4821e3e280bd",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIGF-O-008",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00039",
+      "catalogItemId": "f74a9c74-0010-4260-96f2-81bbb8232445",
+      "candidates": [
+        {
+          "candidateId": "e1f86086-c436-4efd-9db9-af32956bfbab",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIGF-O-009",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00040",
+      "catalogItemId": "23aaebea-9353-4770-84fb-082e8d9dfd32",
+      "candidates": [
+        {
+          "candidateId": "a6395775-30b8-4d8e-8f1d-d04bb56bb849",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "MIGF-O-015",
+      "ok": true,
+      "alreadyPublished": true,
+      "publicCode": "DTG-00004",
+      "catalogItemId": "3e66e8e4-e365-5ee3-bf9f-30486288969d",
+      "candidates": [
+        {
+          "candidateId": "4426e6be-5bc6-4a35-bcba-9abc60854f35",
+          "kind": "CATALOG_ITEM",
+          "linked": 1,
+          "created": 0
+        },
+        {
+          "candidateId": "1ff3d601-d0f2-41af-a4ce-12af269c10b4",
+          "kind": "PRICE",
+          "linked": 1,
+          "created": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "itemLegacyId": "OWN-MT-O-046",
+      "ok": true,
+      "alreadyPublished": false,
+      "publicCode": "DTG-00041",
+      "catalogItemId": "9ed05c63-987a-4e27-a521-d38ac700fc58",
+      "candidates": [
+        {
+          "candidateId": "327e9739-bd76-4fd4-853e-7a71b332ba03",
+          "kind": "CATALOG_ITEM",
+          "linked": 0,
+          "created": 1
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "noWrite": true
+}

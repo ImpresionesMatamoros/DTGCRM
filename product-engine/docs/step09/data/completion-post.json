@@ -1,0 +1,629 @@
+{
+  "asOf": "2026-10-02T09:01:03.387Z",
+  "gate": {
+    "scoped": 21,
+    "publishable": 13,
+    "published": 13,
+    "resolved": 8,
+    "blocked": 0
+  },
+  "before": {
+    "gate": {
+      "published": 5,
+      "blocked": 16
+    },
+    "summary": {
+      "candidates": {
+        "total": 407,
+        "resolved": 32,
+        "unresolved": 375
+      },
+      "findings": {
+        "total": 1212,
+        "blockers": 989,
+        "warnings": 219,
+        "info": 4
+      },
+      "ownerDecisionRequired": 678,
+      "byArea": {
+        "CATALOG_ITEM": {
+          "total": 546,
+          "blockers": 542,
+          "warnings": 4,
+          "info": 0
+        },
+        "COMPOSITION": {
+          "total": 3,
+          "blockers": 3,
+          "warnings": 0,
+          "info": 0
+        },
+        "DECORATION": {
+          "total": 82,
+          "blockers": 82,
+          "warnings": 0,
+          "info": 0
+        },
+        "OPTION": {
+          "total": 312,
+          "blockers": 312,
+          "warnings": 0,
+          "info": 0
+        },
+        "PRESENTATION": {
+          "total": 24,
+          "blockers": 24,
+          "warnings": 0,
+          "info": 0
+        },
+        "PRICING": {
+          "total": 30,
+          "blockers": 26,
+          "warnings": 0,
+          "info": 4
+        },
+        "CATEGORY": {
+          "total": 215,
+          "blockers": 0,
+          "warnings": 215,
+          "info": 0
+        }
+      },
+      "byKind": {
+        "CATALOG_ITEM": {
+          "candidates": 220,
+          "resolved": 5,
+          "unresolved": 215
+        },
+        "COMPOSITION": {
+          "candidates": 5,
+          "resolved": 4,
+          "unresolved": 1
+        },
+        "DECORATION": {
+          "candidates": 86,
+          "resolved": 4,
+          "unresolved": 82
+        },
+        "OPTION": {
+          "candidates": 70,
+          "resolved": 5,
+          "unresolved": 65
+        },
+        "PRESENTATION": {
+          "candidates": 12,
+          "resolved": 0,
+          "unresolved": 12
+        },
+        "PRICE": {
+          "candidates": 14,
+          "resolved": 14,
+          "unresolved": 0
+        }
+      }
+    },
+    "counts": {
+      "catalog_items": 17,
+      "active_items": 13,
+      "candidate_items": 3,
+      "permits": 1,
+      "permit_items": 24,
+      "publications": 24,
+      "published_scope_items": 5,
+      "dispositions": 0,
+      "rejected_candidates": 6,
+      "published_candidates": 24,
+      "authorized_prices": 14,
+      "code_seq": 33
+    }
+  },
+  "after": {
+    "summary": {
+      "candidates": {
+        "total": 391,
+        "resolved": 42,
+        "unresolved": 349
+      },
+      "findings": {
+        "total": 1122,
+        "blockers": 915,
+        "warnings": 203,
+        "info": 4
+      },
+      "ownerDecisionRequired": 633,
+      "byArea": {
+        "CATALOG_ITEM": {
+          "total": 497,
+          "blockers": 493,
+          "warnings": 4,
+          "info": 0
+        },
+        "COMPOSITION": {
+          "total": 3,
+          "blockers": 3,
+          "warnings": 0,
+          "info": 0
+        },
+        "DECORATION": {
+          "total": 79,
+          "blockers": 79,
+          "warnings": 0,
+          "info": 0
+        },
+        "OPTION": {
+          "total": 298,
+          "blockers": 298,
+          "warnings": 0,
+          "info": 0
+        },
+        "PRESENTATION": {
+          "total": 16,
+          "blockers": 16,
+          "warnings": 0,
+          "info": 0
+        },
+        "PRICING": {
+          "total": 30,
+          "blockers": 26,
+          "warnings": 0,
+          "info": 4
+        },
+        "CATEGORY": {
+          "total": 199,
+          "blockers": 0,
+          "warnings": 199,
+          "info": 0
+        }
+      },
+      "byKind": {
+        "CATALOG_ITEM": {
+          "candidates": 212,
+          "resolved": 13,
+          "unresolved": 199
+        },
+        "COMPOSITION": {
+          "candidates": 5,
+          "resolved": 4,
+          "unresolved": 1
+        },
+        "DECORATION": {
+          "candidates": 83,
+          "resolved": 4,
+          "unresolved": 79
+        },
+        "OPTION": {
+          "candidates": 68,
+          "resolved": 6,
+          "unresolved": 62
+        },
+        "PRESENTATION": {
+          "candidates": 9,
+          "resolved": 1,
+          "unresolved": 8
+        },
+        "PRICE": {
+          "candidates": 14,
+          "resolved": 14,
+          "unresolved": 0
+        }
+      }
+    },
+    "counts": {
+      "catalog_items": 25,
+      "active_items": 19,
+      "candidate_items": 5,
+      "permits": 2,
+      "permit_items": 58,
+      "publications": 34,
+      "published_scope_items": 13,
+      "dispositions": 8,
+      "rejected_candidates": 22,
+      "published_candidates": 34,
+      "authorized_prices": 14,
+      "code_seq": 41
+    }
+  },
+  "permit": {
+    "id": "875acac2-18a7-49d6-a0a6-160aae6722d7",
+    "included": 34,
+    "decisions": ["D-016#1", "D-001#2", "D-002#2", "D-003#1", "D-010#1", "D-018#1"]
+  },
+  "published": [
+    {
+      "code": "DTG-00001",
+      "legacyId": "MIG1-O-008",
+      "name": "Tarjeta de presentación Tradicional",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "LINKED_EXISTING",
+      "options": 1,
+      "presentations": 1,
+      "authorized": 2,
+      "publicMemberships": 3
+    },
+    {
+      "code": "DTG-00002",
+      "legacyId": "MIG1-O-009",
+      "name": "Tarjeta de presentación Premium / Gloss",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "LINKED_EXISTING",
+      "options": 1,
+      "presentations": 1,
+      "authorized": 2,
+      "publicMemberships": 3
+    },
+    {
+      "code": "DTG-00003",
+      "legacyId": "MIG2-O-036",
+      "name": "Flyers",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "LINKED_EXISTING",
+      "options": 3,
+      "presentations": 1,
+      "authorized": 9,
+      "publicMemberships": 3
+    },
+    {
+      "code": "DTG-00004",
+      "legacyId": "MIGF-O-015",
+      "name": "Imanes para vehículo — par 2 × 1 ft",
+      "status": "ACTIVE",
+      "saleUnit": "PAIR",
+      "category": "servicios_especiales",
+      "link": "LINKED_EXISTING",
+      "options": 0,
+      "presentations": 1,
+      "authorized": 1,
+      "publicMemberships": 3
+    },
+    {
+      "code": "DTG-00033",
+      "legacyId": "MIG2-O-040",
+      "name": "Postales",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 1
+    },
+    {
+      "code": "DTG-00034",
+      "legacyId": "MIG2-O-037",
+      "name": "Poster / Tabloide 11×17",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 1
+    },
+    {
+      "code": "DTG-00035",
+      "legacyId": "MIG2-O-038",
+      "name": "Poster Gran Formato",
+      "status": "ACTIVE",
+      "saleUnit": "SQ_FT",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 1
+    },
+    {
+      "code": "DTG-00036",
+      "legacyId": "MIG2-O-039",
+      "name": "Menús",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 1,
+      "presentations": 1,
+      "authorized": 0,
+      "publicMemberships": 1
+    },
+    {
+      "code": "DTG-00037",
+      "legacyId": "MIG2-O-047",
+      "name": "Seating card / place card",
+      "status": "CANDIDATE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 0
+    },
+    {
+      "code": "DTG-00038",
+      "legacyId": "MIG2-O-048",
+      "name": "Thank-you card",
+      "status": "CANDIDATE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 0
+    },
+    {
+      "code": "DTG-00039",
+      "legacyId": "MIGF-O-008",
+      "name": "Invitación sencilla",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 1
+    },
+    {
+      "code": "DTG-00040",
+      "legacyId": "MIGF-O-009",
+      "name": "Invitación premium",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 1
+    },
+    {
+      "code": "DTG-00041",
+      "legacyId": "OWN-MT-O-046",
+      "name": "Periódico personalizado para eventos",
+      "status": "ACTIVE",
+      "saleUnit": "PIECE",
+      "category": "impresos_papel",
+      "link": "CREATED",
+      "options": 0,
+      "presentations": 0,
+      "authorized": 0,
+      "publicMemberships": 1
+    }
+  ],
+  "dispositions": [
+    {
+      "legacyId": "MIG2-O-046",
+      "disposition": "LEGACY_INVALID",
+      "canonical": [],
+      "decision": "D-001",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "MIGF-O-010",
+      "disposition": "ALIAS",
+      "canonical": ["MIGF-O-008", "MIGF-O-009"],
+      "decision": "D-018",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "MIGF-O-011",
+      "disposition": "CONFIGURATION",
+      "canonical": ["MIGF-O-008", "MIGF-O-009"],
+      "decision": "D-018",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "MIGF-O-012",
+      "disposition": "CONFIGURATION",
+      "canonical": ["MIGF-O-009"],
+      "decision": "D-018",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "MIGF-O-013",
+      "disposition": "CONFIGURATION",
+      "canonical": ["MIGF-O-009"],
+      "decision": "D-018",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "MIGF-O-014",
+      "disposition": "LEGACY_INVALID",
+      "canonical": [],
+      "decision": "D-018",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "OWN-O-007",
+      "disposition": "STYLE",
+      "canonical": ["MIGF-O-008", "MIGF-O-009"],
+      "decision": "D-018",
+      "actor": "martin"
+    },
+    {
+      "legacyId": "OWN-O-008",
+      "disposition": "STYLE",
+      "canonical": ["MIGF-O-008", "MIGF-O-009"],
+      "decision": "D-018",
+      "actor": "martin"
+    }
+  ],
+  "dispEvidence": [
+    {
+      "legacyId": "MIG2-O-046",
+      "candidates": 1,
+      "cells": 26
+    },
+    {
+      "legacyId": "MIGF-O-010",
+      "candidates": 4,
+      "cells": 128
+    },
+    {
+      "legacyId": "MIGF-O-011",
+      "candidates": 1,
+      "cells": 26
+    },
+    {
+      "legacyId": "MIGF-O-012",
+      "candidates": 1,
+      "cells": 26
+    },
+    {
+      "legacyId": "MIGF-O-013",
+      "candidates": 3,
+      "cells": 132
+    },
+    {
+      "legacyId": "MIGF-O-014",
+      "candidates": 1,
+      "cells": 26
+    },
+    {
+      "legacyId": "OWN-O-007",
+      "candidates": 1,
+      "cells": 26
+    },
+    {
+      "legacyId": "OWN-O-008",
+      "candidates": 1,
+      "cells": 26
+    }
+  ],
+  "candidateRows": 2,
+  "candidateVisible": 0,
+  "nonProductItems": 1,
+  "nonProductRows": [
+    {
+      "source_locator": "MIGF-O-010",
+      "public_code": "DTG-00016",
+      "status": "sin estado",
+      "memberships": 0,
+      "published_by_migration": 0
+    }
+  ],
+  "nonProductPublic": 0,
+  "provenance": {
+    "traced": 34,
+    "total": 34,
+    "broken": []
+  },
+  "pricing": {
+    "cases": [
+      ["Premium Business Card · 2 caras × 500", "120.00", "120.00", "OK"],
+      ["Premium Flyer · media carta · 2 caras × 1000", "400.00", "400.00", "OK"],
+      [
+        "Premium Business Card · 2 caras × 750 (sin interpolar)",
+        "QUOTE_ONLY",
+        "QUOTE_ONLY (QUANTITY_NOT_IN_MATRIX)",
+        "OK"
+      ],
+      ["Imanes · 1 par", "65.00", "65.00", "OK"],
+      [
+        "Imanes · 2 pares (no es 2 × 65)",
+        "QUOTE_ONLY",
+        "QUOTE_ONLY (FIXED_PRICE_QUANTITY_NOT_AUTHORIZED)",
+        "OK"
+      ],
+      ["Postales · 100", "QUOTE_ONLY", "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)", "OK"],
+      [
+        "Menús · 1 pieza (prototipo permitido, sin precio inventado)",
+        "QUOTE_ONLY",
+        "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)",
+        "OK"
+      ],
+      [
+        "Menús · 6 piezas (tramo sin precio autorizado)",
+        "QUOTE_ONLY",
+        "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)",
+        "OK"
+      ],
+      ["Invitación Sencilla · 24", "QUOTE_ONLY", "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)", "OK"],
+      ["Invitación Premium · 300", "QUOTE_ONLY", "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)", "OK"],
+      ["Poster / Tabloide 11×17 · 50", "QUOTE_ONLY", "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)", "OK"],
+      ["Poster Gran Formato · 1", "QUOTE_ONLY", "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)", "OK"],
+      ["Periódico personalizado · 1", "QUOTE_ONLY", "QUOTE_ONLY (NO_AUTHORIZED_BASE_PRICE)", "OK"]
+    ],
+    "allCasesOk": true
+  },
+  "integrity": {
+    "links": 0,
+    "legacy": 0,
+    "out_of_scope": 0,
+    "outside_permit": 0,
+    "bad_codes": 0,
+    "dup_codes": 0,
+    "non_real_in_permit": 0
+  },
+  "dispAnswerOk": true,
+  "answers": {
+    "D-001": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "f4e87154-d4b0-48d0-b35e-26f607b93264"
+      },
+      {
+        "revision": 2,
+        "actor": "martin",
+        "id": "dc87cd8d-d113-4f6f-89d6-92402ee649c5"
+      }
+    ],
+    "D-002": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "4cec377c-f964-4497-99a8-5ba98f6c4bd8"
+      },
+      {
+        "revision": 2,
+        "actor": "martin",
+        "id": "929c355b-41bc-4340-a45c-dacc89e7e782"
+      }
+    ],
+    "D-003": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "34096fda-ff8e-4924-be6d-d6e95b0a6c65"
+      }
+    ],
+    "D-004": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "94b9837e-7b7c-4823-9221-e92ede5ca7ee"
+      }
+    ],
+    "D-005": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "c5c2e25b-dd7a-48e6-86e5-09f286010971"
+      }
+    ],
+    "D-016": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "192cf387-c11c-499d-8697-0038a4e297a0"
+      }
+    ],
+    "D-018": [
+      {
+        "revision": 1,
+        "actor": "martin",
+        "id": "bef2caf1-82b7-403a-b78e-1820e13d04fc"
+      }
+    ]
+  }
+}

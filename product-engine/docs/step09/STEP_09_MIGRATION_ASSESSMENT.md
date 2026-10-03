@@ -1,0 +1,67 @@
+# STEP 09 — Commercial Print: migration assessment
+
+Escrito **antes de tocar código de aplicación**. Fuente de los números: `docs/step08/*` (corrida real de STEP 08) y consultas de sólo lectura a la base local.
+
+## 1. Punto de partida
+
+- Rama `step09/commercial-print-mvp`, creada desde `8956965` (STEP 08 aprobado). El zip del handoff y el repositorio coinciden (sha256 verificado: baseline `9b2ac527…`, workbooks `80e57909…`).
+- Árbol limpio; migraciones `0001`–`0016` intactas. Los 5 workbooks se verifican por hash al inicio y al final.
+
+## 2. Alcance exacto (21 items, sin altas ni bajas)
+
+Tarjetas de presentación: MIG1-O-008 Tarjeta Tradicional, MIG1-O-009 Tarjeta Premium / Gloss. Papelería comercial: MIG2-O-036 Flyers, -037 Tabloides, -038 Posters, -039 Menús, -040 Postales. Papelería social: MIG2-O-046 Tarjetas complementarias, -047 Seating card, -048 Thank-you card, MIGF-O-008…014 (7 invitaciones), OWN-MT-O-046 Periódico personalizado, OWN-O-007 Invitación formal, OWN-O-008 Invitación casual. Satélite: MIGF-O-015 Imanes para vehículo — par de 2 × 1 ft. Fuente: `src/decisions/commercial-print.pack.json` (STEP 05C). Procedencia íntegra en los 21 (0 rotas).
+
+## 3. Estado medido (baseline STEP 08)
+
+| Dimensión              | Estado                                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Categoría              | 21/21 sin mapear (la etiqueta legacy se conserva como evidencia)                                                                                             |
+| CatalogStatus          | 21/21 sin asignar                                                                                                                                            |
+| Unidad de venta        | definida en 3 (PIECE tarjetas/flyers); 18 sin unidad                                                                                                         |
+| Producto/Servicio      | resuelto salvo Periódico personalizado (D-003)                                                                                                               |
+| Política de decoración | abierta en 21/21 (ninguna decisión la cubría)                                                                                                                |
+| Opciones               | 8 candidatos de opción, todos con `required = null` / semántica abierta                                                                                      |
+| Presentaciones         | 4 candidatos (Menús 1, Invitación para evento 3) sin resolver                                                                                                |
+| Precios                | 4 items con evidencia autorizada en la fuente (tarjetas ×2, flyers, imanes): 14 hipótesis de definición, 131 observaciones; 17 items sin precio ⇒ QUOTE_ONLY |
+| Compuerta STEP 08      | 0/21 podían migrar; decisiones abiertas: D-001 (21), D-016 (21), D-002 (17), D-018 (9), D-022 (4), D-004/D-005/D-003/D-009/D-010                             |
+
+## 4. Hallazgo estructural importante
+
+**4 de los 21 items ya existen en el dominio** por la capa dev slice de STEP 03 (ADR-0013): DTG-00001 Tarjeta Tradicional, -00002 Tarjeta Premium, -00003 Flyers, -00004 Imanes (par). Están `ACTIVE`, con categoría (`impresos_papel` ×3, `servicios_especiales` ×1), política de decoración `NONE`, opciones requeridas (caras / papel / tamaño de papel: `required`, SINGLE, no distribuibles — exactamente las "cinco selecciones definidas por STEP03" de la decisión D-004 de STEP 05C) y **14 PriceDefinitions AUTHORIZED** con vigencia 2026-09-15 (incluye los casos de regresión: Premium 2 caras 500 pzas = 120 USD; Flyer media carta 2 caras 1000 = 400 USD). Hoy no tienen proveniencia de import (sólo `LEGACY_ID`). `DTG-00016 Invitación para evento` también existe, con estado `NULL` (no se toca).
+
+Consecuencia: para esos 4 la "publicación REAL" no crea objetos nuevos; **vincula** (`LINK_EXISTING`) el candidato real con el objeto del dominio y deja la cadena candidato → registro → workbook → hoja/fila/celda. Para los demás (p. ej. Postales) crea objetos nuevos con código `DTG-NNNNN` del asignador existente.
+
+## 5. Barrera de publicación REAL y capacidades reutilizables
+
+- `PUBLICATION_ENABLED_FOR = ['FIXTURE']` se aplica en el adaptador (`NOT_PUBLISHABLE_IN_THIS_STEP`). No hay interruptor global y no se va a crear uno.
+- Reutilizable sin arquitectura nueva: publicador `publishCandidate` (un candidato aprobado, aprobación con hash, savepoint, `import_candidate_link`, asignador `next_public_code()`, idempotencia por linaje), planificador masivo con vista previa, respuestas de decisión (0016), mapeo de categorías, motor de calidad/readiness/compuerta (STEP 08), Price Engine (STEP 07) y simulador.
+- Falta (lo único nuevo): un **permiso de migración acotado** (alcance + mercados + actor + evidencia), la **compuerta por item** que lo evalúa, y el flujo de publicación que habilita REAL **sólo** para los candidatos de ese permiso, además de la **cobertura por item** de las respuestas de decisión (ver §6).
+
+## 6. Defecto encontrado en STEP 08 (se corrige en STEP 09)
+
+En STEP 08, registrar una respuesta a una decisión por item marcaba la decisión como "respondida" para **todos** sus items afectados. Con las respuestas parciales de Martín (p. ej. OD-01 cubre sólo unos items) eso ocultaría decisiones aún abiertas. Se corrige: una respuesta cubre un item sólo si lo lista (asignaciones o `covers`), salvo decisiones `GLOBAL_POLICY`, que cubren todo su alcance. No se reescribe ninguna migración.
+
+## 7. Decisiones del owner (OD-01…OD-09) y cómo se aplican
+
+| OD                           | Se registra / aplica como                                                                                                                                                                                                                                                                    | Límites respetados                                                                                                                                                                                                                                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OD-01 ACTIVE                 | Respuesta a **D-001** con asignación `ACTIVE` sólo para correspondencias claras dentro de Commercial Print: Business Cards (×2), Flyers, Postcards (Postales), Auto Magnets.                                                                                                                 | "Posters" y "Tabloides" no se resuelven (la lista dice "Posters 11 × 17"; el item no trae medida): quedan abiertos. Menús, invitaciones, periódico, tarjetas complementarias, seating, thank-you: ausentes de la lista ⇒ **no** se asumen inactivos ni activos. Fuera de Commercial Print no se aplica en este step. |
+| OD-02 unidad                 | **D-002**: PIECE sólo para Postales (regla general del owner; no es excepción nombrada). Tarjetas y flyers conservan su PIECE confirmado (los "lotes" son cantidades del matriz exacta, no otra unidad).                                                                                     | No se inventan unidades; Tabloides/Posters/Menús/invitaciones siguen sin unidad.                                                                                                                                                                                                                                     |
+| OD-03 producto/servicio      | Sin cambios: los 5 items ya son PRODUCT inequívocos; Periódico personalizado (híbrido) sigue abierto (D-003).                                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                      |
+| OD-04 opciones vs producción | Los procesos "Impresión / Impresión comercial" son producción interna inherente: sus 5 candidatos DECORATION (por item) se **rechazan con motivo** (no son capacidad de decoración elegible); `decorationPolicy = NONE` en los 5 items (coincide con el dominio existente).                  | DTF UV/textil/bordado (técnica = lo que se compra) no están en este alcance. No se crea `Blank/Personalizada`.                                                                                                                                                                                                       |
+| OD-05 / OD-07 autoridad      | **D-016** (GLOBAL_POLICY) respondida para el MVP: Martín autoriza el precio maestro y la primera publicación REAL; Jonathan y Ceci preparan/editan/revisan. Se implementa como capacidades `migration.approve` y `migration.publish` del rol dueño, delegables cambiando sólo `ROLE_GRANTS`. | Sin RBAC empresarial. Toda aprobación queda auditada.                                                                                                                                                                                                                                                                |
+| OD-06 heurística             | Sólo documentada: `sugerido = promedio(2 × costo, referencia de mercado)`. No hay motor de costos y nunca autoriza precios.                                                                                                                                                                  |                                                                                                                                                                                                                                                                                                                      |
+| OD-08 imanes                 | **D-010** respondida: US$65 = 1 par (cada imán 1 × 2 ft, impresión incluida); `saleUnit = PAIR`, `maxQuantity = 1`; cualquier otra cantidad ⇒ `QUOTE_ONLY`.                                                                                                                                  | No se asume 2 pares = US$130.                                                                                                                                                                                                                                                                                        |
+| OD-09 mercado                | El permiso lleva `markets = ['USA']`. **D-022 (México) sigue ABIERTA**; sus hallazgos se tratan como "fuera del alcance de mercado del permiso" (no bloquean). HALF_UP_2 sigue siendo comportamiento técnico provisional.                                                                    | Sin motor de impuestos; infraestructura MX intacta.                                                                                                                                                                                                                                                                  |
+
+Categorías: se registra el mapeo `MIG1-CAT-006 → impresos_papel` y `MIG1-CAT-009 → servicios_especiales` con la herramienta de STEP 08. Evidencia: STEP 05C define Commercial Print como los 20 registros de "Impresos en Papel" + el imán como satélite que **no se recategoriza** (D-009 _KNOWN_), y el dev slice ya los coloca en esas categorías. El texto legacy no se reescribe. D-009 (navegación del imán) queda abierta (P2, no bloquea).
+
+## 8. Qué puede migrar y qué no (previsión, se confirma en `OWNER_DECISION_GATE.md` y el dry run)
+
+- **Pueden pasar:** tarjetas ×2, flyers, imanes (4 vinculados) y Postales (nuevo, ACTIVE + QUOTE_ONLY).
+- **Siguen bloqueados:** 16 items sin estado de catálogo (D-001 sin respuesta para ellos) y, según el caso, sin unidad (D-002), con opciones/presentaciones abiertas (D-004/D-005) o conflictos de invitaciones legacy (D-018).
+- **Precios:** los 14 PriceDefinitions ya están AUTORIZADOS en el dominio (vigencia 2026-09-15, evidencia de fuente); STEP 09 no crea ni autoriza precios nuevos; los candidatos PRICE se vinculan con su definición. Todo lo demás ⇒ `QUOTE_ONLY`.
+
+## 9. Riesgos / P0
+
+No hay contradicción arquitectónica P0. Riesgo asumido y documentado: la cobertura de "masa útil" (§ MVP) depende de que sólo 5/21 items tengan estado resuelto por el owner; no se fuerza.

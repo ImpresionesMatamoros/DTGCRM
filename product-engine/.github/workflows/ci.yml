@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dtg
+          POSTGRES_PASSWORD: dtg
+          POSTGRES_DB: dtg_product_engine
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U dtg" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgres://dtg:dtg@localhost:5432/dtg_product_engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Excel importer dependencies
+        run: python -m pip install -r tools/excel-importer/requirements.txt
+      - name: M0 · lint, format, typecheck
+        run: pnpm lint && pnpm format:check && pnpm typecheck
+      - name: M1 · domain and pricing unit tests
+        run: pnpm test
+      - name: Seeds match their typed datasets
+        run: pnpm seed:check
+      - name: Import envelope JSON Schema matches the Zod contract
+        run: pnpm import:schema --check
+      - name: CRM API schema is up to date
+        run: pnpm crm-api:schema --check
+      - name: Excel importer tests without workbooks (the real-source suite needs DTG_SOURCES)
+        run: pnpm importer:test
+      - name: M2 · fresh database rebuild (reset → migrate → seed → integration tests)
+        run: pnpm db:rebuild
+      - name: Migrations are idempotent
+        run: pnpm db:migrate
+      - run: pnpm build

@@ -1,0 +1,1770 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dtg.local/contracts/crm-api.v1.schema.json",
+  "title": "DTG Product Engine — CRM API v1",
+  "description": "Wire contracts of GET /api/v1/catalog/items, GET /api/v1/catalog/items/{id-or-public-code}, POST /api/v1/pricing/resolve. Generated from src/api/crm-contracts.ts and src/api/contracts.ts.",
+  "contract_version": "1",
+  "$defs": {
+    "ItemListResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "type": "string",
+          "const": "1"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "public_code": {
+                "type": "string",
+                "pattern": "^DTG-[0-9]{5,}$"
+              },
+              "canonical_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "display_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "item_type": {
+                "type": "string",
+                "enum": [
+                  "PRODUCT",
+                  "SERVICE"
+                ]
+              },
+              "sale_unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "markets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "market": {
+                      "type": "string",
+                      "enum": [
+                        "USA",
+                        "MX"
+                      ]
+                    },
+                    "is_available": {
+                      "type": "boolean"
+                    },
+                    "price_availability": {
+                      "type": "string",
+                      "enum": [
+                        "AUTHORIZED_PRICES",
+                        "QUOTE_ONLY",
+                        "UNAVAILABLE"
+                      ]
+                    },
+                    "currency": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "MXN"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "market",
+                    "is_available",
+                    "price_availability",
+                    "currency"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "public_code",
+              "canonical_name",
+              "display_name",
+              "item_type",
+              "sale_unit",
+              "description",
+              "markets"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "page": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "total": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "next_offset": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "limit",
+            "offset",
+            "total",
+            "next_offset"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "contract_version",
+        "items",
+        "page"
+      ],
+      "additionalProperties": false
+    },
+    "ItemDetailResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "type": "string",
+          "const": "1"
+        },
+        "item": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "public_code": {
+              "type": "string"
+            },
+            "canonical_name": {
+              "type": "string"
+            },
+            "item_type": {
+              "type": "string",
+              "enum": [
+                "PRODUCT",
+                "SERVICE"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "const": "ACTIVE"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sale_unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "measurement": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "AREA",
+                        "LENGTH"
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "ft"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "public_code",
+            "canonical_name",
+            "item_type",
+            "status",
+            "description",
+            "sale_unit",
+            "measurement"
+          ],
+          "additionalProperties": false
+        },
+        "presentations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "locale": {
+                "type": "string",
+                "enum": [
+                  "es",
+                  "en"
+                ]
+              },
+              "display_name": {
+                "type": "string"
+              },
+              "occasion": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "short_description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "is_default": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "locale",
+              "display_name",
+              "occasion",
+              "short_description",
+              "is_default"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "value_kind": {
+                "type": "string",
+                "enum": [
+                  "ENUM",
+                  "TEXT",
+                  "BOOLEAN",
+                  "DIMENSIONS",
+                  "QUANTITY",
+                  "LENGTH"
+                ]
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "is_required": {
+                "type": "boolean"
+              },
+              "selection_mode": {
+                "type": "string",
+                "enum": [
+                  "SINGLE",
+                  "MULTI"
+                ]
+              },
+              "is_distributable": {
+                "type": "boolean"
+              },
+              "default_value_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "spec": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "w": {
+                              "type": "number"
+                            },
+                            "h": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "w",
+                            "h"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "label",
+                    "spec"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "value_kind",
+              "unit",
+              "is_required",
+              "selection_mode",
+              "is_distributable",
+              "default_value_code",
+              "values"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decoration": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string",
+                  "enum": [
+                    "OPTIONAL",
+                    "REQUIRED"
+                  ]
+                },
+                "methods": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "allowed_placements": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "max_print_size": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "name",
+                      "allowed_placements",
+                      "max_print_size"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "policy",
+                "methods"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "INCLUDED",
+                  "OPTIONAL"
+                ]
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "item": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "public_code": {
+                    "type": "string"
+                  },
+                  "canonical_name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "public_code",
+                  "canonical_name"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "role",
+              "quantity",
+              "item"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "markets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "market": {
+                "type": "string",
+                "enum": [
+                  "USA",
+                  "MX"
+                ]
+              },
+              "is_available": {
+                "type": "boolean"
+              },
+              "price_availability": {
+                "type": "string",
+                "enum": [
+                  "AUTHORIZED_PRICES",
+                  "QUOTE_ONLY",
+                  "UNAVAILABLE"
+                ]
+              },
+              "currency": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "MXN"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "market",
+              "is_available",
+              "price_availability",
+              "currency"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "contract_version",
+        "item",
+        "presentations",
+        "options",
+        "decoration",
+        "components",
+        "markets"
+      ],
+      "additionalProperties": false
+    },
+    "ResolveRequest": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "as_of": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "request": {
+          "type": "object",
+          "properties": {
+            "catalog_item_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "market": {
+              "type": "string",
+              "enum": [
+                "USA",
+                "MX"
+              ]
+            },
+            "quantity": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "selections": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "option_key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value_codes": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "boolean": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "option_key"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "distribution": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "selections": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "option_key": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "value_codes": {
+                          "minItems": 1,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "boolean": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "option_key"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "selections",
+                  "quantity"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "measurements": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "length": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "in",
+                    "ft"
+                  ]
+                }
+              },
+              "required": [
+                "unit"
+              ],
+              "additionalProperties": false
+            },
+            "decorations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "method_key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "placement_code": {
+                    "type": "string"
+                  },
+                  "print_size_code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "method_key"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "optional_components": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "catalog_item_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "catalog_item_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "catalog_item_id",
+            "market",
+            "quantity"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "PriceResult": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "catalog_item_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "market": {
+              "type": "string",
+              "enum": [
+                "USA",
+                "MX"
+              ]
+            },
+            "quantity": {
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "MXN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policy": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "market": {
+                      "type": "string",
+                      "enum": [
+                        "USA",
+                        "MX"
+                      ]
+                    },
+                    "price_book_code": {
+                      "type": "string"
+                    },
+                    "basis": {
+                      "type": "string",
+                      "enum": [
+                        "MASTER",
+                        "DERIVED",
+                        "MANUAL",
+                        "POLICY_QUOTE_ONLY"
+                      ]
+                    },
+                    "factor": {
+                      "type": "string"
+                    },
+                    "factor_source": {
+                      "type": "string",
+                      "enum": [
+                        "DEFAULT",
+                        "ITEM"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "market",
+                    "price_book_code",
+                    "basis"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_at": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "catalog_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "pricing_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "explanation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "status": {
+              "type": "string",
+              "const": "RESOLVED"
+            },
+            "total": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "string",
+                  "pattern": "^-?\\d+\\.\\d{2}$"
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "MXN"
+                  ]
+                }
+              },
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "additionalProperties": false
+            },
+            "breakdown": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "BASE",
+                      "DECORATION",
+                      "RULE",
+                      "COMPONENT_INCLUDED",
+                      "COMPONENT_OPTIONAL",
+                      "MARKET_DERIVATION"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "number"
+                  },
+                  "amount": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "string",
+                            "pattern": "^-?\\d+\\.\\d{2}$"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD",
+                              "MXN"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currency"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "source": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "label",
+                  "quantity",
+                  "amount",
+                  "source"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "rules_applied": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rule_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "rule_id",
+                  "code",
+                  "version"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "derivation": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "source_price_book_code": {
+                      "type": "string"
+                    },
+                    "source_total": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^-?\\d+\\.\\d{2}$"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "MXN"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "amount",
+                        "currency"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "factor": {
+                      "type": "string"
+                    },
+                    "factor_source": {
+                      "type": "string",
+                      "enum": [
+                        "DEFAULT",
+                        "ITEM"
+                      ]
+                    },
+                    "fx": {
+                      "type": "string"
+                    },
+                    "fx_parameter_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "rounding": {
+                      "type": "string",
+                      "const": "HALF_UP_2"
+                    },
+                    "derived_total": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^-?\\d+\\.\\d{2}$"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "MXN"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "amount",
+                        "currency"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "source_price_book_code",
+                    "source_total",
+                    "factor",
+                    "factor_source",
+                    "fx",
+                    "fx_parameter_id",
+                    "rounding",
+                    "derived_total"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "catalog_item_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "quantity": {
+                    "type": "number"
+                  },
+                  "total": {
+                    "type": "object",
+                    "properties": {
+                      "amount": {
+                        "type": "string",
+                        "pattern": "^-?\\d+\\.\\d{2}$"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "USD",
+                          "MXN"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "currency"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "catalog_item_id",
+                  "quantity",
+                  "total"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "catalog_item_id",
+            "market",
+            "quantity",
+            "currency",
+            "policy",
+            "effective_at",
+            "catalog_revision",
+            "pricing_revision",
+            "explanation",
+            "status",
+            "total",
+            "breakdown",
+            "rules_applied",
+            "derivation",
+            "components"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "catalog_item_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "market": {
+              "type": "string",
+              "enum": [
+                "USA",
+                "MX"
+              ]
+            },
+            "quantity": {
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "MXN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policy": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "market": {
+                      "type": "string",
+                      "enum": [
+                        "USA",
+                        "MX"
+                      ]
+                    },
+                    "price_book_code": {
+                      "type": "string"
+                    },
+                    "basis": {
+                      "type": "string",
+                      "enum": [
+                        "MASTER",
+                        "DERIVED",
+                        "MANUAL",
+                        "POLICY_QUOTE_ONLY"
+                      ]
+                    },
+                    "factor": {
+                      "type": "string"
+                    },
+                    "factor_source": {
+                      "type": "string",
+                      "enum": [
+                        "DEFAULT",
+                        "ITEM"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "market",
+                    "price_book_code",
+                    "basis"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_at": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "catalog_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "pricing_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "explanation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "status": {
+              "type": "string",
+              "const": "QUOTE_ONLY"
+            },
+            "reason_code": {
+              "type": "string"
+            },
+            "detail": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "known_lines": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "BASE",
+                      "DECORATION",
+                      "RULE",
+                      "COMPONENT_INCLUDED",
+                      "COMPONENT_OPTIONAL",
+                      "MARKET_DERIVATION"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "number"
+                  },
+                  "amount": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "string",
+                            "pattern": "^-?\\d+\\.\\d{2}$"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD",
+                              "MXN"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currency"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "source": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "label",
+                  "quantity",
+                  "amount",
+                  "source"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "known_adjustments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "BASE",
+                      "DECORATION",
+                      "RULE",
+                      "COMPONENT_INCLUDED",
+                      "COMPONENT_OPTIONAL",
+                      "MARKET_DERIVATION"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "number"
+                  },
+                  "amount": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "string",
+                            "pattern": "^-?\\d+\\.\\d{2}$"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD",
+                              "MXN"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currency"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "source": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "label",
+                  "quantity",
+                  "amount",
+                  "source"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "catalog_item_id",
+            "market",
+            "quantity",
+            "currency",
+            "policy",
+            "effective_at",
+            "catalog_revision",
+            "pricing_revision",
+            "explanation",
+            "status",
+            "reason_code",
+            "detail",
+            "known_lines",
+            "known_adjustments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "catalog_item_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "market": {
+              "type": "string",
+              "enum": [
+                "USA",
+                "MX"
+              ]
+            },
+            "quantity": {
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "MXN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policy": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "market": {
+                      "type": "string",
+                      "enum": [
+                        "USA",
+                        "MX"
+                      ]
+                    },
+                    "price_book_code": {
+                      "type": "string"
+                    },
+                    "basis": {
+                      "type": "string",
+                      "enum": [
+                        "MASTER",
+                        "DERIVED",
+                        "MANUAL",
+                        "POLICY_QUOTE_ONLY"
+                      ]
+                    },
+                    "factor": {
+                      "type": "string"
+                    },
+                    "factor_source": {
+                      "type": "string",
+                      "enum": [
+                        "DEFAULT",
+                        "ITEM"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "market",
+                    "price_book_code",
+                    "basis"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_at": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "catalog_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "pricing_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "explanation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "status": {
+              "type": "string",
+              "const": "INVALID"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "path"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "catalog_item_id",
+            "market",
+            "quantity",
+            "currency",
+            "policy",
+            "effective_at",
+            "catalog_revision",
+            "pricing_revision",
+            "explanation",
+            "status",
+            "errors"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "catalog_item_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "market": {
+              "type": "string",
+              "enum": [
+                "USA",
+                "MX"
+              ]
+            },
+            "quantity": {
+              "type": "number"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "MXN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policy": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "market": {
+                      "type": "string",
+                      "enum": [
+                        "USA",
+                        "MX"
+                      ]
+                    },
+                    "price_book_code": {
+                      "type": "string"
+                    },
+                    "basis": {
+                      "type": "string",
+                      "enum": [
+                        "MASTER",
+                        "DERIVED",
+                        "MANUAL",
+                        "POLICY_QUOTE_ONLY"
+                      ]
+                    },
+                    "factor": {
+                      "type": "string"
+                    },
+                    "factor_source": {
+                      "type": "string",
+                      "enum": [
+                        "DEFAULT",
+                        "ITEM"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "market",
+                    "price_book_code",
+                    "basis"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_at": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            "catalog_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "pricing_revision": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "explanation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "status": {
+              "type": "string",
+              "const": "AMBIGUOUS"
+            },
+            "reason_code": {
+              "type": "string"
+            },
+            "conflicting_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "detail": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "catalog_item_id",
+            "market",
+            "quantity",
+            "currency",
+            "policy",
+            "effective_at",
+            "catalog_revision",
+            "pricing_revision",
+            "explanation",
+            "status",
+            "reason_code",
+            "conflicting_ids",
+            "detail"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ErrorResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "INVALID_QUERY",
+                "INVALID_JSON",
+                "INVALID_REQUEST",
+                "UNAUTHORIZED",
+                "AUTH_NOT_CONFIGURED",
+                "ITEM_NOT_FOUND",
+                "METHOD_NOT_ALLOWED",
+                "INTERNAL"
+              ]
+            },
+            "message": {
+              "type": "string"
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

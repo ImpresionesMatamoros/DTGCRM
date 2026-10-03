@@ -80,7 +80,8 @@ export async function handle(req, deps) {
     const ref=env.STAGING_CRM_PROJECT_REF||'',url=env.SUPABASE_URL||'';
     const denied=['jpjpnxamiclvhmcywyhx','imskdujyquefsgndqled','qrllwqoobqkfcqviquhz','ltqyuylmkawfkwoquqod','tecxlkywsanxaxyogqof'];
     let pe;try{pe=new URL(env.PRODUCT_ENGINE_BASE_URL||'');}catch(e){}
-    if(!/^[a-z]{20}$/.test(ref)||denied.includes(ref)||url!=='https://'+ref+'.supabase.co'||!pe||pe.protocol!=='https:'||pe.origin!==env.STAGING_PE_ORIGIN||denied.some(r=>pe.href.includes(r))||pe.origin===url||pe.hostname==='impresionesmatamoros.github.io')return fail(503,'STAGING_ISOLATION_REQUIRED','Staging isolation configuration required');
+    const shared=env.STAGING_DATABASE_ISOLATION==='shared-staging-project'&&env.STAGING_PE_SCHEMA==='dtg_pe';
+    if(!/^[a-z]{20}$/.test(ref)||denied.includes(ref)||url!=='https://'+ref+'.supabase.co'||!pe||pe.protocol!=='https:'||pe.origin!==env.STAGING_PE_ORIGIN||denied.some(r=>pe.href.includes(r))||(pe.origin===url&&(!shared||pe.pathname!=='/functions/v1/product-engine'))||pe.hostname==='impresionesmatamoros.github.io')return fail(503,'STAGING_ISOLATION_REQUIRED','Staging isolation configuration required');
   }
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return fail(405, "METHOD_NOT_ALLOWED", "Use POST");

@@ -28,26 +28,18 @@ jobs:
       - run: pnpm test:pe
       - run: node TICKET-SEARCH-QA.cjs && node APP-STARTUP-QA.cjs
   artifact:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/staging' && vars.STAGING_BUILD_ENABLED == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
     needs: validate
     environment: staging
     runs-on: ubuntu-latest
     env:
-      STAGING_APP_URL: ${{ vars.STAGING_APP_URL }}
-      STAGING_CRM_PROJECT_REF: ${{ vars.STAGING_CRM_PROJECT_REF }}
-      STAGING_PE_PROJECT_REF: ${{ vars.STAGING_PE_PROJECT_REF }}
-      STAGING_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
-      STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_PUBLISHABLE_KEY }}
-      STAGING_PE_BASE_URL: ${{ vars.STAGING_PE_BASE_URL }}
-      STAGING_PRODUCTION_ORIGINS: ${{ vars.STAGING_PRODUCTION_ORIGINS }}
-      STAGING_ISOLATION_CONFIRMED: ${{ vars.STAGING_ISOLATION_CONFIRMED }}
-      STAGING_CONFIG_FILE: staging/environment.local.json
+      STAGING_CONFIG_FILE: staging/laboratory.json
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node scripts/staging/ci-config.cjs
+      - run: echo "Using reviewed public staging/laboratory.json"
       - run: node scripts/staging/build.cjs
       - uses: actions/upload-artifact@v4
         with:

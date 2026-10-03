@@ -1,0 +1,56 @@
+{
+  "projectRef": "hhzqmqndavqqswerjhxe",
+  "results": [
+    "Test account password login",
+    "Active-member RLS authorization",
+    "PE rejects missing server bearer",
+    "Runtime secrets RPC denied to authenticated users",
+    "PE catalog not exposed through CRM Data API",
+    "Authenticated CRM → proxy → PE health",
+    "Live catalog search",
+    "Original authorized Flyers configuration resolves USD45",
+    "Sold totals45/40/50 survive reload; every master snapshot remains45",
+    "CRM sale edits leave PE master intact",
+    "Snapshot rewrite blocked by database trigger",
+    "Unpriced exact quantity returns QUOTE_ONLY without inventing total",
+    "QUOTE_ONLY accepts manual provisional sale with null master total",
+    "Later PE price revision 46.00 leaves historical snapshots45 and sold totals45/40/50 unchanged",
+    "Actual deployed PE outage: CRM saved a new ticket and manual product",
+    "Later PE price revision 45.00 leaves historical snapshots45 and sold totals45/40/50 unchanged",
+    "Later PE price revision 45.00 leaves historical snapshots45 and sold totals45/40/50 unchanged"
+  ],
+  "savedLineIds": [
+    "18cdde3a-e791-49e7-a40b-d701833e67b8",
+    "ca56fcf5-4900-40a2-b7d7-20003d5b61b8",
+    "89da3a71-a820-4554-960b-329f9e0f9563"
+  ],
+  "quoteLineId": "4f5a7b6e-f7ea-4f82-8bb8-19035ec1ec8e",
+  "priceRequest": {
+    "catalog_item_id": "bdf332e7-d03b-5223-bd25-4006aebb5885",
+    "market": "USA",
+    "quantity": 250,
+    "selections": [
+      {
+        "option_key": "caras",
+        "value_codes": [
+          "1"
+        ]
+      },
+      {
+        "option_key": "papel",
+        "value_codes": [
+          "Bond"
+        ]
+      },
+      {
+        "option_key": "tamano_papel",
+        "value_codes": [
+          "Media carta"
+        ]
+      }
+    ]
+  },
+  "originalPrice": "45.00",
+  "testedAt": "2026-10-03T11:42:01.547Z",
+  "manualOutageTicketId": "68dd8cb3-13c1-465d-b65c-392c375dc8ab"
+}

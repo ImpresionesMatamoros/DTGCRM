@@ -1,0 +1,21 @@
+{
+  "unit": {
+    "passed": 258
+  },
+  "db": {
+    "passed": 133
+  },
+  "importer": {
+    "ran": 39
+  },
+  "e2e_migration": {
+    "passed": 9
+  },
+  "e2e_other": {
+    "passed": 19
+  },
+  "e2e_completion": {
+    "passed": 8
+  },
+  "workbooksUnchanged": true
+}

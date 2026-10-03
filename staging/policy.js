@@ -12,10 +12,14 @@
   function validate(c){
     if(!c||c.environment!=='staging')throw Error('Solo STAGING está habilitado en este paquete');
     const crm=ref(c.crmProjectRef,'CRM'),pe=ref(c.peProjectRef,'PE');
-    if(crm===pe)throw Error('CRM y PE necesitan proyectos separados');
+    const shared=c.databaseIsolation==='shared-staging-project';
+    if(crm===pe&&(!shared||c.crmSchema!=='public'||c.peSchema!=='dtg_pe'))throw Error('Proyecto compartido requiere esquemas public/dtg_pe explícitos');
+    if(shared&&crm!==pe)throw Error('Configuración de proyecto compartido inconsistente');
     const db=https(c.supabaseUrl,'Supabase'),app=https(c.appUrl,'App'),engine=https(c.productEngineUrl,'Product Engine');
     if(db.origin!=='https://'+crm+'.supabase.co'||db.pathname!=='/')throw Error('URL Supabase no corresponde al proyecto CRM');
-    if(new Set([app.origin,db.origin,engine.origin]).size!==3)throw Error('App, API CRM y PE necesitan orígenes distintos');
+    if(shared){
+      if(engine.origin!==db.origin||engine.pathname!=='/functions/v1/product-engine'||app.origin===db.origin)throw Error('Motor compartido debe usar exclusivamente su Edge Function staging');
+    }else if(new Set([app.origin,db.origin,engine.origin]).size!==3)throw Error('App, API CRM y PE necesitan orígenes distintos');
     if(!/^sb_publishable_[A-Za-z0-9_-]+$/.test(c.supabasePublishableKey||''))throw Error('Usa una clave publishable del proyecto staging');
     const effects=c.externalEffects||{};
     for(const k of ['whatsapp','email','push','payments','webhooks','transcription'])if(effects[k]!==false)throw Error(k+': debe permanecer OFF');

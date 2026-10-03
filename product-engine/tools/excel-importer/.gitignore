@@ -1,0 +1,6 @@
+# Regenerated deterministically from the source workbooks (see README).
+evidence/
+fixtures/
+EXCEL-SOURCE-PROFILE.md
+__pycache__/
+*.pyc

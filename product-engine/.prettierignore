@@ -1,0 +1,16 @@
+node_modules
+.next
+pnpm-lock.yaml
+supabase/seeds/*.generated.sql
+data/dev-slice/*.json
+
+# STEP 05A deliverable copied verbatim (tools/excel-importer)
+tools/excel-importer/docs/step05a
+tools/excel-importer/parser/contracts.ts
+.import
+tests/fixtures/import
+contracts/*.schema.json
+tools/excel-importer/evidence
+tools/excel-importer/fixtures
+tools/excel-importer/EXCEL-SOURCE-PROFILE.md
+docs/import/IMPORT-DRY-RUN-REPORT.md

@@ -1,0 +1,3566 @@
+{
+  "meta": {
+    "namespace": "STEP_05C",
+    "source": "STEP_05C_OUTPUT/OWNER-DECISION-QUEUE.json",
+    "sourceSha256": "8a234fc034a165ce16df502d7420ed73e8a33d0fa5fd429660e82b4891698713",
+    "note": "Reference data only. Every answer is null: nothing here is business truth and nothing is applied automatically."
+  },
+  "decisions": [
+    {
+      "id": "D-001",
+      "priority": "P1",
+      "title": "Estado formal del catálogo",
+      "question": "Completa el estado formal de las filas aún vacías por familia. Usa la actividad ya registrada; señala únicamente excepciones o información faltante.",
+      "whyNeeded": "Controla qué se podrá publicar. La respuesta requiere una matriz de asignaciones, no un solo estado aplicado masivamente.",
+      "alreadyKnown": "Hay 16 ACTIVE y 7 CANDIDATE explícitos; esos no se vuelven a preguntar. Core, incorporación y baja rotación no asignan por sí solos un estado formal.",
+      "alternatives": ["CANDIDATE", "PLANNED", "ACTIVE", "RETIRED"],
+      "owner": "Martin",
+      "downstreamImpact": "Lifecycle y elegibilidad de publicación",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-001",
+          "name": "Lona impresa"
+        },
+        {
+          "legacyId": "MIG1-O-002",
+          "name": "Coroplast impreso"
+        },
+        {
+          "legacyId": "MIG1-O-006",
+          "name": "Portalatas de neopreno / Koozie"
+        },
+        {
+          "legacyId": "MIG1-O-007",
+          "name": "Vaso con tapa y popote"
+        },
+        {
+          "legacyId": "MIG1-O-008",
+          "name": "Tarjeta Tradicional"
+        },
+        {
+          "legacyId": "MIG1-O-009",
+          "name": "Tarjeta Premium / Gloss"
+        },
+        {
+          "legacyId": "MIG1-O-010",
+          "name": "Stickers de vinil"
+        },
+        {
+          "legacyId": "MIG1-O-011",
+          "name": "Mantel personalizado"
+        },
+        {
+          "legacyId": "MIG1-O-013",
+          "name": "Aplicación UV DTF en vidrio automotriz"
+        },
+        {
+          "legacyId": "MIG1-O-014",
+          "name": "Letrero plano"
+        },
+        {
+          "legacyId": "MIG2-O-001",
+          "name": "Vinil adhesivo impreso"
+        },
+        {
+          "legacyId": "MIG2-O-002",
+          "name": "Microperforado"
+        },
+        {
+          "legacyId": "MIG2-O-003",
+          "name": "Mesh"
+        },
+        {
+          "legacyId": "MIG2-O-004",
+          "name": "Vinil transparente"
+        },
+        {
+          "legacyId": "MIG2-O-005",
+          "name": "Vinil holográfico"
+        },
+        {
+          "legacyId": "MIG2-O-006",
+          "name": "Canvas imprimible"
+        },
+        {
+          "legacyId": "MIG2-O-007",
+          "name": "Tela sublimada"
+        },
+        {
+          "legacyId": "MIG2-O-008",
+          "name": "Tela para backdrop"
+        },
+        {
+          "legacyId": "MIG2-O-009",
+          "name": "PVC espumado"
+        },
+        {
+          "legacyId": "MIG2-O-010",
+          "name": "Foamboard"
+        },
+        {
+          "legacyId": "MIG2-O-011",
+          "name": "Acrílico impreso"
+        },
+        {
+          "legacyId": "MIG2-O-012",
+          "name": "ACM / aluminio compuesto"
+        },
+        {
+          "legacyId": "MIG2-O-013",
+          "name": "Figura / standee de coroplast"
+        },
+        {
+          "legacyId": "MIG2-O-014",
+          "name": "Coroplast por hoja"
+        },
+        {
+          "legacyId": "MIG2-O-016",
+          "name": "Roll-Up / Retractable Banner"
+        },
+        {
+          "legacyId": "MIG2-O-019",
+          "name": "Tank Top"
+        },
+        {
+          "legacyId": "MIG2-O-020",
+          "name": "Hoodie con capucha sin cierre"
+        },
+        {
+          "legacyId": "MIG2-O-021",
+          "name": "Uniforme"
+        },
+        {
+          "legacyId": "MIG2-O-022",
+          "name": "Mandil"
+        },
+        {
+          "legacyId": "MIG2-O-023",
+          "name": "Tote Bag"
+        },
+        {
+          "legacyId": "MIG2-O-024",
+          "name": "Parche textil"
+        },
+        {
+          "legacyId": "MIG2-O-025",
+          "name": "Funda para cojín"
+        },
+        {
+          "legacyId": "MIG2-O-026",
+          "name": "Lanyard"
+        },
+        {
+          "legacyId": "MIG2-O-027",
+          "name": "Listón para cabello"
+        },
+        {
+          "legacyId": "MIG2-O-028",
+          "name": "Listón personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-029",
+          "name": "Sippy Cup / vaso de chupón"
+        },
+        {
+          "legacyId": "MIG2-O-030",
+          "name": "Vaso de acero inoxidable"
+        },
+        {
+          "legacyId": "MIG2-O-031",
+          "name": "Tumbler"
+        },
+        {
+          "legacyId": "MIG2-O-032",
+          "name": "Cilindro"
+        },
+        {
+          "legacyId": "MIG2-O-033",
+          "name": "Botella"
+        },
+        {
+          "legacyId": "MIG2-O-034",
+          "name": "Tarro"
+        },
+        {
+          "legacyId": "MIG2-O-035",
+          "name": "Taza personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-036",
+          "name": "Flyers"
+        },
+        {
+          "legacyId": "MIG2-O-037",
+          "name": "Tabloides"
+        },
+        {
+          "legacyId": "MIG2-O-038",
+          "name": "Posters"
+        },
+        {
+          "legacyId": "MIG2-O-039",
+          "name": "Menús"
+        },
+        {
+          "legacyId": "MIG2-O-040",
+          "name": "Postales"
+        },
+        {
+          "legacyId": "MIG2-O-041",
+          "name": "Stickers de papel"
+        },
+        {
+          "legacyId": "MIG2-O-042",
+          "name": "Stickers transparentes"
+        },
+        {
+          "legacyId": "MIG2-O-043",
+          "name": "Stickers holográficos"
+        },
+        {
+          "legacyId": "MIG2-O-044",
+          "name": "Stickers reflectivos"
+        },
+        {
+          "legacyId": "MIG2-O-045",
+          "name": "Etiquetas para productos"
+        },
+        {
+          "legacyId": "MIG2-O-046",
+          "name": "Tarjetas complementarias"
+        },
+        {
+          "legacyId": "MIG2-O-047",
+          "name": "Seating card / place card"
+        },
+        {
+          "legacyId": "MIG2-O-048",
+          "name": "Thank-you card"
+        },
+        {
+          "legacyId": "MIG2-O-049",
+          "name": "A-Sign / A-Frame"
+        },
+        {
+          "legacyId": "MIG2-O-051",
+          "name": "Pop-Up Display"
+        },
+        {
+          "legacyId": "MIG2-O-052",
+          "name": "Backdrop"
+        },
+        {
+          "legacyId": "MIG2-O-053",
+          "name": "Pulsera personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-054",
+          "name": "Lentes personalizados"
+        },
+        {
+          "legacyId": "MIG2-O-056",
+          "name": "Botecito de gel personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-057",
+          "name": "Reconocimiento metálico"
+        },
+        {
+          "legacyId": "MIG2-O-058",
+          "name": "Dog Tag"
+        },
+        {
+          "legacyId": "MIG2-O-059",
+          "name": "Pluma personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-060",
+          "name": "Topper acrílico"
+        },
+        {
+          "legacyId": "MIG2-O-061",
+          "name": "Etiqueta rígida"
+        },
+        {
+          "legacyId": "MIGF-O-001",
+          "name": "Manga larga"
+        },
+        {
+          "legacyId": "MIGF-O-002",
+          "name": "Sweater / sudadera cuello redondo sin capucha"
+        },
+        {
+          "legacyId": "MIGF-O-003",
+          "name": "Sudadera"
+        },
+        {
+          "legacyId": "MIGF-O-005",
+          "name": "Vaso de especialidad"
+        },
+        {
+          "legacyId": "MIGF-O-006",
+          "name": "Otros vasos para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-007",
+          "name": "Etiquetas especiales"
+        },
+        {
+          "legacyId": "MIGF-O-008",
+          "name": "Invitación sencilla"
+        },
+        {
+          "legacyId": "MIGF-O-009",
+          "name": "Invitación premium"
+        },
+        {
+          "legacyId": "MIGF-O-010",
+          "name": "Invitación para evento"
+        },
+        {
+          "legacyId": "MIGF-O-011",
+          "name": "Invitación con sobre"
+        },
+        {
+          "legacyId": "MIGF-O-012",
+          "name": "Invitación con sello"
+        },
+        {
+          "legacyId": "MIGF-O-013",
+          "name": "Invitación con acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-014",
+          "name": "Invitación especial"
+        },
+        {
+          "legacyId": "MIGF-O-015",
+          "name": "Imanes para vehículo — par de 2 × 1 ft"
+        },
+        {
+          "legacyId": "MIGF-O-016",
+          "name": "Display para evento"
+        },
+        {
+          "legacyId": "MIGF-O-017",
+          "name": "Vaso personalizado para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-018",
+          "name": "Llavero"
+        },
+        {
+          "legacyId": "MIGF-O-019",
+          "name": "Bolsita personalizada"
+        },
+        {
+          "legacyId": "MIGF-O-020",
+          "name": "Recuerdo personalizado"
+        },
+        {
+          "legacyId": "MIGF-O-021",
+          "name": "Merch para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-022",
+          "name": "Producto de Merch Store"
+        },
+        {
+          "legacyId": "MIGF-O-023",
+          "name": "Placa metálica de reconocimiento"
+        },
+        {
+          "legacyId": "MIGF-O-024",
+          "name": "Placa metálica de identificación"
+        },
+        {
+          "legacyId": "MIGF-O-025",
+          "name": "Placa para trailer"
+        },
+        {
+          "legacyId": "MIGF-O-026",
+          "name": "Placa para vehículo"
+        },
+        {
+          "legacyId": "MIGF-O-027",
+          "name": "Tag para maquinaria/equipo"
+        },
+        {
+          "legacyId": "MIGF-O-028",
+          "name": "Llavero UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-029",
+          "name": "Recuerdo UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-030",
+          "name": "Placa acrílica"
+        },
+        {
+          "legacyId": "MIGF-O-031",
+          "name": "Placa para puerta"
+        },
+        {
+          "legacyId": "MIGF-O-032",
+          "name": "Placa para buzón"
+        },
+        {
+          "legacyId": "MIGF-O-033",
+          "name": "Vaso con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-034",
+          "name": "Producto de vidrio con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-035",
+          "name": "Producto metálico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-036",
+          "name": "Producto plástico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-037",
+          "name": "Producto de madera compatible con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-038",
+          "name": "Ampliación fotográfica"
+        },
+        {
+          "legacyId": "MIGF-O-039",
+          "name": "Canvas fotográfico"
+        },
+        {
+          "legacyId": "MIGF-O-040",
+          "name": "Cuadro de acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-041",
+          "name": "Cuadro con protección UV"
+        },
+        {
+          "legacyId": "MIGF-O-042",
+          "name": "Cuadro con marco"
+        },
+        {
+          "legacyId": "MIGF-O-043",
+          "name": "Fotografía montada"
+        },
+        {
+          "legacyId": "MIGF-O-044",
+          "name": "Panel decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-045",
+          "name": "Tríptico decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-046",
+          "name": "Cuadro decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-047",
+          "name": "Impresión para hogar u oficina"
+        },
+        {
+          "legacyId": "MIGF-O-048",
+          "name": "Letrero acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-049",
+          "name": "Letrero espumado"
+        },
+        {
+          "legacyId": "MIGF-O-050",
+          "name": "Letras dimensionales"
+        },
+        {
+          "legacyId": "MIGF-O-051",
+          "name": "Letras 3D"
+        },
+        {
+          "legacyId": "MIGF-O-052",
+          "name": "Neon Flex / neón frío"
+        },
+        {
+          "legacyId": "MIGF-O-053",
+          "name": "Channel Letters"
+        },
+        {
+          "legacyId": "MIGF-O-054",
+          "name": "Caja de luz"
+        },
+        {
+          "legacyId": "MIGF-O-055",
+          "name": "Letras iluminadas"
+        },
+        {
+          "legacyId": "MIGF-O-056",
+          "name": "Señalización interior"
+        },
+        {
+          "legacyId": "MIGF-O-057",
+          "name": "Señalización exterior"
+        },
+        {
+          "legacyId": "MIGF-O-058",
+          "name": "Letrero corporativo"
+        },
+        {
+          "legacyId": "MIGF-O-059",
+          "name": "Directorio"
+        },
+        {
+          "legacyId": "MIGF-O-060",
+          "name": "Placa señalética"
+        },
+        {
+          "legacyId": "MIGF-O-061",
+          "name": "Señalización comercial"
+        },
+        {
+          "legacyId": "MIGF-O-062",
+          "name": "Señalización industrial"
+        },
+        {
+          "legacyId": "MIGF-O-063",
+          "name": "Casco"
+        },
+        {
+          "legacyId": "MIGF-O-064",
+          "name": "Chaleco reflejante"
+        },
+        {
+          "legacyId": "MIGF-O-065",
+          "name": "Lentes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-066",
+          "name": "Guantes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-067",
+          "name": "Protección auditiva"
+        },
+        {
+          "legacyId": "MIGF-O-068",
+          "name": "Mascarilla"
+        },
+        {
+          "legacyId": "MIGF-O-069",
+          "name": "Respirador"
+        },
+        {
+          "legacyId": "MIGF-O-070",
+          "name": "Arnés"
+        },
+        {
+          "legacyId": "MIGF-O-071",
+          "name": "Cono de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-072",
+          "name": "Botiquín"
+        },
+        {
+          "legacyId": "MIGF-O-073",
+          "name": "Señalización de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-074",
+          "name": "PPE personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-001",
+          "name": "Camisa de vestir personalizada / woven shirt"
+        },
+        {
+          "legacyId": "OWN-MT-O-002",
+          "name": "Bata de laboratorio personalizada / lab coat"
+        },
+        {
+          "legacyId": "OWN-MT-O-003",
+          "name": "Scrub top personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-004",
+          "name": "Scrub pants personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-005",
+          "name": "Chaleco de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-006",
+          "name": "Camisa de trabajo personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-007",
+          "name": "Pantalón de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-008",
+          "name": "Overol personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-009",
+          "name": "Chamarra / abrigo de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-010",
+          "name": "Filipina de chef / chef coat personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-011",
+          "name": "Jersey deportivo personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-012",
+          "name": "Cobija personalizada / sublimada"
+        },
+        {
+          "legacyId": "OWN-MT-O-013",
+          "name": "Ropa personalizada para mascotas"
+        },
+        {
+          "legacyId": "OWN-MT-O-014",
+          "name": "Beanie personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-015",
+          "name": "Bucket hat personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-016",
+          "name": "Visor personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-017",
+          "name": "Protección solar para cabeza / sun shield"
+        },
+        {
+          "legacyId": "OWN-MT-O-018",
+          "name": "Capucha acoplable / snap-on hood"
+        },
+        {
+          "legacyId": "OWN-MT-O-019",
+          "name": "Balaclava personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-020",
+          "name": "Gorro de chef / chef hat"
+        },
+        {
+          "legacyId": "OWN-MT-O-021",
+          "name": "Gorra de cocina / kitchen cap"
+        },
+        {
+          "legacyId": "OWN-MT-O-022",
+          "name": "Mochila personalizable / backpack"
+        },
+        {
+          "legacyId": "OWN-MT-O-023",
+          "name": "Duffel bag personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-024",
+          "name": "Cooler bag personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-025",
+          "name": "Toalla personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-026",
+          "name": "Bandana personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-027",
+          "name": "Sandalias / chanclas personalizadas"
+        },
+        {
+          "legacyId": "OWN-MT-O-028",
+          "name": "Mantel elástico / fitted personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-029",
+          "name": "Decoración personalizada en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-030",
+          "name": "Cake topper en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-031",
+          "name": "Centro de mesa en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-032",
+          "name": "Set / kit de piezas MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-033",
+          "name": "Servicio de corte láser MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-034",
+          "name": "Display de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-035",
+          "name": "Nombre / plaquita personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-036",
+          "name": "Centro de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-037",
+          "name": "Pieza acrílica para libro de firmas / guest book"
+        },
+        {
+          "legacyId": "OWN-MT-O-038",
+          "name": "Imán personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-039",
+          "name": "Ornamento / adorno colgante acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-040",
+          "name": "Medalla personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-041",
+          "name": "Trofeo personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-042",
+          "name": "Taza mágica personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-043",
+          "name": "Skinny cup plástico estándar"
+        },
+        {
+          "legacyId": "OWN-MT-O-044",
+          "name": "Skinny cup plástico premium grueso rubberized"
+        },
+        {
+          "legacyId": "OWN-MT-O-045",
+          "name": "Hoja de Coroplast Multi-Cut / múltiples piezas"
+        },
+        {
+          "legacyId": "OWN-MT-O-046",
+          "name": "Periódico personalizado para eventos"
+        },
+        {
+          "legacyId": "OWN-O-001",
+          "name": "Zip hoodie — capucha con cierre"
+        },
+        {
+          "legacyId": "OWN-O-007",
+          "name": "Invitación formal"
+        },
+        {
+          "legacyId": "OWN-O-008",
+          "name": "Invitación casual"
+        },
+        {
+          "legacyId": "OWN-O-009",
+          "name": "Diseño gráfico"
+        },
+        {
+          "legacyId": "OWN-O-010",
+          "name": "Vectorización"
+        },
+        {
+          "legacyId": "OWN-O-011",
+          "name": "Diseño de logotipo"
+        },
+        {
+          "legacyId": "OWN-O-012",
+          "name": "Identidad de marca / imagen corporativa"
+        },
+        {
+          "legacyId": "OWN-O-013",
+          "name": "Invitaciones digitales"
+        },
+        {
+          "legacyId": "OWN-O-014",
+          "name": "Creación de sitios web"
+        },
+        {
+          "legacyId": "OWN-O-015",
+          "name": "Creación de CRM"
+        },
+        {
+          "legacyId": "OWN-O-016",
+          "name": "Desarrollo de software"
+        },
+        {
+          "legacyId": "OWN-O-017",
+          "name": "Automatización y servicios digitales"
+        }
+      ]
+    },
+    {
+      "id": "D-002",
+      "priority": "P1",
+      "title": "Unidad de venta pendiente",
+      "question": "Para cada familia de la lista, indica qué unidad se vende y cuándo cambia entre productos. Adjunta una cotización si el nombre no basta.",
+      "whyNeeded": "Sin unidad única no se puede interpretar cantidad y precio de forma segura.",
+      "alreadyKnown": "PIECE en tarjetas/flyers según STEP03; par de imanes y hoja de Coroplast ya conocidos y excluidos de esta pregunta.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Unidad y configuración comercial",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-010",
+          "name": "Stickers de vinil"
+        },
+        {
+          "legacyId": "MIG1-O-014",
+          "name": "Letrero plano"
+        },
+        {
+          "legacyId": "MIG1-O-015",
+          "name": "DTF Transfers individuales"
+        },
+        {
+          "legacyId": "MIG1-O-016",
+          "name": "DTF Gang Sheets"
+        },
+        {
+          "legacyId": "MIG1-O-017",
+          "name": "Playera full print sublimada"
+        },
+        {
+          "legacyId": "MIG1-O-018",
+          "name": "Aplicación DTF sobre prenda del cliente"
+        },
+        {
+          "legacyId": "MIG1-O-019",
+          "name": "Rotulación vehicular"
+        },
+        {
+          "legacyId": "MIG1-O-021",
+          "name": "Hardware / stand de X-Banner por separado"
+        },
+        {
+          "legacyId": "MIG2-O-005",
+          "name": "Vinil holográfico"
+        },
+        {
+          "legacyId": "MIG2-O-006",
+          "name": "Canvas imprimible"
+        },
+        {
+          "legacyId": "MIG2-O-007",
+          "name": "Tela sublimada"
+        },
+        {
+          "legacyId": "MIG2-O-008",
+          "name": "Tela para backdrop"
+        },
+        {
+          "legacyId": "MIG2-O-009",
+          "name": "PVC espumado"
+        },
+        {
+          "legacyId": "MIG2-O-010",
+          "name": "Foamboard"
+        },
+        {
+          "legacyId": "MIG2-O-011",
+          "name": "Acrílico impreso"
+        },
+        {
+          "legacyId": "MIG2-O-012",
+          "name": "ACM / aluminio compuesto"
+        },
+        {
+          "legacyId": "MIG2-O-037",
+          "name": "Tabloides"
+        },
+        {
+          "legacyId": "MIG2-O-038",
+          "name": "Posters"
+        },
+        {
+          "legacyId": "MIG2-O-039",
+          "name": "Menús"
+        },
+        {
+          "legacyId": "MIG2-O-040",
+          "name": "Postales"
+        },
+        {
+          "legacyId": "MIG2-O-041",
+          "name": "Stickers de papel"
+        },
+        {
+          "legacyId": "MIG2-O-042",
+          "name": "Stickers transparentes"
+        },
+        {
+          "legacyId": "MIG2-O-043",
+          "name": "Stickers holográficos"
+        },
+        {
+          "legacyId": "MIG2-O-044",
+          "name": "Stickers reflectivos"
+        },
+        {
+          "legacyId": "MIG2-O-045",
+          "name": "Etiquetas para productos"
+        },
+        {
+          "legacyId": "MIG2-O-046",
+          "name": "Tarjetas complementarias"
+        },
+        {
+          "legacyId": "MIG2-O-047",
+          "name": "Seating card / place card"
+        },
+        {
+          "legacyId": "MIG2-O-048",
+          "name": "Thank-you card"
+        },
+        {
+          "legacyId": "MIG2-O-062",
+          "name": "Bordado como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-063",
+          "name": "Serigrafía como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-064",
+          "name": "Vinil textil / HTV como servicio"
+        },
+        {
+          "legacyId": "MIGF-O-007",
+          "name": "Etiquetas especiales"
+        },
+        {
+          "legacyId": "MIGF-O-008",
+          "name": "Invitación sencilla"
+        },
+        {
+          "legacyId": "MIGF-O-009",
+          "name": "Invitación premium"
+        },
+        {
+          "legacyId": "MIGF-O-010",
+          "name": "Invitación para evento"
+        },
+        {
+          "legacyId": "MIGF-O-011",
+          "name": "Invitación con sobre"
+        },
+        {
+          "legacyId": "MIGF-O-012",
+          "name": "Invitación con sello"
+        },
+        {
+          "legacyId": "MIGF-O-013",
+          "name": "Invitación con acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-014",
+          "name": "Invitación especial"
+        },
+        {
+          "legacyId": "MIGF-O-048",
+          "name": "Letrero acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-049",
+          "name": "Letrero espumado"
+        },
+        {
+          "legacyId": "MIGF-O-050",
+          "name": "Letras dimensionales"
+        },
+        {
+          "legacyId": "MIGF-O-051",
+          "name": "Letras 3D"
+        },
+        {
+          "legacyId": "MIGF-O-052",
+          "name": "Neon Flex / neón frío"
+        },
+        {
+          "legacyId": "MIGF-O-053",
+          "name": "Channel Letters"
+        },
+        {
+          "legacyId": "MIGF-O-054",
+          "name": "Caja de luz"
+        },
+        {
+          "legacyId": "MIGF-O-055",
+          "name": "Letras iluminadas"
+        },
+        {
+          "legacyId": "MIGF-O-056",
+          "name": "Señalización interior"
+        },
+        {
+          "legacyId": "MIGF-O-057",
+          "name": "Señalización exterior"
+        },
+        {
+          "legacyId": "MIGF-O-058",
+          "name": "Letrero corporativo"
+        },
+        {
+          "legacyId": "MIGF-O-059",
+          "name": "Directorio"
+        },
+        {
+          "legacyId": "MIGF-O-060",
+          "name": "Placa señalética"
+        },
+        {
+          "legacyId": "MIGF-O-061",
+          "name": "Señalización comercial"
+        },
+        {
+          "legacyId": "MIGF-O-062",
+          "name": "Señalización industrial"
+        },
+        {
+          "legacyId": "OWN-MT-O-001",
+          "name": "Camisa de vestir personalizada / woven shirt"
+        },
+        {
+          "legacyId": "OWN-MT-O-002",
+          "name": "Bata de laboratorio personalizada / lab coat"
+        },
+        {
+          "legacyId": "OWN-MT-O-003",
+          "name": "Scrub top personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-004",
+          "name": "Scrub pants personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-005",
+          "name": "Chaleco de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-006",
+          "name": "Camisa de trabajo personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-007",
+          "name": "Pantalón de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-008",
+          "name": "Overol personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-009",
+          "name": "Chamarra / abrigo de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-010",
+          "name": "Filipina de chef / chef coat personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-011",
+          "name": "Jersey deportivo personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-012",
+          "name": "Cobija personalizada / sublimada"
+        },
+        {
+          "legacyId": "OWN-MT-O-013",
+          "name": "Ropa personalizada para mascotas"
+        },
+        {
+          "legacyId": "OWN-MT-O-014",
+          "name": "Beanie personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-015",
+          "name": "Bucket hat personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-016",
+          "name": "Visor personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-017",
+          "name": "Protección solar para cabeza / sun shield"
+        },
+        {
+          "legacyId": "OWN-MT-O-018",
+          "name": "Capucha acoplable / snap-on hood"
+        },
+        {
+          "legacyId": "OWN-MT-O-019",
+          "name": "Balaclava personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-020",
+          "name": "Gorro de chef / chef hat"
+        },
+        {
+          "legacyId": "OWN-MT-O-021",
+          "name": "Gorra de cocina / kitchen cap"
+        },
+        {
+          "legacyId": "OWN-MT-O-022",
+          "name": "Mochila personalizable / backpack"
+        },
+        {
+          "legacyId": "OWN-MT-O-023",
+          "name": "Duffel bag personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-024",
+          "name": "Cooler bag personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-025",
+          "name": "Toalla personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-026",
+          "name": "Bandana personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-027",
+          "name": "Sandalias / chanclas personalizadas"
+        },
+        {
+          "legacyId": "OWN-MT-O-028",
+          "name": "Mantel elástico / fitted personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-029",
+          "name": "Decoración personalizada en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-030",
+          "name": "Cake topper en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-031",
+          "name": "Centro de mesa en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-032",
+          "name": "Set / kit de piezas MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-033",
+          "name": "Servicio de corte láser MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-034",
+          "name": "Display de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-035",
+          "name": "Nombre / plaquita personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-036",
+          "name": "Centro de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-037",
+          "name": "Pieza acrílica para libro de firmas / guest book"
+        },
+        {
+          "legacyId": "OWN-MT-O-038",
+          "name": "Imán personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-039",
+          "name": "Ornamento / adorno colgante acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-040",
+          "name": "Medalla personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-041",
+          "name": "Trofeo personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-042",
+          "name": "Taza mágica personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-043",
+          "name": "Skinny cup plástico estándar"
+        },
+        {
+          "legacyId": "OWN-MT-O-044",
+          "name": "Skinny cup plástico premium grueso rubberized"
+        },
+        {
+          "legacyId": "OWN-MT-O-045",
+          "name": "Hoja de Coroplast Multi-Cut / múltiples piezas"
+        },
+        {
+          "legacyId": "OWN-MT-O-046",
+          "name": "Periódico personalizado para eventos"
+        },
+        {
+          "legacyId": "OWN-O-001",
+          "name": "Zip hoodie — capucha con cierre"
+        },
+        {
+          "legacyId": "OWN-O-002",
+          "name": "Piñata personalizada"
+        },
+        {
+          "legacyId": "OWN-O-003",
+          "name": "Gráfica impresa de reemplazo para X-Banner"
+        },
+        {
+          "legacyId": "OWN-O-004",
+          "name": "Bandera tipo pluma / Feather Flag — conjunto completo"
+        },
+        {
+          "legacyId": "OWN-O-005",
+          "name": "Gráfica textil para bandera tipo pluma"
+        },
+        {
+          "legacyId": "OWN-O-006",
+          "name": "Base / hardware para bandera tipo pluma"
+        },
+        {
+          "legacyId": "OWN-O-007",
+          "name": "Invitación formal"
+        },
+        {
+          "legacyId": "OWN-O-008",
+          "name": "Invitación casual"
+        },
+        {
+          "legacyId": "OWN-O-009",
+          "name": "Diseño gráfico"
+        },
+        {
+          "legacyId": "OWN-O-010",
+          "name": "Vectorización"
+        },
+        {
+          "legacyId": "OWN-O-011",
+          "name": "Diseño de logotipo"
+        },
+        {
+          "legacyId": "OWN-O-012",
+          "name": "Identidad de marca / imagen corporativa"
+        },
+        {
+          "legacyId": "OWN-O-013",
+          "name": "Invitaciones digitales"
+        },
+        {
+          "legacyId": "OWN-O-014",
+          "name": "Creación de sitios web"
+        },
+        {
+          "legacyId": "OWN-O-015",
+          "name": "Creación de CRM"
+        },
+        {
+          "legacyId": "OWN-O-016",
+          "name": "Desarrollo de software"
+        },
+        {
+          "legacyId": "OWN-O-017",
+          "name": "Automatización y servicios digitales"
+        }
+      ]
+    },
+    {
+      "id": "D-003",
+      "priority": "P1",
+      "title": "Alcance de tres tipos sin resolver",
+      "question": "Describe qué recibe el cliente en Letrero plano, Rotulación vehicular y Periódico personalizado: entregable físico, trabajo sobre un bien del cliente o alcance combinado, según el caso.",
+      "whyNeeded": "El alcance permitirá validar Product/Service sin forzar la evidencia.",
+      "alreadyKnown": "No existe tipo Project en dominio. STEP03 recomienda PRODUCT para Periódico con decisión abierta; su identidad única por diversas ocasiones ya está aprobada.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Tipo y alcance de venta",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-014",
+          "name": "Letrero plano"
+        },
+        {
+          "legacyId": "MIG1-O-019",
+          "name": "Rotulación vehicular"
+        },
+        {
+          "legacyId": "OWN-MT-O-046",
+          "name": "Periódico personalizado para eventos"
+        }
+      ]
+    },
+    {
+      "id": "D-004",
+      "priority": "P2",
+      "title": "Qué datos debe pedir el vendedor",
+      "question": "Revisa las opciones agrupadas por uso e indica cuáles deben solicitarse siempre, cuáles sólo en ciertas configuraciones y cuáles pueden quedar vacías.",
+      "whyNeeded": "Los blancos de Obligatoria no significan false. Una regla reutilizable necesita excepciones explícitas.",
+      "alreadyKnown": "Blank no es opción. Las cinco selecciones de tarjetas/flyers requeridas por matrices ya están definidas por STEP03 y se excluyen de esta cola.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Opciones requeridas y validación",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-003",
+          "name": "X-Banner completo"
+        },
+        {
+          "legacyId": "MIG1-O-004",
+          "name": "Camiseta de algodón cuello redondo"
+        },
+        {
+          "legacyId": "MIG1-O-005",
+          "name": "Camiseta Dry Fit / poliéster"
+        },
+        {
+          "legacyId": "MIG1-O-007",
+          "name": "Vaso con tapa y popote"
+        },
+        {
+          "legacyId": "MIG1-O-011",
+          "name": "Mantel personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-013",
+          "name": "Figura / standee de coroplast"
+        },
+        {
+          "legacyId": "MIG2-O-015",
+          "name": "Bandera personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-016",
+          "name": "Roll-Up / Retractable Banner"
+        },
+        {
+          "legacyId": "MIG2-O-017",
+          "name": "Polo"
+        },
+        {
+          "legacyId": "MIG2-O-018",
+          "name": "Gorra"
+        },
+        {
+          "legacyId": "MIG2-O-021",
+          "name": "Uniforme"
+        },
+        {
+          "legacyId": "MIG2-O-022",
+          "name": "Mandil"
+        },
+        {
+          "legacyId": "MIG2-O-033",
+          "name": "Botella"
+        },
+        {
+          "legacyId": "MIG2-O-039",
+          "name": "Menús"
+        },
+        {
+          "legacyId": "MIG2-O-055",
+          "name": "Pantuflas personalizadas"
+        },
+        {
+          "legacyId": "MIG2-O-060",
+          "name": "Topper acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-013",
+          "name": "Invitación con acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-017",
+          "name": "Vaso personalizado para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-018",
+          "name": "Llavero"
+        },
+        {
+          "legacyId": "MIGF-O-030",
+          "name": "Placa acrílica"
+        },
+        {
+          "legacyId": "MIGF-O-034",
+          "name": "Producto de vidrio con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-044",
+          "name": "Panel decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-048",
+          "name": "Letrero acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-001",
+          "name": "Camisa de vestir personalizada / woven shirt"
+        },
+        {
+          "legacyId": "OWN-MT-O-005",
+          "name": "Chaleco de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-006",
+          "name": "Camisa de trabajo personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-009",
+          "name": "Chamarra / abrigo de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-011",
+          "name": "Jersey deportivo personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-022",
+          "name": "Mochila personalizable / backpack"
+        },
+        {
+          "legacyId": "OWN-MT-O-027",
+          "name": "Sandalias / chanclas personalizadas"
+        },
+        {
+          "legacyId": "OWN-MT-O-028",
+          "name": "Mantel elástico / fitted personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-029",
+          "name": "Decoración personalizada en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-030",
+          "name": "Cake topper en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-031",
+          "name": "Centro de mesa en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-032",
+          "name": "Set / kit de piezas MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-034",
+          "name": "Display de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-035",
+          "name": "Nombre / plaquita personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-036",
+          "name": "Centro de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-037",
+          "name": "Pieza acrílica para libro de firmas / guest book"
+        },
+        {
+          "legacyId": "OWN-MT-O-038",
+          "name": "Imán personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-039",
+          "name": "Ornamento / adorno colgante acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-040",
+          "name": "Medalla personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-041",
+          "name": "Trofeo personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-045",
+          "name": "Hoja de Coroplast Multi-Cut / múltiples piezas"
+        },
+        {
+          "legacyId": "OWN-O-002",
+          "name": "Piñata personalizada"
+        }
+      ]
+    },
+    {
+      "id": "D-005",
+      "priority": "P2",
+      "title": "Significado de opciones genéricas",
+      "question": "Para las opciones señaladas, precisa qué describe cada valor y qué valores realmente comparten significado entre productos.",
+      "whyNeeded": "Evita que una opción reutilizada admita selecciones de otro contexto.",
+      "alreadyKnown": "Talla, capacidad oz, formato de papel, dimensiones y acabado no se unifican sólo por tener nombres parecidos.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Semántica y alcance de opciones",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-011",
+          "name": "Mantel personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-013",
+          "name": "Figura / standee de coroplast"
+        },
+        {
+          "legacyId": "MIG2-O-018",
+          "name": "Gorra"
+        },
+        {
+          "legacyId": "MIG2-O-021",
+          "name": "Uniforme"
+        },
+        {
+          "legacyId": "MIG2-O-022",
+          "name": "Mandil"
+        },
+        {
+          "legacyId": "MIG2-O-033",
+          "name": "Botella"
+        },
+        {
+          "legacyId": "MIG2-O-039",
+          "name": "Menús"
+        },
+        {
+          "legacyId": "MIG2-O-060",
+          "name": "Topper acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-013",
+          "name": "Invitación con acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-018",
+          "name": "Llavero"
+        },
+        {
+          "legacyId": "MIGF-O-030",
+          "name": "Placa acrílica"
+        },
+        {
+          "legacyId": "MIGF-O-034",
+          "name": "Producto de vidrio con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-044",
+          "name": "Panel decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-048",
+          "name": "Letrero acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-001",
+          "name": "Camisa de vestir personalizada / woven shirt"
+        },
+        {
+          "legacyId": "OWN-MT-O-011",
+          "name": "Jersey deportivo personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-022",
+          "name": "Mochila personalizable / backpack"
+        },
+        {
+          "legacyId": "OWN-MT-O-028",
+          "name": "Mantel elástico / fitted personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-029",
+          "name": "Decoración personalizada en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-030",
+          "name": "Cake topper en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-031",
+          "name": "Centro de mesa en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-032",
+          "name": "Set / kit de piezas MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-034",
+          "name": "Display de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-035",
+          "name": "Nombre / plaquita personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-036",
+          "name": "Centro de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-037",
+          "name": "Pieza acrílica para libro de firmas / guest book"
+        },
+        {
+          "legacyId": "OWN-MT-O-038",
+          "name": "Imán personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-039",
+          "name": "Ornamento / adorno colgante acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-040",
+          "name": "Medalla personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-041",
+          "name": "Trofeo personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-045",
+          "name": "Hoja de Coroplast Multi-Cut / múltiples piezas"
+        },
+        {
+          "legacyId": "OWN-O-002",
+          "name": "Piñata personalizada"
+        }
+      ]
+    },
+    {
+      "id": "D-006",
+      "priority": "P2",
+      "title": "Proceso incluido o decoración elegible",
+      "question": "En las asociaciones dudosas, indica si el método forma parte del producto tal como se vende o si el cliente lo elige como personalización adicional.",
+      "whyNeeded": "Evita cobrar dos veces la impresión o afirmar compatibilidad no documentada.",
+      "alreadyKnown": "Métodos expresamente ofrecidos por Martin y procesos de impresión inherente ya se separaron. DTF método/transfer/gang sheet no se vuelve a preguntar.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Capacidades y desglose de decoración",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-003",
+          "name": "X-Banner completo"
+        },
+        {
+          "legacyId": "MIG1-O-006",
+          "name": "Portalatas de neopreno / Koozie"
+        },
+        {
+          "legacyId": "MIG1-O-013",
+          "name": "Aplicación UV DTF en vidrio automotriz"
+        },
+        {
+          "legacyId": "MIG2-O-001",
+          "name": "Vinil adhesivo impreso"
+        },
+        {
+          "legacyId": "MIG2-O-002",
+          "name": "Microperforado"
+        },
+        {
+          "legacyId": "MIG2-O-004",
+          "name": "Vinil transparente"
+        },
+        {
+          "legacyId": "MIG2-O-005",
+          "name": "Vinil holográfico"
+        },
+        {
+          "legacyId": "MIG2-O-007",
+          "name": "Tela sublimada"
+        },
+        {
+          "legacyId": "MIG2-O-016",
+          "name": "Roll-Up / Retractable Banner"
+        },
+        {
+          "legacyId": "MIG2-O-018",
+          "name": "Gorra"
+        },
+        {
+          "legacyId": "MIG2-O-022",
+          "name": "Mandil"
+        },
+        {
+          "legacyId": "MIG2-O-023",
+          "name": "Tote Bag"
+        },
+        {
+          "legacyId": "MIG2-O-024",
+          "name": "Parche textil"
+        },
+        {
+          "legacyId": "MIG2-O-025",
+          "name": "Funda para cojín"
+        },
+        {
+          "legacyId": "MIG2-O-026",
+          "name": "Lanyard"
+        },
+        {
+          "legacyId": "MIG2-O-027",
+          "name": "Listón para cabello"
+        },
+        {
+          "legacyId": "MIG2-O-028",
+          "name": "Listón personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-030",
+          "name": "Vaso de acero inoxidable"
+        },
+        {
+          "legacyId": "MIG2-O-031",
+          "name": "Tumbler"
+        },
+        {
+          "legacyId": "MIG2-O-033",
+          "name": "Botella"
+        },
+        {
+          "legacyId": "MIG2-O-057",
+          "name": "Reconocimiento metálico"
+        },
+        {
+          "legacyId": "MIG2-O-058",
+          "name": "Dog Tag"
+        },
+        {
+          "legacyId": "MIG2-O-059",
+          "name": "Pluma personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-060",
+          "name": "Topper acrílico"
+        },
+        {
+          "legacyId": "MIG2-O-061",
+          "name": "Etiqueta rígida"
+        },
+        {
+          "legacyId": "MIGF-O-023",
+          "name": "Placa metálica de reconocimiento"
+        },
+        {
+          "legacyId": "MIGF-O-024",
+          "name": "Placa metálica de identificación"
+        },
+        {
+          "legacyId": "MIGF-O-025",
+          "name": "Placa para trailer"
+        },
+        {
+          "legacyId": "MIGF-O-026",
+          "name": "Placa para vehículo"
+        },
+        {
+          "legacyId": "MIGF-O-027",
+          "name": "Tag para maquinaria/equipo"
+        },
+        {
+          "legacyId": "MIGF-O-028",
+          "name": "Llavero UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-029",
+          "name": "Recuerdo UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-030",
+          "name": "Placa acrílica"
+        },
+        {
+          "legacyId": "MIGF-O-031",
+          "name": "Placa para puerta"
+        },
+        {
+          "legacyId": "MIGF-O-032",
+          "name": "Placa para buzón"
+        },
+        {
+          "legacyId": "MIGF-O-033",
+          "name": "Vaso con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-034",
+          "name": "Producto de vidrio con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-035",
+          "name": "Producto metálico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-036",
+          "name": "Producto plástico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-037",
+          "name": "Producto de madera compatible con UV DTF"
+        }
+      ]
+    },
+    {
+      "id": "D-007",
+      "priority": "P2",
+      "title": "Surtido real de tallas",
+      "question": "Entrega la lista real de tallas/segmentos por algodón, Dry Fit y polo, con las diferencias entre prendas.",
+      "whyNeeded": "El vendedor necesita ofrecer sólo configuraciones documentadas.",
+      "alreadyKnown": "Son productos distintos; talla/color son configuración. 2XL/3XL no constituyen una lista completa; S–XL del seed son provisionales.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Valores permitidos de opciones",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-004",
+          "name": "Camiseta de algodón cuello redondo"
+        },
+        {
+          "legacyId": "MIG1-O-005",
+          "name": "Camiseta Dry Fit / poliéster"
+        },
+        {
+          "legacyId": "MIG2-O-017",
+          "name": "Polo"
+        }
+      ]
+    },
+    {
+      "id": "D-008",
+      "priority": "P1",
+      "title": "Alcance del recargo por talla",
+      "question": "Marca en qué prendas de la lista aplican los recargos confirmados de 2XL y 3XL y señala excepciones.",
+      "whyNeeded": "Una asignación explícita evita recargos por categoría y errores en prendas sin alcance aprobado.",
+      "alreadyKnown": "Importes +2/+3 USD ya confirmados. Algodón/Dry Fit aparecen en seed STEP03, pero sus notas dicen alcance aún no individualizado. No se extiende a gorra.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Asignación por producto de recargos",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-004",
+          "name": "Camiseta de algodón cuello redondo"
+        },
+        {
+          "legacyId": "MIG1-O-005",
+          "name": "Camiseta Dry Fit / poliéster"
+        },
+        {
+          "legacyId": "MIG2-O-017",
+          "name": "Polo"
+        },
+        {
+          "legacyId": "MIG2-O-019",
+          "name": "Tank Top"
+        },
+        {
+          "legacyId": "MIG2-O-020",
+          "name": "Hoodie con capucha sin cierre"
+        },
+        {
+          "legacyId": "MIG2-O-021",
+          "name": "Uniforme"
+        },
+        {
+          "legacyId": "MIGF-O-001",
+          "name": "Manga larga"
+        },
+        {
+          "legacyId": "MIGF-O-002",
+          "name": "Sweater / sudadera cuello redondo sin capucha"
+        },
+        {
+          "legacyId": "MIGF-O-003",
+          "name": "Sudadera"
+        },
+        {
+          "legacyId": "OWN-MT-O-001",
+          "name": "Camisa de vestir personalizada / woven shirt"
+        },
+        {
+          "legacyId": "OWN-MT-O-002",
+          "name": "Bata de laboratorio personalizada / lab coat"
+        },
+        {
+          "legacyId": "OWN-MT-O-003",
+          "name": "Scrub top personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-004",
+          "name": "Scrub pants personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-005",
+          "name": "Chaleco de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-006",
+          "name": "Camisa de trabajo personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-007",
+          "name": "Pantalón de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-008",
+          "name": "Overol personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-009",
+          "name": "Chamarra / abrigo de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-010",
+          "name": "Filipina de chef / chef coat personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-011",
+          "name": "Jersey deportivo personalizable"
+        },
+        {
+          "legacyId": "OWN-O-001",
+          "name": "Zip hoodie — capucha con cierre"
+        }
+      ]
+    },
+    {
+      "id": "D-009",
+      "priority": "P2",
+      "title": "Ubicación de familias que se solapan",
+      "question": "Revisa sólo las ubicaciones señaladas: piñatas/fabricación, FOT/decoración, PPE/headwear, métodos legacy, imanes y registros sin categoría. Indica dónde debe encontrarlos el vendedor.",
+      "whyNeeded": "Hace navegable la migración completa sin diseñar una taxonomía nueva por defecto.",
+      "alreadyKnown": "FOT se conserva en DTG. PPE no se activa en bloque. Categoría no cambia identidad, código ni reglas de precio. La inclusión transversal de imanes en el piloto no los recategoriza.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Asignaciones de categoría y navegación",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-006",
+          "name": "Portalatas de neopreno / Koozie"
+        },
+        {
+          "legacyId": "MIG1-O-013",
+          "name": "Aplicación UV DTF en vidrio automotriz"
+        },
+        {
+          "legacyId": "MIG1-O-015",
+          "name": "DTF Transfers individuales"
+        },
+        {
+          "legacyId": "MIG1-O-016",
+          "name": "DTF Gang Sheets"
+        },
+        {
+          "legacyId": "MIG1-O-017",
+          "name": "Playera full print sublimada"
+        },
+        {
+          "legacyId": "MIG1-O-018",
+          "name": "Aplicación DTF sobre prenda del cliente"
+        },
+        {
+          "legacyId": "MIG1-O-019",
+          "name": "Rotulación vehicular"
+        },
+        {
+          "legacyId": "MIG1-O-020",
+          "name": "Realtor Sign / Yard Sign 18×24 in"
+        },
+        {
+          "legacyId": "MIG1-O-021",
+          "name": "Hardware / stand de X-Banner por separado"
+        },
+        {
+          "legacyId": "MIG2-O-026",
+          "name": "Lanyard"
+        },
+        {
+          "legacyId": "MIG2-O-027",
+          "name": "Listón para cabello"
+        },
+        {
+          "legacyId": "MIG2-O-028",
+          "name": "Listón personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-059",
+          "name": "Pluma personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-060",
+          "name": "Topper acrílico"
+        },
+        {
+          "legacyId": "MIG2-O-061",
+          "name": "Etiqueta rígida"
+        },
+        {
+          "legacyId": "MIG2-O-062",
+          "name": "Bordado como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-063",
+          "name": "Serigrafía como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-064",
+          "name": "Vinil textil / HTV como servicio"
+        },
+        {
+          "legacyId": "MIGF-O-015",
+          "name": "Imanes para vehículo — par de 2 × 1 ft"
+        },
+        {
+          "legacyId": "MIGF-O-028",
+          "name": "Llavero UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-029",
+          "name": "Recuerdo UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-030",
+          "name": "Placa acrílica"
+        },
+        {
+          "legacyId": "MIGF-O-031",
+          "name": "Placa para puerta"
+        },
+        {
+          "legacyId": "MIGF-O-032",
+          "name": "Placa para buzón"
+        },
+        {
+          "legacyId": "MIGF-O-033",
+          "name": "Vaso con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-035",
+          "name": "Producto metálico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-036",
+          "name": "Producto plástico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-037",
+          "name": "Producto de madera compatible con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-038",
+          "name": "Ampliación fotográfica"
+        },
+        {
+          "legacyId": "MIGF-O-039",
+          "name": "Canvas fotográfico"
+        },
+        {
+          "legacyId": "MIGF-O-040",
+          "name": "Cuadro de acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-041",
+          "name": "Cuadro con protección UV"
+        },
+        {
+          "legacyId": "MIGF-O-042",
+          "name": "Cuadro con marco"
+        },
+        {
+          "legacyId": "MIGF-O-043",
+          "name": "Fotografía montada"
+        },
+        {
+          "legacyId": "MIGF-O-044",
+          "name": "Panel decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-045",
+          "name": "Tríptico decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-046",
+          "name": "Cuadro decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-047",
+          "name": "Impresión para hogar u oficina"
+        },
+        {
+          "legacyId": "MIGF-O-063",
+          "name": "Casco"
+        },
+        {
+          "legacyId": "MIGF-O-064",
+          "name": "Chaleco reflejante"
+        },
+        {
+          "legacyId": "MIGF-O-065",
+          "name": "Lentes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-066",
+          "name": "Guantes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-067",
+          "name": "Protección auditiva"
+        },
+        {
+          "legacyId": "MIGF-O-068",
+          "name": "Mascarilla"
+        },
+        {
+          "legacyId": "MIGF-O-069",
+          "name": "Respirador"
+        },
+        {
+          "legacyId": "MIGF-O-070",
+          "name": "Arnés"
+        },
+        {
+          "legacyId": "MIGF-O-071",
+          "name": "Cono de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-072",
+          "name": "Botiquín"
+        },
+        {
+          "legacyId": "MIGF-O-073",
+          "name": "Señalización de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-074",
+          "name": "PPE personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-029",
+          "name": "Decoración personalizada en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-030",
+          "name": "Cake topper en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-031",
+          "name": "Centro de mesa en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-032",
+          "name": "Set / kit de piezas MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-033",
+          "name": "Servicio de corte láser MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-034",
+          "name": "Display de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-035",
+          "name": "Nombre / plaquita personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-036",
+          "name": "Centro de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-037",
+          "name": "Pieza acrílica para libro de firmas / guest book"
+        },
+        {
+          "legacyId": "OWN-MT-O-038",
+          "name": "Imán personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-039",
+          "name": "Ornamento / adorno colgante acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-040",
+          "name": "Medalla personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-041",
+          "name": "Trofeo personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-O-002",
+          "name": "Piñata personalizada"
+        }
+      ]
+    },
+    {
+      "id": "D-010",
+      "priority": "P1",
+      "title": "Pedidos de varios pares de imanes",
+      "question": "¿Cómo se cotiza un pedido de varios pares de imanes?",
+      "whyNeeded": "El dato actual no autoriza multiplicar automáticamente por el número de pares.",
+      "alreadyKnown": "65 USD por par de dos imanes de 2×1 ft está confirmado. No se pregunta de nuevo el precio de un par ni se transforma en precio por pieza.",
+      "alternatives": [
+        "STEP03 P1-03 contempla precio por unidad de venta o mantener FIXED limitado"
+      ],
+      "owner": "Martin",
+      "downstreamImpact": "Alcance de cantidad del precio fijo",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIGF-O-015",
+          "name": "Imanes para vehículo — par de 2 × 1 ft"
+        }
+      ]
+    },
+    {
+      "id": "D-011",
+      "priority": "P1",
+      "title": "Tarifas de Yard Sign",
+      "question": "¿Qué moneda, vigencia y significado de cantidad tienen los valores 1=$25, 6=$20 c/u y 12=$18 c/u? Aporta la tarifa autorizada o marca que no debe usarse.",
+      "whyNeeded": "No sabemos si son cantidades exactas o umbrales ni si esos importes pueden usarse hoy.",
+      "alreadyKnown": "18×24 in por pieza y estaca no incluida están confirmados.",
+      "alternatives": [
+        "Cantidades exactas (pregunta explícita en fuente)",
+        "Umbrales (pregunta explícita en fuente)"
+      ],
+      "owner": "Martin",
+      "downstreamImpact": "Modelo/cantidad/moneda; seguir sin precio automático hasta resolver",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-020",
+          "name": "Realtor Sign / Yard Sign 18×24 in"
+        }
+      ]
+    },
+    {
+      "id": "D-012",
+      "priority": "P1",
+      "title": "Llavero y Llavero UV DTF",
+      "question": "¿Qué material y construcción corresponde al Llavero UV DTF histórico, y coincide con alguno de los llaveros actuales?",
+      "whyNeeded": "Se necesita evidencia física antes de decidir equivalencia y conservar ambos linajes.",
+      "alreadyKnown": "Llavero actual tiene acrílico documentado; no se atribuye ese material al legacy. No crear producto sólo por método.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Revisión de identidad; ninguna fusión automática",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIGF-O-018",
+          "name": "Llavero"
+        },
+        {
+          "legacyId": "MIGF-O-028",
+          "name": "Llavero UV DTF"
+        }
+      ]
+    },
+    {
+      "id": "D-013",
+      "priority": "P2",
+      "title": "Servicios sobre material del cliente",
+      "question": "¿Se presentan comercialmente como un servicio con métodos elegibles o como servicios separados según método?",
+      "whyNeeded": "STEP03 P2-04 dejó abierto el nivel de consolidación; semejanza de nombres no resuelve la decisión.",
+      "alreadyKnown": "Se vende aplicación/personalización cuando el cliente aporta el artículo. DTF, bordado, serigrafía y HTV son métodos distintos.",
+      "alternatives": [
+        "Un Service multi-método (STEP03 P2-04)",
+        "Services separados (STEP03 P2-04)"
+      ],
+      "owner": "Martin",
+      "downstreamImpact": "Identidad comercial de servicios",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-018",
+          "name": "Aplicación DTF sobre prenda del cliente"
+        },
+        {
+          "legacyId": "MIG2-O-062",
+          "name": "Bordado como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-063",
+          "name": "Serigrafía como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-064",
+          "name": "Vinil textil / HTV como servicio"
+        }
+      ]
+    },
+    {
+      "id": "D-014",
+      "priority": "P1",
+      "title": "Manga larga y Sudadera retenidos",
+      "question": "Indica a qué construcción/material corresponde cada registro retenido y cómo se relaciona con los productos ya identificados.",
+      "whyNeeded": "No se puede transformar una etiqueta genérica en producto canónico sin resolverla.",
+      "alreadyKnown": "OWNER ordenó NO promover MIGF-O-001/MIGF-O-003; variación menor de manga normalmente es opción, hoodie/zip hoodie/sweater tienen evidencia distinta.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Levantar retención explícita cuando exista evidencia",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIGF-O-001",
+          "name": "Manga larga"
+        },
+        {
+          "legacyId": "MIGF-O-003",
+          "name": "Sudadera"
+        }
+      ]
+    },
+    {
+      "id": "D-015",
+      "priority": "P2",
+      "title": "Ficha operativa de transfers",
+      "question": "Aporta unidad de venta, medidas admitidas y requisitos del archivo/entrega para DTF Transfer y Gang Sheet.",
+      "whyNeeded": "Falta productización; no se crean variantes o tarifas geométricas por inferencia.",
+      "alreadyKnown": "Son dos productos ya reconocidos, separados del método. Su status CANDIDATE se conserva.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Especificación de producto",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-015",
+          "name": "DTF Transfers individuales"
+        },
+        {
+          "legacyId": "MIG1-O-016",
+          "name": "DTF Gang Sheets"
+        }
+      ]
+    },
+    {
+      "id": "D-016",
+      "priority": "P1",
+      "title": "Autorización para publicar",
+      "question": "¿Quién puede aprobar la publicación real de un lote y qué evidencia debe quedar de esa aprobación?",
+      "whyNeeded": "Gobernanza de publicación, no recálculo",
+      "alreadyKnown": "Las 131 observaciones tienen autorización fuente. No se pide reaprobar sus importes; falta política/actor de publicación Product Engine (STEP03 P1-06).",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Gobernanza de publicación, no recálculo",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "GLOBAL_POLICY",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-001",
+          "name": "Lona impresa"
+        },
+        {
+          "legacyId": "MIG1-O-002",
+          "name": "Coroplast impreso"
+        },
+        {
+          "legacyId": "MIG1-O-003",
+          "name": "X-Banner completo"
+        },
+        {
+          "legacyId": "MIG1-O-004",
+          "name": "Camiseta de algodón cuello redondo"
+        },
+        {
+          "legacyId": "MIG1-O-005",
+          "name": "Camiseta Dry Fit / poliéster"
+        },
+        {
+          "legacyId": "MIG1-O-006",
+          "name": "Portalatas de neopreno / Koozie"
+        },
+        {
+          "legacyId": "MIG1-O-007",
+          "name": "Vaso con tapa y popote"
+        },
+        {
+          "legacyId": "MIG1-O-008",
+          "name": "Tarjeta Tradicional"
+        },
+        {
+          "legacyId": "MIG1-O-009",
+          "name": "Tarjeta Premium / Gloss"
+        },
+        {
+          "legacyId": "MIG1-O-010",
+          "name": "Stickers de vinil"
+        },
+        {
+          "legacyId": "MIG1-O-011",
+          "name": "Mantel personalizado"
+        },
+        {
+          "legacyId": "MIG1-O-013",
+          "name": "Aplicación UV DTF en vidrio automotriz"
+        },
+        {
+          "legacyId": "MIG1-O-014",
+          "name": "Letrero plano"
+        },
+        {
+          "legacyId": "MIG1-O-015",
+          "name": "DTF Transfers individuales"
+        },
+        {
+          "legacyId": "MIG1-O-016",
+          "name": "DTF Gang Sheets"
+        },
+        {
+          "legacyId": "MIG1-O-017",
+          "name": "Playera full print sublimada"
+        },
+        {
+          "legacyId": "MIG1-O-018",
+          "name": "Aplicación DTF sobre prenda del cliente"
+        },
+        {
+          "legacyId": "MIG1-O-019",
+          "name": "Rotulación vehicular"
+        },
+        {
+          "legacyId": "MIG1-O-020",
+          "name": "Realtor Sign / Yard Sign 18×24 in"
+        },
+        {
+          "legacyId": "MIG1-O-021",
+          "name": "Hardware / stand de X-Banner por separado"
+        },
+        {
+          "legacyId": "MIG2-O-001",
+          "name": "Vinil adhesivo impreso"
+        },
+        {
+          "legacyId": "MIG2-O-002",
+          "name": "Microperforado"
+        },
+        {
+          "legacyId": "MIG2-O-003",
+          "name": "Mesh"
+        },
+        {
+          "legacyId": "MIG2-O-004",
+          "name": "Vinil transparente"
+        },
+        {
+          "legacyId": "MIG2-O-005",
+          "name": "Vinil holográfico"
+        },
+        {
+          "legacyId": "MIG2-O-006",
+          "name": "Canvas imprimible"
+        },
+        {
+          "legacyId": "MIG2-O-007",
+          "name": "Tela sublimada"
+        },
+        {
+          "legacyId": "MIG2-O-008",
+          "name": "Tela para backdrop"
+        },
+        {
+          "legacyId": "MIG2-O-009",
+          "name": "PVC espumado"
+        },
+        {
+          "legacyId": "MIG2-O-010",
+          "name": "Foamboard"
+        },
+        {
+          "legacyId": "MIG2-O-011",
+          "name": "Acrílico impreso"
+        },
+        {
+          "legacyId": "MIG2-O-012",
+          "name": "ACM / aluminio compuesto"
+        },
+        {
+          "legacyId": "MIG2-O-013",
+          "name": "Figura / standee de coroplast"
+        },
+        {
+          "legacyId": "MIG2-O-014",
+          "name": "Coroplast por hoja"
+        },
+        {
+          "legacyId": "MIG2-O-015",
+          "name": "Bandera personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-016",
+          "name": "Roll-Up / Retractable Banner"
+        },
+        {
+          "legacyId": "MIG2-O-017",
+          "name": "Polo"
+        },
+        {
+          "legacyId": "MIG2-O-018",
+          "name": "Gorra"
+        },
+        {
+          "legacyId": "MIG2-O-019",
+          "name": "Tank Top"
+        },
+        {
+          "legacyId": "MIG2-O-020",
+          "name": "Hoodie con capucha sin cierre"
+        },
+        {
+          "legacyId": "MIG2-O-021",
+          "name": "Uniforme"
+        },
+        {
+          "legacyId": "MIG2-O-022",
+          "name": "Mandil"
+        },
+        {
+          "legacyId": "MIG2-O-023",
+          "name": "Tote Bag"
+        },
+        {
+          "legacyId": "MIG2-O-024",
+          "name": "Parche textil"
+        },
+        {
+          "legacyId": "MIG2-O-025",
+          "name": "Funda para cojín"
+        },
+        {
+          "legacyId": "MIG2-O-026",
+          "name": "Lanyard"
+        },
+        {
+          "legacyId": "MIG2-O-027",
+          "name": "Listón para cabello"
+        },
+        {
+          "legacyId": "MIG2-O-028",
+          "name": "Listón personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-029",
+          "name": "Sippy Cup / vaso de chupón"
+        },
+        {
+          "legacyId": "MIG2-O-030",
+          "name": "Vaso de acero inoxidable"
+        },
+        {
+          "legacyId": "MIG2-O-031",
+          "name": "Tumbler"
+        },
+        {
+          "legacyId": "MIG2-O-032",
+          "name": "Cilindro"
+        },
+        {
+          "legacyId": "MIG2-O-033",
+          "name": "Botella"
+        },
+        {
+          "legacyId": "MIG2-O-034",
+          "name": "Tarro"
+        },
+        {
+          "legacyId": "MIG2-O-035",
+          "name": "Taza personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-036",
+          "name": "Flyers"
+        },
+        {
+          "legacyId": "MIG2-O-037",
+          "name": "Tabloides"
+        },
+        {
+          "legacyId": "MIG2-O-038",
+          "name": "Posters"
+        },
+        {
+          "legacyId": "MIG2-O-039",
+          "name": "Menús"
+        },
+        {
+          "legacyId": "MIG2-O-040",
+          "name": "Postales"
+        },
+        {
+          "legacyId": "MIG2-O-041",
+          "name": "Stickers de papel"
+        },
+        {
+          "legacyId": "MIG2-O-042",
+          "name": "Stickers transparentes"
+        },
+        {
+          "legacyId": "MIG2-O-043",
+          "name": "Stickers holográficos"
+        },
+        {
+          "legacyId": "MIG2-O-044",
+          "name": "Stickers reflectivos"
+        },
+        {
+          "legacyId": "MIG2-O-045",
+          "name": "Etiquetas para productos"
+        },
+        {
+          "legacyId": "MIG2-O-046",
+          "name": "Tarjetas complementarias"
+        },
+        {
+          "legacyId": "MIG2-O-047",
+          "name": "Seating card / place card"
+        },
+        {
+          "legacyId": "MIG2-O-048",
+          "name": "Thank-you card"
+        },
+        {
+          "legacyId": "MIG2-O-049",
+          "name": "A-Sign / A-Frame"
+        },
+        {
+          "legacyId": "MIG2-O-050",
+          "name": "Canopy personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-051",
+          "name": "Pop-Up Display"
+        },
+        {
+          "legacyId": "MIG2-O-052",
+          "name": "Backdrop"
+        },
+        {
+          "legacyId": "MIG2-O-053",
+          "name": "Pulsera personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-054",
+          "name": "Lentes personalizados"
+        },
+        {
+          "legacyId": "MIG2-O-055",
+          "name": "Pantuflas personalizadas"
+        },
+        {
+          "legacyId": "MIG2-O-056",
+          "name": "Botecito de gel personalizado"
+        },
+        {
+          "legacyId": "MIG2-O-057",
+          "name": "Reconocimiento metálico"
+        },
+        {
+          "legacyId": "MIG2-O-058",
+          "name": "Dog Tag"
+        },
+        {
+          "legacyId": "MIG2-O-059",
+          "name": "Pluma personalizada"
+        },
+        {
+          "legacyId": "MIG2-O-060",
+          "name": "Topper acrílico"
+        },
+        {
+          "legacyId": "MIG2-O-061",
+          "name": "Etiqueta rígida"
+        },
+        {
+          "legacyId": "MIG2-O-062",
+          "name": "Bordado como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-063",
+          "name": "Serigrafía como servicio"
+        },
+        {
+          "legacyId": "MIG2-O-064",
+          "name": "Vinil textil / HTV como servicio"
+        },
+        {
+          "legacyId": "MIGF-O-001",
+          "name": "Manga larga"
+        },
+        {
+          "legacyId": "MIGF-O-002",
+          "name": "Sweater / sudadera cuello redondo sin capucha"
+        },
+        {
+          "legacyId": "MIGF-O-003",
+          "name": "Sudadera"
+        },
+        {
+          "legacyId": "MIGF-O-005",
+          "name": "Vaso de especialidad"
+        },
+        {
+          "legacyId": "MIGF-O-006",
+          "name": "Otros vasos para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-007",
+          "name": "Etiquetas especiales"
+        },
+        {
+          "legacyId": "MIGF-O-008",
+          "name": "Invitación sencilla"
+        },
+        {
+          "legacyId": "MIGF-O-009",
+          "name": "Invitación premium"
+        },
+        {
+          "legacyId": "MIGF-O-010",
+          "name": "Invitación para evento"
+        },
+        {
+          "legacyId": "MIGF-O-011",
+          "name": "Invitación con sobre"
+        },
+        {
+          "legacyId": "MIGF-O-012",
+          "name": "Invitación con sello"
+        },
+        {
+          "legacyId": "MIGF-O-013",
+          "name": "Invitación con acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-014",
+          "name": "Invitación especial"
+        },
+        {
+          "legacyId": "MIGF-O-015",
+          "name": "Imanes para vehículo — par de 2 × 1 ft"
+        },
+        {
+          "legacyId": "MIGF-O-016",
+          "name": "Display para evento"
+        },
+        {
+          "legacyId": "MIGF-O-017",
+          "name": "Vaso personalizado para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-018",
+          "name": "Llavero"
+        },
+        {
+          "legacyId": "MIGF-O-019",
+          "name": "Bolsita personalizada"
+        },
+        {
+          "legacyId": "MIGF-O-020",
+          "name": "Recuerdo personalizado"
+        },
+        {
+          "legacyId": "MIGF-O-021",
+          "name": "Merch para eventos"
+        },
+        {
+          "legacyId": "MIGF-O-022",
+          "name": "Producto de Merch Store"
+        },
+        {
+          "legacyId": "MIGF-O-023",
+          "name": "Placa metálica de reconocimiento"
+        },
+        {
+          "legacyId": "MIGF-O-024",
+          "name": "Placa metálica de identificación"
+        },
+        {
+          "legacyId": "MIGF-O-025",
+          "name": "Placa para trailer"
+        },
+        {
+          "legacyId": "MIGF-O-026",
+          "name": "Placa para vehículo"
+        },
+        {
+          "legacyId": "MIGF-O-027",
+          "name": "Tag para maquinaria/equipo"
+        },
+        {
+          "legacyId": "MIGF-O-028",
+          "name": "Llavero UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-029",
+          "name": "Recuerdo UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-030",
+          "name": "Placa acrílica"
+        },
+        {
+          "legacyId": "MIGF-O-031",
+          "name": "Placa para puerta"
+        },
+        {
+          "legacyId": "MIGF-O-032",
+          "name": "Placa para buzón"
+        },
+        {
+          "legacyId": "MIGF-O-033",
+          "name": "Vaso con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-034",
+          "name": "Producto de vidrio con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-035",
+          "name": "Producto metálico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-036",
+          "name": "Producto plástico con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-037",
+          "name": "Producto de madera compatible con UV DTF"
+        },
+        {
+          "legacyId": "MIGF-O-038",
+          "name": "Ampliación fotográfica"
+        },
+        {
+          "legacyId": "MIGF-O-039",
+          "name": "Canvas fotográfico"
+        },
+        {
+          "legacyId": "MIGF-O-040",
+          "name": "Cuadro de acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-041",
+          "name": "Cuadro con protección UV"
+        },
+        {
+          "legacyId": "MIGF-O-042",
+          "name": "Cuadro con marco"
+        },
+        {
+          "legacyId": "MIGF-O-043",
+          "name": "Fotografía montada"
+        },
+        {
+          "legacyId": "MIGF-O-044",
+          "name": "Panel decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-045",
+          "name": "Tríptico decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-046",
+          "name": "Cuadro decorativo"
+        },
+        {
+          "legacyId": "MIGF-O-047",
+          "name": "Impresión para hogar u oficina"
+        },
+        {
+          "legacyId": "MIGF-O-048",
+          "name": "Letrero acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-049",
+          "name": "Letrero espumado"
+        },
+        {
+          "legacyId": "MIGF-O-050",
+          "name": "Letras dimensionales"
+        },
+        {
+          "legacyId": "MIGF-O-051",
+          "name": "Letras 3D"
+        },
+        {
+          "legacyId": "MIGF-O-052",
+          "name": "Neon Flex / neón frío"
+        },
+        {
+          "legacyId": "MIGF-O-053",
+          "name": "Channel Letters"
+        },
+        {
+          "legacyId": "MIGF-O-054",
+          "name": "Caja de luz"
+        },
+        {
+          "legacyId": "MIGF-O-055",
+          "name": "Letras iluminadas"
+        },
+        {
+          "legacyId": "MIGF-O-056",
+          "name": "Señalización interior"
+        },
+        {
+          "legacyId": "MIGF-O-057",
+          "name": "Señalización exterior"
+        },
+        {
+          "legacyId": "MIGF-O-058",
+          "name": "Letrero corporativo"
+        },
+        {
+          "legacyId": "MIGF-O-059",
+          "name": "Directorio"
+        },
+        {
+          "legacyId": "MIGF-O-060",
+          "name": "Placa señalética"
+        },
+        {
+          "legacyId": "MIGF-O-061",
+          "name": "Señalización comercial"
+        },
+        {
+          "legacyId": "MIGF-O-062",
+          "name": "Señalización industrial"
+        },
+        {
+          "legacyId": "MIGF-O-063",
+          "name": "Casco"
+        },
+        {
+          "legacyId": "MIGF-O-064",
+          "name": "Chaleco reflejante"
+        },
+        {
+          "legacyId": "MIGF-O-065",
+          "name": "Lentes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-066",
+          "name": "Guantes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-067",
+          "name": "Protección auditiva"
+        },
+        {
+          "legacyId": "MIGF-O-068",
+          "name": "Mascarilla"
+        },
+        {
+          "legacyId": "MIGF-O-069",
+          "name": "Respirador"
+        },
+        {
+          "legacyId": "MIGF-O-070",
+          "name": "Arnés"
+        },
+        {
+          "legacyId": "MIGF-O-071",
+          "name": "Cono de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-072",
+          "name": "Botiquín"
+        },
+        {
+          "legacyId": "MIGF-O-073",
+          "name": "Señalización de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-074",
+          "name": "PPE personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-001",
+          "name": "Camisa de vestir personalizada / woven shirt"
+        },
+        {
+          "legacyId": "OWN-MT-O-002",
+          "name": "Bata de laboratorio personalizada / lab coat"
+        },
+        {
+          "legacyId": "OWN-MT-O-003",
+          "name": "Scrub top personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-004",
+          "name": "Scrub pants personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-005",
+          "name": "Chaleco de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-006",
+          "name": "Camisa de trabajo personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-007",
+          "name": "Pantalón de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-008",
+          "name": "Overol personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-009",
+          "name": "Chamarra / abrigo de trabajo personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-010",
+          "name": "Filipina de chef / chef coat personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-011",
+          "name": "Jersey deportivo personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-012",
+          "name": "Cobija personalizada / sublimada"
+        },
+        {
+          "legacyId": "OWN-MT-O-013",
+          "name": "Ropa personalizada para mascotas"
+        },
+        {
+          "legacyId": "OWN-MT-O-014",
+          "name": "Beanie personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-015",
+          "name": "Bucket hat personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-016",
+          "name": "Visor personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-017",
+          "name": "Protección solar para cabeza / sun shield"
+        },
+        {
+          "legacyId": "OWN-MT-O-018",
+          "name": "Capucha acoplable / snap-on hood"
+        },
+        {
+          "legacyId": "OWN-MT-O-019",
+          "name": "Balaclava personalizable"
+        },
+        {
+          "legacyId": "OWN-MT-O-020",
+          "name": "Gorro de chef / chef hat"
+        },
+        {
+          "legacyId": "OWN-MT-O-021",
+          "name": "Gorra de cocina / kitchen cap"
+        },
+        {
+          "legacyId": "OWN-MT-O-022",
+          "name": "Mochila personalizable / backpack"
+        },
+        {
+          "legacyId": "OWN-MT-O-023",
+          "name": "Duffel bag personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-024",
+          "name": "Cooler bag personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-025",
+          "name": "Toalla personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-026",
+          "name": "Bandana personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-027",
+          "name": "Sandalias / chanclas personalizadas"
+        },
+        {
+          "legacyId": "OWN-MT-O-028",
+          "name": "Mantel elástico / fitted personalizado"
+        },
+        {
+          "legacyId": "OWN-MT-O-029",
+          "name": "Decoración personalizada en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-030",
+          "name": "Cake topper en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-031",
+          "name": "Centro de mesa en MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-032",
+          "name": "Set / kit de piezas MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-033",
+          "name": "Servicio de corte láser MDF"
+        },
+        {
+          "legacyId": "OWN-MT-O-034",
+          "name": "Display de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-035",
+          "name": "Nombre / plaquita personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-036",
+          "name": "Centro de mesa de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-037",
+          "name": "Pieza acrílica para libro de firmas / guest book"
+        },
+        {
+          "legacyId": "OWN-MT-O-038",
+          "name": "Imán personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-039",
+          "name": "Ornamento / adorno colgante acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-040",
+          "name": "Medalla personalizada de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-041",
+          "name": "Trofeo personalizado de acrílico"
+        },
+        {
+          "legacyId": "OWN-MT-O-042",
+          "name": "Taza mágica personalizada"
+        },
+        {
+          "legacyId": "OWN-MT-O-043",
+          "name": "Skinny cup plástico estándar"
+        },
+        {
+          "legacyId": "OWN-MT-O-044",
+          "name": "Skinny cup plástico premium grueso rubberized"
+        },
+        {
+          "legacyId": "OWN-MT-O-045",
+          "name": "Hoja de Coroplast Multi-Cut / múltiples piezas"
+        },
+        {
+          "legacyId": "OWN-MT-O-046",
+          "name": "Periódico personalizado para eventos"
+        },
+        {
+          "legacyId": "OWN-O-001",
+          "name": "Zip hoodie — capucha con cierre"
+        },
+        {
+          "legacyId": "OWN-O-002",
+          "name": "Piñata personalizada"
+        },
+        {
+          "legacyId": "OWN-O-003",
+          "name": "Gráfica impresa de reemplazo para X-Banner"
+        },
+        {
+          "legacyId": "OWN-O-004",
+          "name": "Bandera tipo pluma / Feather Flag — conjunto completo"
+        },
+        {
+          "legacyId": "OWN-O-005",
+          "name": "Gráfica textil para bandera tipo pluma"
+        },
+        {
+          "legacyId": "OWN-O-006",
+          "name": "Base / hardware para bandera tipo pluma"
+        },
+        {
+          "legacyId": "OWN-O-007",
+          "name": "Invitación formal"
+        },
+        {
+          "legacyId": "OWN-O-008",
+          "name": "Invitación casual"
+        },
+        {
+          "legacyId": "OWN-O-009",
+          "name": "Diseño gráfico"
+        },
+        {
+          "legacyId": "OWN-O-010",
+          "name": "Vectorización"
+        },
+        {
+          "legacyId": "OWN-O-011",
+          "name": "Diseño de logotipo"
+        },
+        {
+          "legacyId": "OWN-O-012",
+          "name": "Identidad de marca / imagen corporativa"
+        },
+        {
+          "legacyId": "OWN-O-013",
+          "name": "Invitaciones digitales"
+        },
+        {
+          "legacyId": "OWN-O-014",
+          "name": "Creación de sitios web"
+        },
+        {
+          "legacyId": "OWN-O-015",
+          "name": "Creación de CRM"
+        },
+        {
+          "legacyId": "OWN-O-016",
+          "name": "Desarrollo de software"
+        },
+        {
+          "legacyId": "OWN-O-017",
+          "name": "Automatización y servicios digitales"
+        }
+      ]
+    },
+    {
+      "id": "D-017",
+      "priority": "P2",
+      "title": "Compatibilidad de displays y alcance de canopy",
+      "question": "Aporta qué medidas de stand/gráfica son compatibles y qué incluye la oferta de canopy frente a sus partes vendibles.",
+      "whyNeeded": "La relación general no demuestra compatibilidad de cada configuración ni el contenido de canopy.",
+      "alreadyKnown": "Stand/gráfica/completo separados y composición X-Banner confirmados; no se pide decidir de nuevo que puede venderse hardware solo.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Restricciones de composición y datos de componentes",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-003",
+          "name": "X-Banner completo"
+        },
+        {
+          "legacyId": "MIG1-O-021",
+          "name": "Hardware / stand de X-Banner por separado"
+        },
+        {
+          "legacyId": "MIG2-O-050",
+          "name": "Canopy personalizado"
+        },
+        {
+          "legacyId": "OWN-O-003",
+          "name": "Gráfica impresa de reemplazo para X-Banner"
+        },
+        {
+          "legacyId": "OWN-O-004",
+          "name": "Bandera tipo pluma / Feather Flag — conjunto completo"
+        },
+        {
+          "legacyId": "OWN-O-005",
+          "name": "Gráfica textil para bandera tipo pluma"
+        },
+        {
+          "legacyId": "OWN-O-006",
+          "name": "Base / hardware para bandera tipo pluma"
+        }
+      ]
+    },
+    {
+      "id": "D-018",
+      "priority": "P2",
+      "title": "Invitaciones legacy frente a Formal/Casual",
+      "question": "Relaciona los registros de invitación anteriores con las líneas Formal/Casual, conservando diferencias reales de construcción/acabado.",
+      "whyNeeded": "Hay 9 registros coexistentes y 3 presentaciones de ocasión; necesitamos un mapa explícito, no fusionar por parecido.",
+      "alreadyKnown": "Formal y Casual existen como identidades del dueño; ocasión es presentación y sencilla/premium no equivalen automáticamente.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Linaje y revisión de identidad de invitaciones",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIGF-O-008",
+          "name": "Invitación sencilla"
+        },
+        {
+          "legacyId": "MIGF-O-009",
+          "name": "Invitación premium"
+        },
+        {
+          "legacyId": "MIGF-O-010",
+          "name": "Invitación para evento"
+        },
+        {
+          "legacyId": "MIGF-O-011",
+          "name": "Invitación con sobre"
+        },
+        {
+          "legacyId": "MIGF-O-012",
+          "name": "Invitación con sello"
+        },
+        {
+          "legacyId": "MIGF-O-013",
+          "name": "Invitación con acrílico"
+        },
+        {
+          "legacyId": "MIGF-O-014",
+          "name": "Invitación especial"
+        },
+        {
+          "legacyId": "OWN-O-007",
+          "name": "Invitación formal"
+        },
+        {
+          "legacyId": "OWN-O-008",
+          "name": "Invitación casual"
+        }
+      ]
+    },
+    {
+      "id": "D-019",
+      "priority": "P2",
+      "title": "Evidencia para PPE",
+      "question": "Entrega referencias reales de proveedor, código, costo, moneda y fecha de los artículos PPE que se quieran cotizar automáticamente.",
+      "whyNeeded": "El sourcing ausente limita cotización confiable, sin requerir implementar Supplier/Brand en esta etapa.",
+      "alreadyKnown": "La línea se conserva como expansión; no afirmar certificaciones ni activar todos los artículos. Datos TEST no son costos.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Evidencia de sourcing; no creación de proveedores",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIGF-O-063",
+          "name": "Casco"
+        },
+        {
+          "legacyId": "MIGF-O-064",
+          "name": "Chaleco reflejante"
+        },
+        {
+          "legacyId": "MIGF-O-065",
+          "name": "Lentes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-066",
+          "name": "Guantes de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-067",
+          "name": "Protección auditiva"
+        },
+        {
+          "legacyId": "MIGF-O-068",
+          "name": "Mascarilla"
+        },
+        {
+          "legacyId": "MIGF-O-069",
+          "name": "Respirador"
+        },
+        {
+          "legacyId": "MIGF-O-070",
+          "name": "Arnés"
+        },
+        {
+          "legacyId": "MIGF-O-071",
+          "name": "Cono de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-072",
+          "name": "Botiquín"
+        },
+        {
+          "legacyId": "MIGF-O-073",
+          "name": "Señalización de seguridad"
+        },
+        {
+          "legacyId": "MIGF-O-074",
+          "name": "PPE personalizado"
+        }
+      ]
+    },
+    {
+      "id": "D-020",
+      "priority": "P2",
+      "title": "Tabla waterproof faltante",
+      "question": "Localiza la tabla de 26 puntos waterproof citada en el mapa de comprensión, con su fecha y aprobación.",
+      "whyNeeded": "Una mención no permite reconstruir importes ni condiciones.",
+      "alreadyKnown": "Existe la referencia, no la tabla en PRECIOS. No se extiende a holográfico/fotográfico.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Evidencia adicional de precios",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-010",
+          "name": "Stickers de vinil"
+        }
+      ]
+    },
+    {
+      "id": "D-021",
+      "priority": "P2",
+      "title": "Alcance de instalación",
+      "question": "Precisa el trabajo incluido en microperforado con instalación y la unidad de cobro del servicio.",
+      "whyNeeded": "Falta delimitar el Service y su alcance para evitar doble cobro.",
+      "alreadyKnown": "Material impreso solo / impreso+instalación ya confirmado; no preguntar si esa modalidad existe.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Configuración/composición con servicio",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "CONDITIONAL_SCOPE_REVIEW",
+      "responseMode": "PER_ITEM_OR_RULE_WITH_EXPLICIT_EXCEPTIONS",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG2-O-002",
+          "name": "Microperforado"
+        }
+      ]
+    },
+    {
+      "id": "D-022",
+      "priority": "P1",
+      "title": "Redondeo e impuestos México",
+      "question": "¿Cómo se redondeará el precio México y cómo se mostrará la inclusión o exclusión de IVA?",
+      "whyNeeded": "Sólo publicación/precio México; no bloquea preparar USA",
+      "alreadyKnown": "Factor 0.70 y FX provisional 16.5 ya conocidos. No hay precios MXN reales explícitos en PRECIOS. No se pregunta de nuevo la fórmula.",
+      "alternatives": [],
+      "owner": "Martin",
+      "downstreamImpact": "Sólo publicación/precio México; no bloquea preparar USA",
+      "canPreparationContinue": "YES",
+      "canAffectedScopePublish": "NO",
+      "responseMode": "GLOBAL_POLICY",
+      "status": "OPEN",
+      "answer": null,
+      "affected": [
+        {
+          "legacyId": "MIG1-O-008",
+          "name": "Tarjeta Tradicional"
+        },
+        {
+          "legacyId": "MIG1-O-009",
+          "name": "Tarjeta Premium / Gloss"
+        },
+        {
+          "legacyId": "MIG2-O-036",
+          "name": "Flyers"
+        },
+        {
+          "legacyId": "MIGF-O-015",
+          "name": "Imanes para vehículo — par de 2 × 1 ft"
+        }
+      ]
+    }
+  ]
+}

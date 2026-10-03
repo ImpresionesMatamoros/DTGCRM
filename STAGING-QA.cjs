@@ -6,6 +6,9 @@ for(const r of productionRefs)assert.throws(()=>validate({...config,crmProjectRe
 assert.throws(()=>validate({...config,ownerConfirmedIsolation:false}));assert.throws(()=>validate({...config,peProjectRef:config.crmProjectRef}));assert.throws(()=>validate({...config,externalEffects:{...config.externalEffects,email:true}}));assert.throws(()=>validate({...config,supabaseUrl:'https://other.test'}));assert.throws(()=>validate({...config,appUrl:'https://impresionesmatamoros.github.io/test'}));assert.throws(()=>validate({...config,supabasePublishableKey:'sb_secret_not_allowed'}));assert.throws(()=>validate(JSON.parse(fs.readFileSync('staging/environment.example.json','utf8'))));
 assert.throws(()=>connection('postgres://postgres:fake@db.jpjpnxamiclvhmcywyhx.supabase.co/postgres',config.crmProjectRef));assert.throws(()=>connection('postgres://postgres:fake@arbitrary.test/postgres',config.crmProjectRef));
 assert.equal(connection('postgres://postgres:fake@db.'+config.crmProjectRef+'.supabase.co/postgres',config.crmProjectRef).includes(config.crmProjectRef),true);
+const shared={...config,peProjectRef:config.crmProjectRef,databaseIsolation:'shared-staging-project',crmSchema:'public',peSchema:'dtg_pe',productEngineUrl:config.supabaseUrl+'/functions/v1/product-engine'};
+assert.equal(validate(shared).peSchema,'dtg_pe');
+assert.throws(()=>validate({...shared,peSchema:'public'}));assert.throws(()=>validate({...shared,productEngineUrl:config.supabaseUrl+'/functions/v1/push-fanout'}));
 const out=build(config,path.join(__dirname,'dist/staging-qa'));
 assert.throws(()=>build(config,path.join(__dirname,'supabase')));
 assert(!fs.readFileSync(path.join(out,'sw.js'),'utf8').includes('showNotification'));assert(!fs.existsSync(path.join(out,'staging/fixtures.sql')));assert.equal(JSON.parse(fs.readFileSync(path.join(out,'manifest.webmanifest'))).short_name,'DTG TEST');

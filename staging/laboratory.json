@@ -1,0 +1,25 @@
+{
+  "environment": "staging",
+  "appUrl": "https://dtg-crm-laboratorio.gatete2025.chatgpt.site",
+  "crmProjectRef": "hhzqmqndavqqswerjhxe",
+  "peProjectRef": "hhzqmqndavqqswerjhxe",
+  "databaseIsolation": "shared-staging-project",
+  "crmSchema": "public",
+  "peSchema": "dtg_pe",
+  "supabaseUrl": "https://hhzqmqndavqqswerjhxe.supabase.co",
+  "supabasePublishableKey": "sb_publishable_Cqo2NmKom63ZD5VhCFEvog_lar96VdN",
+  "productEngineUrl": "https://hhzqmqndavqqswerjhxe.supabase.co/functions/v1/product-engine",
+  "productionOrigins": [
+    "https://impresionesmatamoros.github.io",
+    "https://jpjpnxamiclvhmcywyhx.supabase.co"
+  ],
+  "ownerConfirmedIsolation": true,
+  "externalEffects": {
+    "whatsapp": false,
+    "email": false,
+    "push": false,
+    "payments": false,
+    "webhooks": false,
+    "transcription": false
+  }
+}

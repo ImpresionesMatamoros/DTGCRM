@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "width": 390,
+      "login": true,
+      "errors": [],
+      "failedRequests": []
+    },
+    {
+      "width": 1280,
+      "login": true,
+      "errors": [],
+      "failedRequests": []
+    }
+  ],
+  "testedAt": "2026-10-03T11:51:17.306Z"
+}
