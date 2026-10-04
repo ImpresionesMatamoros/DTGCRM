@@ -4840,6 +4840,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
 var UI_INITIAL_SNAPSHOT = JSON.stringify(UI);
 var FATAL_ERROR = null;
 var signedUrlCache = {};
+var signedUrlPending = {}, signedUrlExpires = {};
 /* Escape en el input de teléfono/email de la ficha del cliente cierra la
    edición SIN guardar — pero remover el input del DOM (render() dentro de
    closeClienteFichaEdit) puede disparar su blur nativo antes de que el
@@ -5357,12 +5358,13 @@ function deviceOpenPicker(){
 function deviceClosePicker(){if(DEVICE_SWITCH_BUSY)return;DEVICE_PICKER_OPEN=false;var el=document.querySelector('.device-picker-overlay');if(el)el.remove();var button=document.querySelector('[data-device="open"]');if(button)button.focus({preventScroll:true});}
 function deviceResetIdentity(){
   AUTH_EPOCH++;
-  clearTimeout(realtimeTimer);realtimeTimer=null;refreshPending=null;refreshInFlight=null;
+  clearTimeout(realtimeTimer);realtimeTimer=null;realtimeRefreshOpts=null;refreshPending=null;refreshInFlight=null;
+  clearTimeout(CHAT_RECEIPTS_TIMER);CHAT_RECEIPTS_TIMER=null;CHAT_RECEIPTS_SCOPE=null;
   Object.keys(chatScopeSeenTimers||{}).forEach(function(k){clearTimeout(chatScopeSeenTimers[k]);});chatScopeSeenTimers={};
   if(ASTRA_RECORDER){try{ASTRA_RECORDER.onstop=null;ASTRA_RECORDER.stop();}catch(e){}}
   astraRecordingCleanup();astraDropLocalAudio();astraPlayerStop();
   Object.keys(UI.chatFileDrafts||{}).forEach(function(k){(UI.chatFileDrafts[k]||[]).forEach(function(x){if(x.previewUrl)URL.revokeObjectURL(x.previewUrl);});});
-  signedUrlCache={};CHAT_RECEIPTS={};CHAT_RECEIPTS_LAST=0;DTG_POSTS_AVISADOS={};DTG_CHAT_ARRANCADO=false;
+  signedUrlCache={};signedUrlPending={};signedUrlExpires={};DTG_STATE_CACHE={};CHAT_RECEIPTS={};CHAT_RECEIPTS_LAST=0;DTG_POSTS_AVISADOS={};DTG_CHAT_ARRANCADO=false;
   DTG_ALERTS=[];DTG_OFFLINE=false;
   if(DTG_TAB_CH){try{DTG_TAB_CH.close();}catch(e){}}DTG_TAB_CH=null;clearInterval(dtgTabTimer);dtgTabTimer=null;DTG_TABS={};
   STATE={meta:{queSigueOptions:[],teamNames:[]},tickets:[],clientes:[],teamPosts:[],feedReactions:[],profiles:[],conversations:[],chatReadState:[],chatState:null};
@@ -5754,23 +5756,40 @@ async function fetchWorkOrders(){
   try{ return { rows: await selectAll("work_orders"), missing: false }; }
   catch(e){ return { rows: [], missing: true }; }
 }
-async function fetchAllState(){
+/* Session-only raw snapshots. Permission-sensitive events and manual refreshes
+   still reconcile everything. Unsubscribed tables are always read fresh. */
+var DTG_STATE_CACHE = {};
+async function dtgStateRead(table, load, opts){
+  var epoch=AUTH_EPOCH,client=sb,entry=DTG_STATE_CACHE[table];
+  var watched=DTG_RT_TABLAS.some(function(d){return d.t===table;});
+  if(opts&&opts.tables&&watched&&opts.tables.indexOf(table)<0&&entry&&entry.epoch===epoch&&entry.client===client)return entry.value;
+  var value=await load();
+  if(epoch===AUTH_EPOCH&&client===sb)DTG_STATE_CACHE[table]={epoch:epoch,client:client,value:value};
+  return value;
+}
+async function fetchAllState(opts){
+  var accessBefore=DTG_STATE_CACHE.ticket_access;
   /* X1.9: todas paginadas. La bitácora se pide al REVÉS (lo más nuevo
      primero) y se voltea en memoria: si algún día hiciera falta cortar,
      lo que se pierde es lo viejo, nunca lo de esta semana. El resto de la
      app la sigue recibiendo en el mismo orden ascendente de siempre. */
-  var results = await Promise.all([
-    selectAll("tickets"),
-    selectAll("productos"),
-    selectAll("tareas"),
-    selectAll("pagos"),
-    selectAll("bitacora", { order: "ts", ascending: false }),
-    selectAll("app_settings"),
-    selectAll("documentos"),
-    fetchClientes(), fetchTicketMarkers(), fetchTeamPosts(), fetchFeedReactions(),
-    fetchProfiles(), fetchChatState(), fetchChatReadState(), fetchTicketAccess(),
-    fetchWorkOrders(), fetchAstraConversations(), fetchAstraLinks(), fetchAstraLater()
-  ]);
+  var loaders = [
+    function(){return selectAll("tickets");},
+    function(){return selectAll("productos");},
+    function(){return selectAll("tareas");},
+    function(){return selectAll("pagos");},
+    function(){return selectAll("bitacora", { order: "ts", ascending: false });},
+    function(){return selectAll("app_settings");},
+    function(){return selectAll("documentos");},
+    fetchClientes, fetchTicketMarkers, fetchTeamPosts, fetchFeedReactions,
+    fetchProfiles, fetchChatState, fetchChatReadState, fetchTicketAccess,
+    fetchWorkOrders, fetchAstraConversations, fetchAstraLinks, fetchAstraLater
+  ];
+  var tables=['tickets','productos','tareas','pagos','bitacora','app_settings','documentos','clientes','ticket_markers','team_posts','feed_reactions','profiles','chat_user_state','chat_read_state','ticket_access','work_orders','chat_conversations','chat_ticket_links','chat_later'];
+  var results=await Promise.all(loaders.map(function(load,i){return dtgStateRead(tables[i],load,opts);}));
+  /* ticket_access is not published in every deployment. Its fresh snapshot
+     must invalidate cached ticket data after access is granted or revoked. */
+  if(opts&&opts.tables&&accessBefore&&JSON.stringify(accessBefore.value)!==JSON.stringify(results[14]))return fetchAllState();
   var ticketsRows = results[0], productosRows = results[1], tareasRows = results[2],
       pagosRows = results[3], bitacoraRows = results[4].slice().reverse(), settingsRows = results[5],
       documentosRows = results[6];
@@ -5944,16 +5963,16 @@ async function refreshFromServer(opts){
   opts = opts || {};
   if(opts.refocus) UI.pendingFocus = UI.pendingFocus || "composer";
   if(refreshInFlight){
-    refreshPending = refreshPending || { background: true };
-    if(!opts.background) refreshPending.background = false;
+    refreshPending = refreshPending ? dtgMergeRefresh(refreshPending,opts) : Object.assign({},opts);
     return refreshInFlight;
   }
   refreshInFlight = (async function(){
     var background = !!opts.background;
+    var passOpts=opts;
     for(;;){
       setSyncIndicator(true);
       try{
-        var fresh = await fetchAllState();
+        var fresh = await fetchAllState(passOpts);
         if(refreshEpoch!==AUTH_EPOCH || refreshClient!==sb)return;
         /* v0.23: un refresco NO es un mensaje nuevo. Lo que llegue aquí se
            marca como ya-avisado ANTES de reemplazar el estado, para que
@@ -5989,6 +6008,7 @@ async function refreshFromServer(opts){
       }
       if(!refreshPending) break;
       background = refreshPending.background;
+      passOpts=refreshPending;
       refreshPending = null;
     }
     refreshInFlight = null;
@@ -5998,7 +6018,27 @@ async function refreshFromServer(opts){
 }
 
 var realtimeTimer = null;
-function scheduleRefresh(){ clearTimeout(realtimeTimer); realtimeTimer = setTimeout(function(){ refreshFromServer({ background: true }); }, 300); }
+var realtimeRefreshOpts=null;
+function dtgMergeRefresh(a,b){
+  return {background:!!a.background&&!!b.background,tables:a.tables&&b.tables?Array.from(new Set(a.tables.concat(b.tables))):undefined};
+}
+function dtgRealtimeRefreshOptions(table,payload){
+  var selective=typeof table==='string'&&['tickets','ticket_access','profiles'].indexOf(table)<0;
+  if(table==='tickets'&&payload&&payload.eventType==='UPDATE'){
+    var entry=DTG_STATE_CACHE.tickets,row=payload.new;
+    var prior=entry&&entry.epoch===AUTH_EPOCH&&entry.client===sb&&entry.value.find(function(t){return row&&t.id===row.id;});
+    /* Ordinary touch_ticket updates do not change RLS visibility. Changes
+       of visibility, insertion, deletion, or unknown snapshots stay full. */
+    selective=!!(prior&&row&&row.visibility&&prior.visibility===row.visibility);
+  }
+  return {background:true,tables:selective?[table]:undefined};
+}
+function scheduleRefresh(table,payload){
+  var opts=dtgRealtimeRefreshOptions(table,payload);
+  realtimeRefreshOpts=realtimeRefreshOpts?dtgMergeRefresh(realtimeRefreshOpts,opts):opts;
+  if(realtimeTimer)return;
+  realtimeTimer=setTimeout(function(){realtimeTimer=null;var next=realtimeRefreshOpts;realtimeRefreshOpts=null;refreshFromServer(next);},1000);
+}
 var realtimeChannel = null;
 
 /* ================= Parte T — Deep Links (?t=<uuid>) =================
@@ -6354,7 +6394,8 @@ function dtgRtRecalcular(){
       if(AUTH_STATUS !== "signed_in") return;
       if(typeof document !== "undefined" && document.hidden) return;
       if(refreshInFlight) return;
-      refreshFromServer({ background: true });
+      var failed=DTG_RT_TABLAS.filter(function(d){return dtgRtEstadoDe(d.t)!=='vivo';}).map(function(d){return d.t;});
+      refreshFromServer({ background: true, tables:failed.some(function(t){return ['tickets','profiles','ticket_access'].indexOf(t)>=0;})?undefined:failed });
     }, DTG_RT_POLL_MS);
   }
 }
@@ -6371,8 +6412,12 @@ function dtgRtSet(estado, detalle){
 }
 /* El chat aplica el payload al instante; el resto solo pide un refresh. */
 function dtgRtHandler(tabla){
-  if(tabla==="chat_read_state")return function(){chatReceiptInvalidated();};
-  if(tabla !== "team_posts") return scheduleRefresh;
+  if(tabla==="chat_read_state")return function(payload){
+    chatReceiptInvalidated();
+    var user=payload&&payload.new&&payload.new.user_id;
+    if(!user||user===currentActorId())scheduleRefresh(tabla,payload);
+  };
+  if(tabla !== "team_posts") return function(payload){scheduleRefresh(tabla,payload);};
   /* v0.20 — chat: un mensaje nuevo de otra persona aparece AL INSTANTE con
      el payload del propio evento (Realtime ya aplica RLS), sin esperar el
      refresh completo de 300ms+fetch; el refresh de siempre corre igual
@@ -6382,7 +6427,7 @@ function dtgRtHandler(tabla){
        antes no quedaba rastro de por qué. */
     try{ applyTeamPostRealtime(payload); }
     catch(e){ console.error("[DTG] aplicar mensaje en vivo", e); }
-    scheduleRefresh();
+    scheduleRefresh(tabla);
   };
 }
 /* Suscribe UNA tabla. Su fallo no toca a las demás. */
@@ -17494,21 +17539,34 @@ function pickSlashCommand(cmd){
   restoreComposerText("/" + cmd + " ");
 }
 
+function cachedStorageUrl(bucket,path){
+  var key=bucket+':'+path,epoch=AUTH_EPOCH,client=sb;
+  if(signedUrlCache[key]&&Date.now()<(signedUrlExpires[key]||0))return Promise.resolve(signedUrlCache[key]);
+  if(signedUrlPending[key])return signedUrlPending[key];
+  var pending=(async function(){
+    var res=await client.storage.from(bucket).createSignedUrl(path,3600);
+    if(res.error)throw res.error;
+    var url=res.data&&res.data.signedUrl;
+    if(epoch!==AUTH_EPOCH||client!==sb)return null;
+    if(url){signedUrlCache[key]=url;signedUrlExpires[key]=Date.now()+3300000;}
+    return url;
+  })();
+  signedUrlPending[key]=pending;
+  pending.then(cleanup,cleanup);
+  function cleanup(){if(signedUrlPending[key]===pending)delete signedUrlPending[key];}
+  return pending;
+}
 function hydrateImages(){
   var imageEpoch=AUTH_EPOCH,imageClient=sb;
   var imgs = document.querySelectorAll("img[data-storage-path]");
   imgs.forEach(async function(img){
     var path = img.getAttribute("data-storage-path");
     if(!path) return;
-    var bucket=img.getAttribute('data-storage-bucket')||FILES_BUCKET;var cacheKey=bucket+':'+path;
-    if(signedUrlCache[cacheKey]){ img.src = signedUrlCache[cacheKey]; return; }
+    var bucket=img.getAttribute('data-storage-bucket')||FILES_BUCKET;
     try{
-      var res = await sb.storage.from(bucket).createSignedUrl(path, 3600);
+      var url = await cachedStorageUrl(bucket,path);
       if(imageEpoch!==AUTH_EPOCH || imageClient!==sb)return;
-      if(res.data && res.data.signedUrl){
-        signedUrlCache[cacheKey] = res.data.signedUrl;
-        if(document.body.contains(img)) img.src = res.data.signedUrl;
-      }
+      if(url&&document.body.contains(img)&&img.getAttribute('data-storage-path')===path)img.src=url;
     }catch(e){ /* leave broken silently, non-critical */ }
   });
 }
@@ -26922,16 +26980,22 @@ function chatWithinNotificationHours(date,allHours){
   var hour=Number(parts.find(function(p){return p.type==="hour";}).value);
   return hour>=7&&hour<18;
 }
-var CHAT_RECEIPTS={},CHAT_RECEIPTS_INFLIGHT=false,CHAT_RECEIPTS_LAST=0;
+var CHAT_RECEIPTS={},CHAT_RECEIPTS_INFLIGHT=false,CHAT_RECEIPTS_LAST=0,CHAT_RECEIPTS_SCOPE=null;
 async function chatRefreshReceipts(force){
-  if(!sb||AUTH_STATUS!=="signed_in"||CHAT_RECEIPTS_INFLIGHT||(!force&&Date.now()-CHAT_RECEIPTS_LAST<3000))return;
-  var actor=currentActorId(),scope=chatCurrentScopeId(),ids=(STATE.teamPosts||[]).filter(function(p){return !p.pending&&!p.deletedAt&&(p.conversationId||null)===(scope||null);}).slice(0,250).map(function(p){return p.id;});
+  if(!sb||AUTH_STATUS!=="signed_in"||document.hidden||!document.getElementById('chat-scroll')||CHAT_RECEIPTS_INFLIGHT)return;
+  var actor=currentActorId(),epoch=AUTH_EPOCH,client=sb,scope=chatCurrentScopeId();
+  var receiptScope=String(scope||'team')+':'+String(UI.astraThreadRoot||'');
+  if(!force&&CHAT_RECEIPTS_SCOPE===receiptScope&&Date.now()-CHAT_RECEIPTS_LAST<30000)return;
+  var rendered=new Set(Array.from(document.querySelectorAll('[data-chat-seen]')).map(function(el){return el.getAttribute('data-chat-seen');}));
+  var ids=(STATE.teamPosts||[]).filter(function(p){return rendered.has(p.id)&&!p.pending&&!p.deletedAt&&(p.conversationId||null)===(scope||null);}).slice(0,250).map(function(p){return p.id;});
   if(!ids.length)return;
   CHAT_RECEIPTS_INFLIGHT=true;
+  CHAT_RECEIPTS_SCOPE=receiptScope;
+  CHAT_RECEIPTS_LAST=Date.now(); /* throttle failures as well as successes */
   try{
     var r=await sb.rpc("chat_read_receipts",{p_post_ids:ids});
     if(r.error)throw r.error;
-    if(currentActorId()!==actor||AUTH_STATUS!=="signed_in")return;
+    if(epoch!==AUTH_EPOCH||client!==sb||currentActorId()!==actor||AUTH_STATUS!=="signed_in"||scope!==chatCurrentScopeId())return;
     ids.forEach(function(id){CHAT_RECEIPTS[id]=[];});
     (r.data||[]).forEach(function(x){(CHAT_RECEIPTS[x.post_id]=CHAT_RECEIPTS[x.post_id]||[]).push(x.display_name||"Equipo");});
     CHAT_RECEIPTS_LAST=Date.now();
@@ -26952,7 +27016,12 @@ function chatContextName(){
   var p=(STATE.profiles||[]).find(function(x){return x.id===peer;});
   return p?(p.displayName||p.display_name):"Chat personal";
 }
-function chatReceiptInvalidated(){CHAT_RECEIPTS_LAST=0;chatRefreshReceipts(true);}
+var CHAT_RECEIPTS_TIMER=null;
+function chatReceiptInvalidated(){
+  CHAT_RECEIPTS_LAST=0;
+  if(CHAT_RECEIPTS_TIMER)return;
+  CHAT_RECEIPTS_TIMER=setTimeout(function(){CHAT_RECEIPTS_TIMER=null;chatRefreshReceipts(true);},1000);
+}
 function chatClientPicker(r,ref){
   var q=r.clientQuery||"",picked=r.clientId&&(STATE.clientes||[]).find(function(c){return c.id===r.clientId;});
   var matches=rankClientes(q).slice(0,8);
@@ -27005,7 +27074,7 @@ document.addEventListener('pointerup',function(e){
 },{passive:true});
 document.addEventListener('pointercancel',chatTouchReset);
 window.addEventListener('blur',chatTouchReset);
-setInterval(function(){if(!document.hidden&&AUTH_STATUS==="signed_in")chatRefreshReceipts();},10000);
+setInterval(function(){chatRefreshReceipts();},30000);
 
 /* Chat has two screens: inbox and focused conversation. Existing mutations remain shared. */
 function waHome(){return !UI.mainView&&!UI.selectedTicketId&&!globalEphemeralHtml();}
@@ -27701,7 +27770,7 @@ var CX={selected:[],merge:false,panel:false,query:'',pending:null,busy:false,tar
 var cxMap=mapClienteRow;
 mapClienteRow=function(r){var c=cxMap(r);c.frequentClient=!!r.frequent_client;c.highTicket=!!r.high_ticket;c.archivedAt=r.archived_at||null;c.mergedInto=r.merged_into||null;return c;};
 var cxFetch=fetchAllState;
-fetchAllState=async function(){var results=await Promise.all([cxFetch(),selectAll('client_notes',{order:'created_at'}),selectAll('client_tasks',{order:'created_at'})]);var state=results[0];state.clientNotes=results[1];state.clientTasks=results[2];return state;};
+fetchAllState=async function(opts){var results=await Promise.all([cxFetch(opts),dtgStateRead('client_notes',function(){return selectAll('client_notes',{order:'created_at'});},opts),dtgStateRead('client_tasks',function(){return selectAll('client_tasks',{order:'created_at'});},opts)]);var state=results[0];state.clientNotes=results[1];state.clientTasks=results[2];return state;};
 DTG_RT_TABLAS.push({t:'client_notes',que:'las notas de clientes'},{t:'client_tasks',que:'las tareas de clientes'});
 clienteIdentityControlsHtml=function(){return '';};
 function cxClients(){return (STATE.clientes||[]).filter(function(c){return !c.archivedAt;});}
