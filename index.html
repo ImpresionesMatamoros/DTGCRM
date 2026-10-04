@@ -5761,7 +5761,7 @@ async function fetchWorkOrders(){
 var DTG_STATE_CACHE = {};
 async function dtgStateRead(table, load, opts){
   var epoch=AUTH_EPOCH,client=sb,entry=DTG_STATE_CACHE[table];
-  var watched=DTG_RT_TABLAS.some(function(d){return d.t===table;});
+  var watched=table!=='tickets'&&DTG_RT_TABLAS.some(function(d){return d.t===table;});
   if(opts&&opts.tables&&watched&&opts.tables.indexOf(table)<0&&entry&&entry.epoch===epoch&&entry.client===client)return entry.value;
   var value=await load();
   if(epoch===AUTH_EPOCH&&client===sb)DTG_STATE_CACHE[table]={epoch:epoch,client:client,value:value};
@@ -5769,6 +5769,7 @@ async function dtgStateRead(table, load, opts){
 }
 async function fetchAllState(opts){
   var accessBefore=DTG_STATE_CACHE.ticket_access;
+  var ticketsBefore=DTG_STATE_CACHE.tickets;
   /* X1.9: todas paginadas. La bitácora se pide al REVÉS (lo más nuevo
      primero) y se voltea en memoria: si algún día hiciera falta cortar,
      lo que se pierde es lo viejo, nunca lo de esta semana. El resto de la
@@ -5789,7 +5790,8 @@ async function fetchAllState(opts){
   var results=await Promise.all(loaders.map(function(load,i){return dtgStateRead(tables[i],load,opts);}));
   /* ticket_access is not published in every deployment. Its fresh snapshot
      must invalidate cached ticket data after access is granted or revoked. */
-  if(opts&&opts.tables&&accessBefore&&JSON.stringify(accessBefore.value)!==JSON.stringify(results[14]))return fetchAllState();
+  function visibilityKey(rows){return JSON.stringify(rows.map(function(r){return [r.id,r.visibility];}).sort(function(a,b){return String(a[0]).localeCompare(String(b[0]));}));}
+  if(opts&&opts.tables&&((accessBefore&&JSON.stringify(accessBefore.value)!==JSON.stringify(results[14]))||(ticketsBefore&&visibilityKey(ticketsBefore.value)!==visibilityKey(results[0]))))return fetchAllState();
   var ticketsRows = results[0], productosRows = results[1], tareasRows = results[2],
       pagosRows = results[3], bitacoraRows = results[4].slice().reverse(), settingsRows = results[5],
       documentosRows = results[6];
