@@ -1,0 +1,3 @@
+create or replace view public.dtg_email_inbox_messages with(security_invoker=true) as select m.id,m.connection_id,m.external_message_id,m.thread_id,m.rfc_message_id,m.from_address,m.to_addresses,m.cc_addresses,m.subject,m.received_at,m.sent_at,m.occurred_at,m.direction,m.has_attachments,m.sync_status,i.inbox_id,i.delivered_alias,m.label_ids,m.snippet from public.dtg_email_messages m join public.dtg_email_message_inboxes i on i.message_id=m.id;
+revoke all on public.dtg_email_inbox_messages from public,anon,authenticated;
+grant select on public.dtg_email_inbox_messages to authenticated,service_role;

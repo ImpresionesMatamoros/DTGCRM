@@ -4428,8 +4428,8 @@ button.tk-task-open:hover{background:var(--surface-3)}
 <link rel="stylesheet" href="integrations.css?v=1">
 <script src="workspace-api.js?v=1"></script>
 <script src="integrations.js?v=2"></script>
-<link rel="stylesheet" href="mail.css?v=1">
-<script src="mail.js?v=3"></script>
+<link rel="stylesheet" href="mail.css?v=2">
+<script src="mail.js?v=4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
 <script>
 (function(){
@@ -27888,7 +27888,7 @@ if(window.DTGIntegrations){
 }
 
 if(window.DTGMail){
- window.DTGMail.configure({actor:currentActorId,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},url:function(){return SUPABASE_URL;},members:activeAssignableProfiles,tickets:function(){return STATE.tickets.map(function(t){return{id:t.id,label:'#'+t.seq+' · '+t.cliente};});}});
+ window.DTGMail.configure({actor:currentActorId,actorName:currentActorName,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},url:function(){return SUPABASE_URL;},members:activeAssignableProfiles,tickets:function(){return STATE.tickets.map(function(t){return{id:t.id,label:'#'+t.seq+' · '+t.cliente};});}});
  document.addEventListener('click',function(e){var b=e.target.closest('[data-action="go-correos"]');if(!b)return;UI.mainView='correos';UI.selectedTicketId=null;UI.selectedClienteId=null;UI.sidebarOpen=false;UI.deepLinkNotFound=false;UI.pendingFocus=null;saveUi();render();});
  document.addEventListener('click',function(e){var b=e.target.closest('[data-action="mail-settings-open"]');if(!b||!CURRENT_PROFILE||CURRENT_PROFILE.role!=='admin')return;UI.accountMenuOpen=false;UI.mainView='correos';UI.selectedTicketId=null;UI.selectedClienteId=null;UI.sidebarOpen=false;UI.pendingFocus=null;saveUi();render();window.DTGMail.openSettings();});
  var mailRenderCore=render;render=function(){mailRenderCore();var h=document.getElementById('dtg-mail-root');if(h)window.DTGMail.show(h);else window.DTGMail.hide();};

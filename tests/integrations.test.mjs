@@ -198,3 +198,5 @@ test('primary Gmail sender has no custom alias verification status',async()=>{
  await s.validateAliases({listAliases:async()=>({sendAs:[{sendAsEmail:c.account_email,isPrimary:true}]})},ids.connection);
  const b=await db.one('dtg_email_inboxes',[['email_alias','eq',c.account_email]]);assert.equal(b.verification_status,'accepted');
 });
+
+test('alias validation API input is not mistaken for Google adapter',async()=>{const {s,db,ids}=scenario();const c=await db.one('dtg_google_connections',[['id','eq',ids.connection]]);s.google=async()=>({listAliases:async()=>({sendAs:[{sendAsEmail:c.account_email,isPrimary:true}]})});await s.validateAliases({action:'validateAliases'});assert.equal((await db.one('dtg_email_inboxes',[['email_alias','eq',c.account_email]])).verification_status,'accepted');});

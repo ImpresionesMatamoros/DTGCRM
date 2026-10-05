@@ -69,7 +69,8 @@ export class IntegrationService {
     const connection = connections.find(c=>c.singleton)||null;
     const permissions=admin?[]:await this.user.list(T('email_inbox_access'),[eq('user_id',this.actor)]);
     for(const box of boxes){const grant=permissions.find(g=>g.inbox_id===box.id);const c=allConnections.find(c=>box.connection_id?c.id===box.connection_id:c.singleton);box.can_send=admin||!!grant?.can_send;box.connected=c?.state==='connected';box.account_email=c?.account_email||null;}
-    return { enabled: cfg.enabled, domain: cfg.domain, setup: admin ? mailReadiness(this.env, connections.find(c=>c.state==='connected')) : null, connections: connections.map(c=>({id:c.id,account_email:c.account_email,state:c.state,last_sync_at:c.last_sync_at,singleton:c.singleton})), connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
+    let unread=null;try{unread=await this.user.list(T('email_inbox_messages'),[['label_ids','contains',['UNREAD','INBOX']]],{select:'id,inbox_id',limit:1000});}catch{}
+    return { unread_snapshot:unread,unread_capped:unread?.length===1000,enabled: cfg.enabled, domain: cfg.domain, setup: admin ? mailReadiness(this.env, connections.find(c=>c.state==='connected')) : null, connections: connections.map(c=>({id:c.id,account_email:c.account_email,state:c.state,last_sync_at:c.last_sync_at,singleton:c.singleton})), connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
   }
   async configure(input) {
     await this.requireAdmin(); const patch = {};
@@ -123,6 +124,7 @@ export class IntegrationService {
     await this.validateAliases(google,id); await this.audit('oauth.connected', { account: profile.emailAddress }); return { state: 'connected' };
   }
   async validateAliases(google = null, connectionId = null) {
+    if(google&&typeof google.listAliases!=='function')google=null;
     if(!google){await this.requireAdmin();let total=0;for(const c of await this.admin.list(T('google_connections'),[eq('state','connected')]))total+=(await this.validateAliases(await this.google(c.id),c.id)).validated;return{validated:total};}
     const g=google,connection=await this.connection(connectionId);if(!connection)fail('GOOGLE_NOT_CONNECTED',503);
     const aliases = (await g.listAliases()).sendAs || [];
