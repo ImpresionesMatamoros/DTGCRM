@@ -1,6 +1,6 @@
 # Google Workspace integration layer
 
-Implementation branch only. No migration, Edge Function, scheduler, DNS record or production UI has been deployed. The default configuration is disabled. Workspace/domain setup is owner-managed; this implementation has not verified the live CRM OAuth connection.
+Deployment update 2026-10-05: additive migration and all three Edge Functions are deployed to staging and production. Configuration remains disabled; there is no connected Google account and no scheduler was activated. crm.956print.com is configured on GitHub Pages with HTTPS. See EMAIL-ACTIVATION.md for the remaining credential/consent/scheduler steps and rollout checks. Earlier validation below describes the original implementation.
 
 ## Architecture
 

@@ -1,4 +1,4 @@
-import { IntegrationError, fail, uuid, email, text, header, selectStorage, messageMetadata, vendorEligibility, expiry, retryDelay, buildMime, digest, seal, unseal } from './core.mjs';
+import { IntegrationError, fail, uuid, email, text, header, selectStorage, messageMetadata, vendorEligibility, expiry, retryDelay, buildMime, digest, seal, unseal, mailReadiness } from './core.mjs';
 import { eq } from './store.mjs';
 import { GoogleAdapter, readLimited } from './google.mjs';
 
@@ -64,8 +64,9 @@ export class IntegrationService {
   }
   async status() {
     const cfg = await this.policy(); const boxes = await this.user.list(T('email_inboxes'));
-    const connection = await this.isAdmin() ? await this.connection() : null;
-    return { enabled: cfg.enabled, domain: cfg.domain, connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
+    const admin = await this.isAdmin();
+    const connection = admin ? await this.connection() : null;
+    return { enabled: cfg.enabled, domain: cfg.domain, setup: admin ? mailReadiness(this.env, connection) : null, connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
   }
   async configure(input) {
     await this.requireAdmin(); const patch = {};
@@ -73,7 +74,7 @@ export class IntegrationService {
       if (!Array.isArray(input[k]) || input[k].length > 100) fail('INVALID_POLICY'); patch[k] = input[k].map(x => header(x, 150).toLowerCase());
     }
     if (input.threshold_bytes !== undefined) { const n = Number(input.threshold_bytes); if (!Number.isSafeInteger(n) || n < 1 || n > 52428800) fail('INVALID_THRESHOLD'); patch.threshold_bytes = n; }
-    if (input.enabled !== undefined) { if (typeof input.enabled !== 'boolean') fail('INVALID_POLICY'); patch.enabled = input.enabled; }
+    if (input.enabled !== undefined) { if (typeof input.enabled !== 'boolean') fail('INVALID_POLICY'); if (input.enabled) { const ready = mailReadiness(this.env, await this.connection()); if (!ready.configured) fail('SECRETS_NOT_CONFIGURED',503); if (!ready.connected) fail('GOOGLE_NOT_CONNECTED',503); } patch.enabled = input.enabled; }
     await this.admin.update(T('integration_config'), [eq('id', true)], patch); await this.audit('configuration.changed', { fields: Object.keys(patch) }); return this.status();
   }
   async beginOAuth() {
@@ -147,6 +148,12 @@ export class IntegrationService {
   async sendEmail(input) {
     const cfg = await this.active(), box = await this.inbox(input.inbox_id, true);
     if (input.ticket_id) await this.ticket(input.ticket_id);
+    // Resolve reply headers from an RLS-readable message, never browser-supplied metadata.
+    if (input.reply_message_id) {
+      const original = await this.user.one(T('email_messages'), [eq('id',uuid(input.reply_message_id))]);
+      if (!original?.rfc_message_id || !original.thread_id) fail('THREAD_UNAVAILABLE',403);
+      input = {...input, subject: original.subject || '(Sin asunto)', thread_id: original.thread_id, in_reply_to: original.rfc_message_id, references: original.rfc_message_id};
+    }
     // Validate before accepting a durable command. Signature and alias revalidated in worker.
     buildMime(input, box, uuid(input.idempotency_key), cfg.domain);
     if (input.thread_id) {

@@ -2,7 +2,7 @@
 
 Destino elegido: https://crm.956print.com. Hosting actual verificado: https://impresionesmatamoros.github.io/DTGCRM/ (HTTP 200).
 
-Estado 2026-10-05: subdominio sin respuesta DNS; no hay sesión de Namecheap ni credenciales DNS disponibles en este entorno. No se ha cambiado el dominio de Pages todavía.
+Estado 2026-10-05: CNAME confirmado mediante DNS público. GitHub Pages configurado para crm.956print.com; certificado approved y Enforce HTTPS activo. HTTPS devuelve 200 con validación de certificado. Algunos resolutores locales todavía mantienen caché negativa. El enlace antiguo /DTGCRM/client-form.html redirige a https://crm.956print.com/client-form.html; no se revocaron tokens.
 
 Orden de activación:
 1. En DNS autoritativo de 956print.com crear CNAME: host crm, destino impresionesmatamoros.github.io, TTL automático. No modificar MX, SPF, DKIM ni registros del dominio raíz.

@@ -134,3 +134,13 @@ export function normalizeProviderError(response) {
   }
   return new IntegrationError(status === 403 ? 'PROVIDER_FORBIDDEN' : 'PROVIDER_REJECTED', 409);
 }
+
+// These are the two owner-approved CRM origins; deployments may override them.
+export function crmOrigins(env) {
+  const configured = env.CRM_ORIGINS || env.CRM_ORIGIN;
+  return configured ? configured.split(',').map(x => x.trim()).filter(Boolean) : ['https://impresionesmatamoros.github.io','https://crm.956print.com'];
+}
+export function mailReadiness(env, connection) {
+  const missing = ['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REDIRECT_URI','INTEGRATION_ENCRYPTION_KEY','INTEGRATION_WORKER_SECRET'].filter(k => !env[k]);
+  return { configured: !missing.length, missing, connected: connection?.state === 'connected' };
+}

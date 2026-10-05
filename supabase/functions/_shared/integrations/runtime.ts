@@ -2,17 +2,18 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { IntegrationService } from './service.mjs';
 import { IntegrationWorker } from './worker.mjs';
 import { Store, SupabaseStorageAdapter } from './store.mjs';
-import { IntegrationError, fail } from './core.mjs';
+import { IntegrationError, fail, crmOrigins } from './core.mjs';
 import { readLimited } from './google.mjs';
 
 export function environment() {
   return Object.fromEntries(['SUPABASE_URL','SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','INTEGRATION_ENCRYPTION_KEY',
-    'GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REDIRECT_URI','GOOGLE_DRIVE_PARENT_ID','INTEGRATION_WORKER_SECRET','CRM_ORIGIN'].map(k=>[k,Deno.env.get(k)||'']));
+    'GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET','GOOGLE_REDIRECT_URI','GOOGLE_DRIVE_PARENT_ID','INTEGRATION_WORKER_SECRET','CRM_ORIGIN','CRM_ORIGINS'].map(k=>[k,Deno.env.get(k)||'']));
 }
 export function cors(req: Request, env: Record<string,string>) {
   const origin=req.headers.get('origin');
-  if(origin && origin!==env.CRM_ORIGIN) fail('ORIGIN_FORBIDDEN',403);
-  return { 'Access-Control-Allow-Origin':env.CRM_ORIGIN||'null','Access-Control-Allow-Headers':'authorization, apikey, x-client-info, content-type',
+  const allowed=crmOrigins(env);
+  if(origin && !allowed.includes(origin)) fail('ORIGIN_FORBIDDEN',403);
+  return { 'Access-Control-Allow-Origin':origin||allowed[0]||'null','Access-Control-Allow-Headers':'authorization, apikey, x-client-info, content-type',
     'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Vary':'Origin','Cache-Control':'no-store','X-Content-Type-Options':'nosniff' };
 }
 export async function service(req: Request | null = null) {

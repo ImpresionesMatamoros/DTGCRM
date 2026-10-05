@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectStorage, classifyMessage, messageMetadata, vendorEligibility, buildMime, base64url, unbase64url, seal, unseal, expiry, retryDelay, IntegrationError } from '../supabase/functions/_shared/integrations/core.mjs';
+import { selectStorage, classifyMessage, messageMetadata, vendorEligibility, buildMime, base64url, unbase64url, seal, unseal, expiry, retryDelay, IntegrationError, crmOrigins, mailReadiness } from '../supabase/functions/_shared/integrations/core.mjs';
 import { GoogleAdapter, readLimited } from '../supabase/functions/_shared/integrations/google.mjs';
 import { IntegrationService } from '../supabase/functions/_shared/integrations/service.mjs';
 import { IntegrationWorker } from '../supabase/functions/_shared/integrations/worker.mjs';
@@ -144,4 +144,26 @@ test('revocation outage stays pending and is not reported as revoked',async()=>{
   db.tables.dtg_vendor_grants=[{id:crypto.randomUUID(),file_id:ids.file,recipient_email:'v@example.com',drive_file_id:'d1',permission_id:'p1',managed:true,expires_at:new Date(Date.now()-1000).toISOString(),state:'granted'}];
   google.revoke=async()=>{throw new IntegrationError('PROVIDER_UNAVAILABLE',503,true);};
   await assert.rejects(worker.revoke({}, {grant_id:db.tables.dtg_vendor_grants[0].id}),/PROVIDER_UNAVAILABLE/);assert.equal(db.tables.dtg_vendor_grants[0].state,'revoke_pending');
+});
+
+test('mail setup reports only missing names and origin override stays exact',()=>{
+ assert.deepEqual(crmOrigins({}),['https://impresionesmatamoros.github.io','https://crm.956print.com']);
+ assert.deepEqual(crmOrigins({CRM_ORIGINS:'https://crm.956print.com, https://staging.example.com'}),['https://crm.956print.com','https://staging.example.com']);
+ assert.equal(mailReadiness({},null).configured,false);
+ const env=Object.fromEntries(mailReadiness({},null).missing.map(k=>[k,'secret-value']));
+ assert.deepEqual(mailReadiness(env,{state:'connected'}),{configured:true,missing:[],connected:true});
+ assert(!JSON.stringify(mailReadiness(env,null)).includes('secret-value'));
+});
+test('reply resolves trusted thread metadata and rejects unreadable original',async()=>{
+ const {s,ids,db}=scenario(); const id=crypto.randomUUID();db.tables.dtg_email_messages=[{id,subject:'Pedido',thread_id:'trusted-thread',rfc_message_id:'<original@example.com>'}];
+ const input={inbox_id:ids.inbox,to:['client@example.com'],subject:'Re: Pedido',body:'Hola',reply_message_id:id,thread_id:'forged',in_reply_to:'forged',idempotency_key:crypto.randomUUID()};
+ const op=await s.sendEmail(input);const job=db.tables.dtg_integration_jobs.find(x=>x.id===op.operation_id);const payload=await unseal(job.payload.sealed,s.env.INTEGRATION_ENCRYPTION_KEY,'job:'+job.id);
+ assert.equal(payload.subject,'Pedido');assert.equal(payload.thread_id,'trusted-thread');assert.equal(payload.in_reply_to,'<original@example.com>');
+ await assert.rejects(s.sendEmail({...input,reply_message_id:crypto.randomUUID(),idempotency_key:crypto.randomUUID()}),/THREAD_UNAVAILABLE/);
+});
+
+test('admin cannot enable mail before backend setup and Google consent',async()=>{
+ const {s}=scenario();await assert.rejects(s.configure({enabled:true}),/SECRETS_NOT_CONFIGURED/);
+ for(const k of mailReadiness({},null).missing)s.env[k]='configured';
+ s.connection=async()=>null;await assert.rejects(s.configure({enabled:true}),/GOOGLE_NOT_CONNECTED/);
 });

@@ -3,20 +3,20 @@ const root=path.join(__dirname,'..');
 (async()=>{
   const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[],requests=[];let failSend=true;
+    const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[],requests=[];let failSend=true,hangStatus=false;
     page.on('pageerror',e=>errors.push(e.message));
     const file={id:'f1',asset_id:'a1',filename:'Original producción.pdf',size_bytes:500*1048576,version:3,stage:'Print Ready',availability:'available',preview_state:'unsupported',usage:{production_approved:true}};
     const box={id:'inbox1',email_alias:'vendors@956print.com',verification_status:'accepted'};
     await page.route('**/*',async route=>{
       const req=route.request();if(!req.url().startsWith('https://example.invalid/'))return route.abort();
       if(req.method()==='GET')return route.fulfill({contentType:'text/html',body:'<html></html>'});
-      const body=req.postDataJSON();requests.push(body);let data;
+      const body=req.postDataJSON();requests.push(body);if(hangStatus&&body.action==='status')return;let data;
       if(body.action==='status')data={enabled:true,domain:'956print.com',connection:{state:'connected'},inboxes:[box]};
       else if(body.action==='listVendors')data=[{id:'vendor1',name:'Proveedor'}];
       else if(body.action==='listFiles')data=[file,{...file,id:'f2',filename:'Draft.ai',stage:'Draft',usage:{production_approved:false}}];
       else if(body.action==='customerHistory')data=[file];
       else if(body.action==='listLinkedEmails'||body.action==='listEmails')data=[{id:'m1',subject:'Proof <script>bad()</script>',from_address:'client@example.com'}];
-      else if(body.action==='getEmail')data={message:{payload:{mimeType:'text/plain',body:{data:Buffer.from('Hola <img src=x onerror=bad()>').toString('base64url')}}}};
+      else if(body.action==='getEmail')data={metadata:{id:'m1',rfc_message_id:'<original@example.com>',thread_id:'thread1',from_address:'Cliente <client@example.com>',subject:'Pedido'},message:{payload:{mimeType:'text/plain',body:{data:Buffer.from('Hola <img src=x onerror=bad()>').toString('base64url')}}}};
       else if(body.action==='sendEmail'&&failSend)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'PROVIDER_UNAVAILABLE'})});
       else if(body.action==='sendEmail'||body.action==='sendToVendor')data={operation_id:'op1',state:'queued'};
       else if(body.action==='operationStatus')data={operation_id:'op1',kind:'vendor_delivery',state:'sent'};
@@ -48,6 +48,9 @@ const root=path.join(__dirname,'..');
     assert.equal(requests.filter(x=>x.action==='sendEmail').at(-1).idempotency_key,firstKey);
     await page.getByRole('button',{name:'Consultar bandeja'}).click();await page.getByRole('button',{name:'Leer',exact:true}).first().click();
     await page.locator('.dtgi-mail-body').waitFor();assert.match(await page.locator('.dtgi-mail-body').textContent(),/<img src=x/);assert.equal(await page.locator('.dtgi-mail-body img').count(),0);
+    await page.getByRole('button',{name:'Responder',exact:true}).click();assert.equal(await mailForm.locator('[name=to]').inputValue(),'client@example.com');assert.equal(await mailForm.locator('[name=subject]').inputValue(),'Pedido');assert.equal(await mailForm.locator('[name=reply_message_id]').inputValue(),'m1');
+    await mailForm.locator('[name=body]').fill('Respuesta al cliente');await Promise.all([page.waitForResponse(r=>r.request().method()==='POST'&&r.request().postDataJSON().action==='sendEmail'),mailForm.getByRole('button',{name:'Enviar correo'}).click()]);assert.equal(requests.filter(x=>x.action==='sendEmail').at(-1).reply_message_id,'m1');
+    await mailForm.locator('[name=body]').fill('Borrador antes de actualizar');hangStatus=true;await page.evaluate(()=>{const timeout=AbortSignal.timeout.bind(AbortSignal);AbortSignal.timeout=()=>timeout(50);});await page.getByRole('button',{name:'Actualizar',exact:true}).click();await page.getByText('La conexión tardó demasiado.',{exact:false}).waitFor();assert.equal(await mailForm.locator('[name=body]').inputValue(),'Borrador antes de actualizar');assert.equal(await page.getByRole('button',{name:'Cerrar',exact:true}).isEnabled(),true);hangStatus=false;
     for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no overflow at '+width);}
     if(process.env.DTG_QA_OUTPUTS){await page.setViewportSize({width:1280,height:900});await page.screenshot({path:path.join(process.env.DTG_QA_OUTPUTS,'integraciones-preview.png')});}
     await page.getByRole('button',{name:'Cerrar',exact:true}).click();assert.equal(await page.locator('[role=dialog]').count(),0);
