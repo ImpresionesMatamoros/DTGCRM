@@ -1,0 +1,8 @@
+# Merge these sections into your deployment config; no existing project config is replaced.
+# API explicitly validates session through auth.getUser(), compatible with JWT signing keys.
+[functions.integration-api]
+verify_jwt = false
+[functions.google-oauth-callback]
+verify_jwt = false
+[functions.integration-worker]
+verify_jwt = false
