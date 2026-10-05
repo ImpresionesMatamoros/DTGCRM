@@ -26,7 +26,7 @@ const root=path.join(__dirname,'..');
     await page.goto('https://example.invalid/');
     await page.setContent('<meta charset="utf-8"><style>body{margin:0;background:#13151b;color:white;font:14px sans-serif}.btn{padding:8px}</style><button data-dtgi="open" data-ticket="t1" data-customer="c1" data-seq="1842">Archivos y correo</button>');
     await page.addStyleTag({content:fs.readFileSync(path.join(root,'integrations.css'),'utf8')});
-    await page.addScriptTag({content:fs.readFileSync(path.join(root,'integrations.js'),'utf8')});
+    await page.addScriptTag({content:fs.readFileSync(path.join(root,'workspace-api.js'),'utf8')});await page.addScriptTag({content:fs.readFileSync(path.join(root,'integrations.js'),'utf8')});
     await page.evaluate(()=>{
       window.testActor='actor1';
       const client={auth:{getSession:async()=>({data:{session:{user:{id:testActor},access_token:'fixture-session'}}})},from:()=>{const q={select:()=>q,eq:()=>q,order:()=>q,limit:async()=>({data:[],error:null})};return q;}};

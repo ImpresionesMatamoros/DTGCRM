@@ -1,4 +1,4 @@
-import { IntegrationError, fail, uuid, email, text, header, selectStorage, messageMetadata, vendorEligibility, expiry, retryDelay, buildMime, digest, seal, unseal, mailReadiness } from './core.mjs';
+import { IntegrationError, fail, uuid, email, text, header, selectStorage, messageMetadata, vendorEligibility, expiry, retryDelay, buildMime, digest, seal, unseal, mailReadiness, base64url } from './core.mjs';
 import { eq } from './store.mjs';
 import { GoogleAdapter, readLimited } from './google.mjs';
 
@@ -32,9 +32,9 @@ export class IntegrationService {
   key() { if (!this.env.INTEGRATION_ENCRYPTION_KEY) fail('SECRETS_NOT_CONFIGURED', 503); return this.env.INTEGRATION_ENCRYPTION_KEY; }
   async privateGet(key) { const r = await this.admin.one(T('integration_private'), [eq('key', key)]); return r ? unseal(r.encrypted_value, this.key(), key) : null; }
   async privateSet(key, value, expires_at = null) { return this.admin.upsert(T('integration_private'), { key, encrypted_value: await seal(value, this.key(), key), expires_at, updated_at: now() }, 'key'); }
-  async connection() { return this.admin.one(T('google_connections'), [eq('singleton', true)]); }
-  async google() {
-    const c = await this.connection(); if (!c || c.state !== 'connected') fail('GOOGLE_NOT_CONNECTED', 503);
+  async connection(id=null) { return this.admin.one(T('google_connections'), id?[eq('id',uuid(id))]:[eq('singleton', true)]); }
+  async google(connectionId=null) {
+    const c = await this.connection(connectionId); if (!c || c.state !== 'connected') fail('GOOGLE_NOT_CONNECTED', 503);
     let secret = await this.privateGet(`google:${c.id}`); if (!secret?.refresh_token) fail('REAUTH_REQUIRED', 401);
     if (!secret.access_token || secret.expires_at < Date.now() + 60000) {
       let res;
@@ -65,8 +65,11 @@ export class IntegrationService {
   async status() {
     const cfg = await this.policy(); const boxes = await this.user.list(T('email_inboxes'));
     const admin = await this.isAdmin();
-    const connection = admin ? await this.connection() : null;
-    return { enabled: cfg.enabled, domain: cfg.domain, setup: admin ? mailReadiness(this.env, connection) : null, connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
+    const allConnections=await this.admin.list(T('google_connections'));const connections=admin?allConnections:[];
+    const connection = connections.find(c=>c.singleton)||null;
+    const permissions=admin?[]:await this.user.list(T('email_inbox_access'),[eq('user_id',this.actor)]);
+    for(const box of boxes){const grant=permissions.find(g=>g.inbox_id===box.id);const c=allConnections.find(c=>box.connection_id?c.id===box.connection_id:c.singleton);box.can_send=admin||!!grant?.can_send;box.connected=c?.state==='connected';box.account_email=c?.account_email||null;}
+    return { enabled: cfg.enabled, domain: cfg.domain, setup: admin ? mailReadiness(this.env, connections.find(c=>c.state==='connected')) : null, connections: connections.map(c=>({id:c.id,account_email:c.account_email,state:c.state,last_sync_at:c.last_sync_at,singleton:c.singleton})), connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
   }
   async configure(input) {
     await this.requireAdmin(); const patch = {};
@@ -77,14 +80,15 @@ export class IntegrationService {
     if (input.enabled !== undefined) { if (typeof input.enabled !== 'boolean') fail('INVALID_POLICY'); if (input.enabled) { const ready = mailReadiness(this.env, await this.connection()); if (!ready.configured) fail('SECRETS_NOT_CONFIGURED',503); if (!ready.connected) fail('GOOGLE_NOT_CONNECTED',503); } patch.enabled = input.enabled; }
     await this.admin.update(T('integration_config'), [eq('id', true)], patch); await this.audit('configuration.changed', { fields: Object.keys(patch) }); return this.status();
   }
-  async beginOAuth() {
+  async beginOAuth(input={}) {
     await this.requireAdmin(); const cfg = await this.policy();
     if (!this.env.GOOGLE_CLIENT_ID || !this.env.GOOGLE_CLIENT_SECRET || !this.env.GOOGLE_REDIRECT_URI) fail('OAUTH_NOT_CONFIGURED', 503);
+    const requested=input.account_email?email(input.account_email):null;if(requested&&requested.split('@')[1]!==cfg.domain)fail('WORKSPACE_DOMAIN_MISMATCH',403);
     const state = crypto.randomUUID() + crypto.randomUUID(), verifier = crypto.randomUUID() + crypto.randomUUID();
     const stateKey = `oauth:${await digest(state)}`;
-    await this.privateSet(stateKey, { actor: this.actor, verifier }, new Date(Date.now() + 600000).toISOString());
-    const scopes = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send','https://www.googleapis.com/auth/gmail.settings.basic','https://www.googleapis.com/auth/drive.file'];
-    const q = new URLSearchParams({ client_id: this.env.GOOGLE_CLIENT_ID, redirect_uri: this.env.GOOGLE_REDIRECT_URI, response_type: 'code', access_type: 'offline', prompt: 'consent', scope: scopes.join(' '), state, hd: cfg.domain, code_challenge: await digest(verifier), code_challenge_method: 'S256' });
+    await this.privateSet(stateKey, { actor: this.actor, verifier, requested }, new Date(Date.now() + 600000).toISOString());
+    const scopes = ['https://www.googleapis.com/auth/gmail.modify','https://www.googleapis.com/auth/gmail.send','https://www.googleapis.com/auth/gmail.settings.basic','https://www.googleapis.com/auth/drive.file'];
+    const q = new URLSearchParams({ client_id: this.env.GOOGLE_CLIENT_ID, redirect_uri: this.env.GOOGLE_REDIRECT_URI, response_type: 'code', access_type: 'offline', prompt: 'consent select_account', ...(requested?{login_hint:requested}:{}), scope: scopes.join(' '), state, hd: cfg.domain, code_challenge: await digest(verifier), code_challenge_method: 'S256' });
     await this.audit('oauth.started'); return { url: `https://accounts.google.com/o/oauth2/v2/auth?${q}` };
   }
   async completeOAuth(code, state) {
@@ -101,35 +105,41 @@ export class IntegrationService {
     const res = await this.fetcher('https://oauth2.googleapis.com/token', { method: 'POST', body: new URLSearchParams({ code: text(code, 2000, true), client_id: this.env.GOOGLE_CLIENT_ID, client_secret: this.env.GOOGLE_CLIENT_SECRET, redirect_uri: this.env.GOOGLE_REDIRECT_URI, code_verifier: saved.verifier, grant_type: 'authorization_code' }), signal: AbortSignal.timeout(20000) });
     const tokens = await res.json(); if (!res.ok || !tokens.access_token) fail('OAUTH_EXCHANGE_FAILED', 409);
     const granted = String(tokens.scope || '').split(' ');
-    if (['gmail.readonly','gmail.send','gmail.settings.basic','drive.file'].some(s => !granted.includes(`https://www.googleapis.com/auth/${s}`))) fail('OAUTH_SCOPES_INCOMPLETE', 403);
+    if (['gmail.modify','gmail.send','gmail.settings.basic','drive.file'].some(s => !granted.includes(`https://www.googleapis.com/auth/${s}`))) fail('OAUTH_SCOPES_INCOMPLETE', 403);
     const google = this.googleFactory(tokens.access_token), profile = await google.profile();
     if (email(profile.emailAddress).split('@')[1] !== cfg.domain) fail('WORKSPACE_DOMAIN_MISMATCH', 403);
-    const old = await this.connection();
-    if (old?.account_email && old.account_email !== email(profile.emailAddress)) fail('WORKSPACE_ACCOUNT_MISMATCH', 409);
+    if(saved.requested&&saved.requested!==email(profile.emailAddress))fail('WORKSPACE_ACCOUNT_MISMATCH',409);
+    const old = await this.admin.one(T('google_connections'),[eq('account_email',email(profile.emailAddress))]);
+    const primary=await this.connection();
     const oldSecret = old ? await this.privateGet(`google:${old.id}`) : null;
     if (!tokens.refresh_token && !oldSecret?.refresh_token) fail('OAUTH_OFFLINE_ACCESS_REQUIRED', 409);
     const id = old?.id || crypto.randomUUID();
     // Persist disconnected metadata first; mark connected only after encrypted tokens exist.
-    await this.admin.upsert(T('google_connections'), { id, singleton: true, account_email: email(profile.emailAddress), state: 'disconnected', scopes: granted, connected_by: this.actor }, 'singleton');
+    await this.admin.upsert(T('google_connections'), { id, singleton: old?old.singleton:!primary, account_email: email(profile.emailAddress), state: 'disconnected', scopes: granted, connected_by: this.actor }, 'id');
     await this.privateSet(`google:${id}`, { ...oldSecret, ...tokens, expires_at: Date.now() + tokens.expires_in * 1000 });
     await this.admin.update(T('google_connections'), [eq('id', id)], { state: 'connected', last_error: null });
-    const primary = await this.admin.one(T('email_inboxes'), [eq('email_alias', email(profile.emailAddress))]);
-    if (!primary) await this.admin.insert(T('email_inboxes'), { email_alias: email(profile.emailAddress), display_name: 'Primary Inbox', logical_inbox: 'primary', purpose: 'general', default_from_name: '956 Print', active: true });
-    await this.validateAliases(google); await this.audit('oauth.connected', { account: profile.emailAddress }); return { state: 'connected' };
+    const primaryInbox = await this.admin.one(T('email_inboxes'), [eq('email_alias', email(profile.emailAddress))]);
+    if (!primaryInbox) await this.admin.insert(T('email_inboxes'), { connection_id:id,email_alias: email(profile.emailAddress), display_name: 'Primary Inbox', logical_inbox: 'primary', purpose: 'general', default_from_name: '956 Print', active: true });
+    await this.validateAliases(google,id); await this.audit('oauth.connected', { account: profile.emailAddress }); return { state: 'connected' };
   }
-  async validateAliases(google = null) {
-    if (!google) await this.requireAdmin(); const g = google || await this.google();
+  async validateAliases(google = null, connectionId = null) {
+    if(!google){await this.requireAdmin();let total=0;for(const c of await this.admin.list(T('google_connections'),[eq('state','connected')]))total+=(await this.validateAliases(await this.google(c.id),c.id)).validated;return{validated:total};}
+    const g=google,connection=await this.connection(connectionId);if(!connection)fail('GOOGLE_NOT_CONNECTED',503);
     const aliases = (await g.listAliases()).sendAs || [];
+    const cfg=await this.policy();
+    for(const alias of aliases){const address=email(alias.sendAsEmail);if(address.split('@')[1]!==cfg.domain)continue;const old=await this.admin.one(T('email_inboxes'),[eq('email_alias',address)]);if(!old)await this.admin.insert(T('email_inboxes'),{connection_id:connection.id,email_alias:address,display_name:alias.displayName||address,logical_inbox:address.split('@')[0],purpose:'general',default_from_name:alias.displayName||'956 Print'});}
     const inboxes = await this.admin.list(T('email_inboxes'));
     for (const box of inboxes) {
+      if(box.connection_id&&box.connection_id!==connection.id)continue;
       const remote = aliases.find(x => x.sendAsEmail.toLowerCase() === box.email_alias);
-      await this.admin.update(T('email_inboxes'), [eq('id', box.id)], { verification_status: remote ? remote.verificationStatus === 'accepted' ? 'accepted' : 'pending' : 'missing' });
+      await this.admin.update(T('email_inboxes'), [eq('id', box.id)], { connection_id:remote?connection.id:box.connection_id,verification_status: remote ? remote.verificationStatus === 'accepted' ? 'accepted' : 'pending' : 'missing' });
     }
     return { validated: inboxes.length };
   }
-  async disconnect() {
-    await this.requireAdmin(); const c = await this.connection(); if (!c) return { state: 'disconnected' };
+  async disconnect(input={}) {
+    await this.requireAdmin(); const c = await this.connection(input.connection_id||null); if (!c) return { state: 'disconnected' };
     await this.admin.update(T('google_connections'), [eq('id', c.id)], { state: 'disconnected' });
+    await this.admin.update(T('email_inboxes'),[eq('connection_id',c.id)],{verification_status:'unverified'});
     await this.admin.remove(T('integration_private'), [eq('key', `google:${c.id}`)]); await this.audit('oauth.disconnected'); return { state: 'disconnected' };
   }
   async saveInbox(input) {
@@ -151,29 +161,29 @@ export class IntegrationService {
     // Resolve reply headers from an RLS-readable message, never browser-supplied metadata.
     if (input.reply_message_id) {
       const original = await this.user.one(T('email_messages'), [eq('id',uuid(input.reply_message_id))]);
-      if (!original?.rfc_message_id || !original.thread_id) fail('THREAD_UNAVAILABLE',403);
+      if (!original?.rfc_message_id || !original.thread_id || original.connection_id!==(box.connection_id||(await this.connection())?.id)) fail('THREAD_UNAVAILABLE',403);
       input = {...input, subject: original.subject || '(Sin asunto)', thread_id: original.thread_id, in_reply_to: original.rfc_message_id, references: original.rfc_message_id};
     }
     // Validate before accepting a durable command. Signature and alias revalidated in worker.
     buildMime(input, box, uuid(input.idempotency_key), cfg.domain);
     if (input.thread_id) {
-      const messages = await this.user.list(T('email_messages'), [eq('thread_id', header(input.thread_id, 100))], { limit: 1 });
+      const messages = await this.user.list(T('email_messages'), [eq('connection_id',box.connection_id||(await this.connection())?.id),eq('thread_id', header(input.thread_id, 100))], { limit: 1 });
       if (!messages.length || !input.in_reply_to) fail('THREAD_UNAVAILABLE', 403);
     }
-    return this.enqueue('send_email', `gmail-send`, { inbox_id: box.id, to: input.to, cc: input.cc || [], bcc: input.bcc || [], subject: input.subject, body: input.body, thread_id: input.thread_id || null, in_reply_to: input.in_reply_to || null, references: input.references || null }, input.idempotency_key, { ticket_id: input.ticket_id, inbox_id: box.id });
+    return this.enqueue('send_email', `gmail-send`, { connection_id:box.connection_id||(await this.connection())?.id,inbox_id: box.id, to: input.to, cc: input.cc || [], bcc: input.bcc || [], subject: input.subject, body: input.body, thread_id: input.thread_id || null, in_reply_to: input.in_reply_to || null, references: input.references || null }, input.idempotency_key, { ticket_id: input.ticket_id, inbox_id: box.id });
   }
-  async syncEmails(input) { await this.requireAdmin(); await this.active(); return this.enqueue('sync_email', 'gmail-sync', {}, input.idempotency_key); }
+  async syncEmails(input) { await this.requireAdmin(); await this.active();const c=await this.connection(input.connection_id||null);if(c?.state!=='connected')fail('GOOGLE_NOT_CONNECTED',503);return this.enqueue('sync_email','gmail-sync:'+c.id,{connection_id:c.id},input.idempotency_key); }
   async getEmail(input) {
     const m = await this.user.one(T('email_messages'), [eq('id', uuid(input.message_id))]); if (!m) fail('EMAIL_UNAVAILABLE', 404);
-    const message = await (await this.google()).getEmail(m.external_message_id);
+    const message = await (await this.google(m.connection_id)).getEmail(m.external_message_id);
     if (!await this.isAdmin()) message.payload.headers = (message.payload?.headers || []).filter(h => h.name.toLowerCase() !== 'bcc');
     return { metadata: m, message };
   }
   async getThread(input) {
     const m = await this.user.one(T('email_messages'), [eq('id', uuid(input.message_id))]); if (!m) fail('EMAIL_UNAVAILABLE', 404);
     // Only authorized messages, never return unclassified/other-inbox members of a Gmail thread.
-    const allowed = await this.user.list(T('email_messages'), [eq('thread_id', m.thread_id)], { limit: 100 });
-    const g = await this.google(); const thread = await g.getThread(m.thread_id);
+    const allowed = await this.user.list(T('email_messages'), [eq('connection_id',m.connection_id),eq('thread_id', m.thread_id)], { limit: 100 });
+    const g = await this.google(m.connection_id); const thread = await g.getThread(m.thread_id);
     const messages = (thread.messages || []).filter(x => allowed.some(a => a.external_message_id === x.id));
     if (!await this.isAdmin()) for (const message of messages) if (message.payload) message.payload.headers = (message.payload.headers || []).filter(h => h.name.toLowerCase() !== 'bcc');
     return { id: m.thread_id, messages };
@@ -187,6 +197,12 @@ export class IntegrationService {
     const old = await this.admin.one(T('email_links'), [eq('message_id', m.id), ticket ? eq('ticket_id', ticket.id) : eq('customer_id', customer)]);
     const link = old || await this.admin.insert(T('email_links'), { message_id: m.id, ticket_id: ticket?.id || null, customer_id: customer, linked_by: this.actor });
     await this.audit('email.linked', { message_id: m.id }, { ticket_id: ticket?.id }); return link;
+  }
+  async setEmailState(input) {
+    await this.active();const box=await this.inbox(input.inbox_id,true),m=await this.user.one(T('email_messages'),[eq('id',uuid(input.message_id))]);if(!m||m.connection_id!==box.connection_id)fail('EMAIL_UNAVAILABLE',404);
+    const link=await this.user.one(T('email_message_inboxes'),[eq('message_id',m.id),eq('inbox_id',box.id)]);if(!link)fail('INBOX_FORBIDDEN',403);
+    const actions={read:{removeLabelIds:['UNREAD']},unread:{addLabelIds:['UNREAD']},star:{addLabelIds:['STARRED']},unstar:{removeLabelIds:['STARRED']},archive:{removeLabelIds:['INBOX']}};const change=actions[input.state];if(!change)fail('INVALID_ACTION');
+    const result=await(await this.google(m.connection_id)).modifyEmail(m.external_message_id,change);await this.admin.update(T('email_messages'),[eq('id',m.id)],{label_ids:result.labelIds||[]});await this.audit('email.state_changed',{message_id:m.id,state:input.state},{inbox_id:box.id});return{message_id:m.id,label_ids:result.labelIds||[]};
   }
   async listEmails(input) {
     const box = await this.inbox(input.inbox_id);
@@ -399,6 +415,37 @@ export class IntegrationService {
     if (input.confirm_resend) payload.confirm_resend = true;
     await this.admin.update(T('integration_jobs'), [eq('id', job.id), eq('state', job.state)], { state: 'retry', next_attempt_at: now(), payload: { sealed: await seal(payload, this.key(), `job:${job.id}`) } });
     await this.audit('operation.retry_requested', { confirm_resend: !!input.confirm_resend }, { operation_id: job.id, ticket_id: job.ticket_id, inbox_id: job.inbox_id }); return { operation_id: job.id, state: 'retry' };
+  }
+  async saveMailSignature(input) {await this.requireAdmin();const b=await this.inbox(input.inbox_id);await this.admin.update(T('email_inboxes'),[eq('id',b.id)],{default_from_name:header(input.from_name,120),default_signature:text(input.signature||'',5000)});await this.audit('email.signature_changed',{}, {inbox_id:b.id});return{saved:true};}
+  async listMailDrafts() { return (await this.admin.list(T('mail_drafts'),[eq('actor_id',this.actor)],{order:'updated_at',limit:50})).map(d=>({id:d.id,subject:d.subject,updated_at:d.updated_at})); }
+  async saveMailDraft(input) {
+    const d=input.draft||{},id=input.draft_id?uuid(input.draft_id):crypto.randomUUID();
+    if(input.draft_id&&!await this.admin.one(T('mail_drafts'),[eq('id',id),eq('actor_id',this.actor)]))fail('DRAFT_UNAVAILABLE',404);
+    const safe={};for(const k of ['to','cc','bcc'])safe[k]=text(d[k]||'',3000);
+    safe.subject=text(d.subject||'',300);safe.body=text(d.body||'',100000);safe.reply_message_id=d.reply_message_id?uuid(d.reply_message_id):'';safe.inbox_id=d.inbox_id?uuid(d.inbox_id):'';safe.ticket_id=d.ticket_id?uuid(d.ticket_id):'';
+    if(safe.inbox_id)await this.inbox(safe.inbox_id);if(safe.ticket_id)await this.ticket(safe.ticket_id);
+    if(safe.reply_message_id&&!await this.user.one(T('email_messages'),[eq('id',safe.reply_message_id)]))fail('EMAIL_UNAVAILABLE',404);
+    const row=await this.admin.upsert(T('mail_drafts'),{id,actor_id:this.actor,subject:safe.subject,encrypted_payload:await seal(safe,this.key(),'draft:'+this.actor+':'+id),updated_at:now()},'id');return{id:row.id};
+  }
+  async getMailDraft(input) { const row=await this.admin.one(T('mail_drafts'),[eq('id',uuid(input.draft_id)),eq('actor_id',this.actor)]);if(!row)fail('DRAFT_UNAVAILABLE',404);return{id:row.id,draft:await unseal(row.encrypted_payload,this.key(),'draft:'+this.actor+':'+row.id)}; }
+  async deleteMailDraft(input) {await this.admin.remove(T('mail_drafts'),[eq('id',uuid(input.draft_id)),eq('actor_id',this.actor)]);return{deleted:true};}
+  async configureMail(input) {
+    await this.requireAdmin();
+    if((await this.admin.list(T('google_connections'))).length)fail('OAUTH_ALREADY_CONFIGURED',409);
+    const id=text(input.client_id,300,true),secret=text(input.client_secret,3000,true);if(!id.endsWith('.apps.googleusercontent.com'))fail('INVALID_OAUTH_CLIENT');
+    const config={SUPABASE_URL:this.env.SUPABASE_URL,GOOGLE_CLIENT_ID:id,GOOGLE_CLIENT_SECRET:secret,GOOGLE_REDIRECT_URI:this.env.SUPABASE_URL+'/functions/v1/google-oauth-callback'};
+    for(const key of ['INTEGRATION_ENCRYPTION_KEY','INTEGRATION_WORKER_SECRET'])config[key]=this.env[key]||base64url(crypto.getRandomValues(new Uint8Array(32)));
+    await this.admin.rpc('dtg_workspace_configure_secrets',{p_config:config});
+    const saved=await this.admin.rpc('dtg_workspace_secrets');for(const [key,value]of Object.entries(saved))if(!this.env[key])this.env[key]=value;
+    await this.audit('mail.configured');return this.status();
+  }
+  async processMailOperation(input) {
+    await this.active();const job=await this.admin.one(T('integration_jobs'),[eq('id',uuid(input.operation_id))]);
+    if(!job||!['send_email','sync_email'].includes(job.kind))fail('OPERATION_UNAVAILABLE',404);
+    if(job.actor_id!==this.actor)await this.requireAdmin();
+    if(job.ticket_id)await this.ticket(job.ticket_id);if(job.inbox_id)await this.inbox(job.inbox_id,true);
+    if(job.kind==='sync_email')await this.requireAdmin();
+    const {IntegrationWorker}=await import('./worker.mjs');await new IntegrationWorker(this).run(job.id);return this.operationStatus({operation_id:job.id});
   }
   async operationStatus(input) {
     const job = await this.admin.one(T('integration_jobs'), [eq('id', uuid(input.operation_id))]); if (!job) fail('OPERATION_UNAVAILABLE', 404);

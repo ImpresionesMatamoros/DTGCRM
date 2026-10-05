@@ -4426,7 +4426,10 @@ button.tk-task-open:hover{background:var(--surface-3)}
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
 <link rel="stylesheet" href="integrations.css?v=1">
-<script src="integrations.js?v=1"></script>
+<script src="workspace-api.js?v=1"></script>
+<script src="integrations.js?v=2"></script>
+<link rel="stylesheet" href="mail.css?v=1">
+<script src="mail.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
 <script>
 (function(){
@@ -7170,7 +7173,7 @@ function renderSidebarList(){
    y se vuelven vistas reales (derivadas, sin tabla/módulo nuevo — igual que
    Clientes). Kanban e Informes siguen siendo stubs a propósito (V0.5 §24).
    "Tickets cerrados" es una entrada nueva, sin equivalente previo. */
-var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca","calendario","operaciones","informes"];
+var REAL_VIEWS = ["correos","clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca","calendario","operaciones","informes"];
 /* v0.20 — navegación principal: Inicio · Tickets · Operaciones · Calendario ·
    Cuentas por cobrar · Clientes · Biblioteca · Informes, y abajo, como
    utilidad, Tickets cerrados. Atención y la vieja Producción salen del menú
@@ -7178,6 +7181,7 @@ var REAL_VIEWS = ["clientes","atencion","produccion","cerrados","cxc","tickets",
    Producción). Sus funciones siguen existiendo (una URL/estado viejo cae a
    su reemplazo, ver loadUi/dtgGoToMainView) — nada se borró a ciegas. */
 var NAV_ITEMS = [
+  {view:"correos",action:"go-correos",icon:"mail",label:"Correos"},
   { view: null,           action: "go-home",        icon: "home",    label: "Inicio" },
   { view: "tickets",      action: "go-tickets",     icon: "ticket",  label: "Tickets" },
   { view: "operaciones",  action: "go-operaciones", icon: "factory", label: "Operaciones" },
@@ -7314,6 +7318,7 @@ function renderAccountMenu(){
       '<button type="button" class="menu-item" data-action="doc-terms-open">' + icon("file-text") + "<span>Términos de documentos</span></button>" +
       '<button type="button" class="menu-item" data-action="chat-prefs-open">' + icon("bell") + "<span>Avisos del equipo</span></button>" +
       '<button type="button" class="menu-item" data-device="open">'+icon("users")+"<span>Cambiar usuario</span></button>"+
+      (CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin'?'<button type="button" class="menu-item" data-action="mail-settings-open">'+icon('mail')+'<span>Configuración de correo</span></button>':'')+
       '<button type="button" class="menu-item" data-action="logout">' + icon("logout") + "<span>Cerrar sesión</span></button>" +
     "</div>"
   );
@@ -16700,6 +16705,7 @@ function polishMobileUI(){
 
 function renderMain(){
   ticketSyncContext();
+  if(UI.mainView==="correos"&&!UI.selectedTicketId)return '<div id="dtg-mail-root" style="height:100%;min-height:0"></div>';
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
     return UI.selectedClienteId ? renderClienteFichaView() : renderClientesListView();
   }
@@ -27879,6 +27885,14 @@ if(window.DTGIntegrations){
   renderClienteFichaView=function(){return dtgiClientProfile()+'<button type="button" class="btn btn-ghost" data-dtgi="customer-open" data-customer="'+escapeHtml(UI.selectedClienteId||'')+'">Archivos y correo del cliente</button>';};
   var dtgiLogout=unsubscribeRealtime;
   unsubscribeRealtime=function(){window.DTGIntegrations.reset();return dtgiLogout();};
+}
+
+if(window.DTGMail){
+ window.DTGMail.configure({actor:currentActorId,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},url:function(){return SUPABASE_URL;},members:activeAssignableProfiles,tickets:function(){return STATE.tickets.map(function(t){return{id:t.id,label:'#'+t.seq+' · '+t.cliente};});}});
+ document.addEventListener('click',function(e){var b=e.target.closest('[data-action="go-correos"]');if(!b)return;UI.mainView='correos';UI.selectedTicketId=null;UI.selectedClienteId=null;UI.sidebarOpen=false;UI.deepLinkNotFound=false;UI.pendingFocus=null;saveUi();render();});
+ document.addEventListener('click',function(e){var b=e.target.closest('[data-action="mail-settings-open"]');if(!b||!CURRENT_PROFILE||CURRENT_PROFILE.role!=='admin')return;UI.accountMenuOpen=false;UI.mainView='correos';UI.selectedTicketId=null;UI.selectedClienteId=null;UI.sidebarOpen=false;UI.pendingFocus=null;saveUi();render();window.DTGMail.openSettings();});
+ var mailRenderCore=render;render=function(){mailRenderCore();var h=document.getElementById('dtg-mail-root');if(h)window.DTGMail.show(h);else window.DTGMail.hide();};
+ var mailUnsubscribe=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGMail.reset();return mailUnsubscribe();};
 }
 
 boot();

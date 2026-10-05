@@ -6,19 +6,7 @@
   function key(){return crypto.randomUUID();}
   var errors={INTEGRATIONS_DISABLED:'Las integraciones están preparadas, pero aún no se han activado.',GOOGLE_NOT_CONNECTED:'Google Workspace todavía no está conectado.',REAUTH_REQUIRED:'Un administrador debe reconectar Google Workspace.',ALIAS_NOT_VERIFIED:'Este alias aún no está habilitado para enviar en Gmail.',PRODUCTION_APPROVAL_REQUIRED:'Selecciona un archivo Print Ready aprobado para este ticket.',AUTH_REQUIRED:'Inicia sesión nuevamente.',WORKSPACE_DOMAIN_MISMATCH:'La cuenta de Google debe pertenecer a 956print.com.',SECRETS_NOT_CONFIGURED:'Falta configurar el backend.',OAUTH_NOT_CONFIGURED:'Falta configurar OAuth en el backend.',SEND_RECONCILIATION_REQUIRED:'El resultado del envío es incierto. Revisa Gmail antes de reenviar.',GRANT_RECONCILIATION_REQUIRED:'El permiso necesita revisión administrativa antes de continuar.',PREEXISTING_VENDOR_ACCESS:'El proveedor ya tenía acceso externo; revisa ese permiso antes de continuar.',NATIVE_EXPIRY_UNCONFIRMED:'Drive no confirmó el vencimiento del permiso. El correo no se envió.'};
   function message(e){if(e.name==='TimeoutError')return 'La conexión tardó demasiado. Conservamos tu borrador; comprueba el resultado antes de reintentar un envío.';return errors[e.code]||(e instanceof TypeError||e instanceof ReferenceError?'No fue posible completar esta operación. El ticket sigue disponible.':e.message)||'No fue posible completar esta operación. El ticket sigue disponible.';}
-  async function api(action,input,binary,raw){
-    var owner=actor,revision=generation,client=bridge.getClient();if(!client||owner!==bridge.actor())throw new Error('La sesión cambió.');
-    var auth=await client.auth.getSession(),session=auth.data&&auth.data.session;
-    if(!session||session.user.id!==owner||owner!==bridge.actor())throw new Error('La sesión cambió.');
-    var url=bridge.url()+'/functions/v1/integration-api',body;
-    if(binary){var q=new URLSearchParams(Object.assign({binary:action},input));url+='?'+q;body=binary;}
-    else body=JSON.stringify(Object.assign({action:action},input||{}));
-    var res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+session.access_token,apikey:bridge.publishableKey(),'Content-Type':binary?(input.mime_type||'application/octet-stream'):'application/json'},body:body,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(binary?120000:20000)])});
-    if(owner!==bridge.actor()||owner!==actor||revision!==generation)throw new Error('La sesión cambió.');
-    if(raw&&res.ok)return res;
-    var json;try{json=await res.json();}catch(e){throw new Error('El backend de integraciones todavía no está disponible.');}
-    if(!res.ok){var error=new Error(errors[json.error]||'La integración no está disponible por ahora.');error.code=json.error;throw error;}return json;
-  }
+  async function api(action,input,binary,raw){var revision=generation;return root.DTGWorkspaceAPI.request(action,input,{binary:binary,raw:raw,signal:controller.signal,actor:actor,isCurrent:function(){return revision===generation;}});}
   function button(action,label,data){return '<button type="button" class="btn btn-ghost" data-dtgi="'+action+'" '+(data||'')+(state.busy&&action!=='close'?' disabled':'')+'>'+esc(label)+'</button>';}
   function options(rows,label){return rows.map(function(r){return '<option value="'+esc(r.id)+'">'+esc(r[label])+'</option>';}).join('');}
   function fileRows(files,reuse){return files.map(function(f){var approved=f.stage==='Print Ready'&&f.usage&&f.usage.production_approved;return '<article class="dtgi-file"><div><strong>'+esc(f.filename)+'</strong><small>v'+f.version+' · '+esc(f.stage)+' · '+(Number(f.size_bytes)/1048576).toFixed(1)+' MiB · '+esc(f.availability)+'</small></div>'+button('open-file','Descargar','data-id="'+f.id+'"')+(reuse?button('reuse','Usar en este ticket','data-id="'+f.id+'"'):button('current','Usar como versión actual','data-id="'+f.id+'"'))+(f.thumbnail_path?button('preview','Ver preview','data-id="'+f.id+'"'):'<span class="muted">Preview '+esc(f.preview_state)+'</span>')+(!reuse&&bridge.isAdmin()?button('proof','Proof','data-id="'+f.id+'"')+button('print-ready','Print Ready','data-id="'+f.id+'"')+button('approve','Aprobar producción','data-id="'+f.id+'"'):'')+(approved?'<span>✓ Aprobado para este ticket</span>':'')+'</article>';}).join('')||'<p class="muted">Sin archivos registrados.</p>';}
@@ -130,5 +118,5 @@
     delete state.drafts[kind];delete state.formKeys[kind];
   });});
   document.addEventListener('keydown',function(e){if(!panel)return;if(e.key==='Escape'){close();return;}if(e.key==='Tab'){var fields=Array.from(panel.querySelectorAll('button:not(:disabled),input,select,textarea')).filter(function(x){return x.getClientRects().length;});if(!fields.length)return;var first=fields[0],last=fields[fields.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
-  root.DTGIntegrations={mount:function(b){bridge=b;},reset:close,open:open};
+  root.DTGIntegrations={mount:function(b){bridge=b;root.DTGWorkspaceAPI.configure(b);},reset:close,open:open};
 })(window);

@@ -30,6 +30,9 @@ test('migration, RLS, atomic sessions, versions, job leases and hidden secrets i
     `);
     const sql=await fs.readFile(new URL('../supabase/migrations/20261005020449_google_workspace_integration_layer.sql',import.meta.url),'utf8');
     await db.exec(sql);
+    await db.exec(`create schema vault;create table vault.secrets(id uuid primary key default gen_random_uuid(),name text unique,secret text);create view vault.decrypted_secrets as select id,name,secret as decrypted_secret from vault.secrets;grant usage on schema vault to service_role;grant all on vault.secrets,vault.decrypted_secrets to service_role;create function vault.create_secret(new_secret text,new_name text) returns uuid language sql as $vault$insert into vault.secrets(name,secret)values(new_name,new_secret)returning id$vault$;create function vault.update_secret(secret_id uuid,new_secret text) returns void language sql as $vault$update vault.secrets set secret=new_secret where id=secret_id$vault$;`);
+    await db.exec(await fs.readFile(new URL('../supabase/migrations/20261005100623_workspace_mail_accounts.sql',import.meta.url),'utf8'));
+
     const actor='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-000000000002',customer='20000000-0000-4000-8000-000000000001',ticket='30000000-0000-4000-8000-000000000001',newTicket='30000000-0000-4000-8000-000000000002',file='40000000-0000-4000-8000-000000000001',uploadKey='50000000-0000-4000-8000-000000000001';
     await db.query('insert into public.profiles values($1,\'admin\',true),($2,\'member\',true)',[actor,other]);
     await db.query('insert into public.clientes(id,email) values($1,\'client@example.com\')',[customer]);

@@ -13,7 +13,7 @@ export class MemoryStore {
     if(name==='is_admin'||name==='is_active_member')return name==='is_admin'?this.admin:true;
     if(name==='dtg_canonical_customer')return args.p_id;
     if(name==='dtg_actor_context')return{active:true,is_admin:this.admin,ticket_visible:true,inbox_allowed:true};
-    if(name==='dtg_claim_job'){const j=(this.tables.dtg_integration_jobs||[]).find(x=>['queued','retry'].includes(x.state)&&Date.parse(x.next_attempt_at)<=Date.now());if(!j)return[];j.state='running';j.attempt++;j.lease_token=crypto.randomUUID();j.lease_until=new Date(Date.now()+240000).toISOString();return[structuredClone(j)];}
+    if(name==='dtg_claim_job'||name==='dtg_claim_specific_job'){const j=(this.tables.dtg_integration_jobs||[]).find(x=>(!args.p_id||x.id===args.p_id)&&['queued','retry'].includes(x.state)&&Date.parse(x.next_attempt_at)<=Date.now());if(!j)return[];j.state='running';j.attempt++;j.lease_token=crypto.randomUUID();j.lease_until=new Date(Date.now()+240000).toISOString();return[structuredClone(j)];}
     if(name==='dtg_register_upload'){
       const old=await this.one('dtg_upload_sessions',[['actor_id','eq',args.p_actor],['idempotency_key','eq',args.p_key]]);if(old)return old;
       const ticket=await this.one('tickets',[['id','eq',args.p_ticket]]);let asset=args.p_asset;
@@ -38,7 +38,7 @@ export function scenario(){
   db.tables.tickets=[{id:ids.ticket,cliente_id:ids.customer},{id:ids.newTicket,cliente_id:ids.customer}];db.tables.clientes=[{id:ids.customer,email:'client@example.com',archived_at:null}];
   db.tables.dtg_integration_config=[{id:true,enabled:true,domain:'956print.com',threshold_bytes:26214400,max_file_bytes:2147483648,drive_extensions:['ai'],drive_mime_types:[],drive_purposes:['production_source'],sync_query:'newer_than:90d'}];
   db.tables.dtg_google_connections=[{id:ids.connection,singleton:true,state:'connected',account_email:'martin@956print.com',last_sync_at:new Date().toISOString()}];
-  db.tables.dtg_email_inboxes=[{id:ids.inbox,email_alias:'vendors@956print.com',default_from_name:'956 Print',active:true,verification_status:'accepted'}];
+  db.tables.dtg_email_inboxes=[{id:ids.inbox,connection_id:ids.connection,email_alias:'vendors@956print.com',default_from_name:'956 Print',active:true,verification_status:'accepted'}];
   db.tables.dtg_assets=[{id:ids.asset,customer_id:ids.customer,origin_ticket_id:ids.ticket}];
   db.tables.dtg_files=[{id:ids.file,asset_id:ids.asset,filename:'print.pdf',mime_type:'application/pdf',stage:'Print Ready',version:1,availability:'available',storage_provider:'GOOGLE_DRIVE',drive_file_id:'d1',size_bytes:500*1048576}];
   db.tables.dtg_asset_usages=[{id:crypto.randomUUID(),file_id:ids.file,ticket_id:ids.ticket,production_approved:true,approved_file_id:ids.file}];

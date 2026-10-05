@@ -61,7 +61,7 @@ export function messageMetadata(message, inboxes) {
   return { external_message_id: message.id, thread_id: message.threadId,
     from_address: get('from'), to_addresses: extractEmails(get('to')), cc_addresses: extractEmails(get('cc')),
     // BCC is deliberately excluded from shared metadata. Envelope stays in Gmail.
-    subject: get('subject').slice(0, 1000), direction: c.direction,
+    label_ids: Array.isArray(message.labelIds)?message.labelIds:[],snippet: String(message.snippet||'').slice(0,280),subject: get('subject').slice(0, 1000), direction: c.direction,
     received_at: c.direction === 'inbound' ? new Date(timestamp).toISOString() : null,
     sent_at: c.direction === 'outbound' ? new Date(timestamp).toISOString() : null,
     has_attachments: hasAttachments(message.payload), sync_status: 'synced',

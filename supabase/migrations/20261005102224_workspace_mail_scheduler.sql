@@ -1,4 +1,3 @@
--- Idempotent reinstallation of the scheduler shipped in workspace_mail_scheduler.
 -- Quiet while OFF; Vault credential stays out of the cron command and logs.
 create extension if not exists pg_cron with schema pg_catalog;
 create extension if not exists pg_net;

@@ -2,7 +2,7 @@ import { cors, environment, service, jsonBody, errorReply } from '../_shared/int
 import { fail, uuid } from '../_shared/integrations/core.mjs';
 import { readLimited } from '../_shared/integrations/google.mjs';
 
-const actions: Record<string,string>={status:'status',configure:'configure',beginOAuth:'beginOAuth',validateAliases:'validateAliases',disconnect:'disconnect',
+const actions: Record<string,string>={status:'status',saveMailSignature:'saveMailSignature',listMailDrafts:'listMailDrafts',saveMailDraft:'saveMailDraft',getMailDraft:'getMailDraft',deleteMailDraft:'deleteMailDraft',setEmailState:'setEmailState',configureMail:'configureMail',processMailOperation:'processMailOperation',configure:'configure',beginOAuth:'beginOAuth',validateAliases:'validateAliases',disconnect:'disconnect',
   saveInbox:'saveInbox',setInboxAccess:'setInboxAccess',sendEmail:'sendEmail',sendAsAlias:'sendEmail',syncEmails:'syncEmails',listEmails:'listEmails',
   getEmail:'getEmail',getThread:'getThread',listLinkedEmails:'listLinkedEmails',attachEmailToCustomer:'attachEmail',attachEmailToTicket:'attachEmail',
   beginUpload:'beginUpload',resumeUpload:'resumeUpload',completeUpload:'completeUpload',listFiles:'listFiles',customerHistory:'customerHistory',

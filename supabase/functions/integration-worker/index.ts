@@ -5,8 +5,8 @@ import { digest, fail } from '../_shared/integrations/core.mjs';
 Deno.serve(async(req:Request)=>{
   try {
     if(req.method!=='POST')fail('METHOD_NOT_ALLOWED',405);
-    const configured=environment().INTEGRATION_WORKER_SECRET,supplied=req.headers.get('x-dtg-worker-secret')||'';
+    const s=await service();const configured=s.env.INTEGRATION_WORKER_SECRET,supplied=req.headers.get('x-dtg-worker-secret')||'';
     if(!configured||!supplied||await digest(configured)!==await digest(supplied))fail('AUTH_REQUIRED',401);
-    const worker=new IntegrationWorker(await service());return Response.json(await worker.run(),{headers:{'Cache-Control':'no-store'}});
+    const worker=new IntegrationWorker(s);return Response.json(await worker.run(),{headers:{'Cache-Control':'no-store'}});
   }catch(e){return errorReply(e);}
 });

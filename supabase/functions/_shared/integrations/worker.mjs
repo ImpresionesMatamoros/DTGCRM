@@ -19,12 +19,12 @@ export class IntegrationWorker {
     return this.db.update(T('integration_jobs'), [eq('id', job.id), eq('lease_token', job.lease_token)],
       { state, last_error: error, failure_count: error ? (job.failure_count || 0) + 1 : 0, next_attempt_at: next || date(), lease_until: null, lease_token: null, completed_at: state === 'done' ? date() : null });
   }
-  async run() {
-    await this.s.active(); await this.scheduleExpirations(); await this.scheduleSync();
-    const jobs = await this.db.rpc('dtg_claim_job'); if (!jobs?.length) return { processed: 0 };
-    const job = jobs[0]; this.s.actor = job.actor_id;
+  async run(operationId=null) {
+    await this.s.active();if(!operationId){await this.scheduleExpirations();await this.scheduleSync();}
+    const jobs = await this.db.rpc(operationId?'dtg_claim_specific_job':'dtg_claim_job',operationId?{p_id:operationId}:{}); if (!jobs?.length) return { processed: 0 };
+    const job = jobs[0]; this.s.actor = job.actor_id;let jobConnectionId=null;
     try {
-      const p = await unseal(job.payload.sealed, this.s.key(), `job:${job.id}`);
+      const p = await unseal(job.payload.sealed, this.s.key(), `job:${job.id}`);jobConnectionId=p.connection_id||null;
       if (job.kind !== 'revoke_grant') await this.context(job.actor_id, job.ticket_id, job.inbox_id, ['send_email','vendor_delivery'].includes(job.kind));
       if (job.kind === 'sync_email') { const c = await this.context(job.actor_id); if (!c.is_admin) fail('FORBIDDEN', 403); }
       const handlers = { send_email: 'send', sync_email: 'sync', preview: 'preview', vendor_delivery: 'deliver', revoke_grant: 'revoke' };
@@ -46,14 +46,14 @@ export class IntegrationWorker {
         await this.db.update(T('files'),[eq('id',p.file_id)],{preview_state:'failed'});
       }
       if (job.kind === 'sync_email') {
-        const connection=await this.s.connection();if(connection)await this.db.update(T('google_connections'),[eq('id',connection.id)],{last_error:code});
+        const connection=await this.s.connection(jobConnectionId);if(connection)await this.db.update(T('google_connections'),[eq('id',connection.id)],{last_error:code});
       }
       await this.s.audit(`${job.kind}.${uncertain?'unknown':retry?'retry':'failed'}`, { error: code }, { operation_id: job.id, ticket_id: job.ticket_id, inbox_id: job.inbox_id });
       return { processed: 1, operation_id: job.id, state: uncertain ? 'unknown' : retry ? 'retry' : 'failed', error: code };
     }
   }
-  async recordMessage(g, id, explicitInbox = null, ticket = null) {
-    const connection = await this.s.connection(), boxes = await this.db.list(T('email_inboxes'));
+  async recordMessage(g, id, explicitInbox = null, ticket = null, connectionId=null) {
+    const connection = await this.s.connection(connectionId), boxes = (await this.db.list(T('email_inboxes'))).filter(b=>b.connection_id===connection.id);
     const m = messageMetadata(await g.getEmail(id), boxes), classifications = m.inboxes; delete m.inboxes;
     const row = await this.db.upsert(T('email_messages'), { ...m, connection_id: connection.id }, 'connection_id,external_message_id');
     if (explicitInbox && !classifications.some(x=>x.inbox_id===explicitInbox)) {
@@ -82,7 +82,7 @@ export class IntegrationWorker {
     if(!box?.active || box.verification_status!=='accepted') fail('ALIAS_NOT_VERIFIED',409);
     const aliases=(await g.listAliases()).sendAs||[];
     if(!aliases.some(a=>a.sendAsEmail.toLowerCase()===box.email_alias&&a.verificationStatus==='accepted')) fail('ALIAS_NOT_VERIFIED',409);
-    if(p.external_message_id) { await this.recordMessage(g,p.external_message_id,box.id,ticket); return p.external_message_id; }
+    if(p.external_message_id) { await this.recordMessage(g,p.external_message_id,box.id,ticket,box.connection_id||null); return p.external_message_id; }
     if(p.sending) {
       const found=await g.findSent(`<dtg-${job.id}@${cfg.domain}>`);
       if(found.messages?.length) {p.external_message_id=found.messages[0].id;await this.persist(job,p);await this.recordMessage(g,p.external_message_id,box.id,ticket);return p.external_message_id;}
@@ -95,16 +95,16 @@ export class IntegrationWorker {
       if(e.code!=='UNKNOWN_SEND_RESULT') {p.sending=false;await this.persist(job,p);} throw e;
     }
     p.external_message_id=result.id; await this.persist(job,p);
-    await this.recordMessage(g,result.id,box.id,ticket); return result.id;
+    await this.recordMessage(g,result.id,box.id,ticket,box.connection_id||null); return result.id;
   }
-  async send(job,p) { const g=await this.s.google(),box=await this.db.one(T('email_inboxes'),[eq('id',p.inbox_id)]); await this.sendRaw(job,p,g,box,p,job.ticket_id); return false; }
+  async send(job,p) { const box=await this.db.one(T('email_inboxes'),[eq('id',p.inbox_id)]);if(p.connection_id&&box.connection_id&&box.connection_id!==p.connection_id)fail('ALIAS_ACCOUNT_CHANGED',409);const g=await this.s.google(p.connection_id||box.connection_id||null); await this.sendRaw(job,p,g,box,p,job.ticket_id); return false; }
   async sync(job,p) {
-    const g=await this.s.google(),c=await this.s.connection(),cfg=await this.s.policy();
+    const c=await this.s.connection(p.connection_id||null),g=await this.s.google(c.id),cfg=await this.s.policy();
     let state=await this.s.privateGet(`sync:${c.id}`) || {cursor:null};
     if(!state.cursor || state.mode==='full') {
       if(!state.full_start) {state={mode:'full',full_start:(await g.profile()).historyId,page:null};await this.s.privateSet(`sync:${c.id}`,state);}
       const batch=await g.listMessages(state.page,cfg.sync_query);
-      for(const m of batch.messages||[]) {try{await this.recordMessage(g,m.id);}catch(e){if(e.code!=='MISSING_EXTERNAL')throw e;}}
+      for(const m of batch.messages||[]) {try{await this.recordMessage(g,m.id,null,null,c.id);}catch(e){if(e.code!=='MISSING_EXTERNAL')throw e;}}
       if(batch.nextPageToken) {state.page=batch.nextPageToken;await this.s.privateSet(`sync:${c.id}`,state);return true;}
       state={cursor:state.full_start};await this.s.privateSet(`sync:${c.id}`,state);
       // Run history from the cursor captured BEFORE initial listing, closing the arrival gap.
@@ -118,7 +118,7 @@ export class IntegrationWorker {
       for(const kind of ['messagesAdded','labelsAdded','labelsRemoved']) for(const x of h[kind]||[]) ids.add(x.message.id);
       for(const x of h.messagesDeleted||[]) await this.db.update(T('email_messages'),[eq('connection_id',c.id),eq('external_message_id',x.message.id)],{sync_status:'missing_external'});
     }
-    for(const id of ids) {try{await this.recordMessage(g,id);}catch(e){if(e.code!=='MISSING_EXTERNAL')throw e;}}
+    for(const id of ids) {try{await this.recordMessage(g,id,null,null,c.id);}catch(e){if(e.code!=='MISSING_EXTERNAL')throw e;}}
     if(batch.nextPageToken) {state.page=batch.nextPageToken;await this.s.privateSet(`sync:${c.id}`,state);return true;}
     await this.s.privateSet(`sync:${c.id}`,{cursor:batch.historyId||state.cursor});
     await this.db.update(T('google_connections'),[eq('id',c.id)],{last_sync_at:date(),last_error:null});return false;
@@ -200,7 +200,7 @@ export class IntegrationWorker {
     const box=await this.db.one(T('email_inboxes'),[eq('id',d.inbox_id)]);
     await this.db.update(T('vendor_deliveries'),[eq('id',d.id)],{email_state:'sending',last_error:null});
     const link=meta.webViewLink||`https://drive.google.com/file/d/${encodeURIComponent(driveId)}/view`;
-    const messageId=await this.sendRaw(job,p,g,box,{to:[d.recipient_email],subject:`Archivo de producción — ${f.filename}`,body:`Hola ${vendor.name},\n\nArchivo: ${f.filename}\nVersión: ${f.version}\n\n${link}\n\nAcceso de lectura hasta ${d.access_expires_at}.`},d.ticket_id);
+    const messageId=await this.sendRaw(job,p,await this.s.google(box.connection_id||null),box,{to:[d.recipient_email],subject:`Archivo de producción — ${f.filename}`,body:`Hola ${vendor.name},\n\nArchivo: ${f.filename}\nVersión: ${f.version}\n\n${link}\n\nAcceso de lectura hasta ${d.access_expires_at}.`},d.ticket_id);
     await this.db.update(T('vendor_deliveries'),[eq('id',d.id)],{email_state:'sent',external_message_id:messageId,last_error:null});return false;
   }
   async scheduleExpirations() {
@@ -214,13 +214,15 @@ export class IntegrationWorker {
     }
   }
   async scheduleSync() {
-    const connection=await this.s.connection();if(connection?.state!=='connected'||!connection.connected_by)return;
+    for(const connection of await this.db.list(T('google_connections'),[eq('state','connected')]))await this.scheduleConnectionSync(connection);
+  }
+  async scheduleConnectionSync(connection) {if(connection?.state!=='connected'||!connection.connected_by)return;
     if(connection.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)<60000)return;
-    const existing=await this.db.list(T('integration_jobs'),[eq('kind','sync_email'),['state','in',['queued','running','retry']]],{limit:1});if(existing.length)return;
-    const failed=await this.db.list(T('integration_jobs'),[eq('kind','sync_email'),eq('state','failed')],{order:'created_at',limit:1});
+    const existing=await this.db.list(T('integration_jobs'),[eq('kind','sync_email'),eq('scope_key','gmail-sync:'+connection.id),['state','in',['queued','running','retry']]],{limit:1});if(existing.length)return;
+    const failed=await this.db.list(T('integration_jobs'),[eq('kind','sync_email'),eq('scope_key','gmail-sync:'+connection.id),eq('state','failed')],{order:'created_at',limit:1});
     if(failed.length&&(!connection.last_sync_at||Date.parse(failed[0].created_at)>Date.parse(connection.last_sync_at)))return;
     const context=await this.db.rpc('dtg_actor_context',{p_actor:connection.connected_by});if(!context?.active||!context.is_admin)return;
-    const saved=this.s.actor;this.s.actor=connection.connected_by;await this.s.enqueue('sync_email','gmail-sync',{},crypto.randomUUID());this.s.actor=saved;
+    const saved=this.s.actor;this.s.actor=connection.connected_by;await this.s.enqueue('sync_email','gmail-sync:'+connection.id,{connection_id:connection.id},crypto.randomUUID());this.s.actor=saved;
   }
   async revoke(job,p) {
     const grant=await this.db.one(T('vendor_grants'),[eq('id',p.grant_id)]);if(!grant||!grant.managed)fail('UNMANAGED_PERMISSION',409);

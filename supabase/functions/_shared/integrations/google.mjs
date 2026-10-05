@@ -13,6 +13,7 @@ export class GoogleAdapter {
   getEmail(id, format = 'full') { return this.gmail(`messages/${encodeURIComponent(id)}?format=${format}`); }
   getThread(id) { return this.gmail(`threads/${encodeURIComponent(id)}?format=full`); }
   listAliases() { return this.gmail('settings/sendAs'); }
+  modifyEmail(id,change) {return this.gmail('messages/'+encodeURIComponent(id)+'/modify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(change)});}
   profile() { return this.gmail('profile'); }
   listMessages(pageToken, query) {
     const q = new URLSearchParams({ maxResults: '50' }); if (pageToken) q.set('pageToken', pageToken); if (query) q.set('q', query);

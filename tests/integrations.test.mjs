@@ -155,7 +155,7 @@ test('mail setup reports only missing names and origin override stays exact',()=
  assert(!JSON.stringify(mailReadiness(env,null)).includes('secret-value'));
 });
 test('reply resolves trusted thread metadata and rejects unreadable original',async()=>{
- const {s,ids,db}=scenario(); const id=crypto.randomUUID();db.tables.dtg_email_messages=[{id,subject:'Pedido',thread_id:'trusted-thread',rfc_message_id:'<original@example.com>'}];
+ const {s,ids,db}=scenario(); const id=crypto.randomUUID();db.tables.dtg_email_messages=[{id,connection_id:ids.connection,subject:'Pedido',thread_id:'trusted-thread',rfc_message_id:'<original@example.com>'}];
  const input={inbox_id:ids.inbox,to:['client@example.com'],subject:'Re: Pedido',body:'Hola',reply_message_id:id,thread_id:'forged',in_reply_to:'forged',idempotency_key:crypto.randomUUID()};
  const op=await s.sendEmail(input);const job=db.tables.dtg_integration_jobs.find(x=>x.id===op.operation_id);const payload=await unseal(job.payload.sealed,s.env.INTEGRATION_ENCRYPTION_KEY,'job:'+job.id);
  assert.equal(payload.subject,'Pedido');assert.equal(payload.thread_id,'trusted-thread');assert.equal(payload.in_reply_to,'<original@example.com>');
@@ -166,4 +166,29 @@ test('admin cannot enable mail before backend setup and Google consent',async()=
  const {s}=scenario();await assert.rejects(s.configure({enabled:true}),/SECRETS_NOT_CONFIGURED/);
  for(const k of mailReadiness({},null).missing)s.env[k]='configured';
  s.connection=async()=>null;await assert.rejects(s.configure({enabled:true}),/GOOGLE_NOT_CONNECTED/);
+});
+
+test('verified aliases are discovered and never reassigned to another account silently',async()=>{
+ const {s,db,ids}=scenario();const other=crypto.randomUUID();await db.insert('dtg_google_connections',{id:other,singleton:false,state:'connected',account_email:'jona@956print.com'});
+ await s.validateAliases({listAliases:async()=>({sendAs:[{sendAsEmail:'hello@956print.com',verificationStatus:'accepted'}]})},ids.connection);
+ const hello=await db.one('dtg_email_inboxes',[['email_alias','eq','hello@956print.com']]);assert.equal(hello.connection_id,ids.connection);assert.equal(hello.verification_status,'accepted');
+ await s.validateAliases({listAliases:async()=>({sendAs:[{sendAsEmail:'hello@956print.com',verificationStatus:'accepted'},{sendAsEmail:'jona@956print.com',verificationStatus:'accepted'}]})},other);
+ assert.equal((await db.one('dtg_email_inboxes',[['id','eq',hello.id]])).connection_id,ids.connection);
+ assert.equal((await db.one('dtg_email_inboxes',[['email_alias','eq','jona@956print.com']])).connection_id,other);
+});
+test('OAuth token selection follows each real account and each send snapshots that account',async()=>{
+ const {s,db,ids}=scenario();const second=crypto.randomUUID();await db.insert('dtg_google_connections',{id:second,singleton:false,state:'connected',account_email:'jona@956print.com'});
+ await s.privateSet('google:'+ids.connection,{access_token:'primary-test',refresh_token:'test',expires_at:Date.now()+3600000});await s.privateSet('google:'+second,{access_token:'second-test',refresh_token:'test',expires_at:Date.now()+3600000});
+ const real=new IntegrationService({admin:db,user:db,actor:ids.actor,storage:{},env:s.env,googleFactory:token=>({token})});assert.equal((await real.google(second)).token,'second-test');assert.equal((await real.google()).token,'primary-test');
+ const newBox=await db.insert('dtg_email_inboxes',{connection_id:second,email_alias:'jona@956print.com',active:true,verification_status:'accepted',default_from_name:'Jonathan'});
+ const op=await s.sendEmail({inbox_id:newBox.id,to:['test@example.com'],subject:'Prueba',body:'Hola',idempotency_key:crypto.randomUUID()});const job=await db.one('dtg_integration_jobs',[['id','eq',op.operation_id]]);const p=await unseal(job.payload.sealed,s.env.INTEGRATION_ENCRYPTION_KEY,'job:'+job.id);assert.equal(p.connection_id,second);
+});
+test('drafts are encrypted and private even from another admin',async()=>{
+ const {s,ids,db}=scenario();const d=await s.saveMailDraft({draft:{inbox_id:ids.inbox,subject:'Draft',to:'test@example.com',body:'private draft'}});const row=await db.one('dtg_mail_drafts',[['id','eq',d.id]]);assert(!row.encrypted_payload.includes('private draft'));assert.equal((await s.getMailDraft({draft_id:d.id})).draft.body,'private draft');
+ s.actor=crypto.randomUUID();assert.deepEqual(await s.listMailDrafts(),[]);await assert.rejects(s.getMailDraft({draft_id:d.id}),/DRAFT_UNAVAILABLE/);await assert.rejects(s.saveMailDraft({draft_id:d.id,draft:{body:'overwrite'}}),/DRAFT_UNAVAILABLE/);
+ await s.deleteMailDraft({draft_id:d.id});assert(await db.one('dtg_mail_drafts',[['id','eq',d.id]]));
+});
+test('explicit processing claims only the owner operation and cannot drive another user queue',async()=>{
+ const {s,db,ids}=scenario();const op=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Prueba',body:'Hola',idempotency_key:crypto.randomUUID()});assert.equal((await s.processMailOperation({operation_id:op.operation_id})).state,'done');
+ const other=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Otro',body:'Hola',idempotency_key:crypto.randomUUID()});s.actor=crypto.randomUUID();db.admin=false;await assert.rejects(s.processMailOperation({operation_id:other.operation_id}),/FORBIDDEN/);assert.equal((await db.one('dtg_integration_jobs',[['id','eq',other.operation_id]])).state,'queued');
 });

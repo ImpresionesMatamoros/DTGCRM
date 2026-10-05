@@ -20,6 +20,8 @@ export async function service(req: Request | null = null) {
   const env=environment();
   if(!env.SUPABASE_URL||!env.SUPABASE_SERVICE_ROLE_KEY)fail('BACKEND_NOT_CONFIGURED',503);
   const adminClient=createClient(env.SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+  const admin=new Store(adminClient);
+  try {const saved=await admin.rpc('dtg_workspace_secrets');for(const [key,value] of Object.entries(saved||{}))if(!env[key])env[key]=String(value);} catch {/* Additive deployment: absent Vault migration leaves environment setup usable. */}
   let user: Store | null=null,actor:string|null=null;
   if(req) {
     const bearer=req.headers.get('authorization')||'';
@@ -29,7 +31,7 @@ export async function service(req: Request | null = null) {
     user=new Store(client);actor=auth.data.user!.id;
     if(!await user.rpc('is_active_member'))fail('FORBIDDEN',403);
   }
-  return new IntegrationService({admin:new Store(adminClient),user,actor,storage:new SupabaseStorageAdapter(adminClient),env});
+  return new IntegrationService({admin,user,actor,storage:new SupabaseStorageAdapter(adminClient),env});
 }
 export async function jsonBody(req: Request, limit=150000) {
   const bytes=await readLimited(req,limit);
