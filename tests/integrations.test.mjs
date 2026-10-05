@@ -192,3 +192,9 @@ test('explicit processing claims only the owner operation and cannot drive anoth
  const {s,db,ids}=scenario();const op=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Prueba',body:'Hola',idempotency_key:crypto.randomUUID()});assert.equal((await s.processMailOperation({operation_id:op.operation_id})).state,'done');
  const other=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Otro',body:'Hola',idempotency_key:crypto.randomUUID()});s.actor=crypto.randomUUID();db.admin=false;await assert.rejects(s.processMailOperation({operation_id:other.operation_id}),/FORBIDDEN/);assert.equal((await db.one('dtg_integration_jobs',[['id','eq',other.operation_id]])).state,'queued');
 });
+
+test('primary Gmail sender has no custom alias verification status',async()=>{
+ const {s,db,ids}=scenario();const c=await db.one('dtg_google_connections',[['id','eq',ids.connection]]);
+ await s.validateAliases({listAliases:async()=>({sendAs:[{sendAsEmail:c.account_email,isPrimary:true}]})},ids.connection);
+ const b=await db.one('dtg_email_inboxes',[['email_alias','eq',c.account_email]]);assert.equal(b.verification_status,'accepted');
+});

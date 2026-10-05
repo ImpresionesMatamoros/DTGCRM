@@ -132,7 +132,7 @@ export class IntegrationService {
     for (const box of inboxes) {
       if(box.connection_id&&box.connection_id!==connection.id)continue;
       const remote = aliases.find(x => x.sendAsEmail.toLowerCase() === box.email_alias);
-      await this.admin.update(T('email_inboxes'), [eq('id', box.id)], { connection_id:remote?connection.id:box.connection_id,verification_status: remote ? remote.verificationStatus === 'accepted' ? 'accepted' : 'pending' : 'missing' });
+      await this.admin.update(T('email_inboxes'), [eq('id', box.id)], { connection_id:remote?connection.id:box.connection_id,verification_status: remote ? (remote.verificationStatus === 'accepted'||(remote.isPrimary===true&&remote.sendAsEmail.toLowerCase()===connection.account_email.toLowerCase())) ? 'accepted' : 'pending' : 'missing' });
     }
     return { validated: inboxes.length };
   }
