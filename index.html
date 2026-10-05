@@ -47,6 +47,7 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <title>Design To Go</title>
+<link rel="stylesheet" href="client-forms.css">
 <style id="dtg-style">
 :root{
   /* MEGA UPDATE v0.20 — nuevo sistema visual. El rosa deja de ser la
@@ -4421,8 +4422,11 @@ button.tk-task-open:hover{background:var(--surface-3)}
 @media(max-width:600px){.device-picker-overlay{align-items:flex-end;padding:8px;}.device-picker{padding:18px 14px calc(18px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px);}.device-picker h2{font-size:20px;}}
 
 </style>
+<script src="client-forms.js?v=1"></script>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
+<link rel="stylesheet" href="integrations.css?v=1">
+<script src="integrations.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="window.__dtgSupabaseLoadFailed=true"></script>
 <script>
 (function(){
@@ -7926,7 +7930,7 @@ function renderTicketHeader(t){
 
   var meta = '<span class="tk-meta"><span class="ticket-id">#' + t.seq + '</span><span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + '</span>' +
     (t.visibility === "private" ? '<span class="pill privacy-pill" title="Restringido — solo lo ven las personas agregadas con /privado">' + icon("lock") + " Privado</span>" : "") + '</span>';
-  var tools = '<span class="tk-tools"><button type="button" class="tk-icon" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned ? "Desfijar" : "Fijar") + '" aria-label="' + (t.pinned ? "Desfijar ticket" : "Fijar ticket") + '" aria-pressed="' + (t.pinned ? "true" : "false") + '">' + icon("pin") + '</button>' +
+  var tools = '<span class="tk-tools">'+(window.DTGClientForms?'<button type="button" class="tk-icon" data-client-form-ticket="'+escapeHtml(t.id)+'" title="Formularios para el cliente" aria-label="Formularios para el cliente">'+icon("file-text")+'</button>':'')+'<button type="button" class="tk-icon" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned ? "Desfijar" : "Fijar") + '" aria-label="' + (t.pinned ? "Desfijar ticket" : "Fijar ticket") + '" aria-pressed="' + (t.pinned ? "true" : "false") + '">' + icon("pin") + '</button>' +
     '<button type="button" class="tk-icon" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket" aria-label="Copiar resumen del ticket">' + icon("copy") + '</button></span>';
   /* Qué sigue: pieza central, siempre visible, opcional y de un toque. */
   var next = editing === "quesigue"
@@ -26849,6 +26853,10 @@ document.addEventListener('keydown',function(e){
   }
 },true);
 
+if(window.DTGClientForms) window.DTGClientForms.configure({sb:function(){return sb;},ticket:function(id){return (STATE.tickets||[]).find(function(t){return t.id===id;});}});
+
+var cfUnsubscribeRealtime=unsubscribeRealtime;unsubscribeRealtime=function(){if(window.DTGClientForms)window.DTGClientForms.reset();return cfUnsubscribeRealtime();};
+
 async function boot(){
   loadUi();
   // Kanban is the default workspace; explicit ticket/chat URLs still resolve below.
@@ -27857,6 +27865,21 @@ document.addEventListener('compositionend',function(e){if(ticketSearchField(e.ta
 document.addEventListener('keydown',function(e){if(ticketSearchField(e.target)&&e.key==='Enter'&&!TS_COMPOSING){e.preventDefault();ticketSearchFlush();}},true);
 var TS_PHOTO_CORE=ticketPhotos;ticketPhotos=function(t){if(!TS_RENDER_DEPTH||!t)return TS_PHOTO_CORE(t);var photos=TS_PHOTOS.get(t);if(!photos){photos=TS_PHOTO_CORE(t);TS_PHOTOS.set(t,photos);}return photos.slice();};
 var TS_RENDER_CORE=render;render=function(){if(TS_COMPOSING&&ticketSearchField(document.activeElement)&&UI.mainView==='tickets'&&!UI.selectedTicketId)return;if(TS_TIMER!==null){clearTimeout(TS_TIMER);TS_TIMER=null;}if(TS_DIRTY){TS_DIRTY=false;saveUi();}if(!TS_RENDER_DEPTH)TS_PHOTOS=new WeakMap();TS_RENDER_DEPTH++;try{return TS_RENDER_CORE();}finally{TS_RENDER_DEPTH--;if(!TS_RENDER_DEPTH)TS_PHOTOS=null;var view=document.querySelector('.tickets-explorer');if(view)view.setAttribute('aria-busy','false');}};
+
+/* Additive integration panel. No calls during startup or ticket rendering. */
+if(window.DTGIntegrations){
+  window.DTGIntegrations.mount({getClient:function(){return sb;},actor:currentActorId,
+    url:function(){return SUPABASE_URL;},publishableKey:function(){return SUPABASE_KEY;},
+    isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},
+    members:function(){return activeAssignableProfiles();},
+    providerKeys:function(){var result=[];Object.keys(DTGOps.providers).forEach(function(group){DTGOps.providerList(group,STATE.meta.opsProviders||[]).forEach(function(p){result.push({key:'ops_provider_v1:'+group+':'+p.id,name:p.name+' · '+group});});});return result;}});
+  var dtgiTicketHeader=renderTicketHeader;
+  renderTicketHeader=function(t){return dtgiTicketHeader(t)+'<div class="dtgi-entry"><button type="button" class="btn btn-ghost" data-dtgi="open" data-ticket="'+escapeHtml(t.id)+'" data-customer="'+escapeHtml(t.clienteId||'')+'" data-seq="'+escapeHtml(t.seq)+'">Archivos y correo</button></div>';};
+  var dtgiClientProfile=renderClienteFichaView;
+  renderClienteFichaView=function(){return dtgiClientProfile()+'<button type="button" class="btn btn-ghost" data-dtgi="customer-open" data-customer="'+escapeHtml(UI.selectedClienteId||'')+'">Archivos y correo del cliente</button>';};
+  var dtgiLogout=unsubscribeRealtime;
+  unsubscribeRealtime=function(){window.DTGIntegrations.reset();return dtgiLogout();};
+}
 
 boot();
 

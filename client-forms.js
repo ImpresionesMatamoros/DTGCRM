@@ -1,0 +1,67 @@
+(function(root){
+ 'use strict';
+ var fields={name:{label:'Nombre',type:'text'},email:{label:'Correo electrónico',type:'email'},phone:{label:'Teléfono',type:'tel'},description:{label:'¿Qué necesitas?',type:'textarea'},quantity:{label:'Cantidad',type:'number'},delivery_date:{label:'Fecha deseada',type:'date'},comments:{label:'Comentarios',type:'textarea'}};
+ function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+ function token(){var a=new Uint8Array(32);root.crypto.getRandomValues(a);return Array.from(a,function(n){return n.toString(16).padStart(2,'0');}).join('');}
+ function link(t){var u=new URL('client-form.html',root.location.href);u.search='';u.hash=t;return u.href;}
+ function state(r){return r.revoked_at?'Revocada':r.submitted_at?(r.reviewed_at?'Revisada':'Respondida'):Date.parse(r.expires_at)<=Date.now()?'Vencida':'Pendiente';}
+ async function rpc(sb,name,args){
+  // Promise.race also covers transports that ignore AbortSignal. No core UI lock.
+  var timer;try{return await Promise.race([Promise.resolve(sb.rpc(name,args)).then(function(r){if(r.error)throw Error('unavailable');return r.data;}),new Promise(function(_,reject){timer=setTimeout(function(){reject(Error('timeout'));},15000);})]);}finally{clearTimeout(timer);}
+ }
+ function fieldInput(k){var f=fields[k];if(!f)return '';var attrs=' name="'+k+'" id="cf-'+k+'" maxlength="2000"';return '<label for="cf-'+k+'">'+f.label+'</label>'+(f.type==='textarea'?'<textarea'+attrs+' rows="3"></textarea>':'<input'+attrs+' type="'+f.type+'"'+(f.type==='number'?' min="1" max="1000000" step="1"':f.type==='email'?' maxlength="254"':'')+'>');}
+ function publicClient(){return root.supabase.createClient(root.DTG_PUBLIC_CONFIG.url,root.DTG_PUBLIC_CONFIG.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});}
+ async function publicStart(){
+  var app=document.getElementById('client-form-app'),t=root.location.hash.slice(1),sb,submission=root.crypto.randomUUID();
+  // Fragment prevents the capability token reaching HTTP access logs/referrers.
+  function unavailable(){app.innerHTML='<h1>Enlace no disponible</h1><p>Solicita un nuevo enlace a Design To Go.</p>';}
+  if(!/^[a-f0-9]{64}$/.test(t))return unavailable();
+  try{
+   app.innerHTML='<p>Cargando formulario…</p>';sb=publicClient();var data=await rpc(sb,'client_form_get',{p_token:t});if(root.location.hash.slice(1)!==t)return;
+   if(data.state==='submitted'){app.innerHTML='<h1>Respuesta recibida</h1><p>Esta solicitud ya fue contestada. Contacta al equipo si necesitas corregir algo.</p>';return;}
+   if(data.state!=='open')return unavailable();
+   app.innerHTML='<h1>'+esc(data.title)+'</h1><p class="cf-instructions">'+esc(data.instructions)+'</p><p>Completa la información que tengas. El equipo revisará tu respuesta antes de actualizar el pedido.</p><form id="cf-public">'+data.fields.map(fieldInput).join('')+'<p id="cf-error" role="status" aria-live="polite"></p><button type="submit">Enviar información</button></form>';
+   document.getElementById('cf-public').addEventListener('submit',async function(e){
+    e.preventDefault();var form=e.target,b=form.querySelector('button'),msg=document.getElementById('cf-error');if(b.disabled)return;
+    var answers={};data.fields.forEach(function(k){if(fields[k])answers[k]=form.elements[k].value.trim();});
+    if(!Object.values(answers).some(Boolean)){msg.textContent='Completa al menos un campo.';return;}
+    b.disabled=true;b.textContent='Enviando…';msg.textContent='';
+    try{var result=await rpc(sb,'client_form_submit',{p_token:t,p_submission:submission,p_answers:answers});
+     if(result.state==='received'){app.innerHTML='<h1>¡Gracias!</h1><p>Tu información fue recibida. El equipo de Design To Go la revisará.</p>';}
+     else if(result.state==='submitted'){app.innerHTML='<h1>Respuesta ya recibida</h1><p>La respuesta anterior se conserva. Contacta al equipo si necesitas corregir algo.</p>';}
+     else unavailable();
+    }catch(err){msg.textContent='No pudimos confirmar el envío. Conservamos tu información aquí; intenta nuevamente.';b.disabled=false;b.textContent='Reintentar envío';}
+   });
+  }catch(err){app.innerHTML='<h1>No pudimos cargar el formulario</h1><p>Revisa tu conexión e intenta nuevamente.</p><button id="cf-retry">Reintentar</button>';document.getElementById('cf-retry').onclick=publicStart;}
+ }
+ var staff=null,links={},pendingCreates={},epoch=0;
+ function reset(){epoch++;var host=document.getElementById('cf-staff');if(host)host._cfClose();links={};pendingCreates={};}
+ function configure(opts){staff=opts;document.addEventListener('click',function(e){var b=e.target.closest('[data-client-form-ticket]');if(b){e.preventDefault();open(b.dataset.clientFormTicket);}});}
+ async function open(ticketId){
+  if(!staff||!staff.ticket(ticketId))return;
+  var revision=epoch;var previous=document.getElementById('cf-staff');if(previous)previous._cfClose();
+  var host=document.createElement('div');host.id='cf-staff';host.className='cf-backdrop';host.innerHTML='<section class="cf-panel" role="dialog" aria-modal="true" aria-labelledby="cf-heading"><header><h2 id="cf-heading">Formularios · #'+esc(staff.ticket(ticketId).seq)+'</h2><button data-cf="close" aria-label="Cerrar">Cerrar</button></header><p>El cliente solo verá lo que solicites aquí. Las respuestas no cambian el ticket automáticamente.</p><form id="cf-create"><label for="cf-title">Título para el cliente</label><input id="cf-title" maxlength="120" required value="Información de tu pedido"><label for="cf-instructions">Instrucciones para el cliente</label><textarea id="cf-instructions" maxlength="2000" rows="2"></textarea><fieldset><legend>Información a solicitar</legend>'+Object.keys(fields).map(function(k){return '<label class="cf-check"><input type="checkbox" name="fields" value="'+k+'"'+(['name','description','quantity','delivery_date','comments'].includes(k)?' checked':'')+'>'+fields[k].label+'</label>';}).join('')+'</fieldset><label for="cf-days">Vigencia</label><select id="cf-days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option></select><button type="submit">Crear enlace</button></form><p id="cf-staff-status" role="status" aria-live="polite"></p><h3>Solicitudes de este ticket</h3><button data-cf="refresh">Actualizar respuestas</button><div id="cf-list">Cargando…</div></section>';
+  document.body.appendChild(host);var returnFocus=document.activeElement;host.querySelector('[data-cf="close"]').focus();
+  function close(){document.removeEventListener('keydown',onKey,true);host.remove();if(returnFocus&&returnFocus.isConnected)returnFocus.focus();}host._cfClose=close;
+  function onKey(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();return;}if(e.key==='Tab'){var controls=Array.from(host.querySelectorAll('button,input,textarea,select,a')).filter(function(x){return !x.disabled;});var first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}else if(!host.contains(document.activeElement)){e.preventDefault();first.focus();}}}document.addEventListener('keydown',onKey,true);
+  var status=host.querySelector('#cf-staff-status'),list=host.querySelector('#cf-list'),busy=false;
+  async function load(){
+   try{var q=staff.sb().from('client_form_requests').select('id,title,instructions,fields,created_at,expires_at,revoked_at,answers,submitted_at,reviewed_at').eq('ticket_id',ticketId).order('created_at',{ascending:false}).limit(50);
+    var timer,res;try{res=await Promise.race([q,new Promise(function(_,reject){timer=setTimeout(function(){reject(Error('timeout'));},15000);})]);}finally{clearTimeout(timer);}if(res.error)throw res.error;if(!host.isConnected)return;
+    list.innerHTML=res.data.map(function(r){return '<article class="cf-request"><strong>'+esc(r.title)+'</strong><span> · '+state(r)+'</span><p>Creada: '+esc(new Date(r.created_at).toLocaleString())+' · Vence: '+esc(new Date(r.expires_at).toLocaleDateString())+'</p>'+(r.submitted_at?'<p>Respondida: '+esc(new Date(r.submitted_at).toLocaleString())+'</p>':'')+(r.reviewed_at?'<p>Revisada: '+esc(new Date(r.reviewed_at).toLocaleString())+'</p>':'')+(r.answers?'<dl>'+Object.keys(r.answers).map(function(k){return '<dt>'+esc(fields[k]?fields[k].label:k)+'</dt><dd>'+esc(r.answers[k]||'Sin respuesta')+'</dd>';}).join('')+'</dl>':'')+(links[r.id]?'<label>Enlace<input readonly value="'+esc(links[r.id])+'" aria-label="Enlace del formulario"></label><button data-cf="copy" data-id="'+r.id+'">Copiar enlace</button>'+(root.DTGIntegrations?'<button data-cf="email" data-id="'+r.id+'">Preparar correo con enlace</button>':'')+'':'')+(!r.revoked_at&&!r.submitted_at?'<button data-cf="renew" data-id="'+r.id+'">Renovar enlace (invalida el anterior)</button>':'')+(!r.revoked_at?'<button data-cf="revoke" data-id="'+r.id+'">Revocar enlace</button>':'')+(r.submitted_at&&!r.reviewed_at?'<button data-cf="review" data-id="'+r.id+'">Marcar revisada</button>':'')+'</article>';}).join('')||'<p>Aún no hay solicitudes.</p>';
+   }catch(e){list.textContent='Formularios no disponibles. El ticket sigue funcionando. Revisa el despliegue o intenta actualizar.';}
+  }
+  host.querySelector('#cf-create').addEventListener('submit',async function(e){e.preventDefault();if(busy)return;var form=e.target,selected=Array.from(form.querySelectorAll('[name="fields"]:checked')).map(function(x){return x.value;});if(!selected.length){status.textContent='Selecciona al menos un campo.';return;}
+   var signature=JSON.stringify([form.querySelector('#cf-title').value,form.querySelector('#cf-instructions').value,selected,form.querySelector('#cf-days').value]);
+   var pending=pendingCreates[ticketId];if(!pending||pending.signature!==signature)pending=pendingCreates[ticketId]={id:root.crypto.randomUUID(),token:token(),signature:signature};
+   busy=true;form.querySelector('button').disabled=true;status.textContent='Creando…';
+   try{var id=await rpc(staff.sb(),'client_form_create',{p_id:pending.id,p_ticket:ticketId,p_token:pending.token,p_title:form.querySelector('#cf-title').value,p_instructions:form.querySelector('#cf-instructions').value,p_fields:selected,p_days:Number(form.querySelector('#cf-days').value)});if(revision!==epoch)return;links[id]=link(pending.token);delete pendingCreates[ticketId];status.textContent='Enlace creado. Cópialo para compartirlo con el cliente.';await load();}catch(err){status.textContent='No pudimos confirmar la creación. Intenta de nuevo con los mismos datos; no se duplicará.';}finally{busy=false;form.querySelector('button').disabled=false;}
+  });
+  host.addEventListener('click',async function(e){var b=e.target.closest('[data-cf]');if(!b)return;var action=b.dataset.cf,id=b.dataset.id;if(action==='close')return close();if(action==='refresh')return load();if(busy)return;
+   if(action==='email'){if(root.DTGIntegrations){var t=staff.ticket(ticketId);close();root.DTGIntegrations.open({ticketId:ticketId,customerId:t.clienteId||null,seq:t.seq,draftEmail:{subject:'Información de tu pedido · Design To Go',body:'Hola, completa la información de tu pedido en este enlace:\n'+links[id]+'\n\nGracias,\nDesign To Go'}});}return;}
+   if(action==='copy'){try{await navigator.clipboard.writeText(links[id]);status.textContent='Enlace copiado.';}catch(err){status.textContent='Selecciona el enlace y cópialo manualmente.';}return;}
+   busy=true;b.disabled=true;try{var next=action==='renew'?token():null;await rpc(staff.sb(),'client_form_manage',{p_id:id,p_action:action,p_token:next});if(revision!==epoch)return;if(next)links[id]=link(next);if(action==='revoke')delete links[id];status.textContent=action==='review'?'Respuesta revisada. Los campos del ticket conservan sus valores.':action==='renew'?'Enlace renovado; el anterior dejó de funcionar.':'Enlace revocado.';await load();}catch(err){status.textContent='No pudimos confirmar el cambio. Actualiza para comprobar el estado antes de reintentar.';}finally{busy=false;b.disabled=false;}
+  });await load();
+ }
+ var api={fields:fields,escape:esc,state:state,token:token,link:link,rpc:rpc,configure:configure,reset:reset,open:open,publicStart:publicStart};root.DTGClientForms=api;if(typeof module!=='undefined')module.exports=api;
+})(typeof window==='undefined'?globalThis:window);
