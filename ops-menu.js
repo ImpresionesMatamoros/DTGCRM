@@ -45,7 +45,7 @@ function tree(mode,custom){
  return Object.keys(mode==='action'?actions:categories).map(id=>node(mode==='action'?actions[id][0]:categories[id],mode==='action'?{action:id}:{category:id},recipes.filter(r=>r[mode==='action'?'action':'category']===id).map(branch)));
 }
 function meta(task){try{const m=JSON.parse(task.actionPath||'');return m.v===1?m:{};}catch(_){return {};}}
-function blocked(task,ticket){const id=meta(task).dependsOn;return !!id&&!(ticket.tareas||[]).some(t=>t.id===id&&t.estado==='terminado');}
+function blocked(task,ticket){const id=task.dependsOn||meta(task).dependsOn;return !!id&&!(ticket.tareas||[]).some(t=>t.id===id&&t.estado==='terminado');}
 root.DTGOps={actions,categories,recipes,providers,groupLabels,norm,providerId,providerList,resolve,tree,meta,blocked};
 if(typeof module!=='undefined')module.exports=root.DTGOps;
 })(typeof window!=='undefined'?window:globalThis);
