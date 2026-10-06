@@ -16866,6 +16866,25 @@ function restoreTicketScroll(snap){
   el.scrollTop=!snap||snap.id!==UI.selectedTicketId ? 0 : snap.atBottom ? el.scrollHeight : snap.top;
 }
 
+/* Preserve workspace positions across same-screen actions and refreshes. */
+var WORKSPACE_SCROLL_SELECTORS=['#kanban-board','#ops-board','.ticket-list','.sidebar-scroll','.page-scroll','.clientes-view','.calendar-scroll','.tickets-explorer-scroll','.board-scroll','.board-col-cards','.work-map-scroll'];
+function workspaceScrollScope(){return JSON.stringify([UI.mainView,UI.selectedTicketId||null,UI.selectedClienteId||null,UI.displayMode||null]);}
+function workspaceScrollKey(el,selector,index){
+  var col=el.closest('[data-kanban-column],[data-ops-column]');
+  if(col)return selector+':column:'+JSON.stringify([col.getAttribute('data-kanban-column'),col.getAttribute('data-ops-column')]);
+  return selector+':'+(el.id||index);
+}
+function captureWorkspaceScroll(){
+  var app=document.getElementById('app'),positions={};
+  WORKSPACE_SCROLL_SELECTORS.forEach(function(selector){app.querySelectorAll(selector).forEach(function(el,index){positions[workspaceScrollKey(el,selector,index)]={top:el.scrollTop,left:el.scrollLeft};});});
+  return {scope:app.getAttribute('data-scroll-scope'),positions:positions};
+}
+function restoreWorkspaceScroll(snap){
+  var app=document.getElementById('app'),scope=workspaceScrollScope();app.setAttribute('data-scroll-scope',scope);
+  if(!snap||snap.scope!==scope)return;
+  WORKSPACE_SCROLL_SELECTORS.forEach(function(selector){app.querySelectorAll(selector).forEach(function(el,index){var pos=snap.positions[workspaceScrollKey(el,selector,index)];if(pos){el.scrollTop=pos.top;el.scrollLeft=pos.left;}});});
+}
+
 function render(){
   var app = document.getElementById("app");
   if(FATAL_ERROR){
@@ -16903,6 +16922,7 @@ function render(){
      pantalla). Así un clic en una reacción, un cambio de filtro o un evento
      de Realtime nunca se come lo que alguien estaba escribiendo ni lo
      arranca de donde estaba leyendo. */
+  var workspaceScrollSnap = captureWorkspaceScroll();
   var mobileScrollSnap = captureMobilePageScroll();
   var ticketScrollSnap = captureTicketScroll();
   var chatSnap = captureChatScroll();
@@ -16977,6 +16997,7 @@ function render(){
      propio), así que "ir al final" tiene que ir al final de lo que de
      verdad rueda. */
   restoreTicketScroll(ticketScrollSnap);
+  restoreWorkspaceScroll(workspaceScrollSnap);
   updateTotalPedidoSummary();
   var composerInput = document.getElementById("composer-input");
   if(composerInput){
