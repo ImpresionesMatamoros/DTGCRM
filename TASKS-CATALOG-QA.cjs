@@ -1,6 +1,6 @@
 const fs=require('fs'),assert=require('assert'),{chromium}=require('playwright');
 const setup=`
-window.qa={openOpsEditor,getState:()=>STATE,getWrites:()=>writes,setFailure:(v)=>fail=v};
+window.qa={slashOpenTask,openOpsEditor,getState:()=>STATE,getWrites:()=>writes,setFailure:(v)=>fail=v};
 var writes=[],fail=false;
 STATE={tickets:[{id:'11111111-1111-4111-8111-111111111111',seq:1330,cliente:'Angela',estado:'abierto',productos:[{id:'p1',desc:'Camisas',cantidad:24}],tareas:[],markers:[],thread:[]}],clientes:[],profiles:[],meta:{opsProviders:[]}};
 AUTH_STATUS='signed_in';UI.waChatOpen=true;
@@ -66,6 +66,16 @@ try{
  await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);ts=await page.evaluate(()=>qa.getState().tickets[0].tareas);assert.equal(ts[1].desc,'CONFIRMAR LA CALIDAD (LETS ENHANCE)');assert.equal(ts[1].dependsOn,ts[0].id);
  await open();await page.locator('#ops-f-desc').selectOption({label:'ENVIAR DISENO'});await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
  await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);ts=await page.evaluate(()=>qa.getState().tickets[0].tareas);assert.equal(ts[1].desc,'CONSEGUIR APROBACION');
+
+ // palomita "va después de la anterior"
+ await page.evaluate(()=>{qa.getState().tickets[0].tareas=[{id:'x1',desc:'CORTAR',estado:'pendiente',tipo:'produccion',area:'produccion',dependsOn:null,responsable:''}];qa.setView('kanban');});
+ await page.getByRole('button',{name:/Crear tarea para ticket/}).click();
+ await page.locator('#ops-f-desc').selectOption({label:'FABRICAR'});await page.locator('#ops-f-after').check();
+ await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);
+ assert.equal(await page.evaluate(()=>qa.getState().tickets[0].tareas[1].dependsOn),'x1');
+ // /tarea abre el editor con la tarea del catálogo
+ await page.evaluate(()=>{qa.getState().tickets[0].tareas=[];qa.setView('kanban');qa.slashOpenTask(qa.getState().tickets[0],'fabri');});
+ assert.equal(await page.locator('#ops-f-desc').inputValue(),'FABRICAR');
  console.log('PASS catálogo v2: un selector agrupado, vendedores/proveedores, tareas automáticas encadenadas, total aún no disponible');
 }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
