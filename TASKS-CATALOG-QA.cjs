@@ -50,7 +50,7 @@ try{
  await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
  await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);
  let ts=await page.evaluate(()=>qa.getState().tickets[0].tareas);
- assert.equal(ts[0].desc,'ORDENAR MATERIAL');assert.equal(ts[1].desc,'PAGAR Y ENVIAR COMPROBANTE');assert.equal(ts[1].dependsOn,ts[0].id);
+ assert.equal(ts[0].desc,'ORDENAR MATERIAL');assert.equal(ts[1].desc,'PAGAR Y ENVIAR COMPROBANTE');assert.equal(ts[1].dependsOn,null);
  assert.equal(JSON.parse(ts[1].actionPath).payee.name,'FORPRINT MTY');assert.equal(JSON.parse(ts[0].actionPath).payee.name,'FORPRINT MTY');
  await page.evaluate(()=>qa.setView('kanban'));
  assert.equal(await page.locator('.ws-plan-row.pay').count(),1);
@@ -59,8 +59,8 @@ try{
  await open();await page.locator('#ops-f-desc').selectOption({label:'ENVIAR TRABAJO CON PROVEEDOR'});await page.waitForSelector('#ops-f-payee');
  opts=await page.locator('#ops-f-payee option').allTextContents();assert(opts.includes('CARBAJAL IMPRESOS')&&opts.includes('SERIGRAFIA PUERTORICO')&&!opts.includes('FORPRINT MTY'));
  await page.locator('#ops-f-payee').selectOption({label:'OTRO'});await page.locator('#ops-f-payee-text').fill('Taller Pepe');
- await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);
- ts=await page.evaluate(()=>qa.getState().tickets[0].tareas);assert.equal(ts[1].desc,'RECOGER');assert.equal(ts[1].dependsOn,ts[0].id);
+ await page.getByRole('button',{name:'Crear tarea',exact:true}).click();await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===3);
+ ts=await page.evaluate(()=>qa.getState().tickets[0].tareas);assert.equal(ts[1].desc,'RECOGER');assert.equal(ts[1].dependsOn,ts[0].id);assert.equal(ts[2].desc,'PAGAR Y ENVIAR COMPROBANTE');assert.equal(ts[2].dependsOn,ts[1].id);
  // automáticas del cliente
  await open();await page.locator('#ops-f-desc').selectOption({label:'CONSEGUIR ARCHIVOS DEL CLIENTE'});await page.getByRole('button',{name:'Crear tarea',exact:true}).click();
  await page.waitForFunction(()=>qa.getState().tickets[0].tareas.length===2);ts=await page.evaluate(()=>qa.getState().tickets[0].tareas);assert.equal(ts[1].desc,'CONFIRMAR LA CALIDAD (LETS ENHANCE)');assert.equal(ts[1].dependsOn,ts[0].id);
