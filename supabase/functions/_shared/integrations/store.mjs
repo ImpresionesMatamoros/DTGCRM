@@ -33,8 +33,8 @@ export class SupabaseStorageAdapter {
     if (!file) throw new IntegrationError('MISSING_EXTERNAL', 404);
     return { size: Number(file.metadata?.size), mime_type: file.metadata?.mimetype };
   }
-  async signedUrl(bucket, key) {
-    const r = await this.client.storage.from(bucket).createSignedUrl(key, 300);
+  async signedUrl(bucket, key, lifetime=300) {
+    const r = await this.client.storage.from(bucket).createSignedUrl(key, lifetime);
     if (r.error) throw new IntegrationError('STORAGE_UNAVAILABLE', 503, true);
     return r.data.signedUrl;
   }

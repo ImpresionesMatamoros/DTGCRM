@@ -1,3 +1,7 @@
+# Library and usage update — 2026-10-06
+
+CLIENT-LIBRARY.md documents the new direct Google original transfers, private96px/320px derivatives, targeted task refreshes and five-minute idle mail synchronization. Existing reduced chat/ticket photos remain in Storage. Cron still checks eachminute, and due work remains prompt. Baseline request counts do not prove byte attribution; validate billed egress and log ingest after a representative pilot. No measured production saving percentage is claimed.
+
 # Reparación de consumo de Supabase — 3 de octubre de 2026
 
 El CRM descargaba sus 21 fuentes de datos ante cada evento de Realtime. La bitácora tiene 1,319 filas (aproximadamente 363 KB de JSON sin compresión), por lo que su descarga necesita dos páginas. También se consultaban recibos de lectura cada 10 segundos con el chat cerrado y se firmaba el mismo avatar varias veces durante renders simultáneos.

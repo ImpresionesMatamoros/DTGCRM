@@ -1,3 +1,7 @@
+# Client library update — 2026-10-06
+
+See CLIENT-LIBRARY.md for the deployed direct-transfer library, per-user Workspace verification, thumbnail authorization, merged-client history and pilot limits. The sections below describe the earlier integration baseline; the new library supersedes its original-upload proxy flow. Existing mailbox security fixes from production were preserved.
+
 # Google Workspace integration layer
 
 Deployment update 2026-10-05: additive migration and all three Edge Functions are deployed to staging and production. Configuration remains disabled; there is no connected Google account and no scheduler was activated. crm.956print.com is configured on GitHub Pages with HTTPS. See EMAIL-ACTIVATION.md for the remaining credential/consent/scheduler steps and rollout checks. Earlier validation below describes the original implementation.

@@ -1,6 +1,7 @@
 import { IntegrationError, fail, uuid, email, text, header, selectStorage, messageMetadata, vendorEligibility, expiry, retryDelay, buildMime, digest, seal, unseal, mailReadiness, base64url } from './core.mjs';
 import { eq } from './store.mjs';
 import { GoogleAdapter, readLimited } from './google.mjs';
+import { libraryMethods } from './library.mjs';
 
 const T = name => `dtg_${name}`;
 const now = () => new Date().toISOString();
@@ -20,7 +21,7 @@ export class IntegrationService {
   }
   async inbox(id, send = false) {
     const box = await this.user.one(T('email_inboxes'), [eq('id', uuid(id))]); if (!box || !box.active) fail('INBOX_UNAVAILABLE', 403);
-    if (!await this.isAdmin()) {
+    if (!await this.isAdmin() || box.purpose === 'personal') {
       const grant = await this.user.one(T('email_inbox_access'), [eq('inbox_id', id), eq('user_id', this.actor)]);
       if (!grant?.can_read || (send && !grant.can_send)) fail('INBOX_FORBIDDEN', 403);
     }
@@ -63,12 +64,13 @@ export class IntegrationService {
     return { operation_id: id, state: 'queued' };
   }
   async status() {
-    const cfg = await this.policy(); const boxes = await this.user.list(T('email_inboxes'));
+    const cfg = await this.policy(); let boxes = await this.user.list(T('email_inboxes'));
     const admin = await this.isAdmin();
     const allConnections=await this.admin.list(T('google_connections'));const connections=admin?allConnections:[];
     const connection = connections.find(c=>c.singleton)||null;
-    const permissions=admin?[]:await this.user.list(T('email_inbox_access'),[eq('user_id',this.actor)]);
-    for(const box of boxes){const grant=permissions.find(g=>g.inbox_id===box.id);const c=allConnections.find(c=>box.connection_id?c.id===box.connection_id:c.singleton);box.can_send=admin||!!grant?.can_send;box.connected=c?.state==='connected';box.account_email=c?.account_email||null;}
+    const permissions=await this.user.list(T('email_inbox_access'),[eq('user_id',this.actor)]);
+    boxes=boxes.filter(box=>box.active&&(box.purpose!=='personal'||permissions.some(g=>g.inbox_id===box.id&&g.can_read)));
+    for(const box of boxes){const grant=permissions.find(g=>g.inbox_id===box.id);const c=allConnections.find(c=>box.connection_id?c.id===box.connection_id:c.singleton);box.can_send=(admin&&box.purpose!=='personal')||!!grant?.can_send;box.connected=c?.state==='connected';box.account_email=c?.account_email||null;}
     let unread=null;try{unread=await this.user.list(T('email_inbox_messages'),[['label_ids','contains',['UNREAD','INBOX']]],{select:'id,inbox_id',limit:1000});}catch{}
     return { unread_snapshot:unread,unread_capped:unread?.length===1000,enabled: cfg.enabled, domain: cfg.domain, setup: admin ? mailReadiness(this.env, connections.find(c=>c.state==='connected')) : null, connections: connections.map(c=>({id:c.id,account_email:c.account_email,state:c.state,last_sync_at:c.last_sync_at,singleton:c.singleton})), connection: connection && { state: connection.state, account_email: connection.account_email, last_sync_at: connection.last_sync_at, last_error: connection.last_error }, inboxes: boxes };
   }
@@ -100,6 +102,7 @@ export class IntegrationService {
     const claimed = await this.admin.rpc('dtg_consume_oauth_state', { p_key: key });
     if (!claimed) fail('OAUTH_STATE_INVALID', 403);
     const saved = await unseal(claimed, this.key(), key); this.actor = saved.actor;
+    if(saved.purpose==='library_identity')return this.finishLibraryIdentity(code,saved);
     const member = await this.admin.rpc('dtg_actor_context', { p_actor: this.actor });
     if (!member?.active || !member.is_admin) fail('FORBIDDEN', 403);
     const cfg = await this.policy();
@@ -264,7 +267,7 @@ export class IntegrationService {
   }
   async driveUploadSession(s, f, google) {
     const k = `upload:${s.id}`; let uri = await this.privateGet(k);
-    if (!uri) { uri = await google.beginUpload(f.drive_file_id, f.filename, f.mime_type, Number(f.size_bytes), this.env.GOOGLE_DRIVE_PARENT_ID || null); await this.privateSet(k, uri, s.expires_at); }
+    if (!uri) { uri = await google.beginUpload(f.drive_file_id, f.filename, f.mime_type, Number(f.size_bytes), f.drive_parent_id || this.env.GOOGLE_DRIVE_PARENT_ID || null, s.policy_snapshot.direct_transfer ? (this.env.CRM_ORIGIN || 'https://crm.956print.com').split(',')[0] : null); await this.privateSet(k, uri, s.expires_at); }
     return uri;
   }
   async uploadChunk(input, bytes) {
@@ -324,9 +327,9 @@ export class IntegrationService {
     await this.active(); return this.withUpload(input.session_id, async (s, f) => {
       if (s.state === 'complete') return this.publicSession(s, f);
       const meta = f.storage_provider === 'GOOGLE_DRIVE' ? await (await this.google()).stat(f.drive_file_id) : await this.storage.stat('dtg-originals', f.storage_key);
-      if (meta.trashed || Number(meta.size) !== Number(f.size_bytes)) fail('UPLOAD_INCOMPLETE', 409);
+      if (meta.trashed || Number(meta.size) !== Number(f.size_bytes) || (f.drive_parent_id && !(meta.parents||[]).includes(f.drive_parent_id))) fail('UPLOAD_INCOMPLETE', 409);
       await this.admin.rpc('dtg_finalize_upload', { p_id: s.id, p_checksum: meta.md5Checksum || null });
-      await this.enqueue('preview', `preview:${f.id}`, { file_id: f.id }, f.id);
+      if(!s.policy_snapshot?.direct_transfer)await this.enqueue('preview', `preview:${f.id}`, { file_id: f.id }, f.id);
       const a = await this.admin.one(T('assets'), [eq('id', f.asset_id)]);
       await this.audit('file.available', { file_id: f.id, version: f.version }, { ticket_id: a.origin_ticket_id });
       return this.publicSession({ ...s, state: 'complete', confirmed_offset: Number(f.size_bytes) }, f);
@@ -373,6 +376,7 @@ export class IntegrationService {
     const { f } = await this.file(input.file_id); if (f.availability !== 'available') fail('FILE_UNAVAILABLE', 409);
     if (input.preview) return { url: f.thumbnail_path ? await this.storage.signedUrl('dtg-previews', f.thumbnail_path) : null };
     if (f.storage_provider === 'SUPABASE') return { url: await this.storage.signedUrl('dtg-originals', f.storage_key) };
+    if((await this.policy()).library_enabled)return this.directFileAccess(input);
     // Google ACL is intentionally NOT granted to every employee on read. Stream via authorized download endpoint.
     return { download_via_backend: true, file_id: f.id, filename: f.filename, size_bytes: Number(f.size_bytes) };
   }
@@ -467,3 +471,4 @@ export class IntegrationService {
     await this.audit('grant.management_confirmed', { grant_id: grant.id, permission_id: permission.id }); return { state: 'granted' };
   }
 }
+Object.assign(IntegrationService.prototype,libraryMethods);

@@ -55,6 +55,8 @@ const root=path.join(__dirname,'..');
     if(process.env.DTG_QA_OUTPUTS){await page.setViewportSize({width:1280,height:900});await page.screenshot({path:path.join(process.env.DTG_QA_OUTPUTS,'integraciones-preview.png')});}
     await page.getByRole('button',{name:'Cerrar',exact:true}).click();assert.equal(await page.locator('[role=dialog]').count(),0);
     await page.evaluate(()=>DTGIntegrations.open({customerId:'c1'}));await page.getByRole('button',{name:'Consultar historial',exact:true}).click();await page.getByText('Original producción.pdf',{exact:true}).waitFor();
+    await page.evaluate(()=>{window.DTGClientLibrary={open:c=>window.directLibraryContext=c};DTGIntegrations.open({customerId:'c1',ticketId:'t1',seq:1});});
+    await page.getByRole('button',{name:'Abrir biblioteca de archivos',exact:true}).waitFor();assert.equal(await page.locator('[data-dtgi-form="upload"]').count(),0);await page.getByRole('button',{name:'Abrir biblioteca de archivos',exact:true}).click();assert.equal(await page.locator('[role=dialog]').count(),0);assert.deepEqual(await page.evaluate(()=>directLibraryContext),{customerId:'c1',ticketId:'t1',seq:1});
     await page.evaluate(()=>{testActor='actor2';DTGIntegrations.reset();});assert.equal(await page.locator('[role=dialog]').count(),0);
     assert.deepEqual(errors,[]);console.log('PASS integration UI: lazy loading, only approved versions offered, vendor command, results, preserved retry draft/key, safe email text, client history, session reset, 320–1280 px.');
   }finally{await browser.close();}

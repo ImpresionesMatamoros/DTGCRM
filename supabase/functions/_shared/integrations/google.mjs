@@ -32,10 +32,11 @@ export class GoogleAdapter {
   findSent(messageId) { return this.listMessages(null, `in:sent rfc822msgid:${messageId}`); }
   drive(path, options) { return this.request(`https://www.googleapis.com/drive/v3/${path}`, options); }
   generateFileId() { return this.drive('files/generateIds?count=1&space=drive&type=files').then(x => x.ids[0]); }
+  createFolder(id,name,parent) { return this.drive('files?fields=id,mimeType,parents', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,name,mimeType:'application/vnd.google-apps.folder',...(parent?{parents:[parent]}:{}),appProperties:{dtg_managed:'true'}})}); }
   stat(id) { return this.drive(`files/${encodeURIComponent(id)}?fields=id,name,mimeType,size,md5Checksum,trashed,webViewLink,thumbnailLink,parents`); }
-  async beginUpload(id, name, mime, size, parent) {
+  async beginUpload(id, name, mime, size, parent, origin = null) {
     const res = await this.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,size,md5Checksum', {
-      method: 'POST', headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json', 'X-Upload-Content-Type': mime, 'X-Upload-Content-Length': String(size) },
+      method: 'POST', headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json', 'X-Upload-Content-Type': mime, 'X-Upload-Content-Length': String(size), ...(origin ? {Origin:origin} : {}) },
       body: JSON.stringify({ id, name, mimeType: mime, ...(parent ? { parents: [parent] } : {}), appProperties: { dtg_managed: 'true' } }), signal: AbortSignal.timeout(30000),
     });
     if (!res.ok) throw normalizeProviderError(res);

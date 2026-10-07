@@ -8,7 +8,9 @@ export class IntegrationWorker {
   constructor(service) { this.s = service; this.db = service.admin; }
   async context(actor, ticket = null, inbox = null, send = false) {
     const c = await this.db.rpc('dtg_actor_context', { p_actor: actor, p_ticket: ticket, p_inbox: inbox, p_send: send });
-    if (!c?.active || !c.ticket_visible || !c.inbox_allowed) fail('ACTOR_PERMISSION_REVOKED', 403); return c;
+    if (!c?.active || !c.ticket_visible || !c.inbox_allowed) fail('ACTOR_PERMISSION_REVOKED', 403);
+    if(inbox){const box=await this.db.one(T('email_inboxes'),[eq('id',inbox)]);if(box?.purpose==='personal'){const grant=await this.db.one(T('email_inbox_access'),[eq('inbox_id',inbox),eq('user_id',actor)]);if(!grant?.can_read||(send&&!grant.can_send))fail('ACTOR_PERMISSION_REVOKED',403);}}
+    return c;
   }
   async persist(job, payload) {
     const changed = await this.db.update(T('integration_jobs'), [eq('id', job.id), eq('lease_token', job.lease_token), eq('state', 'running'), ['lease_until','gt',date()]],
@@ -20,7 +22,7 @@ export class IntegrationWorker {
       { state, last_error: error, failure_count: error ? (job.failure_count || 0) + 1 : 0, next_attempt_at: next || date(), lease_until: null, lease_token: null, completed_at: state === 'done' ? date() : null });
   }
   async run(operationId=null) {
-    await this.s.active();if(!operationId){await this.scheduleExpirations();await this.scheduleSync();}
+    await this.s.active();if(!operationId){await this.reconcileLibraryGrants();await this.scheduleExpirations();await this.scheduleSync();}
     const jobs = await this.db.rpc(operationId?'dtg_claim_specific_job':'dtg_claim_job',operationId?{p_id:operationId}:{}); if (!jobs?.length) return { processed: 0 };
     const job = jobs[0]; this.s.actor = job.actor_id;let jobConnectionId=null;
     try {
@@ -81,7 +83,8 @@ export class IntegrationWorker {
     const cfg=await this.s.policy();
     if(!box?.active || box.verification_status!=='accepted') fail('ALIAS_NOT_VERIFIED',409);
     const aliases=(await g.listAliases()).sendAs||[];
-    if(!aliases.some(a=>a.sendAsEmail.toLowerCase()===box.email_alias&&a.verificationStatus==='accepted')) fail('ALIAS_NOT_VERIFIED',409);
+    const connection=await this.s.connection(p.connection_id||box.connection_id||null);
+    if(!aliases.some(a=>a.sendAsEmail.toLowerCase()===box.email_alias&&(a.verificationStatus==='accepted'||(a.isPrimary===true&&a.sendAsEmail.toLowerCase()===connection?.account_email?.toLowerCase())))) fail('ALIAS_NOT_VERIFIED',409);
     if(p.external_message_id) { await this.recordMessage(g,p.external_message_id,box.id,ticket,box.connection_id||null); return p.external_message_id; }
     if(p.sending) {
       const found=await g.findSent(`<dtg-${job.id}@${cfg.domain}>`);
@@ -216,8 +219,20 @@ export class IntegrationWorker {
   async scheduleSync() {
     for(const connection of await this.db.list(T('google_connections'),[eq('state','connected')]))await this.scheduleConnectionSync(connection);
   }
+  async reconcileLibraryGrants() {
+    if(!(await this.s.policy()).library_enabled)return;
+    const rows=await this.db.rpc('dtg_library_grants_to_revoke');if(!rows?.length)return;
+    const g=await this.s.google();
+    for(const row of rows){
+      try{await g.revoke(row.drive_file_id,row.permission_id);}catch(e){if(e.code!=='MISSING_EXTERNAL')throw e;}
+      const permissions=(await g.listPermissions(row.drive_file_id)).permissions||[];
+      if(permissions.some(p=>p.id===row.permission_id))throw new IntegrationError('REVOCATION_UNCONFIRMED',503,true);
+      await this.db.remove(T('library_grants'),[eq('file_id',row.file_id),eq('actor_id',row.actor_id),eq('permission_id',row.permission_id)]);
+    }
+  }
   async scheduleConnectionSync(connection) {if(connection?.state!=='connected'||!connection.connected_by)return;
-    if(connection.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)<60000)return;
+    const policy=await this.s.policy();
+    if(connection.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)<Number(policy.sync_interval_seconds||300)*1000)return;
     const existing=await this.db.list(T('integration_jobs'),[eq('kind','sync_email'),eq('scope_key','gmail-sync:'+connection.id),['state','in',['queued','running','retry']]],{limit:1});if(existing.length)return;
     const failed=await this.db.list(T('integration_jobs'),[eq('kind','sync_email'),eq('scope_key','gmail-sync:'+connection.id),eq('state','failed')],{order:'created_at',limit:1});
     if(failed.length&&(!connection.last_sync_at||Date.parse(failed[0].created_at)>Date.parse(connection.last_sync_at)))return;

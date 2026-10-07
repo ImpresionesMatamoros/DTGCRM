@@ -27,6 +27,7 @@
       (!ticket&&context.customerId?'<section><h3>Historial de archivos</h3>'+button('history','Consultar historial')+fileRows(state.history,false)+'</section>':'')+
       (state.emailBody?'<pre class="dtgi-mail-body">'+esc(state.emailBody)+'</pre>'+(state.readMail&&state.readMail.rfc_message_id?button('email-reply','Responder'):''):'')+
       '<section><h3>Operaciones</h3>'+state.operations.map(function(o){return '<article class="dtgi-file"><strong>'+esc(o.kind||'Operación')+'</strong><small>'+esc(o.state)+' '+esc(o.last_error?errors[o.last_error]||o.last_error:'')+'</small>'+button('operation','Consultar resultado','data-id="'+o.operation_id+'"')+(['failed','unknown'].includes(o.state)?button('retry','Reintentar','data-id="'+o.operation_id+'" data-state="'+o.state+'"'):'')+'</article>';}).join('')+'</section></section>';
+    if(root.DTGClientLibrary&&context.customerId){var legacyUpload=panel.querySelector('form[data-dtgi-form="upload"]');if(legacyUpload){var direct=document.createElement('div');direct.innerHTML='<p>Sube y organiza los originales desde la biblioteca del cliente.</p>'+button('library-upload','Abrir biblioteca de archivos');legacyUpload.replaceWith(direct);}}
     if(context.ticketId||context.customerId){
       var related=document.createElement('section');related.innerHTML='<h3>Correo relacionado</h3>'+button('related-emails','Consultar historial de correo')+(state.relatedMessages||[]).map(function(m){return '<article class="dtgi-file"><strong>'+esc(m.subject||'(Sin asunto)')+'</strong><small>'+esc(m.from_address)+'</small>'+button('email-view','Leer','data-id="'+m.id+'"')+'</article>';}).join('');panel.querySelector('.dtgi-dialog').appendChild(related);
     }
@@ -73,6 +74,7 @@
     if(a==='open'){open({ticketId:b.dataset.ticket,customerId:b.dataset.customer||null,seq:b.dataset.seq});return;}
     if(a==='customer-open'){open({customerId:b.dataset.customer});return;}
     if(a==='close'){close();return;}
+    if(a==='library-upload'&&panel&&root.DTGClientLibrary){var target={customerId:context.customerId,ticketId:context.ticketId,seq:context.seq};close();root.DTGClientLibrary.open(target);return;}
     if(!panel)return;
     var selectedInbox=panel.querySelector('#dtgi-inbox');var inboxId=selectedInbox&&selectedInbox.value;
     action(async function(){

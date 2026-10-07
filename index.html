@@ -4431,6 +4431,10 @@ button.tk-task-open:hover{background:var(--surface-3)}
 <script src="ops-menu.js?v=3"></script>
 <link rel="stylesheet" href="integrations.css?v=1">
 <script src="workspace-api.js?v=1"></script>
+<link rel="stylesheet" href="client-library.css?v=1">
+<script src="library-transfer.js?v=1"></script>
+<script src="client-library.js?v=1"></script>
+<script src="image-thumbnails.js?v=1"></script>
 <script src="integrations.js?v=2"></script>
 <link rel="stylesheet" href="mail.css?v=2">
 <script src="mail.js?v=5"></script>
@@ -17687,6 +17691,7 @@ function hydrateImages(){
   imgs.forEach(async function(img){
     var path = img.getAttribute("data-storage-path");
     if(!path) return;
+    if(window.DTGImages&&['ticket-files','chat-private','profile-avatars'].includes(img.getAttribute('data-storage-bucket')||FILES_BUCKET)&&!img.closest('.photo-zoom-overlay,.biblioteca-viewer-media,.ticket-gallery-media,.kds-detail-photo')){window.DTGImages.observe(img);return;}
     var bucket=img.getAttribute('data-storage-bucket')||FILES_BUCKET;
     try{
       var url = await cachedStorageUrl(bucket,path);
@@ -17717,6 +17722,10 @@ function openPhotoZoom(img){
   close.type = "button"; close.className = "photo-zoom-close";
   close.setAttribute("aria-label", "Cerrar fotografía"); close.textContent = "×";
   var full = document.createElement("img"); full.src = img.src; full.alt = img.alt || "Fotografía";
+  if(img.getAttribute('data-storage-path')){
+    var zoomEpoch=AUTH_EPOCH;
+    cachedStorageUrl(img.getAttribute('data-storage-bucket')||FILES_BUCKET,img.getAttribute('data-storage-path')).then(function(url){if(url&&zoomEpoch===AUTH_EPOCH&&full.isConnected)full.src=url;}).catch(function(){});
+  }
   overlay.appendChild(close); overlay.appendChild(full);
   overlay.addEventListener("click", function(e){ if(e.target === overlay || e.target === close) closePhotoZoom(); });
   document.body.appendChild(overlay); close.focus();
@@ -18758,7 +18767,7 @@ async function addTareaCore(t, tipo, desc, responsable, fechaAtencion, extra){
     if(/esperando|check constraint|estado/i.test(m)) adminNote("El estado \"Esperando\" necesita la migración 0016 en Supabase.", e);
     userError("Paso de producción · #" + t.seq, e);
   }
-  refreshFromServer({refocus: tipo !== "produccion" || !extra.tipoOperacion});
+  refreshFromServer({refocus: tipo !== "produccion" || !extra.tipoOperacion,tables:["tareas","bitacora","ticket_markers","work_orders"]});
   return ok;
 }
 function slashOpenTask(t, text){
@@ -18828,7 +18837,7 @@ async function updateTareaCore(t, taskId, patch){
     if(/esperando|check constraint/i.test(m)) adminNote("El estado \"Esperando\" necesita la migración 0016 en Supabase.", e);
     userError("Paso de producción · #" + t.seq, e);
   }
-  refreshFromServer({background:true});
+  refreshFromServer({background:true,tables:["tareas","bitacora"]});
   return ok;
 }
 async function deleteTareaCore(t, taskId){
@@ -18844,7 +18853,7 @@ async function deleteTareaCore(t, taskId){
     if(r1.error) throw r1.error;
     await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Operación eliminada: " + task.desc, kind: "operacion" } });
   }catch(e){ ok = false; userError("Eliminar el paso · #" + t.seq, e); }
-  refreshFromServer();
+  refreshFromServer({tables:["tareas","bitacora"]});
   return ok;
 }
 /* Guarda un catálogo text[] de app_settings (tipos de operación, términos
@@ -28253,6 +28262,17 @@ if(window.DTGIntegrations){
   var dtgiLogout=unsubscribeRealtime;
   unsubscribeRealtime=function(){window.DTGIntegrations.reset();return dtgiLogout();};
 }
+
+if(window.DTGClientLibrary){
+ window.DTGClientLibrary.mount({actor:currentActorId,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},customer:findCliente});
+ var libraryTicketHeader=renderTicketHeader;
+ renderTicketHeader=function(t){return libraryTicketHeader(t)+(t.clienteId?'<div class="dtgi-entry"><button type="button" class="btn btn-ghost" data-library="entry" data-customer="'+escapeHtml(t.clienteId)+'" data-ticket="'+escapeHtml(t.id)+'" data-seq="'+escapeHtml(t.seq)+'">Biblioteca de archivos</button></div>':'');};
+ var libraryClientProfile=renderClienteFichaView;
+ renderClienteFichaView=function(){return libraryClientProfile()+'<button type="button" class="btn btn-ghost" data-library="entry" data-customer="'+escapeHtml(UI.selectedClienteId||'')+'">Biblioteca de archivos del cliente</button>';};
+ var libraryLogout=unsubscribeRealtime;
+ unsubscribeRealtime=function(){window.DTGClientLibrary.reset();if(window.DTGImages)window.DTGImages.reset();return libraryLogout();};
+}
+if(window.DTGImages)window.DTGImages.mount({actor:currentActorId,originalURL:cachedStorageUrl});
 
 if(window.DTGMail){
  window.DTGMail.configure({actor:currentActorId,actorName:currentActorName,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},url:function(){return SUPABASE_URL;},members:activeAssignableProfiles,tickets:function(){return STATE.tickets.map(function(t){return{id:t.id,label:'#'+t.seq+' · '+t.cliente};});}});
