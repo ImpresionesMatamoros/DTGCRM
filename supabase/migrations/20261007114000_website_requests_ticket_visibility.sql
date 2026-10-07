@@ -1,0 +1,3 @@
+alter policy website_requests_staff_read on public.dtg_website_requests using(public.is_active_member() and (ticket_id is null or public.ticket_is_visible_to_me(ticket_id)));
+alter policy website_requests_staff_update on public.dtg_website_requests using(public.is_active_member() and public.is_admin() and (ticket_id is null or public.ticket_is_visible_to_me(ticket_id))) with check(public.is_active_member() and public.is_admin() and (ticket_id is null or public.ticket_is_visible_to_me(ticket_id)));
+alter policy website_comments_staff_read on public.dtg_website_comments using(public.is_active_member() and exists(select 1 from public.dtg_website_requests r where r.reference=dtg_website_comments.reference));
