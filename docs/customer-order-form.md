@@ -19,3 +19,17 @@ QA con PostgreSQL/PGlite: resumen 2 × 20 = 40, restricciones de campos, área v
 Verificación en producción: ticket interno #1417, dos camisetas a USD20, enlace creado con confirmación de copia, formulario abierto, respuesta enviada, datos aplicados a cliente y zona Brownsville; teléfono y fecha 2026-10-20 permanecieron intactos. Los datos de prueba se revocan/archivan al finalizar.
 
 El botón **Ver respuestas** abre la revisión de formas existentes sin crear ni renovar un enlace.
+
+## Experiencia pública y archivos (2026-10-07)
+
+Los nuevos enlaces abren https://956print.com/order-form.html con el token en el fragmento. Los enlaces anteriores de CRM siguen funcionando. La vista usa las marcas Design To Go y 956print.com, tipografía Archivo y una fotografía del sitio existente; presenta pedido, datos y archivos por separado.
+
+**Ciudad** sustituye Área de entrega: texto con sugerencias de ciudades preestablecidas, normalización de mayúsculas/acentos y autocompletado de prefijos únicos. Se conserva la clave comercial delivery_area del CRM. Una ciudad ajena a las sugerencias requiere seleccionar Otra ciudad y aclararla en los detalles.
+
+El mismo enlace permite subir archivos sin completar datos y después de responder, hasta su vencimiento o revocación. Máximo acumulado: cinco archivos y 20 MB por enlace; PDF, PNG, JPG y WEBP. La función client-form-files valida firma, extensión y MIME, reserva cuota de forma transaccional e identifica reintentos por lote. Un lote incompleto conserva su cuota para reintentar; no debe generarse otro lote si se busca reanudar la misma subida.
+
+Los archivos quedan privados en dtg-client-form-files, ligados al formulario/ticket. Clientes con enlace vigente y personal autorizado pueden obtener URLs firmadas por cinco minutos. El personal los consulta en Ver respuestas. No se importan automáticamente a Google Drive. La carga no depende de Gmail ni autoriza producción.
+
+Migración: client_form_private_files_and_followup; fuente client-form-files-schema.sql. Edge Function: supabase/functions/client-form-files/index.ts, verify_jwt=false con validación del token público y JWT/permisos internos en el servidor.
+
+La fuente pública vive en este repositorio: client-order-public.js, public-order-form.css, order-form-assets y client-form.html. Copiar estos archivos junto con client-forms.js/css, client-form-start.js y dtg-public-config.js a public del sitio; renombrar client-form.html a order-form.html. Compilar con Vite y desplegar el Worker de Cloudflare. Mantener ambas copias sincronizadas.
