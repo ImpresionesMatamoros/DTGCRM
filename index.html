@@ -4433,6 +4433,7 @@ button.tk-task-open:hover{background:var(--surface-3)}
 <script src="workspace-api.js?v=1"></script>
 <link rel="stylesheet" href="client-library.css?v=2">
 <script src="library-transfer.js?v=2"></script>
+<script src="automatic-attachments.js?v=1"></script>
 <script src="client-library.js?v=2"></script>
 <script src="image-thumbnails.js?v=2"></script>
 <script src="integrations.js?v=20261006-library2"></script>
@@ -7459,6 +7460,7 @@ function renderThreadItem(ev, ticketId){
     body += '<div class="thread-sub">' + fmtMoney(ev.monto) + (ev.metodo ? " · " + escapeHtml(ev.metodo) : "") + (ev.fecha ? " · " + fmtDateOnlyShort(ev.fecha) : "") + "</div>";
   } else if(ev.type === "archivo"){
     body = '<div class="thread-text">' + (ev.caption ? escapeHtml(ev.caption) : "Archivo adjunto") + "</div>";
+    if(ev.drive_file_id&&window.DTGAutomaticAttachments)body+=window.DTGAutomaticAttachments.markup(ev.drive_file_id,ev.filename);
     if(ev.storage_path){ body += '<img class="thread-img" data-storage-path="' + escapeHtml(ev.storage_path) + '" alt="' + escapeHtml(ev.filename||"adjunto") + '">'; }
     else { body += '<div class="thread-sub">' + escapeHtml(ev.filename||"") + "</div>"; }
   } else if(ev.type === "documento"){
@@ -7710,7 +7712,10 @@ function ticketChatPosts(){
   return (STATE.teamPosts||[]).filter(function(p){return (p.conversationId||null)===(cid||null)&&!p.pending&&!isPostExpired(p)&&(!UI.astraThreadRoot?!p.threadRootId:p.id===UI.astraThreadRoot||p.threadRootId===UI.astraThreadRoot);});
 }
 function ticketFileMarkup(p){
-  if(p.deletedAt||!p.filePath)return "";
+  if(p.deletedAt)return "";
+  var originals=(p.refs||[]).filter(function(r){return r.kind==='drive_file';});
+  if(originals.length&&window.DTGAutomaticAttachments)return originals.map(function(r){return window.DTGAutomaticAttachments.markup(r.file_id,r.filename);}).join('');
+  if(!p.filePath)return "";
   var ext=(p.fileName||"").split(".").pop().toUpperCase();
   return '<button type="button" class="chat-file-card" data-ticket-ux="file-open" data-post="'+escapeHtml(p.id)+'">'+icon("file")+'<span><b>'+escapeHtml(p.fileName||"Archivo")+'</b><small>'+escapeHtml(ext)+' · '+chatFileSize(p.fileSize)+'</small></span>'+icon("arrow-down")+'</button>';
 }
@@ -14979,6 +14984,11 @@ async function createTeamPostCore(opts){
   var wantsMegapin = opts.pinLevel === "megapin" && isAdmin();
   var pinLevel = opts.pinLevel === "pin" ? "pin" : "none";
   var imagePath = null, filePath=opts.filePath||null, uploadedStorage=null;
+  var attachment=opts.file||opts.photoFile,attachmentTicket=opts.ticketId||conversationTicketId(opts.conversationId),driveAttachment=null;
+  if(attachment&&attachmentTicket&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(attachment)){
+    driveAttachment=await window.DTGAutomaticAttachments.upload(attachment,findTicket(attachmentTicket));
+    opts=Object.assign({},opts,{file:null,photoFile:opts.photoFile?driveAttachment.previewFile:null,refs:(opts.refs||[]).concat([{kind:'drive_file',file_id:driveAttachment.file_id,filename:driveAttachment.filename,size_bytes:driveAttachment.size_bytes}])});
+  }
   if(opts.file){filePath=(opts.conversationId||"team")+"/"+uuid4();var fileUpload=await sb.storage.from("chat-private").upload(filePath,opts.file,{contentType:opts.file.type||"application/octet-stream"});if(fileUpload.error)throw fileUpload.error;uploadedStorage={bucket:"chat-private",path:filePath};opts.fileName=opts.file.name;opts.fileMime=opts.file.type;}
   if(opts.photoFile){
     var blob = await resizeImageToBlob(opts.photoFile, 1280, 0.8);
@@ -19391,7 +19401,9 @@ function runQueueWithConcurrency(items, worker, concurrency, onProgress){
    (sección 7: una foto fallida no cancela ni borra las que sí subieron). */
 async function uploadOnePhoto(t, file, caption, uploadBatchId){
   try{
-    var blob = await resizeImageToBlob(file, 1280, 0.8);
+    var uploadActor=currentActorId(),driveAttachment=null,previewFile=file;
+    if(window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(file)){driveAttachment=await window.DTGAutomaticAttachments.upload(file,t);previewFile=driveAttachment.previewFile;}
+    var blob = previewFile?await resizeImageToBlob(previewFile,1280,0.8):null;
     /* §23: bug real de la auditoría — resizeImageToBlob() SIEMPRE produce
        JPEG (y se sube con contentType: image/jpeg, línea de abajo), pero la
        extensión del PATH se derivaba del nombre original del archivo, así
@@ -19404,14 +19416,17 @@ async function uploadOnePhoto(t, file, caption, uploadBatchId){
        transparencia — ver ronda anterior). */
     var ext = "jpg";
     var path = t.id + "/" + Date.now() + "_" + Math.random().toString(36).slice(2,8) + "." + ext;
-    var up = await sb.storage.from(FILES_BUCKET).upload(path, blob, { contentType: "image/jpeg" });
-    if(up.error) throw up.error;
+    var up = blob?await sb.storage.from(FILES_BUCKET).upload(path,blob,{contentType:"image/jpeg"}):null;
+    if(up&&up.error)throw up.error;
+    if(!blob)path=null;
+    if(currentActorId()!==uploadActor)throw Error("La sesión cambió durante la carga.");
     /* upload_batch_id: dato plano dentro del jsonb existente, sin migración
        — opcional a propósito (fotos históricas y la subida de una sola foto
        de antes de esta ronda nunca lo tuvieron, y no se les inventa uno).
        Nunca se usa todavía para agrupar visualmente nada en el thread — es
        solo la base para una futura vista de galería (sección 12/47). */
     var payload = { storage_path: path, filename: file.name, caption: caption || "" };
+    if(driveAttachment)payload.drive_file_id=driveAttachment.file_id;
     if(uploadBatchId) payload.upload_batch_id = uploadBatchId;
     var r = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "archivo", autor: currentActorName() || null, payload: payload });
     if(r.error) throw r.error;
@@ -27049,7 +27064,8 @@ function chatQueueFiles(files){
   var key=chatDraftKey(),items=chatQueuedFiles().slice(),errors=[];
   Array.from(files||[]).forEach(function(file){
     if(items.length>=20){errors.push("Máximo 20 archivos por envío.");return;}
-    if(file.size>25*1024*1024){errors.push(file.name+": máximo 25 MB.");return;}
+    var attachmentTicket=UI.selectedTicketId||conversationTicketId(chatCurrentScopeId()),drive=attachmentTicket&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(file);
+    if(file.size>(drive?2147483648:25*1024*1024)){errors.push(file.name+(drive?": máximo 2 GB.":": máximo 25 MB fuera de un ticket."));return;}
     items.push({id:uuid4(),file:file,previewUrl:chatRaster(file)?URL.createObjectURL(file):null,status:"ready"});
   });
   UI.chatFileDrafts[key]=items;
@@ -27068,6 +27084,7 @@ function chatQueuedMarkup(){
     return '<div class="chat-file-preview'+(x.status==="failed"?" failed":"")+'">'+
       (x.previewUrl?'<img src="'+escapeHtml(x.previewUrl)+'" alt="">':icon("file"))+
       '<span><b>'+escapeHtml(x.file.name)+'</b><small>'+chatFileSize(x.file.size)+
+      ((UI.selectedTicketId||conversationTicketId(chatCurrentScopeId()))&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(x.file)?' · Original en Drive':'')+
       (x.status==="sending"?" · Enviando…":x.status==="failed"?" · No enviado. Reintenta con Enviar.":"")+
       '</small></span><button type="button" class="icon-btn" data-chat-remove-file="'+x.id+'" aria-label="Quitar '+escapeHtml(x.file.name)+'"'+(UI.feedComposerBusy?' disabled':'')+'>'+icon("x")+'</button></div>';
   }).join("")+"</div>":"";
@@ -28273,6 +28290,7 @@ if(window.DTGClientLibrary){
  unsubscribeRealtime=function(){window.DTGClientLibrary.reset();if(window.DTGImages)window.DTGImages.reset();return libraryLogout();};
 }
 if(window.DTGImages)window.DTGImages.mount({actor:currentActorId,originalURL:cachedStorageUrl});
+if(window.DTGAutomaticAttachments){window.DTGAutomaticAttachments.mount({actor:currentActorId,notice:showToast});var automaticLogout=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGAutomaticAttachments.reset();return automaticLogout();};}
 
 if(window.DTGMail){
  window.DTGMail.configure({actor:currentActorId,actorName:currentActorName,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},url:function(){return SUPABASE_URL;},members:activeAssignableProfiles,tickets:function(){return STATE.tickets.map(function(t){return{id:t.id,label:'#'+t.seq+' · '+t.cliente};});}});

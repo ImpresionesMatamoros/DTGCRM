@@ -8,7 +8,15 @@ Managed folders are private My Drive folders owned by the connected Workspace ac
 
 Small existing images use lazy private derivatives: avatar 96px, card 320px, max128KiB. The API checks source Storage RLS before resolving or registering a derivative. First use may fetch the prior image to generate the derivative; later use resolves the stored one. Full photo zoom, library viewer, ticket gallery and KDS detail keep the larger source. Thumbnails live in a private bucket with no direct browser policies. Account reset invalidates cached responses. CDR previews can be added manually; Google previews are requested explicitly.
 
-The legacy integration panel routes new original uploads into this library when loaded; the historical proxy API is retained for compatibility and rollback. Ordinary chat/ticket photo uploads retain their existing reduction/storage flow.
+The legacy integration panel routes new original uploads into this library when loaded; the historical proxy API is retained for compatibility and rollback.
+
+## Automatic ticket attachments
+
+The ordinary ticket chat attachments and ticket photo batches now route recognized design extensions/MIME (CDR, PSD/PSB, AI, PDF, SVG, TIFF, etc.), photos >=5MiB, and other files >25MiB directly to Drive through the existing library session API. Ticket/customer scope is captured before upload. Missing clients are rejected; the original never falls back to a Supabase proxy. Files up to2GiB are admitted by the ticket chat; backend policy is still authoritative. General and personal chat attachments without ticket context retain their previous behavior.
+
+Bounded-memory full hashing and persisted, actor/ticket/content/name-specific idempotency keys let message retries reuse the uploaded original. Recovery queries the provider's confirmed offset. Local storage contains keys, not owner tokens or upload capability URLs. Logout aborts work and clears memory. Compatible raster originals get <=128KiB/320px previews; only these small images travel through Storage. Original links are stored in existing references_data or bitacora payloads, with original-file RLS enforced when clicked. Private messages keep ticket_id null and use their conversation scope, as required by the existing database guard.
+
+tests/automatic-attachments-ui.cjs passes using the actual transfer helper and app upload functions: small CDR, 30MiB PSD, heavy photo, small photo, byte-preserving direct PUT, preview-only Storage writes, private message rules, message retry, session reset and missing-client rejection. Library/integration UI, startup, scroll and usage regression checks pass. CHAT-WHATSAPP-QA.cjs has a pre-existing notification assertion failure, reproduced against the unmodified baseline; the new automatic-attachment checks pass independently.
 
 ## Deployment and verification
 
