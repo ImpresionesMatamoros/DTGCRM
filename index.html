@@ -3705,8 +3705,11 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-fechas-falta b{ color:var(--k-c, #94A3B8); }
 .kds-sinfecha{
   flex-shrink:0; padding-top:calc(6 * var(--kds));
-  font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:900; letter-spacing:.08em; color:var(--k-c, #6F7F93);
+  font-size:calc(18 * var(--kds) * var(--kdc)); font-weight:800; letter-spacing:.12em; color:#6F7F93;
 }
+.kds-fechas-tarde b{ color:var(--k-urg); }
+/* Quién lo hace se busca desde lejos: en blanco y más grande que el resto del pie. */
+.kds-foot > span:first-child{ font-size:calc(26 * var(--kds) * var(--kdc)); font-weight:900; color:#FFFFFF; letter-spacing:.04em; }
 .kds-foot{
   display:flex; align-items:center; justify-content:space-between; gap:calc(12 * var(--kds));
   margin-top:calc(6 * var(--kds)); padding-top:calc(6 * var(--kds)); border-top:calc(2 * var(--kds)) solid #1F2A38;
@@ -3727,7 +3730,7 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .kds-q-cliente{ color:#B6C3D4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .kds-q-accion{ color:#F2F5F9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .kds-q-cant{ color:#94A3B8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
-.kds-q-resp{ margin-left:auto; color:#6F7F93; flex-shrink:0; }
+.kds-q-resp{ margin-left:auto; color:#B6C3D4; flex-shrink:0; }
 .kds-empty{ flex:1; display:flex; align-items:center; justify-content:center; font-size:calc(72 * var(--kds)); font-weight:900; color:#1F2A38; }
 .kds-overlay{ position:fixed; inset:0; z-index:210; display:flex; align-items:center; justify-content:center; background:rgba(3,6,10,.86); }
 .kds-confirm{
@@ -16068,6 +16071,47 @@ function kdsCantidadVisible(it){
   var mas = cant.match(/\s\s(\+\d+)$/);
   return (num ? num[1] + " PZ" : "") + (mas ? (num ? "  " : "") + mas[1] : "");
 }
+/* Lo que no informa se abrevia; lo que informa, se ve. "ENTREGA VENCIDA"
+   y "ACCIÓN VENCIDA" son una sola cosa para quien mira: VENCIDA. "PENDIENTE"
+   no dice nada que el color no diga ya. */
+function kdsEtiqueta(prio){
+  var l = prio && prio.label || "";
+  if(l === "ENTREGA VENCIDA" || l === "ACCIÓN VENCIDA") return "VENCIDA";
+  if(l === "PENDIENTE") return "";
+  return l;
+}
+/* Una fecha se lee como CUÁNTO falta o CUÁNTO se pasó, no como "23-SEP". */
+function kdsFechaRel(dateOnly){
+  if(!dateOnly || !isSaneDateOnly(dateOnly)) return { val: "—", tarde: false };
+  var hoy = todayLocalYYYYMMDD();
+  if(dateOnly === hoy) return { val: "HOY", tarde: false };
+  var d = Math.round((new Date(dateOnly + "T00:00:00") - new Date(hoy + "T00:00:00")) / 86400000);
+  if(d === 1) return { val: "MAÑANA", tarde: false };
+  if(d > 1) return { val: d <= 6 ? "EN " + d + " D" : fmtDateOnlyShort(dateOnly).toUpperCase(), tarde: false };
+  return { val: Math.abs(d) + " D TARDE", tarde: true };
+}
+/* Dos fechas que dicen lo mismo son una sola. */
+function kdsFechasRel(pares){
+  var out = [], vistos = {};
+  pares.forEach(function(p){
+    if(!p[1] || !isSaneDateOnly(p[1])) return;
+    var r = kdsFechaRel(p[1]), k = r.val;
+    if(vistos[k]) return;
+    vistos[k] = 1;
+    out.push({ et: p[0], val: r.val, tarde: r.tarde });
+  });
+  return out;
+}
+/* La antigüedad solo informa cuando ya es de días; "HOY" y "1 DÍA" no. */
+function kdsEsperaCorta(it){
+  var e = kdsEspera(it), m = /^(\d+) D/.exec(e);
+  return m && Number(m[1]) >= 2 ? m[1] + " D" : "";
+}
+/* Marcadores de posición que alguien dejó en el producto no son un dato. */
+function kdsCantUtil(c){
+  var k = String(c || "").replace(/^\d+\s+/, "").trim();
+  return /^(PRODUCTO\/SERVICIO|PRODUCTO|SERVICIO|SIN DESCRIPCI.N|SIN PRODUCTO)$/.test(k) ? "" : c;
+}
 function kdsFechaCorta(dateOnly){
   if(!dateOnly || !isSaneDateOnly(dateOnly)) return "—";
   var hoy = todayLocalYYYYMMDD();
@@ -16377,46 +16421,40 @@ function kdsVista(it){
     /* Planeación no produce nada: "PRODUCIR" aquí no querría decir nada.
        Su reloj es ATENDER, y el compromiso del ticket cuando lo hay. */
     var at = task.fechaAtencion || t.fechaAtencion;
-    var fechasP = [];
-    if(at && isSaneDateOnly(at)) fechasP.push({ et: "ATENDER", val: kdsFechaCorta(at) });
-    if(t.fechaCompromiso && isSaneDateOnly(t.fechaCompromiso)) fechasP.push({ et: "COMPROMISO", val: kdsFechaCorta(t.fechaCompromiso) });
+    var fechasP = kdsFechasRel([["ATENDER", at], ["ENTREGA", t.fechaCompromiso]]);
     var nnP = kdsNotasCount(it);
     var pieP = [];
     if(nnP) pieP.push(nnP + (nnP === 1 ? " NOTA" : " NOTAS"));
-    var espP = kdsEspera(it);
+    var espP = kdsEsperaCorta(it);
     if(espP) pieP.push(espP);
     return {
       cliente: cliente,
       accion: accionP,
-      cant: kdsCantidadVisible(it) || canal, canal: !kdsCantidad(it),
+      cant: kdsCantUtil(kdsCantidadVisible(it)) || canal, canal: !kdsCantUtil(kdsCantidad(it)),
       notas: ntsP.slice(0, 2), fechas: fechasP,
-      sinFecha: "SIN FECHA PARA ATENDER",
+      sinFecha: "SIN FECHA",
       footL: (task.responsable || "SIN ASIGNAR").toUpperCase(),
       footR: pieP.join(" · ")
     };
   }
 
   /* ---- PARTE F3 — Producción: trabajo físico ---- */
-  var cant = kdsCantidadVisible(it);
+  var cant = kdsCantUtil(kdsCantidadVisible(it));
   var notas = kdsNotas(it);
   var prod = task.fechaAtencion || t.fechaAtencion;
   var ent = t.fechaCompromiso;
-  var fechas = [];
-  if(prod && isSaneDateOnly(prod)) fechas.push({ et: "PRODUCIR", val: kdsFechaCorta(prod) });
-  if(ent && isSaneDateOnly(ent)) fechas.push({ et: "ENTREGA", val: kdsFechaCorta(ent) });
-  else if(fechas.length) fechas.push({ et: "ENTREGA", val: "SIN FECHA", falta: true });
+  var fechas = kdsFechasRel([["PRODUCIR", prod], ["ENTREGA", ent]]);
+  if(fechas.length && !(ent && isSaneDateOnly(ent))) fechas.push({ et: "ENTREGA", val: "SIN FECHA", falta: true });
   var nn = kdsNotasCount(it);
-  var prog = Math.max(0, Math.min(100, Number(task.progreso) || 0));
   var pie = [];
-  if(prog > 0) pie.push(prog + "%");
   if(nn) pie.push(nn + (nn === 1 ? " NOTA" : " NOTAS"));
-  var esp = kdsEspera(it);
+  var esp = kdsEsperaCorta(it);
   if(esp) pie.push(esp);
   return {
     cliente: cliente,
     accion: kdsAccion(it), cant: cant,
     notas: notas, fechas: fechas,
-    sinFecha: "SIN FECHA DE ENTREGA",
+    sinFecha: "SIN FECHA",
     footL: (task.responsable || "SIN ASIGNAR").toUpperCase(),
     footR: pie.join(" · ")
   };
@@ -16431,7 +16469,7 @@ function renderKdsCard(it, slot, selected){
          a las notas para caber sin recortarse. */
       '<div class="kds-card-top">' +
         '<span class="kds-slot">' + (slot + 1) + "</span>" +
-        '<span class="kds-estado">' + escapeHtml(it.prio.label) + "</span>" +
+        (kdsEtiqueta(it.prio) ? '<span class="kds-estado">' + escapeHtml(kdsEtiqueta(it.prio)) + "</span>" : "") +
         '<span class="kds-cliente">' + escapeHtml(v.cliente) + "</span>" +
         '<span class="kds-folio">#' + it.t.seq + "</span>" +
       "</div>" +
@@ -16447,7 +16485,7 @@ function renderKdsCard(it, slot, selected){
          gritar. Se dice con letras; nunca con una raya. */
       (v.fechas.length
         ? '<div class="kds-fechas">' + v.fechas.map(function(f){
-            return '<div' + (f.falta ? ' class="kds-fechas-falta"' : "") + "><span>" + escapeHtml(f.et) + "</span><b>" + escapeHtml(f.val) + "</b></div>";
+            return '<div' + (f.falta ? ' class="kds-fechas-falta"' : (f.tarde ? ' class="kds-fechas-tarde"' : "")) + "><span>" + escapeHtml(f.et) + "</span><b>" + escapeHtml(f.val) + "</b></div>";
           }).join("") + "</div>"
         : '<div class="kds-sinfecha">' + escapeHtml(v.sinFecha) + "</div>") +
       '<div class="kds-foot">' +
@@ -16463,6 +16501,25 @@ function renderKdsCard(it, slot, selected){
    negro. Ahora las columnas son las que hacen falta, y cuando sobra ancho
    el renglón dice también de quién es el pedido — que era lo único
    importante que no cabía. */
+/* La acción es lo que se lee desde lejos: JAMÁS se corta. Si el cuerpo de la
+   tarjeta no alcanza, primero se sacrifican las notas, luego la letra baja
+   un poco, luego la cantidad, y solo al final la letra baja más. */
+function kdsFit(){
+  document.querySelectorAll(".kds-card:not(.kds-card-empty)").forEach(function(c){
+    var b = c.querySelector(".kds-body"), a = c.querySelector(".kds-accion");
+    if(!b || !a) return;
+    var n = c.querySelector(".kds-notas"), q = c.querySelector(".kds-cant");
+    a.style.fontSize = ""; if(n) n.style.display = ""; if(q) q.style.display = "";
+    function sobra(){ return b.scrollHeight > b.clientHeight + 1; }
+    var base = parseFloat(getComputedStyle(a).fontSize) || 40, f = base;
+    function baja(minimo){ while(sobra() && f > base * minimo){ f *= 0.94; a.style.fontSize = f + "px"; } }
+    if(sobra() && n) n.style.display = "none";
+    baja(0.7);
+    if(sobra() && q) q.style.display = "none";
+    baja(0.4);
+  });
+}
+window.addEventListener("resize", function(){ if(UI.displayMode) kdsFit(); });
 function renderKdsQueue(items, selectedId){
   if(!items.length) return "";
   var cols = Math.min(items.length, 4);
@@ -16931,6 +16988,7 @@ function render(){
   if(UI.displayMode){
     app.innerHTML = renderKdsView() + '<div class="toast" id="toast" role="status" aria-live="polite"></div>';
     wireEvents();
+    kdsFit();
     return;
   }
   var composerSnap = captureComposerDraft();
