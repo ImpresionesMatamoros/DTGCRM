@@ -42,7 +42,9 @@ try{
  assert(!info.some(i=>/PRODUCTO\/SERVICIO/.test(i.cant)));
  assert(info.some(i=>i.estado==='VENCIDA'));
  assert(info.some(i=>/D TARDE/.test(i.fechas.join())));
- assert(info.some(i=>i.sin==='SIN FECHA'));
+ assert(info.every(i=>i.sin===''),'SIN FECHA ya no se repite por tarjeta');
+ assert(/SIN FECHA/.test(await page.locator('.kds-legend-count').textContent()),'SIN FECHA se cuenta una vez arriba');
+ assert(!(await page.locator('.kds-legend').textContent()).includes('FALTA PRECIO'),'leyenda solo con lo que existe');
  assert(!info.some(i=>/\d\d-[A-Z]{3}/.test(i.fechas.join())));
  console.log('PASS KDS tarjetas: etiquetas cortas, fechas relativas, sin texto cortado');
 }finally{await browser.close();}

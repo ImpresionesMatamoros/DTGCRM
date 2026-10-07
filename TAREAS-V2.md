@@ -41,3 +41,11 @@ Automáticas (no salen en el menú): PAGAR Y ENVIAR COMPROBANTE, CONFIRMAR LA CA
 Junto al nombre de cada columna del Kanban (y en las pestañas móviles): cuántos tickets vivos no tienen ninguna tarea pendiente.
 ## Pagos
 La cuenta regresiva apunta a la próxima hora límite: si ya pasó hoy, cuenta hacia mañana.
+## Ronda "sin ticket sin tarea"
+- Ticket nuevo nace con CONTACTAR CLIENTE para hoy (`createTicketCore`).
+- Al terminar la última tarea de un ticket sale "¿Cuál es la siguiente, o ya se cierra?" (+ Siguiente tarea / Cerrar ticket / Después).
+- El número rojo del Kanban es tocable: filtra a los tickets sin tarea; chip "Ver todos" lo quita.
+- Fecha de atención por defecto = hoy. "PRONTO" en la TV lo marca solo la entrega (hoy/mañana); atender hoy es trabajo normal.
+- TV Planeación: tareas del mismo ticket en una tarjeta ("+1 TAREA"), "+N MÁS" si no caben, leyenda solo con lo que existe, "N SIN FECHA" una sola vez arriba.
+- Pagos: hora límite = hora de Matamoros; aviso (sonido + banner en la TV, toast en el CRM) a 30 min del cierre.
+- El selector "Destino" del editor va oculto: el destino sale del nombre de la tarea.

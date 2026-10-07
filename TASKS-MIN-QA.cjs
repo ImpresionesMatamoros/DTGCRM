@@ -27,7 +27,7 @@ try{
   out.badge=qa.kanbanSinTareaBadge(tickets);
   out.badge0=qa.kanbanSinTareaBadge([tickets[0]]);
   // rollover del curfew
-  const hm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const hm=d=>new Intl.DateTimeFormat('en-GB',{timeZone:'America/Matamoros',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);
   const past=new Date(Date.now()-3600000),fut=new Date(Date.now()+3600000);
   const dp=qa.payCurfewDate({curfew:hm(past)}),df=qa.payCurfewDate({curfew:hm(fut)});
   out.pastMs=dp.getTime()-Date.now();out.futMs=df.getTime()-Date.now();

@@ -34,3 +34,8 @@ where t.id = b.id;
 
 -- FABRICAR siempre es del taller.
 update tareas set area = 'produccion' where tipo = 'produccion' and descripcion = 'FABRICAR' and estado <> 'terminado' and area is distinct from 'produccion';
+
+-- Fecha de atención: las tareas abiertas sin fecha toman hoy, para que la TV las ordene sola.
+update tareas
+set fecha_atencion = (now() at time zone 'America/Matamoros')::date
+where tipo = 'produccion' and estado <> 'terminado' and fecha_atencion is null;
