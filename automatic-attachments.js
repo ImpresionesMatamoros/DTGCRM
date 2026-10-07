@@ -12,7 +12,7 @@ async function upload(file,ticket){
  var last=-10;function progress(p){var n=Math.floor(p*100);if(n>=last+10){last=n;bridge.notice(file.name+' · '+n+'%');}}
  async function api(a,i,b){try{return await root.DTGWorkspaceAPI.request(a,i,{actor:actor,signal:signal,binary:b,isCurrent:function(){return epoch===revision&&bridge.actor()===actor;}});}catch(e){if(!e.message)e.message=({LIBRARY_DISABLED:'La biblioteca de Drive está deshabilitada.',GOOGLE_NOT_CONNECTED:'Conecta Google Workspace para guardar este original.',INVALID_FILE_SIZE:'El archivo supera el tamaño permitido.',UPLOAD_BUSY_OR_EXPIRED:'La carga está ocupada o venció. Revisa su estado en la biblioteca.'})[e.code]||root.DTGWorkspaceAPI.message(e);throw e;}}
  bridge.notice('Guardando original en Drive: '+file.name);
- var sha=await root.DTGLibraryTransfer.hash(file,signal),cacheKey=actor+':'+ticket.id+':'+sha+':'+file.name+':'+file.type;
+ var sha=await root.DTGLibraryTransfer.hash(file,signal),cacheKey=actor+':'+ticket.id+':'+ticket.clienteId+':'+sha+':'+file.name+':'+file.type;
  if(pending.has(cacheKey))return pending.get(cacheKey);
  var operation=(async function(){
   var localKey='dtg-auto-upload:'+cacheKey,key;try{key=localStorage.getItem(localKey);}catch{}var recovered=!!key;if(!key)key=crypto.randomUUID();try{localStorage.setItem(localKey,key);}catch{}
