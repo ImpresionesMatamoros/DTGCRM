@@ -11447,7 +11447,7 @@ function detailsModalCell(html, kind, ticketId){
 function detailsInlineCell(t, field, valueHtml){
   var isEditingThis = UI.headerEditField === field && UI.headerEditTicketId === t.id;
   if(isEditingThis){
-    var inputHtml = field === "quesigue" ? renderQueSigueSelect(t) : renderHeaderFieldInput(t, field);
+    var inputHtml = field === "quesigue" ? renderQueSigueSelect(t) : (field === "clientename" ? renderClienteNombreInput(t) : renderHeaderFieldInput(t, field));
     return '<div class="comanda-edit-inline">' + inputHtml + "</div>";
   }
   return '<button type="button" class="tickets-details-cell-btn" data-action="details-cell-inline" data-field="' + field + '" data-ticket="' + t.id + '">' + valueHtml + "</button>";
@@ -17986,8 +17986,7 @@ async function createTicketCore(initialData){
     if(ins.error) throw ins.error;
     var newId = ins.data.id;
     await sb.from("bitacora").insert({ ticket_id: newId, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Ticket creado" } });
-    /* Todo ticket vivo tiene una tarea: nace con CONTACTAR CLIENTE para hoy. Si falla, el ticket ya existe y se avisa en rojo. */
-    try{ await sb.from("tareas").insert({ ticket_id: newId, descripcion: "CONTACTAR CLIENTE", tipo: "produccion", responsable: currentActorName() || null, fecha_atencion: todayLocalYYYYMMDD(), estado: "pendiente", area: "planeacion", action_path: JSON.stringify({ note: "" }) }); }catch(e0){}
+    /* Los tickets nuevos nacen sin tareas. El equipo agrega únicamente las tareas que correspondan a cada trabajo. */
     return newId;
   }catch(e){
     userError("Crear el trabajo", e);
@@ -21584,6 +21583,7 @@ function renderCellEditorQuickEdit(t){
   var v = ticketOperationalCellValues(t);
   var rows =
     quickEditFieldRow("Cliente", detailsModalCell(v.clienteHtml, "cliente", t.id)) +
+    quickEditFieldRow("Nombre cliente", detailsInlineCell(t, "clientename", v.clienteHtml)) +
     quickEditFieldRow("Trabajo", detailsModalCell(v.trabajoHtml, "trabajo", t.id)) +
     quickEditFieldRow("Estado", detailsModalCell(v.estadoHtml, "estado", t.id)) +
     quickEditFieldRow("Qué sigue", detailsInlineCell(t, "quesigue", v.queSigueHtml)) +
@@ -24964,6 +24964,12 @@ function wireEvents(){
   root.querySelectorAll('[data-action="cierre-confirm"]').forEach(function(b){
     b.addEventListener("click", submitCierreForm);
   });
+  var cierreRazon = document.getElementById("cierre-razon");
+  if(cierreRazon){
+    cierreRazon.addEventListener("keydown", function(e){
+      if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitCierreForm(); }
+    });
+  }
   var cierreOverlay = document.getElementById("cierre-modal-overlay");
   if(cierreOverlay){
     cierreOverlay.addEventListener("click", function(e){ if(e.target === cierreOverlay) closeCierreModal(); });
@@ -27428,7 +27434,7 @@ astraReviewOverlay=function(){var r=UI.astraReview;if(!r||r.kind!=='task')return
 
 var workMarkerToggle=toggleMarkerTypeCore;toggleMarkerTypeCore=async function(t,type){if(!MARKER_PICKABLE.some(function(m){return m.type===type;}))return false;DTG_AUTH_WRITES++;try{return await workMarkerToggle(t,type);}finally{DTG_AUTH_WRITES--;}};
 var workKanbanCard=renderKanbanCard;
-kanbanCardProductosContext=function(t){var products=t.productos||[];return {text:products.length?products.slice(0,3).map(function(p){return (p.cantidad?p.cantidad+' ':'')+p.desc;}).join(' · '):'Agregar trabajo',empty:!products.length};};
+kanbanCardProductosContext=function(t){var products=t.productos||[];return {text:products.length?products.slice(0,3).map(function(p){return (p.cantidad?p.cantidad+' X ':'')+p.desc;}).join(' · '):'Agregar trabajo',empty:!products.length};};
 renderKanbanCard=function(t){var html=workKanbanCard(t);var start=html.indexOf('<div class="kanban-card-quesigue-cell');var end=html.indexOf('<div class="kanban-card-markers-row',start);if(start!==-1&&end!==-1)html=html.slice(0,start)+html.slice(end);if(!ticketThumbPhotoPath(t))html=html.replace('<div class="kanban-card-main" draggable="false">','<div class="kanban-card-main" draggable="false"><button class="work-add-photo" data-action="tickets-thumb-photo" data-ticket="'+t.id+'" aria-label="Agregar foto al ticket #'+t.seq+'">'+icon('image')+'<span>Agregar foto</span></button>');var f=ticketFinancials(t),tasks=(t.tareas||[]).filter(function(x){return x.estado!=='terminado';});var extra='<div class="work-ticket-actions"><button class="btn btn-ghost" data-workspace="dates" data-ticket="'+t.id+'">'+icon('calendar')+'<span>'+(t.fechaCompromiso?'Entrega '+fmtDateOnlyShort(t.fechaCompromiso):'Fecha de entrega')+'</span></button><button class="btn btn-ghost" data-action="cxc-pago-open" data-ticket="'+t.id+'">'+icon('wallet')+(f.saldo==null?'Revisar cobro':f.saldo>0?'Cobrar '+fmtMoney(f.saldo):'Pagado')+'</button>'+(!t.entregadoAt&&!ticketIsCerrado(t)?'<button class="btn btn-ghost" data-action="cell-editor-marcar-entregado" data-ticket="'+t.id+'">'+icon('truck')+'Marcar entregado</button>':'')+'</div>'+(tasks.length?'<div class="work-kanban-tasks">'+tasks.map(function(x){return '<div class="work-kanban-task"><button class="icon-btn" data-workspace="task-done" data-ticket="'+t.id+'" data-task="'+x.id+'" aria-label="Terminar '+escapeHtml(x.desc)+'">'+icon('check')+'</button><button data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+'<small>'+escapeHtml(x.responsable||'Sin asignar')+'</small></button></div>';}).join('')+'</div>':'');return html.slice(0,html.lastIndexOf('</div>'))+extra+'</div>';};
 var workToolbar=renderTicketsToolbar;
 renderTicketsToolbar=function(list){var toolbar=workToolbar(list);return '<div class="work-kanban-toolbar"><label class="search-wrap">'+icon('search')+'<input id="workspace-search" type="search" placeholder="Buscar cliente, folio o responsable" aria-label="Buscar en todos los tickets" value="'+escapeHtml(UI.search||'')+'"></label><button class="btn btn-primary" data-action="tickets-quickcreate-toggle" aria-label="Crear ticket">'+icon('plus')+'</button><button class="icon-btn" data-workspace="tools" aria-label="Mostrar vistas y filtros" aria-expanded="'+!!UI.workToolsOpen+'">'+icon('sliders')+'</button></div><div class="work-discover'+(UI.workToolsOpen||UI.ticketsExplorer.quickCreateOpen?' shown':'')+'">'+toolbar+'</div>';};
