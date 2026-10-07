@@ -1,4 +1,4 @@
-alter table public.client_form_requests add column source_customer_id uuid references public.clientes(id);
+alter table public.client_form_requests add column if not exists source_customer_id uuid references public.clientes(id);
 create or replace function public.client_order_form_create(p_id uuid,p_ticket uuid,p_token text) returns uuid language plpgsql security definer set search_path='' as $$
 declare t public.tickets%rowtype; c public.clientes%rowtype; locked jsonb; lines jsonb; editable text[]; total numeric;
 begin
