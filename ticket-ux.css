@@ -1,3 +1,4 @@
+.tk-chip.overdue{color:var(--danger);background:var(--danger-soft);border-color:transparent}
 .ticket-header.ticket-operational{padding:10px 16px;flex-shrink:0;max-height:38dvh;overflow:auto}
 .ticket-operational .comanda-identity{margin:5px 0}.ticket-operational .comanda-summary{display:none}
 .ticket-operational .ticket-operation-strip{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center}
