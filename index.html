@@ -4433,7 +4433,7 @@ button.tk-task-open:hover{background:var(--surface-3)}
 @media(max-width:600px){.device-picker-overlay{align-items:flex-end;padding:8px;}.device-picker{padding:18px 14px calc(18px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px);}.device-picker h2{font-size:20px;}}
 
 </style>
-<script src="client-forms.js?v=3"></script>
+<script src="client-forms.js?v=4"></script>
 <script src="website-requests.js?v=2"></script>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
@@ -7961,7 +7961,7 @@ function renderTicketHeader(t){
 
   var meta = '<span class="tk-meta"><span class="ticket-id">#' + t.seq + '</span><span class="pill status-pill status-' + estado + '">' + ticketEstadoLabel(estado) + '</span>' +
     (t.visibility === "private" ? '<span class="pill privacy-pill" title="Restringido — solo lo ven las personas agregadas con /privado">' + icon("lock") + " Privado</span>" : "") + '</span>';
-  var tools = '<span class="tk-tools">'+(window.DTGClientForms?'<button type="button" class="cf-ticket-create" data-client-form-ticket="'+escapeHtml(t.id)+'" title="Crear forma para cliente" aria-label="Crear forma para cliente">'+icon("file-text")+'<span>Crear forma para cliente</span></button>':'')+'<button type="button" class="tk-icon" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned ? "Desfijar" : "Fijar") + '" aria-label="' + (t.pinned ? "Desfijar ticket" : "Fijar ticket") + '" aria-pressed="' + (t.pinned ? "true" : "false") + '">' + icon("pin") + '</button>' +
+  var tools = '<span class="tk-tools">'+(window.DTGClientForms?'<button type="button" class="cf-ticket-create" data-client-form-ticket="'+escapeHtml(t.id)+'" title="Crear forma para cliente" aria-label="Crear forma para cliente">'+icon("file-text")+'<span>Crear forma para cliente</span></button><button type="button" class="cf-ticket-create" data-client-form-manage="'+escapeHtml(t.id)+'">Ver respuestas</button>':'')+'<button type="button" class="tk-icon" data-action="toggle-pin" data-id="' + t.id + '" title="' + (t.pinned ? "Desfijar" : "Fijar") + '" aria-label="' + (t.pinned ? "Desfijar ticket" : "Fijar ticket") + '" aria-pressed="' + (t.pinned ? "true" : "false") + '">' + icon("pin") + '</button>' +
     '<button type="button" class="tk-icon" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen del ticket" aria-label="Copiar resumen del ticket">' + icon("copy") + '</button></span>';
   /* Qué sigue: pieza central, siempre visible, opcional y de un toque. */
   var next = editing === "quesigue"

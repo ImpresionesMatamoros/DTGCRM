@@ -17,3 +17,5 @@ Migraciones de producción: client_order_forms_snapshot_and_review y client_orde
 QA con PostgreSQL/PGlite: resumen 2 × 20 = 40, restricciones de campos, área válida, creación/envío/aplicación idempotentes, permisos anónimos, cambios posteriores del equipo y fecha bloqueada. Los formularios anteriores y las integraciones existentes mantienen sus pruebas.
 
 Verificación en producción: ticket interno #1417, dos camisetas a USD20, enlace creado con confirmación de copia, formulario abierto, respuesta enviada, datos aplicados a cliente y zona Brownsville; teléfono y fecha 2026-10-20 permanecieron intactos. Los datos de prueba se revocan/archivan al finalizar.
+
+El botón **Ver respuestas** abre la revisión de formas existentes sin crear ni renovar un enlace.
