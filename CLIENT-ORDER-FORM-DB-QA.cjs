@@ -1,0 +1,36 @@
+const fs=require('fs'),assert=require('node:assert/strict'),{PGlite}=require(process.env.PGLITE_MODULE);
+(async()=>{const db=new PGlite();try{
+await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);
+create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create table profiles(id uuid,display_name text);create function is_active_member() returns boolean language sql as $$select auth.uid() is not null$$;
+create table clientes(id uuid primary key default gen_random_uuid(),nombre text,telefono text,email text,archived_at timestamptz,merged_into uuid);
+create table tickets(id uuid primary key default gen_random_uuid(),seq bigint,cliente_id uuid,cliente text,fecha_compromiso date,delivery_zone text,cerrado_at timestamptz);
+create function ticket_is_visible_to_me(p uuid) returns boolean language sql as $$select auth.uid()='11111111-1111-4111-8111-111111111111'::uuid$$;
+create table productos(id uuid default gen_random_uuid(),ticket_id uuid,descripcion text,cantidad numeric,precio numeric,created_at timestamptz default now());
+create table bitacora(ticket_id uuid,tipo text,autor text,payload jsonb);
+grant usage on schema public,auth to anon,authenticated;
+insert into auth.users values('11111111-1111-4111-8111-111111111111');insert into profiles values('11111111-1111-4111-8111-111111111111','QA');
+insert into clientes(id,nombre,telefono) values('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','9561234567','9561234567');
+insert into tickets(id,seq,cliente_id,fecha_compromiso) values('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',123,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','2026-10-20');
+insert into productos(ticket_id,descripcion,cantidad,precio) values('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','Camisetas',2,20);`);
+await db.exec(fs.readFileSync(__dirname+'/supabase/migrations/20261005041144_client_request_forms.sql','utf8'));
+await db.exec(fs.readFileSync(__dirname+'/client-order-form-schema.sql','utf8'));
+const token='a'.repeat(64),id='cccccccc-cccc-4ccc-8ccc-cccccccccccc',ticket='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const scalar=async(sql,args=[])=>Object.values((await db.query(sql,args)).rows[0])[0];
+async function role(r,uid=''){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid]);await db.exec('set role '+r);}
+await role('anon');await assert.rejects(db.query('select client_order_form_create($1,$2,$3)',[id,ticket,token]));
+await role('authenticated','11111111-1111-4111-8111-111111111111');
+assert.equal(await scalar('select client_order_form_create($1,$2,$3)',[id,ticket,token]),id);
+assert.equal(await scalar('select client_order_form_create($1,$2,$3)',[id,ticket,token]),id);
+await role('anon');const data=await scalar('select client_form_get($1)',[token]);assert.equal(data.order.product_total,40);assert.equal(data.order.items[0].unit_price,20);assert.equal(data.order.locked.phone,'9561234567');assert.equal(data.order.locked.delivery_date,'2026-10-20');assert(!data.fields.includes('phone'));assert(!data.fields.includes('delivery_date'));assert(data.fields.includes('name'));
+await assert.rejects(db.query('select client_form_submit($1,$2,$3)',[token,id,{phone:'hack',name:'QA'}]),/Invalid answer/);
+await assert.rejects(db.query('select client_form_submit($1,$2,$3)',[token,id,{delivery_area:'evil',name:'QA'}]),/INVALID_AREA/);
+const answers={name:'Cliente QA',email:'qa@example.com',delivery_area:'brownsville',comments:'Prueba'};
+assert.equal((await scalar('select client_form_submit($1,$2,$3)',[token,id,answers])).state,'received');
+assert.equal((await scalar('select client_form_submit($1,$2,$3)',[token,id,answers])).state,'received');
+await assert.rejects(db.query('select client_order_form_apply($1)',[id]));
+await db.exec("reset role;update clientes set email='staff@example.com';update tickets set delivery_zone='matamoros'");
+await role('authenticated','11111111-1111-4111-8111-111111111111');await scalar('select client_order_form_apply($1)',[id]);await scalar('select client_order_form_apply($1)',[id]);
+await db.exec('reset role');const c=(await db.query('select * from clientes')).rows[0],t=(await db.query('select * from tickets')).rows[0];assert.equal(c.nombre,'Cliente QA');assert.equal(c.telefono,'9561234567');assert.equal(c.email,'staff@example.com');assert.equal(t.delivery_zone,'matamoros');assert.equal(t.fecha_compromiso.toISOString().slice(0,10),'2026-10-20');assert.equal(await scalar('select count(*)::int from bitacora'),1);
+console.log('Order form QA passed: 2 x USD20 = USD40, fixed data, forged answers, valid zones, idempotency, staff review, no overwrite after link creation.');
+}finally{await db.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
