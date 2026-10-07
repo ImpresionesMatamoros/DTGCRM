@@ -26,3 +26,18 @@
 
 ## Pruebas
 `TASKS-PLAN-QA.cjs`, `TASKS-CATALOG-QA.cjs`, `PAGOS-QA.cjs`, `COBRANZA-QA.cjs`, `KDS-MENU-QA.cjs`.
+
+## Catálogo mínimo (11 tareas)
+Cliente: CONTACTAR CLIENTE · CONSEGUIR ARCHIVOS DEL CLIENTE · CONSEGUIR APROBACION
+Diseño: REALIZAR DISENO · ENVIAR DISENO
+Compras y proveedores: ORDENAR MATERIAL · ENVIAR TRABAJO CON PROVEEDOR · RECOGER
+Taller y entrega: FABRICAR · ENTREGAR
+Otras: TAREA ADMINISTRATIVA
+Automáticas (no salen en el menú): PAGAR Y ENVIAR COMPROBANTE, CONFIRMAR LA CALIDAD (LETS ENHANCE).
+- Los nombres anteriores se mapean (`V2_LEGACY`): ENVIAR COTIZACION/PEDIR ANTICIPO → CONTACTAR CLIENTE; COMPRAR MATERIAL/ORDENAR EN LINEA/A MONTERREY → ORDENAR MATERIAL; IMPRIMIR LONA/ENVIAR DTF… → ENVIAR TRABAJO CON PROVEEDOR; CORTAR/ESTAMPAR DTF/INSTALAR… → FABRICAR; COBRAR → TAREA ADMINISTRATIVA. El nombre específico se conserva como detalle y se ve en la TV.
+- El destino sale del nombre: solo FABRICAR es de Producción.
+- `supabase/migrations/20261006000002_tareas_catalogo_minimo.sql` renombra en la base las tareas abiertas (conserva el nombre anterior en la nota). Hay que correrlo una vez.
+## Número rojo
+Junto al nombre de cada columna del Kanban (y en las pestañas móviles): cuántos tickets vivos no tienen ninguna tarea pendiente.
+## Pagos
+La cuenta regresiva apunta a la próxima hora límite: si ya pasó hoy, cuenta hacia mañana.

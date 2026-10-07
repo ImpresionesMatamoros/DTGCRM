@@ -36,7 +36,7 @@ try{
  assert.equal(await page.locator('#ops-f-desc optgroup').count(),5);
  const names=await page.locator('#ops-f-desc option').allTextContents();
  for(const gone of ['COBRAR','IMPRIMIR LONA','ENVIAR DTF','ENVIAR DTF UV','ENVIAR TABLOIDES','ORDENAR EN LINEA','ORDENAR A MONTERREY','COMPRAR MATERIAL'])assert(!names.includes(gone),gone);
- for(const here of ['ORDENAR MATERIAL','ENVIAR TRABAJO CON PROVEEDOR','PEDIR ANTICIPO','CONSEGUIR ARCHIVOS DEL CLIENTE','ENVIAR DISENO','CONSEGUIR APROBACION'])assert(names.includes(here),here);
+ for(const here of ['ORDENAR MATERIAL','ENVIAR TRABAJO CON PROVEEDOR','CONTACTAR CLIENTE','CONSEGUIR ARCHIVOS DEL CLIENTE','ENVIAR DISENO','CONSEGUIR APROBACION'])assert(names.includes(here),here);
  // ORDENAR MATERIAL -> vendedores
  await page.locator('#ops-f-desc').selectOption({label:'ORDENAR MATERIAL'});
  await page.waitForSelector('#ops-f-payee');
