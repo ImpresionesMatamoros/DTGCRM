@@ -193,6 +193,44 @@ test('explicit processing claims only the owner operation and cannot drive anoth
  const other=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Otro',body:'Hola',idempotency_key:crypto.randomUUID()});s.actor=crypto.randomUUID();db.admin=false;await assert.rejects(s.processMailOperation({operation_id:other.operation_id}),/FORBIDDEN/);assert.equal((await db.one('dtg_integration_jobs',[['id','eq',other.operation_id]])).state,'queued');
 });
 
+test('worker sends from the primary Gmail address without custom alias verification',async()=>{
+ const {s,db,ids,google}=scenario();
+ const connection=await s.connection(ids.connection);
+ await db.update('dtg_email_inboxes',[['id','eq',ids.inbox]],{email_alias:connection.account_email});
+ google.listAliases=async()=>({sendAs:[{sendAsEmail:connection.account_email,isPrimary:true}]});
+ let sends=0;google.sendEmail=async()=>{sends++;return{id:'primary-sent'};};
+ const op=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Primary',body:'Hello',idempotency_key:crypto.randomUUID()});
+ assert.equal((await s.processMailOperation({operation_id:op.operation_id})).state,'done');assert.equal(sends,1);
+});
+
+test('worker still rejects an unverified custom alias and a mismatched primary account',async()=>{
+ for(const isPrimary of [false,true]){
+  const {s,ids,google}=scenario();
+  google.listAliases=async()=>({sendAs:[{sendAsEmail:'vendors@956print.com',isPrimary}]});
+  let sends=0;google.sendEmail=async()=>{sends++;return{id:'unexpected'};};
+  const op=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Alias',body:'Hello',idempotency_key:crypto.randomUUID()});
+  const result=await s.processMailOperation({operation_id:op.operation_id});
+  assert.equal(result.state,'failed');assert.equal(result.last_error,'ALIAS_NOT_VERIFIED');assert.equal(sends,0);
+ }
+});
+
+test('personal inboxes require explicit permission even for admins and hide paused addresses',async()=>{
+ const {s,db,ids}=scenario();await db.update('dtg_email_inboxes',[['id','eq',ids.inbox]],{purpose:'personal'});
+ await assert.rejects(s.inbox(ids.inbox,true),/INBOX_FORBIDDEN/);assert.deepEqual((await s.status()).inboxes,[]);
+ await db.insert('dtg_email_inbox_access',{inbox_id:ids.inbox,user_id:ids.actor,can_read:true,can_send:true});
+ assert.equal((await s.status()).inboxes[0].can_send,true);await s.inbox(ids.inbox,true);
+ await db.update('dtg_email_inboxes',[['id','eq',ids.inbox]],{active:false});assert.deepEqual((await s.status()).inboxes,[]);
+});
+
+test('worker rejects personal sender access revoked after queueing even for admins',async()=>{
+ const {s,db,ids}=scenario();await db.update('dtg_email_inboxes',[['id','eq',ids.inbox]],{purpose:'personal'});
+ await db.insert('dtg_email_inbox_access',{inbox_id:ids.inbox,user_id:ids.actor,can_read:true,can_send:true});
+ const op=await s.sendEmail({inbox_id:ids.inbox,to:['test@example.com'],subject:'Personal',body:'Hello',idempotency_key:crypto.randomUUID()});
+ await db.update('dtg_email_inbox_access',[['inbox_id','eq',ids.inbox],['user_id','eq',ids.actor]],{can_send:false});
+ const result=await new IntegrationWorker(s).run(op.operation_id);assert.equal(result.state,'failed');
+ assert.equal((await db.one('dtg_integration_jobs',[['id','eq',op.operation_id]])).last_error,'ACTOR_PERMISSION_REVOKED');
+});
+
 test('primary Gmail sender has no custom alias verification status',async()=>{
  const {s,db,ids}=scenario();const c=await db.one('dtg_google_connections',[['id','eq',ids.connection]]);
  await s.validateAliases({listAliases:async()=>({sendAs:[{sendAsEmail:c.account_email,isPrimary:true}]})},ids.connection);

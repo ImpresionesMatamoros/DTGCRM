@@ -48,6 +48,7 @@
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <title>Design To Go</title>
 <link rel="stylesheet" href="client-forms.css">
+<link rel="stylesheet" href="website-requests.css">
 <style id="dtg-style">
 :root{
   /* MEGA UPDATE v0.20 — nuevo sistema visual. El rosa deja de ser la
@@ -4432,6 +4433,7 @@ button.tk-task-open:hover{background:var(--surface-3)}
 
 </style>
 <script src="client-forms.js?v=1"></script>
+<script src="website-requests.js?v=1"></script>
 <script src="mobile-viewport.js?v=1"></script>
 <script src="ops-menu.js?v=3"></script>
 <link rel="stylesheet" href="integrations.css?v=1">
@@ -7190,7 +7192,7 @@ function renderSidebarList(){
    y se vuelven vistas reales (derivadas, sin tabla/módulo nuevo — igual que
    Clientes). Kanban e Informes siguen siendo stubs a propósito (V0.5 §24).
    "Tickets cerrados" es una entrada nueva, sin equivalente previo. */
-var REAL_VIEWS = ["correos","clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca","calendario","operaciones","informes"];
+var REAL_VIEWS = ["solicitudes-web","correos","clientes","atencion","produccion","cerrados","cxc","tickets","biblioteca","calendario","operaciones","informes"];
 /* v0.20 — navegación principal: Inicio · Tickets · Operaciones · Calendario ·
    Cuentas por cobrar · Clientes · Biblioteca · Informes, y abajo, como
    utilidad, Tickets cerrados. Atención y la vieja Producción salen del menú
@@ -7198,6 +7200,7 @@ var REAL_VIEWS = ["correos","clientes","atencion","produccion","cerrados","cxc",
    Producción). Sus funciones siguen existiendo (una URL/estado viejo cae a
    su reemplazo, ver loadUi/dtgGoToMainView) — nada se borró a ciegas. */
 var NAV_ITEMS = [
+  {view:"solicitudes-web",action:"go-website-requests",icon:"file-text",label:"Solicitudes web"},
   {view:"correos",action:"go-correos",icon:"mail",label:"Correos"},
   { view: null,           action: "go-home",        icon: "home",    label: "Inicio" },
   { view: "tickets",      action: "go-tickets",     icon: "ticket",  label: "Tickets" },
@@ -16821,6 +16824,7 @@ function polishMobileUI(){
 }
 
 function renderMain(){
+  if(UI.mainView==="solicitudes-web")return '<div id="dtg-website-requests-root"></div>';
   ticketSyncContext();
   if(UI.mainView==="correos"&&!UI.selectedTicketId)return '<div id="dtg-mail-root" style="height:100%;min-height:0"></div>';
   if(UI.mainView === "clientes" && !UI.selectedTicketId){
@@ -28318,6 +28322,13 @@ if(window.DTGClientLibrary){
 }
 if(window.DTGImages)window.DTGImages.mount({actor:currentActorId,originalURL:cachedStorageUrl});
 if(window.DTGAutomaticAttachments){window.DTGAutomaticAttachments.mount({actor:currentActorId,notice:showToast});var automaticLogout=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGAutomaticAttachments.reset();return automaticLogout();};}
+
+if(window.DTGWebsiteRequests){
+ window.DTGWebsiteRequests.configure({sb:function(){return sb;},url:function(){return SUPABASE_URL;},key:function(){return SUPABASE_KEY;},admin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},refresh:refreshFromServer,ticket:function(id){UI.selectedTicketId=id;UI.mainView='tickets';saveUi();render();}});
+ document.addEventListener('click',function(e){var b=e.target.closest('[data-action="go-website-requests"]');if(!b)return;UI.mainView='solicitudes-web';UI.selectedTicketId=null;UI.selectedClienteId=null;UI.sidebarOpen=false;UI.pendingFocus=null;saveUi();render();});
+ var websiteRenderCore=render;render=function(){websiteRenderCore();var h=document.getElementById('dtg-website-requests-root');if(h)window.DTGWebsiteRequests.show(h);else window.DTGWebsiteRequests.hide();};
+ var websiteUnsubscribe=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGWebsiteRequests.reset();return websiteUnsubscribe();};
+}
 
 if(window.DTGMail){
  window.DTGMail.configure({actor:currentActorId,actorName:currentActorName,isAdmin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},url:function(){return SUPABASE_URL;},members:activeAssignableProfiles,tickets:function(){return STATE.tickets.map(function(t){return{id:t.id,label:'#'+t.seq+' · '+t.cliente};});}});
