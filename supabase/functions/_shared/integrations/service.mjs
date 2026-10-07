@@ -44,6 +44,8 @@ export class IntegrationService {
       const tokens = await res.json();
       if (!res.ok) {
         if (tokens.error === 'invalid_grant') { await this.admin.update(T('google_connections'), [eq('id', c.id)], { state: 'reauth_required', last_error: 'REAUTH_REQUIRED' }); fail('REAUTH_REQUIRED', 401); }
+        const providerError = ['invalid_client','unauthorized_client','invalid_request','temporarily_unavailable','server_error'].includes(tokens.error) ? tokens.error : 'unknown';
+        await this.audit('google.refresh_failed', { provider_error: providerError });
         throw new IntegrationError('TOKEN_REFRESH_FAILED', 503, true);
       }
       secret = { ...secret, ...tokens, expires_at: Date.now() + tokens.expires_in * 1000 };

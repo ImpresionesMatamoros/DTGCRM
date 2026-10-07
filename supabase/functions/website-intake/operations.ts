@@ -72,6 +72,9 @@ export async function portal(req:Request,s:any,config:any,path:string){
  const queue=async(to:string,subject:string,body:string,key:string)=>{await activateActor();const inbox=await s.admin.one('dtg_email_inboxes',[['email_alias','eq','hello@956print.com']]);if(!inbox)fail('CENTRAL_INBOX_UNAVAILABLE',503);const op=await s.sendEmail({inbox_id:inbox.id,to:[to],subject,body,idempotency_key:key});EdgeRuntime.waitUntil(new IntegrationWorker(s).run(op.operation_id));};
  if(action==='login'){
   if(typeof d.email!=='string'||d.email.length>254||!/^\S+@\S+\.\S+$/.test(d.email))fail('INVALID_EMAIL');
+  // Check the shared sender for every address before creating a short-lived login link.
+  // This avoids queueing links that expire during a Google outage and does not reveal account existence.
+  try { await s.google(); } catch { fail('PORTAL_EMAIL_UNAVAILABLE',503); }
   const account=await s.admin.one('dtg_customer_portal_accounts',[['email','eq',d.email.trim().toLowerCase()],['active','eq',true]]);
   if(account){
    const recent=await client.from('dtg_customer_portal_tokens').select('token_hash').eq('account_id',account.id).eq('kind','login').gt('created_at',new Date(Date.now()-60000).toISOString()).limit(1);
