@@ -38,6 +38,28 @@ export async function staff(req:Request){
    const file=r.files[Number(d.index)];if(!Number.isInteger(d.index)||!file)fail('FILE_UNAVAILABLE',404);
    return response({url:await s.storage.signedUrl('dtg-website-files',file.path)},200,headers);
   }
+  if(d.action==='import'){
+   await s.requireAdmin();if(!r.ticket_id||!r.customer_id)fail('LINK_TICKET_FIRST',409);
+   // Serialize imports. Upload keys remain tied to the first importing actor across retries.
+   const lease=await client.rpc('dtg_claim_website_import',{p_reference:r.reference});if(lease.error)fail('IMPORT_BUSY_OR_OTHER_ACTOR',409);
+   const mapped=r.engine_files||[];try{
+    for(const [index,file] of r.files.entries()){
+     if(mapped.some((f:any)=>f.path===file.path))continue;
+     if(r.source_reference){const source=await s.user.one('dtg_website_requests',[['reference','eq',r.source_reference]]);const previous=source?.engine_files?.find((f:any)=>f.path===file.path);if(previous){await s.reuseFile({file_id:previous.file_id,ticket_id:r.ticket_id});mapped.push(previous);await s.user.update('dtg_website_requests',[['reference','eq',r.reference]],{engine_files:mapped});continue;}}
+     const bytes=await s.storage.download('dtg-website-files',file.path,20*1024*1024);
+     const hex=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
+     const keyBytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(r.reference+':file:'+index)));const k=Array.from(keyBytes,v=>v.toString(16).padStart(2,'0')).join('');const key=`${k.slice(0,8)}-${k.slice(8,12)}-4${k.slice(13,16)}-a${k.slice(17,20)}-${k.slice(20,32)}`;
+     const upload=await s.beginLibraryUpload({customer_id:r.customer_id,ticket_id:r.ticket_id,idempotency_key:key,filename:file.name,mime_type:file.mime,size_bytes:file.size,source_sha256:hex,category:file.mime==='application/pdf'?'pdf':'fotos'});
+     if(upload.state!=='complete'){
+      let resumed=await s.resumeUpload({session_id:upload.session_id});
+      while(resumed.state!=='complete'&&Number(resumed.confirmed_offset)<bytes.length){const offset=Number(resumed.confirmed_offset);resumed=await s.uploadChunk({session_id:upload.session_id,offset},bytes.slice(offset,Math.min(offset+4194304,bytes.length)));}
+      await s.completeUpload({session_id:upload.session_id});
+     }
+     mapped.push({path:file.path,file_id:upload.file_id});await s.user.update('dtg_website_requests',[['reference','eq',r.reference]],{engine_files:mapped});
+    }
+    return response({ok:true,files:mapped.length},200,headers);
+   }finally{await s.user.update('dtg_website_requests',[['reference','eq',r.reference]],{import_lease_until:null});}
+  }
   fail('ACTION_UNAVAILABLE',404);
  }catch(e){return errorReply(e,headers);}
 }

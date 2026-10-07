@@ -28324,7 +28324,7 @@ if(window.DTGImages)window.DTGImages.mount({actor:currentActorId,originalURL:cac
 if(window.DTGAutomaticAttachments){window.DTGAutomaticAttachments.mount({actor:currentActorId,notice:showToast});var automaticLogout=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGAutomaticAttachments.reset();return automaticLogout();};}
 
 if(window.DTGWebsiteRequests){
- window.DTGWebsiteRequests.configure({sb:function(){return sb;},url:function(){return SUPABASE_URL;},key:function(){return SUPABASE_KEY;},admin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},refresh:refreshFromServer,ticket:function(id){UI.selectedTicketId=id;UI.mainView='tickets';saveUi();render();}});
+ window.DTGWebsiteRequests.configure({sb:function(){return sb;},url:function(){return SUPABASE_URL;},key:function(){return SUPABASE_KEY;},admin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},refresh:refreshFromServer,ticket:openTicketById});
  document.addEventListener('click',function(e){var b=e.target.closest('[data-action="go-website-requests"]');if(!b)return;UI.mainView='solicitudes-web';UI.selectedTicketId=null;UI.selectedClienteId=null;UI.sidebarOpen=false;UI.pendingFocus=null;saveUi();render();});
  var websiteRenderCore=render;render=function(){websiteRenderCore();var h=document.getElementById('dtg-website-requests-root');if(h)window.DTGWebsiteRequests.show(h);else window.DTGWebsiteRequests.hide();};
  var websiteUnsubscribe=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGWebsiteRequests.reset();return websiteUnsubscribe();};
