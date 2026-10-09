@@ -4,12 +4,45 @@ var design=/\.(cdr|cdt|cpt|cmx|psd|psb|psdt|ai|ait|eps|ps|indd|idml|xd|afdesign|
 var designMime=/^(image\/(vnd\.adobe\.photoshop|photoshop|x-photoshop|tiff|svg\+xml|heic|heif)|application\/(pdf|postscript|vnd\.corel-draw|x-coreldraw|x-photoshop))$/i;
 function shouldDrive(file){return !!file&&(design.test(file.name||'')||designMime.test(file.type||'')||file.size>25*1048576||(/^image\//i.test(file.type||'')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(file.name||''))&&file.size>=5*1048576);}
 function reset(){epoch++;controller.abort();controller=new AbortController();pending.clear();}
-async function preview(file){if(!/^image\/(jpeg|png|webp)$/i.test(file.type||'')||file.size>25*1048576)return null;var url=URL.createObjectURL(file);try{var img=new Image();img.src=url;await img.decode();var scale=Math.min(1,640/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);var blob=await new Promise(function(done){c.toBlob(done,'image/jpeg',.85);});return blob&&blob.size<=524288?new File([blob],'preview.jpg',{type:'image/jpeg'}):null;}catch{return null;}finally{URL.revokeObjectURL(url);}}
+async function preview(file){
+ var type=file.type||'',name=file.name||'';
+ var isRaster=/^image\/(jpeg|png|webp|gif|bmp)$/i.test(type)||/\.(jpe?g|png|webp|gif|bmp)$/i.test(name);
+ var isSvg=/^image\/svg/i.test(type)||/\.svgz?$/i.test(name);
+ var isVideo=/^video\/(mp4|webm|ogg|quicktime|x-matroska|avi)$/i.test(type)||/\.(mp4|webm|mov|mkv|avi)$/i.test(name);
+ if(!isRaster&&!isSvg&&!isVideo)return null;
+ if((isRaster||isSvg)&&file.size>100*1048576)return null;
+ var url=URL.createObjectURL(file);
+ try{
+  if(isVideo){
+   var video=document.createElement('video');video.muted=true;video.preload='metadata';
+   await new Promise(function(res,rej){
+    var done=false;function ok(){if(!done){done=true;res();}}function fail(){if(!done){done=true;rej(new Error('v'));}}
+    video.addEventListener('loadeddata',ok,{once:true});video.addEventListener('error',fail,{once:true});
+    setTimeout(function(){if(!done){done=true;rej(new Error('timeout'));}},8000);
+    video.src=url;video.load();
+   });
+   video.currentTime=Math.min(2,video.duration||0);
+   await new Promise(function(res){video.addEventListener('seeked',res,{once:true});setTimeout(res,2000);});
+   var scale=Math.min(1,1280/Math.max(video.videoWidth||1,video.videoHeight||1));
+   var c=document.createElement('canvas');c.width=Math.max(1,Math.round((video.videoWidth||640)*scale));c.height=Math.max(1,Math.round((video.videoHeight||360)*scale));
+   c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+   var blob=await new Promise(function(done){c.toBlob(done,'image/jpeg',.85);});
+   return blob&&blob.size<=1048576?new File([blob],'preview.jpg',{type:'image/jpeg'}):null;
+  }else{
+   var img=new Image();img.src=url;await img.decode();
+   var scale=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));
+   var c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));
+   c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+   var blob=await new Promise(function(done){c.toBlob(done,'image/jpeg',.90);});
+   return blob&&blob.size<=1048576?new File([blob],'preview.jpg',{type:'image/jpeg'}):null;
+  }
+ }catch{return null;}finally{URL.revokeObjectURL(url);}
+}
 async function upload(file,ticket){
  if(!ticket||!ticket.clienteId)throw Error('Asocia este ticket a un cliente antes de subir originales a Drive.');
  if(!file||!file.size||file.size>2147483648)throw Error('Selecciona un archivo de hasta 2 GB que no esté vacío.');
  var actor=bridge.actor(),revision=epoch,signal=controller.signal;if(!actor)throw Error('Inicia sesión nuevamente.');
- var last=-10;function progress(p){var n=Math.floor(p*100);if(n>=last+10){last=n;bridge.notice(file.name+' · '+n+'%');}}
+ var last=-10;function progress(p){var n=Math.floor(p*100);if(n>=last+10){last=n;bridge.notice(file.name+' · '+n+'%');if(bridge.onProgress)bridge.onProgress(file.name,n);}}
  async function api(a,i,b){try{return await root.DTGWorkspaceAPI.request(a,i,{actor:actor,signal:signal,binary:b,isCurrent:function(){return epoch===revision&&bridge.actor()===actor;}});}catch(e){if(!e.message)e.message=({LIBRARY_DISABLED:'La biblioteca de Drive está deshabilitada.',GOOGLE_NOT_CONNECTED:'Conecta Google Workspace para guardar este original.',INVALID_FILE_SIZE:'El archivo supera el tamaño permitido.',UPLOAD_BUSY_OR_EXPIRED:'La carga está ocupada o venció. Revisa su estado en la biblioteca.'})[e.code]||root.DTGWorkspaceAPI.message(e);throw e;}}
  bridge.notice('Guardando original en Drive: '+file.name);
  var sha=await root.DTGLibraryTransfer.hash(file,signal),cacheKey=actor+':'+ticket.id+':'+ticket.clienteId+':'+sha+':'+file.name+':'+file.type;

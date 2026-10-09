@@ -4293,8 +4293,10 @@ button.tk-task-open:hover{background:var(--surface-3)}
 .chat-file-preview small,.chat-file-card small{font-size:11px;color:var(--text-muted)}
 .chat-file-preview img{width:46px;height:46px;object-fit:cover;border-radius:6px}
 .chat-file-preview.failed{border-color:var(--danger)}
-.chat-file-preview.sending::after{content:'';position:absolute;bottom:0;left:0;height:3px;width:100%;background:linear-gradient(90deg,transparent 0%,var(--accent,#3b82f6) 50%,transparent 100%);background-size:200% 100%;animation:upload-sweep 1.4s linear infinite}
+.chat-file-preview.sending:not(.has-progress)::after{content:'';position:absolute;bottom:0;left:0;height:3px;width:100%;background:linear-gradient(90deg,transparent 0%,var(--accent,#3b82f6) 50%,transparent 100%);background-size:200% 100%;animation:upload-sweep 1.4s linear infinite}
 @keyframes upload-sweep{from{background-position:150% 0}to{background-position:-50% 0}}
+.upload-progress-track{position:absolute;bottom:0;left:0;width:100%;height:3px;background:var(--border)}
+.upload-progress-fill{height:100%;background:var(--accent,#3b82f6);border-radius:0 2px 2px 0;transition:width .3s ease;min-width:5%}
 .chat-client-results{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}
 .chat-client-results button{text-align:left;white-space:normal}
 .chat-msg:focus-within{z-index:5}
@@ -15010,7 +15012,7 @@ async function createTeamPostCore(opts){
   }
   if(opts.file){filePath=(opts.conversationId||"team")+"/"+uuid4();var fileUpload=await sb.storage.from("chat-private").upload(filePath,opts.file,{contentType:opts.file.type||"application/octet-stream"});if(fileUpload.error)throw fileUpload.error;uploadedStorage={bucket:"chat-private",path:filePath};opts.fileName=opts.file.name;opts.fileMime=opts.file.type;}
   if(opts.photoFile){
-    var blob = await resizeImageToBlob(opts.photoFile, 1280, 0.8);
+    var blob = driveAttachment?opts.photoFile:await resizeImageToBlob(opts.photoFile, 1280, 0.8);
     imagePath = (opts.conversationId ? opts.conversationId+"/" : "feed/") + Date.now() + "_" + Math.random().toString(36).slice(2,8) + ".jpg";
     var up = await sb.storage.from(opts.conversationId ? 'chat-private' : FILES_BUCKET).upload(imagePath, blob, { contentType: "image/jpeg" });
     if(up.error) throw up.error;
@@ -27101,7 +27103,8 @@ function chatQueueFiles(files){
     if(items.length>=20){errors.push("Máximo 20 archivos por envío.");return;}
     var attachmentTicket=UI.selectedTicketId||conversationTicketId(chatCurrentScopeId()),drive=attachmentTicket&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(file);
     if(file.size>(drive?2147483648:25*1024*1024)){errors.push(file.name+(drive?": máximo 2 GB.":": máximo 25 MB fuera de un ticket."));return;}
-    items.push({id:uuid4(),file:file,previewUrl:chatRaster(file)?URL.createObjectURL(file):null,status:"ready"});
+    var canPreview=/^image\/(jpeg|png|webp|gif|svg\+xml|bmp)$/i.test(file.type||'')||/\.(jpe?g|png|webp|gif|svg|bmp)$/i.test(file.name||'');
+    items.push({id:uuid4(),file:file,previewUrl:canPreview?URL.createObjectURL(file):null,status:"ready"});
   });
   UI.chatFileDrafts[key]=items;
   if(errors.length)showToast(errors.join(" "));
@@ -27116,12 +27119,15 @@ function chatRemoveQueuedFile(id){
 function chatQueuedMarkup(){
   var files=chatQueuedFiles();
   return files.length?'<div class="chat-file-queue" aria-label="Archivos para enviar">'+files.map(function(x){
-    return '<div class="chat-file-preview'+(x.status==="failed"?" failed":x.status==="sending"?" sending":"")+'">'+
+    var hasPct=x.status==="sending"&&x.progress!=null;
+    return '<div class="chat-file-preview'+(x.status==="failed"?" failed":x.status==="sending"?(" sending"+(hasPct?" has-progress":"")):"")+'">'+
       (x.previewUrl?'<img src="'+escapeHtml(x.previewUrl)+'" alt="">':icon("file"))+
       '<span><b>'+escapeHtml(x.file.name)+'</b><small>'+chatFileSize(x.file.size)+
       ((UI.selectedTicketId||conversationTicketId(chatCurrentScopeId()))&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(x.file)?' · Original en Drive':'')+
-      (x.status==="sending"?" · Enviando…":x.status==="failed"?" · No enviado. Reintenta con Enviar.":"")+
-      '</small></span><button type="button" class="icon-btn" data-chat-remove-file="'+x.id+'" aria-label="Quitar '+escapeHtml(x.file.name)+'"'+(UI.feedComposerBusy?' disabled':'')+'>'+icon("x")+'</button></div>';
+      (x.status==="sending"?(' · '+(hasPct?x.progress+'%':'Enviando…')):x.status==="failed"?" · No enviado. Reintenta con Enviar.":"")+
+      '</small></span><button type="button" class="icon-btn" data-chat-remove-file="'+x.id+'" aria-label="Quitar '+escapeHtml(x.file.name)+'"'+(UI.feedComposerBusy?' disabled':'')+'>'+icon("x")+'</button>'+
+      (hasPct?'<div class="upload-progress-track"><div class="upload-progress-fill" style="width:'+x.progress+'%"></div></div>':'')+
+      '</div>';
   }).join("")+"</div>":"";
 }
 async function chatPublishBatch(text){
@@ -28338,7 +28344,7 @@ if(window.DTGClientLibrary){
  unsubscribeRealtime=function(){window.DTGClientLibrary.reset();if(window.DTGImages)window.DTGImages.reset();return libraryLogout();};
 }
 if(window.DTGImages)window.DTGImages.mount({actor:currentActorId,originalURL:cachedStorageUrl});
-if(window.DTGAutomaticAttachments){window.DTGAutomaticAttachments.mount({actor:currentActorId,notice:showToast});var automaticLogout=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGAutomaticAttachments.reset();return automaticLogout();};}
+if(window.DTGAutomaticAttachments){window.DTGAutomaticAttachments.mount({actor:currentActorId,notice:showToast,onProgress:function(filename,pct){var key=chatDraftKey(),items=UI.chatFileDrafts&&UI.chatFileDrafts[key];if(!items)return;var item=items.find(function(x){return x.file&&x.file.name===filename&&x.status==='sending';});if(item){item.progress=pct;renderKeepingLiveInputs();}}});var automaticLogout=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGAutomaticAttachments.reset();return automaticLogout();};}
 
 if(window.DTGWebsiteRequests){
  window.DTGWebsiteRequests.configure({sb:function(){return sb;},url:function(){return SUPABASE_URL;},key:function(){return SUPABASE_KEY;},admin:function(){return CURRENT_PROFILE&&CURRENT_PROFILE.role==='admin';},refresh:refreshFromServer,ticket:openTicketById});
