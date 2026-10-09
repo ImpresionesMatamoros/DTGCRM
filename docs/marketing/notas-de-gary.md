@@ -1,6 +1,6 @@
 # Notas de Gary — Marketing de Martín / Design To Go
 
-Actualizado: 2026-10-08.
+Actualizado: 2026-10-09.
 
 ## Reglas y alcance
 - Este archivo contiene exclusivamente notas de Martín para desarrollar la publicidad y estrategia de redes sociales de Design To Go.
@@ -48,3 +48,12 @@ No se han registrado resultados del experimento.
 
 ## Registro de cambios
 - 2026-10-08: Creación del documento maestro a partir de la conversación con Martín; destino confirmado por el propietario.
+
+## Exploración del 9 de octubre: contenido estático por lotes
+- Martín creó y compartió 14 gráficos de 956PRINT / Design To Go en pocos minutos; se revisaron visualmente. Cubren negocio, uniformes, señalización, market y celebraciones. Quiere aprovechar batch production y programación para liberar tiempo para contenido real.
+- Solicitó un mes de contenido cruzado con todos los productos del Product Engine y las tácticas de la guía de 64 piezas de Gary, con explicación individual de por qué cada concepto merece probarse.
+- Se contrastó el snapshot STEP 12 guardado el 4 de octubre: 33 productos/servicios ACTIVE en su catálogo publicado, complementado por oferta activa confirmada por el propietario aún ausente de esa publicación. No se consultó la base en vivo ni se añadieron candidatos como oferta.
+- Propuesta entregada: 30 conceptos principales, 30 Stories derivadas y 4 recaps semanales (64 unidades editoriales en el mes), como adaptación para DTG y no como frecuencia atribuida a Gary. Titulares en inglés para USA/RGV; briefs en español. Incluye formatos, visual, público, CTA, hipótesis de resultado, producción por lotes y cobertura del catálogo.
+- El plan es una propuesta: no hay aprobación de calendario, piezas generadas para este plan, programación ni publicaciones ejecutadas. No considerar opiniones creativas como resultados comerciales.
+- Criterios propuestos: alternar comparación, educación, ocasión, producto y evidencia real; identidad del cliente protagonista, DTG como firma; marcar simulaciones; no inventar precios, descuentos, bundles, testimonios, modelos de blanks o prestaciones.
+- Referencia del entregable: DTG-Plan-30-Dias-Contenido.md. Para continuidad, estas notas conservan el contexto y estado de propuesta, no una segunda lista editable del calendario.
