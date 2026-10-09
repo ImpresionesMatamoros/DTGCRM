@@ -4287,12 +4287,14 @@ button.tk-task-open:hover{background:var(--surface-3)}
 .chat-msg-deleted{font-style:italic;color:var(--text-muted);background:transparent}
 .chat-seen{font-size:10px;color:var(--text-faint);margin-top:3px}
 .chat-file-queue{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;max-height:200px;overflow:auto}
-.chat-file-preview,.chat-file-card{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;max-width:100%;background:var(--surface)}
+.chat-file-preview,.chat-file-card{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;max-width:100%;background:var(--surface);position:relative;overflow:hidden}
 .chat-file-preview>span,.chat-file-card>span{display:flex;flex-direction:column;min-width:0;text-align:left}
 .chat-file-preview b,.chat-file-card b{font-size:12px;overflow-wrap:anywhere}
 .chat-file-preview small,.chat-file-card small{font-size:11px;color:var(--text-muted)}
 .chat-file-preview img{width:46px;height:46px;object-fit:cover;border-radius:6px}
 .chat-file-preview.failed{border-color:var(--danger)}
+.chat-file-preview.sending::after{content:'';position:absolute;bottom:0;left:0;height:3px;width:100%;background:linear-gradient(90deg,transparent 0%,var(--accent,#3b82f6) 50%,transparent 100%);background-size:200% 100%;animation:upload-sweep 1.4s linear infinite}
+@keyframes upload-sweep{from{background-position:150% 0}to{background-position:-50% 0}}
 .chat-client-results{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}
 .chat-client-results button{text-align:left;white-space:normal}
 .chat-msg:focus-within{z-index:5}
@@ -27114,7 +27116,7 @@ function chatRemoveQueuedFile(id){
 function chatQueuedMarkup(){
   var files=chatQueuedFiles();
   return files.length?'<div class="chat-file-queue" aria-label="Archivos para enviar">'+files.map(function(x){
-    return '<div class="chat-file-preview'+(x.status==="failed"?" failed":"")+'">'+
+    return '<div class="chat-file-preview'+(x.status==="failed"?" failed":x.status==="sending"?" sending":"")+'">'+
       (x.previewUrl?'<img src="'+escapeHtml(x.previewUrl)+'" alt="">':icon("file"))+
       '<span><b>'+escapeHtml(x.file.name)+'</b><small>'+chatFileSize(x.file.size)+
       ((UI.selectedTicketId||conversationTicketId(chatCurrentScopeId()))&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(x.file)?' · Original en Drive':'')+
