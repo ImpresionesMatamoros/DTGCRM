@@ -2,7 +2,12 @@
 var bridge,epoch=0,controller=new AbortController(),pending=new Map();
 var design=/\.(cdr|cdt|cpt|cmx|psd|psb|psdt|ai|ait|eps|ps|indd|idml|xd|afdesign|afphoto|afpub|xcf|sketch|pdf|svg|svgz|tif|tiff|raw|dng|nef|cr2|cr3|arw|orf|raf|heic|heif)$/i;
 var designMime=/^(image\/(vnd\.adobe\.photoshop|photoshop|x-photoshop|tiff|svg\+xml|heic|heif)|application\/(pdf|postscript|vnd\.corel-draw|x-coreldraw|x-photoshop))$/i;
-function shouldDrive(file){return !!file&&(design.test(file.name||'')||designMime.test(file.type||'')||file.size>25*1048576||(/^image\//i.test(file.type||'')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(file.name||''))&&file.size>=5*1048576);}
+/* shouldDrive: solo archivos de diseño-fuente que realmente requieren Drive.
+   PDF, SVG, HEIC, RAW y criterios de tamaño se eliminaron — esos archivos
+   suben directo a Supabase Storage para que funcionen sin Google configurado. */
+var driveDesign=/\.(cdr|cdt|cpt|cmx|psd|psb|psdt|ai|ait|eps|ps|indd|idml|xd|afdesign|afphoto|afpub|xcf|sketch)$/i;
+var driveDesignMime=/^(image\/(vnd\.adobe\.photoshop|photoshop|x-photoshop)|application\/(vnd\.corel-draw|x-coreldraw|x-photoshop|postscript))$/i;
+function shouldDrive(file){return !!file&&(driveDesign.test(file.name||'')||driveDesignMime.test(file.type||''));}
 function reset(){epoch++;controller.abort();controller=new AbortController();pending.clear();}
 async function preview(file){if(!/^image\/(jpeg|png|webp)$/i.test(file.type||'')||file.size>25*1048576)return null;var url=URL.createObjectURL(file);try{var img=new Image();img.src=url;await img.decode();var scale=Math.min(1,320/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);var blob=await new Promise(function(done){c.toBlob(done,'image/jpeg',.72);});return blob&&blob.size<=131072?new File([blob],'preview.jpg',{type:'image/jpeg'}):null;}catch{return null;}finally{URL.revokeObjectURL(url);}}
 async function upload(file,ticket){
