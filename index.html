@@ -15003,14 +15003,8 @@ async function createTeamPostCore(opts){
   var imagePath = null, filePath=opts.filePath||null, uploadedStorage=null;
   var attachment=opts.file||opts.photoFile,attachmentTicket=opts.ticketId||conversationTicketId(opts.conversationId),driveAttachment=null;
   if(attachment&&attachmentTicket&&window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(attachment)){
-    try{
-      driveAttachment=await window.DTGAutomaticAttachments.upload(attachment,findTicket(attachmentTicket));
-      opts=Object.assign({},opts,{file:null,photoFile:opts.photoFile?driveAttachment.previewFile:null,refs:(opts.refs||[]).concat([{kind:'drive_file',file_id:driveAttachment.file_id,filename:driveAttachment.filename,size_bytes:driveAttachment.size_bytes}])});
-    }catch(driveErr){
-      var _driveOffline=driveErr&&(driveErr.code==='GOOGLE_NOT_CONNECTED'||driveErr.code==='LIBRARY_DISABLED'||driveErr.code==='INTEGRATIONS_DISABLED');
-      if(!_driveOffline)throw driveErr;
-      /* Google Drive no está configurado — el archivo se adjunta directamente */
-    }
+    driveAttachment=await window.DTGAutomaticAttachments.upload(attachment,findTicket(attachmentTicket));
+    opts=Object.assign({},opts,{file:null,photoFile:opts.photoFile?driveAttachment.previewFile:null,refs:(opts.refs||[]).concat([{kind:'drive_file',file_id:driveAttachment.file_id,filename:driveAttachment.filename,size_bytes:driveAttachment.size_bytes}])});
   }
   if(opts.file){filePath=(opts.conversationId||"team")+"/"+uuid4();var fileUpload=await sb.storage.from("chat-private").upload(filePath,opts.file,{contentType:opts.file.type||"application/octet-stream"});if(fileUpload.error)throw fileUpload.error;uploadedStorage={bucket:"chat-private",path:filePath};opts.fileName=opts.file.name;opts.fileMime=opts.file.type;}
   if(opts.photoFile){
@@ -19435,10 +19429,7 @@ function runQueueWithConcurrency(items, worker, concurrency, onProgress){
 async function uploadOnePhoto(t, file, caption, uploadBatchId){
   try{
     var uploadActor=currentActorId(),driveAttachment=null,previewFile=file;
-    if(window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(file)){
-      try{driveAttachment=await window.DTGAutomaticAttachments.upload(file,t);previewFile=driveAttachment.previewFile;}
-      catch(driveErr){var _dOff=driveErr&&(driveErr.code==='GOOGLE_NOT_CONNECTED'||driveErr.code==='LIBRARY_DISABLED'||driveErr.code==='INTEGRATIONS_DISABLED');if(!_dOff)throw driveErr;}
-    }
+    if(window.DTGAutomaticAttachments&&window.DTGAutomaticAttachments.shouldDrive(file)){driveAttachment=await window.DTGAutomaticAttachments.upload(file,t);previewFile=driveAttachment.previewFile;}
     var blob = previewFile?await resizeImageToBlob(previewFile,1280,0.8):null;
     /* §23: bug real de la auditoría — resizeImageToBlob() SIEMPRE produce
        JPEG (y se sube con contentType: image/jpeg, línea de abajo), pero la
