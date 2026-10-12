@@ -3150,6 +3150,14 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .cxc-row-cliente{ font-weight:650; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cxc-row-folio{ font-family:var(--font-mono); font-size:12px; color:var(--text-faint); font-weight:500; }
 .cxc-row-work{ font-size:12px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cxc-photos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.cxc-photo{display:grid;place-items:center;width:56px;height:56px;flex:0 0 56px;padding:0;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-muted);cursor:pointer;}
+.cxc-photo img{display:block;width:100%;height:100%;object-fit:cover;}
+.cxc-photo:hover{border-color:var(--accent);}
+.cxc-photo:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.cob-t-work{min-width:0;overflow-wrap:anywhere;}
+.cxc-photos-empty{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-faint);}
+@media(max-width:880px){.cob-t{grid-template-columns:auto minmax(0,1fr) auto;}.cob-t-work{grid-column:2/-1;}.cob-t>b{grid-column:2;}.cob-t>.btn{grid-column:3;}}
 .cxc-row-mid{ display:flex; flex-direction:column; gap:3px; min-width:0; }
 .cxc-money-line{ font-size:12.5px; color:var(--text-muted); display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .cxc-money-line .i{ color:var(--gold); }
@@ -10662,6 +10670,14 @@ function fmtAgeDays(days){
   if(days === 1) return "hace 1 día";
   return "hace " + days + " días";
 }
+/* Reutiliza el índice del ticket (más nuevas primero) y sus URLs privadas. */
+function renderCxcPhotos(t){
+  var photos = ticketPhotos(t);
+  if(!photos.length) return '<div class="cxc-photos cxc-photos-empty">' + icon("image") + 'Sin fotos</div>';
+  return '<div class="cxc-photos" role="group" aria-label="Fotos recientes del ticket #' + t.seq + '">' + photos.slice(0,3).map(function(p,i){
+    return '<button type="button" class="cxc-photo" data-cob="photo" data-ticket="' + escapeHtml(t.id) + '" data-index="' + i + '" aria-label="Abrir foto ' + (i+1) + ' del ticket #' + t.seq + '"><img loading="lazy" data-storage-path="' + escapeHtml(p.storagePath) + '" data-storage-bucket="' + escapeHtml(p.bucket || FILES_BUCKET) + '" alt="Foto reciente del ticket #' + t.seq + '"></button>';
+  }).join("") + '</div>';
+}
 function renderCxcRow(r){
   var t = r.t, f = r.f;
   var c = t.clienteId ? findCliente(t.clienteId) : null;
@@ -10688,6 +10704,7 @@ function renderCxcRow(r){
         '<div class="cxc-row-idtext">' +
           '<div class="cxc-row-cliente">' + escapeHtml(sidebarClienteLabel(t)) + ' <span class="cxc-row-folio">#' + t.seq + "</span></div>" +
           '<div class="cxc-row-work">' + escapeHtml(sidebarProductoPrincipal(t)) + "</div>" +
+          renderCxcPhotos(t) +
         "</div>" +
       "</div>" +
       '<div class="cxc-row-mid">' +
@@ -27958,7 +27975,7 @@ function cobStatement(g){var lines=['Estado de cuenta · '+g.cliente,'Design To 
 function cobWaText(g){var c=g.clienteId?findCliente(g.clienteId):null,name=(c&&c.nombre)||g.cliente;return 'Hola '+name+', le escribo de Design To Go. '+(g.rows.length===1?'Su pedido #'+g.rows[0].t.seq+' tiene un saldo pendiente de '+fmtMoney(g.saldo)+'.':'Tiene '+g.rows.length+' pedidos con saldo pendiente, en total '+fmtMoney(g.saldo)+'.')+' ¿Cuándo podemos recibir su pago? Gracias.';}
 function cobGroupCard(g){var c=g.clienteId?findCliente(g.clienteId):null,phone=c&&c.telefono,flag=g.promiseOver?'<span class="cob-flag red">PROMESA VENCIDA</span>':(g.toDo?'<span class="cob-flag amber">COBRAR HOY</span>':(g.allFuture?'<span class="cob-flag green">PROMETIDO '+escapeHtml(fmtDateOnlyShort(g.promise))+'</span>':''));
  return '<article class="cob-card'+(g.promiseOver?' over':'')+'"><div class="cob-top"><div><h3>'+escapeHtml(g.cliente)+'</h3><small>'+g.rows.length+(g.rows.length===1?' ticket':' tickets')+(g.oldest>=0?' · el más viejo '+escapeHtml(fmtAgeDays(g.oldest)):'')+' · '+(g.last?'último contacto '+escapeHtml(fmtDateOnlyShort(g.last)):'<b>sin contactar</b>')+'</small></div><div class="cob-money"><b>'+escapeHtml(fmtMoney(g.saldo))+'</b>'+flag+'</div></div>'+
- '<div class="cob-tickets">'+g.rows.map(function(r){return '<div class="cob-t"><button type="button" class="pay-ticket" data-cob="open" data-ticket="'+r.t.id+'">#'+r.t.seq+'</button><span>'+escapeHtml((r.t.productos||[]).map(function(p){return p.desc;}).slice(0,2).join(', ')||'Sin productos')+'</span><span class="cob-t-last">'+(r.last?escapeHtml((r.last.channel||'')+(r.last.note?': '+r.last.note:'')):'')+'</span><b>'+escapeHtml(fmtMoney(r.f.saldo))+'</b><button type="button" class="btn btn-sm btn-primary" data-action="cxc-pago-open" data-ticket="'+r.t.id+'">Cobrar</button></div>';}).join('')+'</div>'+
+ '<div class="cob-tickets">'+g.rows.map(function(r){return '<div class="cob-t"><button type="button" class="pay-ticket" data-cob="open" data-ticket="'+r.t.id+'">#'+r.t.seq+'</button><div class="cob-t-work"><span>'+escapeHtml((r.t.productos||[]).map(function(p){return p.desc;}).slice(0,2).join(', ')||'Sin productos')+'</span>'+renderCxcPhotos(r.t)+'</div><span class="cob-t-last">'+(r.last?escapeHtml((r.last.channel||'')+(r.last.note?': '+r.last.note:'')):'')+'</span><b>'+escapeHtml(fmtMoney(r.f.saldo))+'</b><button type="button" class="btn btn-sm btn-primary" data-action="cxc-pago-open" data-ticket="'+r.t.id+'">Cobrar</button></div>';}).join('')+'</div>'+
  '<div class="cob-actions"><button type="button" class="btn btn-ghost" data-cob="contact" data-key="'+escapeHtml(g.key)+'">'+icon('phone')+' Registrar contacto / promesa</button>'+(phone?'<a class="btn btn-ghost" href="tel:'+escapeHtml(phone.replace(/[^\d+]/g,''))+'">'+icon('phone')+' Llamar</a>'+waButton(phone,{cls:'wa-btn-sm',text:cobWaText(g)}):'')+'<button type="button" class="btn btn-ghost" data-cob="statement" data-key="'+escapeHtml(g.key)+'">Copiar estado de cuenta</button></div></article>';}
 function cobForm(d){var f=UI.cob.form;if(!f)return '';var g=d.groups.find(function(x){return x.key===f;});if(!g)return '';return '<div class="cierre-modal-overlay" id="cob-form"><div class="cierre-modal" role="dialog" aria-modal="true" aria-label="Registrar contacto"><div class="cierre-modal-title">Contacto con '+escapeHtml(g.cliente)+'</div><div class="cierre-modal-sub">Debe '+escapeHtml(fmtMoney(g.saldo))+' en '+g.rows.length+' ticket(s)</div><div class="popover-form"><label>Cómo<select id="cob-channel">'+COB_CHANNELS.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></label><label>Qué dijo<input id="cob-note" type="text" maxlength="160" placeholder="Ej. Dice que paga el viernes"></label><label>Prometió pagar el<input id="cob-promise" type="date" min="'+DATE_INPUT_MIN+'" max="'+DATE_INPUT_MAX+'"></label></div><div class="popover-actions"><button type="button" class="btn btn-ghost" data-cob="form-cancel">Cancelar</button><button type="button" class="btn btn-primary" data-cob="form-save" data-key="'+escapeHtml(g.key)+'">Guardar</button></div></div></div>';}
 var cobOldView=renderCxcView;
@@ -27974,6 +27991,7 @@ renderCxcView=function(){var tab=UI.cob.tab,tabs=function(d){return '<div class=
 document.addEventListener('click',async function(e){var b=e.target.closest&&e.target.closest('[data-cob]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();var a=b.dataset.cob;
  if(a==='tab'){UI.cob.tab=b.dataset.tab;render();}
  else if(a==='open'){openTicketById(b.dataset.ticket);}
+ else if(a==='photo'){openTicketGallery(b.dataset.ticket,Number(b.dataset.index)||0);}
  else if(a==='contact'){UI.cob.form=b.dataset.key;render();}
  else if(a==='form-cancel'){UI.cob.form=null;render();}
  else if(a==='statement'){var g=cobData().groups.find(function(x){return x.key===b.dataset.key;});if(g){try{await navigator.clipboard.writeText(cobStatement(g));showToast('Estado de cuenta copiado.');}catch(err){showToast('No se pudo copiar.');}}}
