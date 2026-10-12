@@ -481,6 +481,11 @@ button{cursor:pointer;}
   padding:4px 6px; border-radius:var(--radius-s); line-height:1; display:inline-flex; align-items:center; justify-content:center;
 }
 .cliente-contact-edit:hover, .cliente-contact-edit:active{color:var(--text); background:var(--surface-3);}
+.cliente-phone-form{display:grid;gap:8px;margin:10px 0;max-width:420px;}
+.cliente-phone-form label{font-size:13px;font-weight:600;}
+.cliente-phone-input{width:100%;min-width:0;min-height:44px;padding:10px;font:inherit;font-size:16px;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;}
+.cliente-phone-form .popover-actions{margin:0;justify-content:flex-start;flex-wrap:wrap;}
+.cx-card-phone{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;}
 .cliente-contact-input{
   border:1px solid var(--accent); border-radius:var(--radius-s); padding:4px 8px; font-size:13px;
   background:var(--surface); color:var(--text); font:inherit; flex:1; max-width:240px;
@@ -9802,6 +9807,7 @@ function clienteIdentityControlsHtml(c){
    llame"). */
 function clienteContactLine(c, field, value){
   var label = field === "telefono" ? "Teléfono" : "Email";
+  if(field === "telefono" && UI.clienteFichaEditField === field) return renderClientePhoneForm(c);
   if(UI.clienteFichaEditField === field){
     return (
       '<div class="ephemeral-row cliente-contact-row">' +
@@ -9842,12 +9848,50 @@ function clienteContactBlock(c){
   return clienteContactLine(c, "telefono", c.telefono || "") + clienteContactLine(c, "email", c.email || "");
 }
 function openClienteFichaEdit(field){
+  UI.clientePhoneDraft = null;
   UI.clienteFichaEditField = field;
   UI.pendingFocus = { elId: "cliente-ficha-field-" + field, userInitiated: true };
   render();
 }
 function closeClienteFichaEdit(){
+  UI.clientePhoneDraft = null;
   if(UI.clienteFichaEditField){ UI.clienteFichaEditField = null; render(); }
+}
+function renderClientePhoneButton(c,t){
+  return '<button type="button" class="btn btn-ghost btn-sm" data-action="cliente-phone-open" data-client-id="' + escapeHtml(c ? c.id : '') + '" data-ticket="' + escapeHtml(t ? t.id : '') + '">' + icon("phone") + (c && c.telefono ? 'Editar teléfono' : 'Agregar teléfono') + '</button>';
+}
+function openClientePhoneEditor(clientId,ticketId){
+  var c = findCliente(clientId), t = ticketId && findTicket(ticketId);
+  if(!c && t){ openTicketWarningAction("phone",t.id); return; }
+  if(!c) return;
+  UI.contactPanel = { clienteId:c.id, ticketId:ticketId || null };
+  UI.clientePhoneDraft = null;
+  openClienteFichaEdit("telefono");
+}
+function renderClientePhoneForm(c){
+  var d = UI.clientePhoneDraft;
+  if(!d || d.clientId !== c.id || d.epoch !== AUTH_EPOCH){
+    d = UI.clientePhoneDraft = { clientId:c.id, value:c.telefono || '', saving:false, epoch:AUTH_EPOCH };
+    wsSnapshot('clientes',c.id,c);
+  }
+  return '<form class="cliente-phone-form" data-client-phone-form="' + escapeHtml(c.id) + '"><label for="cliente-ficha-field-telefono">Teléfono</label><input class="cliente-phone-input" id="cliente-ficha-field-telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="956 561 2970 o +52 868 123 4567" value="' + escapeHtml(d.value) + '"' + (d.saving ? ' disabled' : '') + '><div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="cliente-phone-cancel"' + (d.saving ? ' disabled' : '') + '>Cancelar</button><button type="submit" class="btn btn-primary"' + (d.saving ? ' disabled' : '') + '>' + (d.saving ? 'Guardando…' : 'Guardar teléfono') + '</button></div></form>';
+}
+async function saveClientePhoneForm(form){
+  var d = UI.clientePhoneDraft;
+  if(!d || d.saving || d.clientId !== form.getAttribute('data-client-phone-form') || d.epoch !== AUTH_EPOCH) return;
+  var raw = form.querySelector('input').value.trim(), digits = raw.replace(/\D/g,'');
+  d.value = raw;
+  if(!/^\+?[\d\s().-]+$/.test(raw) || digits.length < 10 || digits.length > 14){ showToast('Escribe un teléfono de 10 dígitos, con lada de país si corresponde.'); return; }
+  var c = findCliente(d.clientId);
+  if(!c) return;
+  var value = digits.length === 10 ? formatPhoneDigits(digits) : raw, epoch = AUTH_EPOCH;
+  d.saving = true; renderKeepingLiveInputs();
+  try{
+    var ok = c.telefono === value || await updateClienteCore(c.id,{telefono:value});
+    if(epoch !== AUTH_EPOCH || UI.clientePhoneDraft !== d) return;
+    if(ok){ UI.clienteFichaEditField = null; UI.clientePhoneDraft = null; render(); showToast('Teléfono guardado.'); }
+  }catch(err){ if(epoch === AUTH_EPOCH) userError('Guardar teléfono',err); }
+  finally{ d.saving = false; if(epoch === AUTH_EPOCH && UI.clientePhoneDraft === d) renderKeepingLiveInputs(); }
 }
 /* Guardado directo, sin banner de confirmación — a diferencia de
    /editarcliente (que sí necesita confirmar porque interpreta texto libre
@@ -10712,7 +10756,7 @@ function renderCxcRow(r){
         '<span class="cxc-meta">' + icon("package-check") + "Entregado " + (t.entregadoAt ? fmtDateShort(t.entregadoAt) : "—") + " · " + fmtAgeDays(r.days) + " " + agingChip + "</span>" +
         (t.responsable ? '<span class="cxc-meta">' + responsibleChip(t.responsable) + "</span>" : "") +
         (t.queSigue ? '<span class="cxc-meta cxc-quesigue">' + icon("arrow-right") + escapeHtml(t.queSigue) + "</span>" : "") +
-        ((phone || email) ? '<span class="cxc-meta cxc-contacts">' + phone + email + "</span>" : "") +
+        '<span class="cxc-meta cxc-contacts">' + phone + email + renderClientePhoneButton(c,t) + "</span>" +
         '<span class="cxc-meta cxc-dq">' + renderZoneChip(t) + renderTicketWarnings(t) + "</span>" +
       "</div>" +
       saldoHtml +
@@ -21442,6 +21486,7 @@ function closeContactPanel(){
      teléfono/email que hubiera quedado abierta dentro de él, sin guardar —
      mismo criterio que closeClienteFichaEdit() en el resto de la app. */
   UI.clienteFichaEditField = null;
+  UI.clientePhoneDraft = null;
   render();
 }
 function renderContactPanel(){
@@ -24845,6 +24890,16 @@ function wireEvents(){
   root.querySelectorAll('[data-action="cliente-contact-edit"]').forEach(function(b){
     b.addEventListener("click", function(){ openClienteFichaEdit(b.getAttribute("data-field")); });
   });
+  root.querySelectorAll('[data-action="cliente-phone-open"]').forEach(function(b){
+    b.addEventListener('click',function(){ openClientePhoneEditor(b.getAttribute('data-client-id'),b.getAttribute('data-ticket')); });
+  });
+  root.querySelectorAll('[data-action="cliente-phone-cancel"]').forEach(function(b){ b.addEventListener('click',closeClienteFichaEdit); });
+  root.querySelectorAll('[data-client-phone-form]').forEach(function(form){
+    form.addEventListener('submit',function(e){ e.preventDefault(); saveClientePhoneForm(form); });
+    var input = form.querySelector('input');
+    input.addEventListener('input',function(){ if(UI.clientePhoneDraft) UI.clientePhoneDraft.value = input.value; });
+    input.addEventListener('keydown',function(e){ if(e.key === 'Escape' && !(UI.clientePhoneDraft && UI.clientePhoneDraft.saving)){ e.preventDefault(); e.stopPropagation(); closeClienteFichaEdit(); } });
+  });
   root.querySelectorAll(".cliente-contact-input").forEach(function(inp){
     inp.addEventListener("keydown", function(e){
       if(e.key === "Enter"){ e.preventDefault(); inp.blur(); }
@@ -27976,7 +28031,7 @@ function cobWaText(g){var c=g.clienteId?findCliente(g.clienteId):null,name=(c&&c
 function cobGroupCard(g){var c=g.clienteId?findCliente(g.clienteId):null,phone=c&&c.telefono,flag=g.promiseOver?'<span class="cob-flag red">PROMESA VENCIDA</span>':(g.toDo?'<span class="cob-flag amber">COBRAR HOY</span>':(g.allFuture?'<span class="cob-flag green">PROMETIDO '+escapeHtml(fmtDateOnlyShort(g.promise))+'</span>':''));
  return '<article class="cob-card'+(g.promiseOver?' over':'')+'"><div class="cob-top"><div><h3>'+escapeHtml(g.cliente)+'</h3><small>'+g.rows.length+(g.rows.length===1?' ticket':' tickets')+(g.oldest>=0?' · el más viejo '+escapeHtml(fmtAgeDays(g.oldest)):'')+' · '+(g.last?'último contacto '+escapeHtml(fmtDateOnlyShort(g.last)):'<b>sin contactar</b>')+'</small></div><div class="cob-money"><b>'+escapeHtml(fmtMoney(g.saldo))+'</b>'+flag+'</div></div>'+
  '<div class="cob-tickets">'+g.rows.map(function(r){return '<div class="cob-t"><button type="button" class="pay-ticket" data-cob="open" data-ticket="'+r.t.id+'">#'+r.t.seq+'</button><div class="cob-t-work"><span>'+escapeHtml((r.t.productos||[]).map(function(p){return p.desc;}).slice(0,2).join(', ')||'Sin productos')+'</span>'+renderCxcPhotos(r.t)+'</div><span class="cob-t-last">'+(r.last?escapeHtml((r.last.channel||'')+(r.last.note?': '+r.last.note:'')):'')+'</span><b>'+escapeHtml(fmtMoney(r.f.saldo))+'</b><button type="button" class="btn btn-sm btn-primary" data-action="cxc-pago-open" data-ticket="'+r.t.id+'">Cobrar</button></div>';}).join('')+'</div>'+
- '<div class="cob-actions"><button type="button" class="btn btn-ghost" data-cob="contact" data-key="'+escapeHtml(g.key)+'">'+icon('phone')+' Registrar contacto / promesa</button>'+(phone?'<a class="btn btn-ghost" href="tel:'+escapeHtml(phone.replace(/[^\d+]/g,''))+'">'+icon('phone')+' Llamar</a>'+waButton(phone,{cls:'wa-btn-sm',text:cobWaText(g)}):'')+'<button type="button" class="btn btn-ghost" data-cob="statement" data-key="'+escapeHtml(g.key)+'">Copiar estado de cuenta</button></div></article>';}
+ '<div class="cob-actions">'+renderClientePhoneButton(c,g.rows[0]&&g.rows[0].t)+'<button type="button" class="btn btn-ghost" data-cob="contact" data-key="'+escapeHtml(g.key)+'">'+icon('phone')+' Registrar contacto / promesa</button>'+(phone?'<a class="btn btn-ghost" href="tel:'+escapeHtml(phone.replace(/[^\d+]/g,''))+'">'+icon('phone')+' Llamar</a>'+waButton(phone,{cls:'wa-btn-sm',text:cobWaText(g)}):'')+'<button type="button" class="btn btn-ghost" data-cob="statement" data-key="'+escapeHtml(g.key)+'">Copiar estado de cuenta</button></div></article>';}
 function cobForm(d){var f=UI.cob.form;if(!f)return '';var g=d.groups.find(function(x){return x.key===f;});if(!g)return '';return '<div class="cierre-modal-overlay" id="cob-form"><div class="cierre-modal" role="dialog" aria-modal="true" aria-label="Registrar contacto"><div class="cierre-modal-title">Contacto con '+escapeHtml(g.cliente)+'</div><div class="cierre-modal-sub">Debe '+escapeHtml(fmtMoney(g.saldo))+' en '+g.rows.length+' ticket(s)</div><div class="popover-form"><label>Cómo<select id="cob-channel">'+COB_CHANNELS.map(function(c){return '<option>'+c+'</option>';}).join('')+'</select></label><label>Qué dijo<input id="cob-note" type="text" maxlength="160" placeholder="Ej. Dice que paga el viernes"></label><label>Prometió pagar el<input id="cob-promise" type="date" min="'+DATE_INPUT_MIN+'" max="'+DATE_INPUT_MAX+'"></label></div><div class="popover-actions"><button type="button" class="btn btn-ghost" data-cob="form-cancel">Cancelar</button><button type="button" class="btn btn-primary" data-cob="form-save" data-key="'+escapeHtml(g.key)+'">Guardar</button></div></div></div>';}
 var cobOldView=renderCxcView;
 renderCxcView=function(){var tab=UI.cob.tab,tabs=function(d){return '<div class="work-task-views cob-tabs" role="tablist">'+[['hoy','Cobrar hoy'+(d?' · '+d.hoy.length:'')],['clientes','Por cliente'+(d?' · '+d.groups.length:'')],['tickets','Todos los tickets']].map(function(v){return '<button type="button" role="tab" aria-selected="'+(tab===v[0])+'" class="btn '+(tab===v[0]?'btn-primary':'btn-ghost')+'" data-cob="tab" data-tab="'+v[0]+'">'+v[1]+'</button>';}).join('')+'</div>';};
@@ -28266,7 +28321,7 @@ function cxButton(a,text,attrs){return '<button type="button" class="btn btn-gho
 function cxStars(c,editable){return ['frequentClient','highTicket'].map(function(k,i){var label=i?'Ticket Alto':'Cliente Frecuente';return editable?'<button type="button" class="cx-star '+(i?'gold':'silver')+(c[k]?' on':'')+'" data-cx="flag" data-client="'+c.id+'" data-flag="'+k+'" title="'+label+'" aria-label="'+label+'" aria-pressed="'+!!c[k]+'"'+(CX.busy?' disabled':'')+'>★<span>'+label+'</span></button>':c[k]?'<span class="cx-star '+(i?'gold':'silver')+' on" title="'+label+'" aria-label="'+label+'">★</span>':'';}).join('');}
 function cxThumb(t){var path=ticketThumbPhotoPath(t);return '<span class="cx-thumb">'+(path?'<img draggable="false" loading="lazy" data-storage-path="'+escapeHtml(path)+'" data-storage-bucket="'+escapeHtml(ticketThumbPhotoBucket(t))+'" alt="Ticket #'+t.seq+'">':icon('image'))+'</span>';}
 function cxTicketPill(t,drag){return '<div class="cx-ticket-pill"'+(drag?' draggable="true" data-cx-drag="'+t.id+'"':'')+'>'+cxThumb(t)+'<button type="button" data-action="open-ticket" data-id="'+t.id+'"><strong>#'+t.seq+' · '+escapeHtml(kanbanCardProductosContext(t).text||'Ticket')+'</strong><small>'+escapeHtml(ticketEstadoLabel(ticketEstado(t)))+' · '+escapeHtml(t.fechaCompromiso?fmtDateOnlyShort(t.fechaCompromiso):'Sin fecha de entrega')+'</small></button>'+(drag&&CX.panel?cxButton('choose-ticket','Asociar','data-ticket="'+t.id+'" aria-label="Asociar ticket #'+t.seq+'"'):'')+'</div>';}
-function cxCard(c){var ts=cxTickets(c),open=ts.filter(function(t){return !ticketIsCerrado(t);}).length;return '<article class="cx-card" data-cx-drop="'+c.id+'">'+(CX.merge?'<label class="cx-check"><input type="checkbox" data-cx-select="'+c.id+'"'+(CX.selected.indexOf(c.id)>=0?' checked':'')+'>Seleccionar para fusionar</label>':'')+'<button class="cx-card-heading" data-action="open-cliente-ficha" data-client-id="'+c.id+'">'+clientAvatar(c,{size:'lg',noIdentity:true})+'<span><strong>'+escapeHtml(c.nombre)+'</strong><small>'+escapeHtml(c.empresa||'')+'</small></span>'+cxStars(c,false)+'</button><div class="cx-card-meta"><b>'+open+' abierto'+(open===1?'':'s')+'</b><span>'+ts.length+' tickets</span></div><div class="cx-ticket-previews">'+ts.slice(0,4).map(function(t){return cxTicketPill(t,false);}).join('')+(!ts.length?'<p class="muted">Sin tickets todavía.</p>':'')+'</div>'+cxButton('associate','Asociar tickets','data-client="'+c.id+'"')+'</article>';}
+function cxCard(c){var ts=cxTickets(c),open=ts.filter(function(t){return !ticketIsCerrado(t);}).length;return '<article class="cx-card" data-cx-drop="'+c.id+'">'+(CX.merge?'<label class="cx-check"><input type="checkbox" data-cx-select="'+c.id+'"'+(CX.selected.indexOf(c.id)>=0?' checked':'')+'>Seleccionar para fusionar</label>':'')+'<button class="cx-card-heading" data-action="open-cliente-ficha" data-client-id="'+c.id+'">'+clientAvatar(c,{size:'lg',noIdentity:true})+'<span><strong>'+escapeHtml(c.nombre)+'</strong><small>'+escapeHtml(c.empresa||'')+'</small></span>'+cxStars(c,false)+'</button><div class="cx-card-phone">'+(c.telefono?'<a class="cliente-contact-link" href="tel:'+escapeHtml(c.telefono.replace(/[^\d+]/g,''))+'">'+escapeHtml(c.telefono)+'</a>':'')+renderClientePhoneButton(c)+'</div><div class="cx-card-meta"><b>'+open+' abierto'+(open===1?'':'s')+'</b><span>'+ts.length+' tickets</span></div><div class="cx-ticket-previews">'+ts.slice(0,4).map(function(t){return cxTicketPill(t,false);}).join('')+(!ts.length?'<p class="muted">Sin tickets todavía.</p>':'')+'</div>'+cxButton('associate','Asociar tickets','data-client="'+c.id+'"')+'</article>';}
 function cxPanels(){var h='';if(CX.panel){var list=(STATE.tickets||[]).filter(function(t){return ticketMatchesSearch(t,CX.query);}).sort(function(a,b){return cxDate(b)-cxDate(a);});h+='<aside class="cx-source" role="dialog" aria-label="Asociar tickets"><header><h2>Asociar tickets</h2>'+cxButton('close-panel','Cerrar')+'</header><p>Arrastra a una tarjeta de cliente o pulsa Asociar.</p><label>Cliente destino<select id="cx-destination"><option value="">Seleccionar cliente…</option>'+cxClients().map(function(c){return '<option value="'+c.id+'"'+(CX.target===c.id?' selected':'')+'>'+escapeHtml(c.nombre)+'</option>';}).join('')+'</select></label>'+(CX.target?'<div class="cx-destination-drop" data-cx-drop="'+CX.target+'">Soltar aquí para asociar a <strong>'+escapeHtml(findCliente(CX.target).nombre)+'</strong></div>':'')+'<label>Buscar ticket<input id="cx-ticket-search" type="search" value="'+escapeHtml(CX.query)+'" placeholder="Folio, cliente o trabajo"></label><div class="cx-source-list">'+list.map(function(t){return cxTicketPill(t,true);}).join('')+(!list.length?'<p>Sin coincidencias.</p>':'')+'</div></aside>';}
  if(CX.pending){var p=CX.pending,t=findTicket(p.ticket),old=p.source&&findCliente(p.source),target=findCliente(p.target),remaining=old?cxTickets(old).filter(function(x){return x.id!==p.ticket;}).length:0;h+='<div class="cierre-modal-overlay cx-modal"><section class="cierre-modal dc-sheet" role="dialog" aria-modal="true" aria-label="Confirmar asociación"><h2>Asociar #'+(t?t.seq:'')+' a '+escapeHtml(target.nombre)+'</h2>'+(old?'<p>¿Qué quieres hacer con '+escapeHtml(old.nombre)+'?</p><p class="muted">'+remaining+' ticket'+(remaining===1?'':'s')+' restante'+(remaining===1?'':'s')+'. Fusionar reúne todos sus tickets, tareas y notas.</p>':'<p>Este ticket no tiene cliente asociado.</p>')+'<div class="cx-modal-actions">'+(old?cxButton('resolve','Eliminar','data-resolution="delete"'+(remaining?' disabled title="El cliente aún tiene otros tickets"':''))+cxButton('resolve','Fusionar','data-resolution="merge"'):'')+cxButton('resolve',old?'Dejar como está':'Asociar','data-resolution="keep"')+cxButton('cancel-pending','Cancelar')+'</div></section></div>';}
  if(CX.merge&&CX.selected.length>1){h+='<div class="cx-merge-bar"><label>Conservar como cliente principal<select id="cx-merge-target">'+CX.selected.map(function(id){var c=findCliente(id);return '<option value="'+id+'"'+(CX.target===id?' selected':'')+'>'+escapeHtml(c.nombre)+'</option>';}).join('')+'</select></label><span>Se reunirán los tickets, fotos, tareas y notas de '+CX.selected.length+' clientes.</span>'+cxButton('merge-review','Revisar fusión')+'</div>';}
