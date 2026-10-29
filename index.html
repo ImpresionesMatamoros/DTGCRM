@@ -4665,13 +4665,10 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* SIGUIENTE ACTUALIZACIÓN §25/§26: selector "Marcar como…" — null = cerrado.
      { source: "composer"|"note", ticketId, noteId, text, navIndex } */
   markerPicker: null,
-  /* Ronda "PWA + Tickets + Biblioteca": UI.ticketsView es preferencia LOCAL
-     persistida (ver loadUi/saveUi) — "cómo quiero ver mis tickets", no algo
-     por ticket. UI.ticketsExplorer/UI.biblioteca son estado de SESIÓN (no
-     localStorage): búsqueda/filtros/scroll de cada explorador sobreviven a
-     abrir un ticket/foto y volver, pero no tienen por qué sobrevivir a
-     cerrar la pestaña — no son una preferencia, son "dónde estabas". */
-  ticketsView: "kanban",
+  /* Tickets comienza en Detalles + Abiertas para todos los miembros.
+     Las vistas y filtros pueden cambiarse durante la sesión; al recargar,
+     cambiar de cuenta o entrar al módulo se aplica resetTicketsEntry(). */
+  ticketsView: "details",
   /* Ronda "Refinamiento operativo" §17-21: optionsOpen/sort son estado de
      SESIÓN (como el resto de ticketsExplorer, no localStorage) — "abierto/
      cerrado el panel de opciones" y "cómo ordenar ahora" no son preferencias
@@ -4687,7 +4684,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      agregue un panel más). moreFiltersOpen es el segundo nivel ("Más filtros >")
      DENTRO del panel de Filtros — Marcador/Cliente/Responsable/Fecha, colapsado
      por default para que el panel de filtros nazca corto (§19). */
-  ticketsExplorer: { search:"", estado:"todos", marker:null, clienteId:null, responsable:"", fecha:"todas", sort:"actividad", optionsOpen:false, moreFiltersOpen:false, quickCreateOpen:false, selectedCardId:null, thumbMoreTicketId:null, scrollTop:0 },
+  ticketsExplorer: { search:"", estado:"abierto", marker:null, clienteId:null, responsable:"", fecha:"todas", sort:"actividad", optionsOpen:false, moreFiltersOpen:false, quickCreateOpen:false, selectedCardId:null, thumbMoreTicketId:null, scrollTop:0 },
   biblioteca: { search:"", clienteId:null, fecha:"todas", subidoPor:"", soloLogos:false, scrollTop:0 },
   bibliotecaViewer: null,
   /* Tickets Workbench §22-24: galería de fotos de UN ticket, abierta al
@@ -5245,6 +5242,13 @@ function joinWithDaySeparators(items){
 
 /* ---------------- local UI-only storage (never the source of truth) ---------------- */
 
+// Shared entry policy for every member, including reloads and account switches.
+// In-session view/filter choices remain available until the next module entry.
+function resetTicketsEntry(){
+  UI.ticketsView = "details";
+  UI.search = "";
+  UI.ticketsExplorer = JSON.parse(UI_INITIAL_SNAPSHOT).ticketsExplorer;
+}
 function loadUi(){
   try{
     var raw = localStorage.getItem("dtg_ui");
@@ -5268,7 +5272,7 @@ function loadUi(){
          porque el mismo bug afectaría a "calendar" si no se incluye desde
          el principio. */
       var validViews = { thumbnails:1, icons:1, list:1, details:1, kanban:1, gantt:1 };
-      UI.ticketsView = validViews[parsed.ticketsView] ? parsed.ticketsView : "thumbnails";
+      UI.ticketsView = validViews[parsed.ticketsView] ? parsed.ticketsView : "details";
       /* Calendar Workbench §44: solo view/mios se recuerdan entre sesiones
          (preferencia de presentación) — cursor/filtros/paneles abiertos
          nunca se persisten, mismo criterio que UI.ticketsExplorer. */
@@ -5410,7 +5414,7 @@ function deviceResetIdentity(){
   if(DTG_TAB_CH){try{DTG_TAB_CH.close();}catch(e){}}DTG_TAB_CH=null;clearInterval(dtgTabTimer);dtgTabTimer=null;DTG_TABS={};
   STATE={meta:{queSigueOptions:[],teamNames:[]},tickets:[],clientes:[],teamPosts:[],feedReactions:[],profiles:[],conversations:[],chatReadState:[],chatState:null};
   AUTH_SESSION=null;CURRENT_PROFILE=null;AUTH_ERROR='';FATAL_ERROR=null;AUTH_STATUS='loading';
-  UI=JSON.parse(UI_INITIAL_SNAPSHOT);UI.mainView="tickets";UI.ticketsView="kanban";UI.selectedTicketId=null;UI.selectedClienteId=null;UI.waChatOpen=false;MOBILE_DISCLOSURE=Object.create(null);
+  UI=JSON.parse(UI_INITIAL_SNAPSHOT);resetTicketsEntry();UI.mainView="tickets";UI.selectedTicketId=null;UI.selectedClienteId=null;UI.waChatOpen=false;MOBILE_DISCLOSURE=Object.create(null);
   DEVICE_BROWSER_NOTIFICATIONS.forEach(function(n){try{n.close();}catch(e){}});DEVICE_BROWSER_NOTIFICATIONS=[];
   closePhotoZoom();renderChatNotifs();renderAlerts();renderRtBadge();
   try{history.replaceState(null,'',location.pathname);}catch(e){}
@@ -6765,24 +6769,13 @@ function goToCxc(){
   UI.pendingFocus = "composer"; UI.sidebarOpen = false;
   saveUi(); render();
 }
-/* Bug B ("no existe el explorador general de tickets"): mismo patrón exacto
-   que las otras vistas de arriba — un solo punto de entrada, ningún modelo
-   de datos nuevo. A diferencia de esas, NO se resetea UI.ticketsExplorer
-   (búsqueda/filtros/scroll) al entrar — entrar "de nuevo" a Tickets desde
-   el nav-stub conserva lo último que se buscó/filtró, y abrir un ticket
-   desde aquí y volver también, que es justo lo que pide la ronda ("Abrir y
-   regresar"). Solo /clear-equivalente sería resetearlo a mano, y no hay tal
-   comando — es intencional: es más útil recordar que olvidar. */
+/* Entrada común al módulo: misma vista inicial para todo el equipo. */
 function goToTickets(){
   UI.selectedTicketId = null; UI.mainView = "tickets"; UI.selectedClienteId = null; UI.clienteReturnTicketId = null; UI.deepLinkNotFound = false;
   UI.composer = null; UI.docDraft = null; UI.viewingDocId = null; UI.slashMenuOpen = false; UI.pendingConfirm = null; UI.smartActions = null; resetPhotoBatch(); UI.headerMoreOpen = false; UI.markerPicker = null; UI.totalDraft = null;
-  /* UX Flow Patch §6: cada entrada al módulo Tickets abre en Responsables +
-     Abiertos — elimina los 2 clics repetidos que hacía el equipo todos los
-     días. Las demás vistas/filtros siguen existiendo tal cual, solo cambia
-     el punto de partida; se puede cambiar de vista/filtro normalmente
-     después de entrar, eso NO se toca ni se persiste distinto a hoy. */
-  UI.ticketsView = "kanban";
-  UI.ticketsExplorer.estado = "abierto";
+  /* Cada entrada comienza en Detalles + Abiertas para todo el equipo.
+     Limpia búsquedas/filtros anteriores que podrían ocultar tickets abiertos. */
+  resetTicketsEntry();
   UI.pendingFocus = { elId: "tickets-explorer-search" };
   UI.sidebarOpen = false;
   saveUi(); render();
@@ -11593,7 +11586,7 @@ function renderTicketsExplorerView(){
     UI.ticketsExplorer.thumbMoreTicketId = null;
   }
   var toolbar = renderTicketsToolbar(list);
-  var view = UI.ticketsView || "thumbnails";
+  var view = UI.ticketsView || "details";
   var body;
   if(!list.length){
     body = '<div class="empty-list tickets-empty">No encontramos tickets con estos filtros.</div>';
@@ -27167,8 +27160,9 @@ var cfUnsubscribeRealtime=unsubscribeRealtime;unsubscribeRealtime=function(){if(
 
 async function boot(){
   loadUi();
-  // Kanban is the default workspace; explicit ticket/chat URLs still resolve below.
-  UI.selectedTicketId=null;UI.mainView="tickets";UI.ticketsView="kanban";UI.selectedClienteId=null;UI.astraConversationId=null;UI.astraThreadRoot=null;UI.waChatOpen=false;UI.waToolsOpen=false;
+  // Details + open tickets for every member; explicit ticket/chat URLs still resolve below.
+  resetTicketsEntry();
+  UI.selectedTicketId=null;UI.mainView="tickets";UI.selectedClienteId=null;UI.astraConversationId=null;UI.astraThreadRoot=null;UI.waChatOpen=false;UI.waToolsOpen=false;
   /* PARTE E — ?display=produccion | planeacion | cxc encienden la TV en su
      tablero. `?display=1` y `#display` siguen entrando a Producción: hay PCs
      del taller configuradas así y romperlas no arregla nada. Mismo mecanismo
