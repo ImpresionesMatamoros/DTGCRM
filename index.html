@@ -146,6 +146,21 @@
 .pc-purple,.resp-theme-purple{--pc:#D08CFF; --pc-soft:rgba(208,140,255,.16); --resp-color:#D08CFF;}
 .pc-pink,.resp-theme-pink{--pc:#F472B6; --pc-soft:rgba(244,114,182,.16); --resp-color:#F472B6;}
 .pc-silver,.resp-theme-silver{--pc:#CBD5E1; --pc-soft:rgba(203,213,225,.14); --resp-color:#CBD5E1;}
+.pc-sky,.resp-theme-sky{--pc:#7DD3FC; --pc-soft:rgba(125,211,252,.16); --resp-color:#7DD3FC;}
+.pc-aqua,.resp-theme-aqua{--pc:#67E8F9; --pc-soft:rgba(103,232,249,.16); --resp-color:#67E8F9;}
+.pc-mint,.resp-theme-mint{--pc:#6EE7B7; --pc-soft:rgba(110,231,183,.16); --resp-color:#6EE7B7;}
+.pc-emerald,.resp-theme-emerald{--pc:#34D399; --pc-soft:rgba(52,211,153,.16); --resp-color:#34D399;}
+.pc-olive,.resp-theme-olive{--pc:#BECE70; --pc-soft:rgba(190,206,112,.16); --resp-color:#BECE70;}
+.pc-yellow,.resp-theme-yellow{--pc:#FDE047; --pc-soft:rgba(253,224,71,.16); --resp-color:#FDE047;}
+.pc-gold,.resp-theme-gold{--pc:#E9C46A; --pc-soft:rgba(233,196,106,.16); --resp-color:#E9C46A;}
+.pc-peach,.resp-theme-peach{--pc:#FDBA9A; --pc-soft:rgba(253,186,154,.16); --resp-color:#FDBA9A;}
+.pc-salmon,.resp-theme-salmon{--pc:#FDA4AF; --pc-soft:rgba(253,164,175,.16); --resp-color:#FDA4AF;}
+.pc-rose,.resp-theme-rose{--pc:#F9A8D4; --pc-soft:rgba(249,168,212,.16); --resp-color:#F9A8D4;}
+.pc-fuchsia,.resp-theme-fuchsia{--pc:#E879F9; --pc-soft:rgba(232,121,249,.16); --resp-color:#E879F9;}
+.pc-lavender,.resp-theme-lavender{--pc:#C4B5FD; --pc-soft:rgba(196,181,253,.16); --resp-color:#C4B5FD;}
+.pc-indigo,.resp-theme-indigo{--pc:#A5B4FC; --pc-soft:rgba(165,180,252,.16); --resp-color:#A5B4FC;}
+.pc-periwinkle,.resp-theme-periwinkle{--pc:#B8C0FF; --pc-soft:rgba(184,192,255,.16); --resp-color:#B8C0FF;}
+.pc-slate,.resp-theme-slate{--pc:#94A3B8; --pc-soft:rgba(148,163,184,.16); --resp-color:#94A3B8;}
 /* Iconografía v0.20: UNA familia SVG (trazo 2px, esquinas redondas, estilo
    Lucide, dibujada a mano dentro de este archivo — cero dependencia). El
    ícono hereda color del texto (currentColor) y tamaño de font-size (1em)
@@ -5050,7 +5065,22 @@ var PERSON_COLORS = [
   { id:"violet", label:"Violeta", hex:"#A78BFA" },
   { id:"purple", label:"Púrpura", hex:"#D08CFF" },
   { id:"pink",   label:"Rosa",    hex:"#F472B6" },
-  { id:"silver", label:"Plata",   hex:"#CBD5E1" }
+  { id:"silver", label:"Plata",   hex:"#CBD5E1" },
+  { id:"sky", label:"Celeste", hex:"#7DD3FC" },
+  { id:"aqua", label:"Aguamarina", hex:"#67E8F9" },
+  { id:"mint", label:"Menta", hex:"#6EE7B7" },
+  { id:"emerald", label:"Esmeralda", hex:"#34D399" },
+  { id:"olive", label:"Oliva", hex:"#BECE70" },
+  { id:"yellow", label:"Amarillo", hex:"#FDE047" },
+  { id:"gold", label:"Dorado", hex:"#E9C46A" },
+  { id:"peach", label:"Durazno", hex:"#FDBA9A" },
+  { id:"salmon", label:"Salmón", hex:"#FDA4AF" },
+  { id:"rose", label:"Rosa claro", hex:"#F9A8D4" },
+  { id:"fuchsia", label:"Fucsia", hex:"#E879F9" },
+  { id:"lavender", label:"Lavanda", hex:"#C4B5FD" },
+  { id:"indigo", label:"Índigo", hex:"#A5B4FC" },
+  { id:"periwinkle", label:"Azul lavanda", hex:"#B8C0FF" },
+  { id:"slate", label:"Gris azulado", hex:"#94A3B8" }
 ];
 var PERSON_COLOR_IDS = PERSON_COLORS.map(function(c){ return c.id; });
 function isValidPersonColor(id){ return PERSON_COLOR_IDS.indexOf(id) !== -1; }
@@ -5352,7 +5382,7 @@ var DEVICE_CLIENTS=Object.create(null),DEVICE_AUTH_LISTENERS=Object.create(null)
 var DEVICE_CLIENT_KEY=DEVICE_LEGACY_KEY,DEVICE_SWITCH_BUSY=false,DEVICE_PICKER_OPEN=false,DEVICE_PICKER_ERROR='',DEVICE_LOGIN_EMAIL='';
 var AUTH_EPOCH=0,DTG_AUTH_WRITES=0,DEVICE_BROWSER_NOTIFICATIONS=[];
 function deviceAccounts(){
-  try{var list=JSON.parse(localStorage.getItem(DEVICE_ACCOUNTS_KEY)||'[]');return Array.isArray(list)?list.filter(function(a){return a&&typeof a.id==='string'&&typeof a.key==='string'&&(a.key===DEVICE_LEGACY_KEY||/^dtg-account-[a-z0-9-]+$/i.test(a.key));}):[];}catch(e){return [];}
+  try{var list=JSON.parse(localStorage.getItem(DEVICE_ACCOUNTS_KEY)||'[]');return Array.isArray(list)?list.filter(function(a){return a&&typeof a.id==='string'&&typeof a.key==='string'&&(a.key===DEVICE_LEGACY_KEY||/^dtg-account-[a-z0-9-]+$/i.test(a.key));}).map(function(a){var p=STATE&&STATE.profiles&&STATE.profiles.find(function(p){return p.id===a.id;});return p?Object.assign({},a,{name:p.displayName||a.name,color:p.accentColor||''}):a;}):[];}catch(e){return [];}
 }
 function deviceWriteAccounts(list){try{localStorage.setItem(DEVICE_ACCOUNTS_KEY,JSON.stringify(list));return true;}catch(e){return false;}}
 function deviceSetActive(key){try{if(key)localStorage.setItem(DEVICE_ACTIVE_KEY,key);else localStorage.removeItem(DEVICE_ACTIVE_KEY);}catch(e){}}
@@ -7344,7 +7374,7 @@ function renderAccountMenu(){
         (email ? '<div class="sidebar-account-menu-email">' + escapeHtml(email) + "</div>" : "") + "</div></div>" +
       '<div class="account-menu-section-label">' + icon("palette") + "Mi color" + (myChosen ? "" : ' <span class="account-menu-hint">(automático)</span>') + "</div>" +
       '<div class="color-swatch-grid" role="group" aria-label="Mi color">' + swatches + "</div>" +
-      '<div class="account-menu-hint-line">Así te identifica el equipo en el chat, Responsables y Kanban.</div>' +
+      '<div class="account-menu-hint-line">Elige entre 28 colores para tu nombre y avatar en el chat, Responsables y Kanban.</div>' +
       '<input id="wa-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><button type="button" class="menu-item" data-wa="avatar-pick">'+icon('camera')+'<span>Cambiar foto de perfil</span></button>'+
       '<button type="button" class="menu-item" data-action="edit-name-open">' + icon("pencil") + "<span>Editar nombre</span></button>" +
       '<button type="button" class="menu-item" data-action="doc-terms-open">' + icon("file-text") + "<span>Términos de documentos</span></button>" +
