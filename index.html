@@ -1966,6 +1966,28 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 /* ---- Vista Detalles: tabla en desktop, cards en mobile vía data-label
    (ver @media(max-width:880px) abajo) — mismo HTML/datos siempre. ---- */
 .tickets-details-wrap{overflow-x:auto;}
+.dt-detail-photo{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-muted);padding:0;cursor:pointer;overflow:hidden}
+.dt-detail-photo img{width:100%;height:100%;object-fit:cover}
+.dt-detail-more{padding:4px;color:var(--text-muted);cursor:pointer}
+.dt-detail-task-summary{display:flex;flex-direction:column;gap:2px;text-align:left;border:0;background:none;color:var(--text);padding:4px;cursor:pointer;max-width:190px;min-width:115px}
+.dt-detail-task-summary small{max-width:185px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)}
+.dt-detail-task-summary.empty small{color:var(--text-muted)}
+.dt-detail-tools,.dt-detail-team{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dt-detail-tools .btn,.dt-detail-team .btn{font-size:12px;min-height:32px;padding:5px 9px}
+.dt-detail-tools>span,.dt-detail-team>span{font-size:11px;color:var(--text-muted)}
+.dt-detail-tools [aria-pressed=true],.dt-detail-team [aria-pressed=true]{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px currentColor}
+.tickets-details .dt-detail-expanded>td{padding:0;background:var(--surface)}
+.dt-detail-panel{padding:12px 16px;max-width:850px;white-space:normal}
+.dt-detail-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dt-detail-actions{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.dt-detail-panel .ws-plan{margin:0;max-width:700px}
+.dt-detail-order{margin-top:10px;font-size:12px}
+.dt-detail-order summary{cursor:pointer;color:var(--text-muted);padding:6px 0}
+.dt-detail-order label{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
+.dt-detail-order label>span{min-width:130px;max-width:280px;overflow-wrap:anywhere}
+.dt-detail-order select{max-width:100%;padding:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:5px}
+@media(hover:hover){.dt-detail-photo:not(:has(img)),.dt-detail-more{opacity:.45}.tickets-details-row:hover .dt-detail-photo,.tickets-details-row:focus-within .dt-detail-photo,.tickets-details-row:hover .dt-detail-more,.tickets-details-row:focus-within .dt-detail-more{opacity:1}}
+@media(max-width:880px){.dt-detail-tools .btn,.dt-detail-team .btn,.dt-detail-photo,.dt-detail-more,.dt-detail-panel button,.dt-detail-order select{min-height:44px;min-width:44px}.dt-detail-panel{padding:10px;width:100%;min-width:0}.tickets-details .dt-detail-expanded>td{display:block!important;width:100%!important}.tickets-details .dt-detail-expanded>td:before{display:none}.dt-detail-task-summary,.dt-detail-task-summary small{max-width:100%}.dt-detail-tools>span{display:none}.dt-detail-panel .ws-plan-row{min-width:0}.dt-detail-panel .ws-plan-name{min-width:0}.dt-detail-panel .ws-plan-name strong{overflow-wrap:anywhere}.dt-detail-order select{width:100%}}
 .tickets-details{width:100%; border-collapse:collapse; font-size:12.5px;}
 .tickets-details thead th{
   text-align:left; padding:8px 10px; font-size:12px; text-transform:uppercase; letter-spacing:.04em;
@@ -4688,6 +4710,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
      Las vistas y filtros pueden cambiarse durante la sesión; al recargar,
      cambiar de cuenta o entrar al módulo se aplica resetTicketsEntry(). */
   ticketsView: "details",
+  detailsExpandedTicketId: null, detailsTeamOpen: false, detailsOnlyNoTasks: false,
   /* Ronda "Refinamiento operativo" §17-21: optionsOpen/sort son estado de
      SESIÓN (como el resto de ticketsExplorer, no localStorage) — "abierto/
      cerrado el panel de opciones" y "cómo ordenar ahora" no son preferencias
@@ -5281,6 +5304,11 @@ function joinWithDaySeparators(items){
 function resetTicketsEntry(){
   UI.ticketsView = "details";
   UI.search = "";
+  UI.detailsExpandedTicketId = null;
+  UI.detailsTeamOpen = false;
+  UI.detailsOnlyNoTasks = false;
+  UI.detailsUnassigned = false;
+  UI.detailsOrderOpen = false;
   UI.ticketsExplorer = JSON.parse(UI_INITIAL_SNAPSHOT).ticketsExplorer;
 }
 function loadUi(){
@@ -11561,7 +11589,8 @@ function renderTicketsListPreview(){
 /* ---- Vista Detalles: tabla en desktop, mismas filas se leen como cards en
    mobile vía CSS (data-label + ::before) — NUNCA una quinta vista/renderer
    aparte, mismo HTML/datos en los dos anchos. */
-var TICKETS_DETAILS_COLS = TICKETS_OPERATIONAL_COLS;
+var TICKETS_DETAILS_COLS = TICKETS_OPERATIONAL_COLS.filter(function(label){return label!=="Qué sigue";});
+TICKETS_DETAILS_COLS.splice(3, 0, "Tareas");
 /* §27-30/§81: envoltura genérica para las celdas que abren el editor central
    modal (§42) — un <button> por celda, NUNCA la fila entera (esa regla ahora
    es exclusiva de "#folio ↗"). Un valor vacío ("—") sigue siendo el mismo
@@ -11585,14 +11614,15 @@ function detailsInlineCell(t, field, valueHtml){
 function renderTicketsDetailsRow(t){
   var v = ticketOperationalCellValues(t);
   var cells = [
-    '<span class="tickets-folio-cell">' +
+    '<span class="tickets-folio-cell">' + detailsPhotoButton(t) +
       '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '">#' + t.seq + " " + icon("arrow-up-right") + "</button>" +
       '<button type="button" class="btn-plain tickets-copy-icon-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen" aria-label="Copiar resumen">' + icon("copy") + "</button>" +
+      '<button type="button" class="btn-plain dt-detail-more" data-detail="expand" data-ticket="'+t.id+'" aria-expanded="'+(UI.detailsExpandedTicketId===t.id)+'" aria-controls="dt-detail-panel-'+t.id+'" aria-label="Acciones del ticket #'+t.seq+'" title="Tareas y acciones">'+'⋯'+'</button>' +
     "</span>",
     detailsModalCell(v.clienteHtml, "cliente", t.id),
     detailsModalCell(v.trabajoHtml, "trabajo", t.id),
+    detailsTaskSummary(t),
     detailsModalCell(v.estadoHtml, "estado", t.id),
-    detailsInlineCell(t, "quesigue", v.queSigueHtml),
     detailsInlineCell(t, "responsable", v.responsableHtml),
     detailsInlineCell(t, "atencion", v.atenderHtml),
     detailsInlineCell(t, "compromiso", v.compromisoHtml),
@@ -11606,7 +11636,7 @@ function renderTicketsDetailsRow(t){
   ];
   return '<tr class="tickets-details-row" data-id="' + t.id + '">' + cells.map(function(html, idx){
     return '<td data-label="' + TICKETS_DETAILS_COLS[idx] + '">' + html + "</td>";
-  }).join("") + "</tr>";
+  }).join("") + "</tr>" + detailsExpandedRow(t);
 }
 
 function renderTicketsExplorerView(){
@@ -28533,6 +28563,56 @@ if(window.DTGMail){
  var mailUnsubscribe=unsubscribeRealtime;unsubscribeRealtime=function(){window.DTGMail.reset();return mailUnsubscribe();};
 }
 
+/* Compact operational controls for Details. Existing task/photo/payment editors
+   own all writes; this layer only exposes them without leaving the table. */
+function detailsPhotoButton(t){
+  var path=ticketThumbPhotoPath(t);
+  return '<button type="button" class="dt-detail-photo" data-action="'+(path?'tickets-thumb-gallery':'tickets-thumb-photo')+'" data-id="'+t.id+'" data-ticket="'+t.id+'" aria-label="'+(path?'Ver fotos':'Agregar foto')+' del ticket #'+t.seq+'" title="'+(path?'Ver fotos':'Agregar foto')+'">'+(path?'<img loading="lazy" alt="" data-storage-bucket="'+escapeHtml(ticketThumbPhotoBucket(t))+'" data-storage-path="'+escapeHtml(path)+'">':icon('camera'))+'</button>';
+}
+function detailsTaskSummary(t){
+  var m=planModel(t),first=m.now[0]||m.later[0],open=UI.detailsExpandedTicketId===t.id;
+  return '<button type="button" class="dt-detail-task-summary'+(ticketSinTarea(t)?' empty':'')+'" data-detail="expand" data-ticket="'+t.id+'" aria-expanded="'+open+'" aria-controls="dt-detail-panel-'+t.id+'" title="Ver tareas y acciones"><span>'+m.pending.length+' pendiente'+(m.pending.length===1?'':'s')+'</span><small>'+escapeHtml(first?first.task.desc:ticketSinTarea(t)?'+ Agregar tarea':'Sin pendientes')+'</small></button>';
+}
+function detailsExpandedRow(t){
+  if(UI.detailsExpandedTicketId!==t.id)return '';
+  var m=planModel(t),active=!t.entregadoAt&&!ticketIsCerrado(t);
+  var actions='<button type="button" class="btn btn-ghost" data-action="ops-task-new" data-ticket="'+t.id+'">'+icon('plus')+'Tarea</button><button type="button" class="btn btn-ghost" data-action="tickets-thumb-photo" data-ticket="'+t.id+'">'+icon('camera')+'Agregar foto</button><button type="button" class="btn btn-ghost" data-action="cxc-pago-open" data-ticket="'+t.id+'">'+icon('wallet')+'Cobrar / pagos</button>'+(active?'<button type="button" class="btn btn-ghost" data-action="cell-editor-marcar-entregado" data-ticket="'+t.id+'">'+icon('truck')+'Entregar</button>':'')+(!ticketIsCerrado(t)?'<button type="button" class="btn btn-ghost" data-action="cell-editor-abrir-cierre" data-ticket="'+t.id+'">Cerrar ticket…</button>':'');
+  var order=m.pending.length>1?'<details class="dt-detail-order"'+(UI.detailsOrderOpen?' open':'')+'><summary>Orden de tareas</summary><p class="muted">Elige qué debe terminar antes. También puedes arrastrar una tarea sobre otra.</p>'+m.pending.map(function(x){return '<label><span>'+escapeHtml(x.desc)+'</span><select data-detail-dependency="'+x.id+'" data-ticket="'+t.id+'" aria-label="Paso anterior de '+escapeHtml(x.desc)+'"><option value="">En paralelo / sin paso anterior</option>'+(t.tareas||[]).filter(function(y){return y.id!==x.id&&!planWouldCycle(t,x.id,y.id);}).map(function(y){return '<option value="'+escapeHtml(y.id)+'"'+(x.dependsOn===y.id?' selected':'')+'>Después de: '+escapeHtml(y.desc)+'</option>';}).join('')+'</select></label>';}).join('')+'</details>':'';
+  var plan=active?planBlock(t):'<div class="ws-plan">'+m.now.map(function(i){return planRow(t,i,false);}).join('')+m.later.map(function(i){return planRow(t,i,true);}).join('')+'</div>';
+  return '<tr class="dt-detail-expanded"><td colspan="'+TICKETS_DETAILS_COLS.length+'" data-label="Tareas y acciones"><section class="dt-detail-panel" id="dt-detail-panel-'+t.id+'" aria-label="Tareas y acciones del ticket #'+t.seq+'"><header><strong>#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</strong><button type="button" class="btn btn-ghost" data-detail="collapse" data-ticket="'+t.id+'" aria-label="Ocultar acciones del ticket #'+t.seq+'">Ocultar</button></header><div class="dt-detail-actions">'+actions+'</div>'+plan+order+'</section></td></tr>';
+}
+var detailsFilteredBase=ticketsExplorerFiltered;
+ticketsExplorerFiltered=function(){var list=detailsFilteredBase();return UI.ticketsView==='details'&&UI.detailsOnlyNoTasks?list.filter(ticketSinTarea):list;};
+var detailsToolbarBase=renderTicketsToolbar;
+renderTicketsToolbar=function(list){
+  var html=detailsToolbarBase(list);if(UI.ticketsView!=='details')return html;
+  var open=STATE.tickets.filter(function(t){return ticketEstado(t)==='abierto';}),counts=Object.create(null);
+  open.forEach(function(t){var key=t.responsable||'';counts[key]=(counts[key]||0)+1;});
+  var keys=Array.from(new Set([''].concat(activeAssignableProfiles().map(function(p){return p.displayName;}),Object.keys(counts))));
+  var team=UI.detailsTeamOpen?'<div class="dt-detail-team" role="group" aria-label="Tickets abiertos por responsable"><span>Tickets abiertos:</span>'+keys.map(function(key){return '<button type="button" class="btn btn-ghost" data-detail="owner" data-owner="'+escapeHtml(key)+'" aria-pressed="'+(key?UI.ticketsExplorer.responsable===key:!!UI.detailsUnassigned)+'">'+escapeHtml(key||'Sin responsable')+' <b>'+(counts[key]||0)+'</b></button>';}).join('')+'<button type="button" class="btn btn-ghost" data-detail="all-owners">Todos los miembros</button></div>':'';
+  return html+'<div class="dt-detail-tools"><button type="button" class="btn btn-ghost" data-detail="team" aria-expanded="'+!!UI.detailsTeamOpen+'">'+icon('users')+'Equipo</button><button type="button" class="btn btn-ghost" data-detail="no-tasks" aria-pressed="'+!!UI.detailsOnlyNoTasks+'">Sin tareas'+(UI.detailsOnlyNoTasks?' · Quitar filtro':'')+'</button><span>Fotos y tareas sin abrir el ticket</span></div>'+team;
+};
+window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-action="tickets-filters-clear-all"]')){UI.detailsOnlyNoTasks=false;UI.detailsUnassigned=false;}},true);
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('[data-detail]');if(!b)return;
+  e.preventDefault();var a=b.dataset.detail,id=b.dataset.ticket;
+  if(a==='expand')UI.detailsExpandedTicketId=UI.detailsExpandedTicketId===id?null:id;
+  else if(a==='collapse')UI.detailsExpandedTicketId=null;
+  else if(a==='team')UI.detailsTeamOpen=!UI.detailsTeamOpen;
+  else if(a==='no-tasks')UI.detailsOnlyNoTasks=!UI.detailsOnlyNoTasks;
+  else if(a==='owner'||a==='all-owners'){resetTicketsEntry();UI.detailsTeamOpen=true;UI.ticketsExplorer.responsable=a==='owner'?b.dataset.owner:'';UI.detailsUnassigned=a==='owner'&&!b.dataset.owner;}
+  render();var target=a==='expand'&&UI.detailsExpandedTicketId?document.querySelector('#dt-detail-panel-'+id+' [data-detail="collapse"]'):a==='collapse'?document.querySelector('.dt-detail-task-summary[data-ticket="'+id+'"]'):document.querySelector('[data-detail="'+a+'"]');if(target)target.focus({preventScroll:true});
+});
+var detailsOwnerBase=ticketsExplorerFiltered;
+ticketsExplorerFiltered=function(){var list=detailsOwnerBase();return UI.ticketsView==='details'&&UI.detailsUnassigned?list.filter(function(t){return !t.responsable;}):list;};
+document.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('dt-detail-order')&&e.target.isConnected)UI.detailsOrderOpen=e.target.open;},true);
+document.addEventListener('change',async function(e){
+  var el=e.target;if(!el.hasAttribute('data-detail-dependency'))return;
+  UI.detailsOrderOpen = true;
+  var t=findTicket(el.dataset.ticket);if(!t)return;el.disabled=true;
+  try{await planSetDep(t,el.dataset.detailDependency,el.value||null);}finally{render();}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&e.target.closest&&e.target.closest('.dt-detail-panel')){var id=UI.detailsExpandedTicketId;UI.detailsExpandedTicketId=null;render();var b=document.querySelector('.dt-detail-task-summary[data-ticket="'+id+'"]');if(b)b.focus();}});
 boot();
 
 })();
