@@ -146,20 +146,20 @@
 .pc-purple,.resp-theme-purple{--pc:#D08CFF; --pc-soft:rgba(208,140,255,.16); --resp-color:#D08CFF;}
 .pc-pink,.resp-theme-pink{--pc:#F472B6; --pc-soft:rgba(244,114,182,.16); --resp-color:#F472B6;}
 .pc-silver,.resp-theme-silver{--pc:#CBD5E1; --pc-soft:rgba(203,213,225,.14); --resp-color:#CBD5E1;}
-.pc-sky,.resp-theme-sky{--pc:#7DD3FC; --pc-soft:rgba(125,211,252,.16); --resp-color:#7DD3FC;}
-.pc-aqua,.resp-theme-aqua{--pc:#67E8F9; --pc-soft:rgba(103,232,249,.16); --resp-color:#67E8F9;}
-.pc-mint,.resp-theme-mint{--pc:#6EE7B7; --pc-soft:rgba(110,231,183,.16); --resp-color:#6EE7B7;}
-.pc-emerald,.resp-theme-emerald{--pc:#34D399; --pc-soft:rgba(52,211,153,.16); --resp-color:#34D399;}
-.pc-olive,.resp-theme-olive{--pc:#BECE70; --pc-soft:rgba(190,206,112,.16); --resp-color:#BECE70;}
-.pc-yellow,.resp-theme-yellow{--pc:#FDE047; --pc-soft:rgba(253,224,71,.16); --resp-color:#FDE047;}
-.pc-gold,.resp-theme-gold{--pc:#E9C46A; --pc-soft:rgba(233,196,106,.16); --resp-color:#E9C46A;}
-.pc-peach,.resp-theme-peach{--pc:#FDBA9A; --pc-soft:rgba(253,186,154,.16); --resp-color:#FDBA9A;}
-.pc-salmon,.resp-theme-salmon{--pc:#FDA4AF; --pc-soft:rgba(253,164,175,.16); --resp-color:#FDA4AF;}
-.pc-rose,.resp-theme-rose{--pc:#F9A8D4; --pc-soft:rgba(249,168,212,.16); --resp-color:#F9A8D4;}
-.pc-fuchsia,.resp-theme-fuchsia{--pc:#E879F9; --pc-soft:rgba(232,121,249,.16); --resp-color:#E879F9;}
-.pc-lavender,.resp-theme-lavender{--pc:#C4B5FD; --pc-soft:rgba(196,181,253,.16); --resp-color:#C4B5FD;}
-.pc-indigo,.resp-theme-indigo{--pc:#A5B4FC; --pc-soft:rgba(165,180,252,.16); --resp-color:#A5B4FC;}
-.pc-periwinkle,.resp-theme-periwinkle{--pc:#B8C0FF; --pc-soft:rgba(184,192,255,.16); --resp-color:#B8C0FF;}
+.pc-sky,.resp-theme-sky{--pc:#93C5FD; --pc-soft:rgba(147,197,253,.16); --resp-color:#93C5FD;}
+.pc-aqua,.resp-theme-aqua{--pc:#22D3EE; --pc-soft:rgba(34,211,238,.16); --resp-color:#22D3EE;}
+.pc-mint,.resp-theme-mint{--pc:#A7F3D0; --pc-soft:rgba(167,243,208,.16); --resp-color:#A7F3D0;}
+.pc-emerald,.resp-theme-emerald{--pc:#10B981; --pc-soft:rgba(16,185,129,.16); --resp-color:#10B981;}
+.pc-olive,.resp-theme-olive{--pc:#B5BD68; --pc-soft:rgba(181,189,104,.16); --resp-color:#B5BD68;}
+.pc-yellow,.resp-theme-yellow{--pc:#FEF08A; --pc-soft:rgba(254,240,138,.16); --resp-color:#FEF08A;}
+.pc-gold,.resp-theme-gold{--pc:#D4A64A; --pc-soft:rgba(212,166,74,.16); --resp-color:#D4A64A;}
+.pc-peach,.resp-theme-peach{--pc:#FED7AA; --pc-soft:rgba(254,215,170,.16); --resp-color:#FED7AA;}
+.pc-salmon,.resp-theme-salmon{--pc:#E88E95; --pc-soft:rgba(232,142,149,.16); --resp-color:#E88E95;}
+.pc-rose,.resp-theme-rose{--pc:#FBCFE8; --pc-soft:rgba(251,207,232,.16); --resp-color:#FBCFE8;}
+.pc-fuchsia,.resp-theme-fuchsia{--pc:#D946EF; --pc-soft:rgba(217,70,239,.16); --resp-color:#D946EF;}
+.pc-lavender,.resp-theme-lavender{--pc:#DDD6FE; --pc-soft:rgba(221,214,254,.16); --resp-color:#DDD6FE;}
+.pc-indigo,.resp-theme-indigo{--pc:#818CF8; --pc-soft:rgba(129,140,248,.16); --resp-color:#818CF8;}
+.pc-periwinkle,.resp-theme-periwinkle{--pc:#A5B4FC; --pc-soft:rgba(165,180,252,.16); --resp-color:#A5B4FC;}
 .pc-slate,.resp-theme-slate{--pc:#94A3B8; --pc-soft:rgba(148,163,184,.16); --resp-color:#94A3B8;}
 /* Iconografía v0.20: UNA familia SVG (trazo 2px, esquinas redondas, estilo
    Lucide, dibujada a mano dentro de este archivo — cero dependencia). El
@@ -2806,6 +2806,10 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .color-swatch .i{ font-size:14px; stroke-width:3; }
 .color-swatch:hover{ transform:scale(1.08); }
 .color-swatch.on{ border-color:var(--text); }
+.color-name-preview{padding:10px 12px;margin:4px 4px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);}
+.color-name-preview small{display:block;color:var(--text-muted);font-size:11px;margin-bottom:4px;}
+.color-name-preview strong{color:var(--pc);font-size:16px;}
+.color-save{margin:0 4px 8px;width:calc(100% - 8px);min-height:36px;}
 .menu-item{
   display:flex; align-items:center; gap:9px; width:100%; text-align:left; background:none; border:none; color:var(--text);
   font-size:13px; padding:7px 8px; border-radius:7px; cursor:pointer;
@@ -5066,20 +5070,20 @@ var PERSON_COLORS = [
   { id:"purple", label:"Púrpura", hex:"#D08CFF" },
   { id:"pink",   label:"Rosa",    hex:"#F472B6" },
   { id:"silver", label:"Plata",   hex:"#CBD5E1" },
-  { id:"sky", label:"Celeste", hex:"#7DD3FC" },
-  { id:"aqua", label:"Aguamarina", hex:"#67E8F9" },
-  { id:"mint", label:"Menta", hex:"#6EE7B7" },
-  { id:"emerald", label:"Esmeralda", hex:"#34D399" },
-  { id:"olive", label:"Oliva", hex:"#BECE70" },
-  { id:"yellow", label:"Amarillo", hex:"#FDE047" },
-  { id:"gold", label:"Dorado", hex:"#E9C46A" },
-  { id:"peach", label:"Durazno", hex:"#FDBA9A" },
-  { id:"salmon", label:"Salmón", hex:"#FDA4AF" },
-  { id:"rose", label:"Rosa claro", hex:"#F9A8D4" },
-  { id:"fuchsia", label:"Fucsia", hex:"#E879F9" },
-  { id:"lavender", label:"Lavanda", hex:"#C4B5FD" },
-  { id:"indigo", label:"Índigo", hex:"#A5B4FC" },
-  { id:"periwinkle", label:"Azul lavanda", hex:"#B8C0FF" },
+  { id:"sky", label:"Celeste", hex:"#93C5FD" },
+  { id:"aqua", label:"Aguamarina", hex:"#22D3EE" },
+  { id:"mint", label:"Menta", hex:"#A7F3D0" },
+  { id:"emerald", label:"Esmeralda", hex:"#10B981" },
+  { id:"olive", label:"Oliva", hex:"#B5BD68" },
+  { id:"yellow", label:"Amarillo", hex:"#FEF08A" },
+  { id:"gold", label:"Dorado", hex:"#D4A64A" },
+  { id:"peach", label:"Durazno", hex:"#FED7AA" },
+  { id:"salmon", label:"Salmón", hex:"#E88E95" },
+  { id:"rose", label:"Rosa claro", hex:"#FBCFE8" },
+  { id:"fuchsia", label:"Fucsia", hex:"#D946EF" },
+  { id:"lavender", label:"Lavanda", hex:"#DDD6FE" },
+  { id:"indigo", label:"Índigo", hex:"#818CF8" },
+  { id:"periwinkle", label:"Azul lavanda", hex:"#A5B4FC" },
   { id:"slate", label:"Gris azulado", hex:"#94A3B8" }
 ];
 var PERSON_COLOR_IDS = PERSON_COLORS.map(function(c){ return c.id; });
@@ -7326,6 +7330,7 @@ function renderSidebar(){
 }
 function setAccountMenuOpen(open){
   UI.accountMenuOpen = !!open;
+  UI.myColorDraft = null;
   var wrap = document.querySelector(".sidebar-account-wrap");
   if(!wrap) return;
   var menu = wrap.querySelector(".sidebar-account-menu");
@@ -7361,10 +7366,10 @@ function renderAccountMenu(){
   /* v0.20 — "Mi color": paleta curada (nunca HEX libre), guardada en
      profiles.accent_color con la MISMA policy profiles_update_own que ya usa
      "Editar nombre". Se propaga a todo el equipo por Realtime (profiles). */
-  var myColor = personColorId(currentActorName());
+  var myColor = isValidPersonColor(UI.myColorDraft) ? UI.myColorDraft : personColorId(currentActorName());
   var myChosen = CURRENT_PROFILE && isValidPersonColor(CURRENT_PROFILE.accent_color) ? CURRENT_PROFILE.accent_color : null;
   var swatches = PERSON_COLORS.map(function(c){
-    var on = myChosen === c.id;
+    var on = myColor === c.id;
     return '<button type="button" class="color-swatch pc-' + c.id + (on ? " on" : "") + '" data-action="my-color-pick" data-color="' + c.id + '" aria-pressed="' + (on?"true":"false") + '" aria-label="' + c.label + '" title="' + c.label + '">' + (on ? icon("check") : "") + "</button>";
   }).join("");
   return (
@@ -7374,6 +7379,8 @@ function renderAccountMenu(){
         (email ? '<div class="sidebar-account-menu-email">' + escapeHtml(email) + "</div>" : "") + "</div></div>" +
       '<div class="account-menu-section-label">' + icon("palette") + "Mi color" + (myChosen ? "" : ' <span class="account-menu-hint">(automático)</span>') + "</div>" +
       '<div class="color-swatch-grid" role="group" aria-label="Mi color">' + swatches + "</div>" +
+      '<div class="color-name-preview pc-' + myColor + '" aria-live="polite"><small>Así se verá tu nombre</small><strong>' + escapeHtml(currentActorName() || '') + '</strong></div>' +
+      '<button type="button" class="btn btn-sm btn-primary color-save" data-action="my-color-save"' + ((!UI.myColorDraft || UI.myColorDraft === myChosen || UI.myColorSaving) ? ' disabled' : '') + '>' + (UI.myColorSaving ? 'Guardando…' : 'Guardar color') + '</button>' +
       '<div class="account-menu-hint-line">Elige entre 28 colores para tu nombre y avatar en el chat, Responsables y Kanban.</div>' +
       '<input id="wa-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><button type="button" class="menu-item" data-wa="avatar-pick">'+icon('camera')+'<span>Cambiar foto de perfil</span></button>'+
       '<button type="button" class="menu-item" data-action="edit-name-open">' + icon("pencil") + "<span>Editar nombre</span></button>" +
@@ -25320,7 +25327,14 @@ document.addEventListener("click", function(e){
     if(e.target && e.target.id === "doc-terms-overlay"){ UI.docTermsEditor = null; render(); return; }
   }
   var myColorBtn = e.target.closest && e.target.closest('[data-action="my-color-pick"]');
-  if(myColorBtn){ saveMyColor(myColorBtn.getAttribute("data-color")); return; }
+  if(myColorBtn){ if(UI.myColorSaving) return; UI.myColorDraft = myColorBtn.getAttribute("data-color"); render(); return; }
+  var myColorSave = e.target.closest && e.target.closest('[data-action="my-color-save"]');
+  if(myColorSave){
+    if(UI.myColorSaving || !isValidPersonColor(UI.myColorDraft)) return;
+    UI.myColorSaving = true;
+    saveMyColor(UI.myColorDraft).then(function(ok){ UI.myColorSaving = false; if(ok) UI.myColorDraft = null; render(); });
+    return;
+  }
   var editNameOpenBtn = e.target.closest && e.target.closest('[data-action="edit-name-open"]');
   if(editNameOpenBtn){ UI.editingDisplayName = true; UI.pendingFocus = { elId: "account-name-input", userInitiated: true }; render(); return; }
   var editNameCancelBtn = e.target.closest && e.target.closest('[data-action="edit-name-cancel"]');
