@@ -1968,6 +1968,13 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-details-wrap{overflow-x:auto;}
 .dt-detail-photo{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-muted);padding:0;cursor:pointer;overflow:hidden}
 .dt-detail-photo img{width:100%;height:100%;object-fit:cover}
+.dt-products-line{display:block;width:clamp(150px,24vw,340px);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.dt-sort-heading{font:inherit;text-transform:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;white-space:nowrap}.dt-sort-heading span{color:var(--accent);padding-left:4px}.dt-state-action{white-space:nowrap;font-size:11px;padding:5px 8px;min-height:30px;border:1px solid var(--border);border-radius:5px;background:none;color:var(--text-muted);cursor:pointer}
+@media(max-width:880px){.dt-state-action{min-height:44px}}
+.dt-product-tone-0{color:#8ed8e9}.dt-product-tone-1{color:#c4b5fd}.dt-product-tone-2{color:#e9c46a}.dt-product-tone-3{color:#9bd7b1}
+.dt-products-popover{position:fixed;z-index:10000;width:380px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;padding:14px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 35px #0006;font-size:13px}
+.dt-products-popover header{display:flex;justify-content:space-between;align-items:center;gap:12px}.dt-products-popover ul{padding-left:22px;margin:12px 0}.dt-products-popover li{padding:4px 0;white-space:normal;overflow-wrap:anywhere}.dt-products-popover .btn{min-height:36px}.dt-products-popover header button{min-width:36px}
+@media(max-width:880px){.dt-products-line{width:100%;max-width:100%}.dt-products-popover .btn{min-height:44px}}
 .dt-detail-more{padding:4px;color:var(--text-muted);cursor:pointer}
 .dt-detail-task-summary{display:flex;flex-direction:column;gap:2px;text-align:left;border:0;background:none;color:var(--text);padding:4px;cursor:pointer;max-width:190px;min-width:115px}
 .dt-detail-task-summary small{max-width:185px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)}
@@ -5309,6 +5316,7 @@ function resetTicketsEntry(){
   UI.detailsOnlyNoTasks = false;
   UI.detailsUnassigned = false;
   UI.detailsOrderOpen = false;
+  UI.detailsSort = null;
   UI.ticketsExplorer = JSON.parse(UI_INITIAL_SNAPSHOT).ticketsExplorer;
 }
 function loadUi(){
@@ -11591,6 +11599,7 @@ function renderTicketsListPreview(){
    aparte, mismo HTML/datos en los dos anchos. */
 var TICKETS_DETAILS_COLS = TICKETS_OPERATIONAL_COLS.filter(function(label){return label!=="Qué sigue";});
 TICKETS_DETAILS_COLS.splice(3, 0, "Tareas");
+TICKETS_DETAILS_COLS.push("Acciones");
 /* §27-30/§81: envoltura genérica para las celdas que abren el editor central
    modal (§42) — un <button> por celda, NUNCA la fila entera (esa regla ahora
    es exclusiva de "#folio ↗"). Un valor vacío ("—") sigue siendo el mismo
@@ -11620,7 +11629,7 @@ function renderTicketsDetailsRow(t){
       '<button type="button" class="btn-plain dt-detail-more" data-detail="expand" data-ticket="'+t.id+'" aria-expanded="'+(UI.detailsExpandedTicketId===t.id)+'" aria-controls="dt-detail-panel-'+t.id+'" aria-label="Acciones del ticket #'+t.seq+'" title="Tareas y acciones">'+'⋯'+'</button>' +
     "</span>",
     detailsModalCell(v.clienteHtml, "cliente", t.id),
-    detailsModalCell(v.trabajoHtml, "trabajo", t.id),
+    detailsWorkCell(t),
     detailsTaskSummary(t),
     detailsModalCell(v.estadoHtml, "estado", t.id),
     detailsInlineCell(t, "responsable", v.responsableHtml),
@@ -11632,7 +11641,8 @@ function renderTicketsDetailsRow(t){
     detailsModalCell(v.totalConocidoHtml, "trabajo", t.id),
     detailsModalCell(v.cobradoHtml, "cobrado", t.id),
     detailsModalCell(v.marcadoresHtml, "marcadores", t.id),
-    v.ultimaActividadHtml
+    v.ultimaActividadHtml,
+    '<button type="button" class="dt-state-action" data-action="details-cell-modal" data-kind="estado" data-ticket="'+t.id+'">'+(ticketEstado(t)==='abierto'?'Entregar / cerrar':'Estado / cierre')+'</button>'
   ];
   return '<tr class="tickets-details-row" data-id="' + t.id + '">' + cells.map(function(html, idx){
     return '<td data-label="' + TICKETS_DETAILS_COLS[idx] + '">' + html + "</td>";
@@ -11674,7 +11684,7 @@ function renderTicketsExplorerView(){
   } else if(view === "details"){
     body =
       '<div class="tickets-details-wrap"><table class="tickets-details">' +
-        "<thead><tr>" + TICKETS_DETAILS_COLS.map(function(cn){ return "<th>" + cn + "</th>"; }).join("") + "</tr></thead>" +
+        "<thead><tr>" + TICKETS_DETAILS_COLS.map(detailsSortHeading).join("") + "</tr></thead>" +
         "<tbody>" + list.map(renderTicketsDetailsRow).join("") + "</tbody>" +
       "</table></div>";
   } else if(view === "kanban"){
@@ -28613,6 +28623,74 @@ document.addEventListener('change',async function(e){
   try{await planSetDep(t,el.dataset.detailDependency,el.value||null);}finally{render();}
 });
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&e.target.closest&&e.target.closest('.dt-detail-panel')){var id=UI.detailsExpandedTicketId;UI.detailsExpandedTicketId=null;render();var b=document.querySelector('.dt-detail-task-summary[data-ticket="'+id+'"]');if(b)b.focus();}});
+function detailsProductLabel(p){return (p.cantidad!=null?p.cantidad+' ':'')+(p.desc||'Sin descripción');}
+function detailsWorkCell(t){
+  var products=t.productos||[],html=products.length?products.map(function(p,i){return '<span'+(products.length>1?' class="dt-product-tone-'+(i%4)+'"':'')+'>'+escapeHtml(detailsProductLabel(p))+'</span>';}).join(', '):escapeHtml(sidebarProductoPrincipal(t));
+  return '<button type="button" class="tickets-details-cell-btn dt-products-target" data-products-ticket="'+t.id+'" aria-haspopup="dialog" aria-expanded="false" aria-label="Ver trabajo completo del ticket #'+t.seq+'"><span class="dt-products-line">'+html+'</span></button>';
+}
+var DETAILS_PRODUCT_PREVIEW=null,DETAILS_PRODUCT_TIMER=null,DETAILS_PRODUCT_SUPPRESS_FOCUS=false,DETAILS_PRODUCT_CLOSING=false;
+function closeDetailsProducts(restoreFocus){
+  if(DETAILS_PRODUCT_CLOSING)return;DETAILS_PRODUCT_CLOSING=true;
+  clearTimeout(DETAILS_PRODUCT_TIMER);var old=DETAILS_PRODUCT_PREVIEW;DETAILS_PRODUCT_PREVIEW=null;
+  var panel=document.getElementById('dt-products-popover');if(panel)panel.remove();
+  if(old&&old.button.isConnected){old.button.setAttribute('aria-expanded','false');if(restoreFocus){DETAILS_PRODUCT_SUPPRESS_FOCUS=true;old.button.focus({preventScroll:true});DETAILS_PRODUCT_SUPPRESS_FOCUS=false;}}
+  document.querySelectorAll('.dt-products-target[aria-expanded="true"]').forEach(function(b){b.setAttribute('aria-expanded','false');});
+  DETAILS_PRODUCT_CLOSING=false;
+}
+function showDetailsProducts(button,pinned){
+  clearTimeout(DETAILS_PRODUCT_TIMER);
+  var t=findTicket(button.dataset.productsTicket);if(!t)return;
+  if(DETAILS_PRODUCT_PREVIEW&&DETAILS_PRODUCT_PREVIEW.button===button){if(pinned){DETAILS_PRODUCT_PREVIEW.pinned=true;var edit=document.querySelector('#dt-products-popover [data-products-edit]');if(edit)edit.focus({preventScroll:true});}return;}
+  closeDetailsProducts(false);DETAILS_PRODUCT_PREVIEW={button:button,pinned:!!pinned};button.setAttribute('aria-expanded','true');
+  var panel=document.createElement('section');panel.id='dt-products-popover';panel.className='dt-products-popover';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Trabajo completo del ticket #'+t.seq);
+  var products=t.productos||[];
+  panel.innerHTML='<header><strong>Trabajo · #'+t.seq+'</strong><button type="button" class="btn btn-ghost" data-products-close aria-label="Cerrar vista del trabajo">×</button></header>'+(products.length?'<ul>'+products.map(function(p,i){return '<li'+(products.length>1?' class="dt-product-tone-'+(i%4)+'"':'')+'>'+escapeHtml(detailsProductLabel(p))+'</li>';}).join('')+'</ul>':'<p>Sin productos todavía.</p>')+'<button type="button" class="btn btn-ghost" data-products-edit="'+t.id+'">Editar productos</button>';
+  document.body.appendChild(panel);var r=button.getBoundingClientRect(),height=panel.offsetHeight;
+  panel.style.left=Math.max(12,Math.min(r.left,innerWidth-panel.offsetWidth-12))+'px';panel.style.top=Math.max(12,r.bottom+6+height<=innerHeight?r.bottom+6:r.top-height-6)+'px';
+  if(pinned)panel.querySelector('[data-products-edit]').focus({preventScroll:true});
+}
+function scheduleDetailsProductsClose(){clearTimeout(DETAILS_PRODUCT_TIMER);DETAILS_PRODUCT_TIMER=setTimeout(function(){if(DETAILS_PRODUCT_PREVIEW&&!DETAILS_PRODUCT_PREVIEW.pinned)closeDetailsProducts(false);},220);}
+document.addEventListener('pointerover',function(e){if(e.pointerType==='touch')return;var b=e.target.closest&&e.target.closest('.dt-products-target');if(b&&matchMedia('(hover:hover)').matches)showDetailsProducts(b,false);if(e.target.closest&&e.target.closest('#dt-products-popover'))clearTimeout(DETAILS_PRODUCT_TIMER);});
+document.addEventListener('pointerout',function(e){var zone=e.target.closest&&e.target.closest('.dt-products-target,#dt-products-popover');if(zone&&!zone.contains(e.relatedTarget))scheduleDetailsProductsClose();});
+document.addEventListener('focusin',function(e){if(!DETAILS_PRODUCT_SUPPRESS_FOCUS&&e.target.matches&&e.target.matches('.dt-products-target'))showDetailsProducts(e.target,false);});
+document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.dt-products-target,#dt-products-popover')&&!(e.relatedTarget&&e.relatedTarget.closest('.dt-products-target,#dt-products-popover')))closeDetailsProducts(false);});
+window.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('.dt-products-target'),edit=e.target.closest&&e.target.closest('[data-products-edit]'),close=e.target.closest&&e.target.closest('[data-products-close]');
+  if(b||edit||close){e.preventDefault();e.stopImmediatePropagation();}
+  if(b){e.preventDefault();showDetailsProducts(b,true);}else if(edit){var id=edit.dataset.productsEdit;closeDetailsProducts(false);openCellEditor('trabajo',id);}else if(close)closeDetailsProducts(true);else if(!e.target.closest||!e.target.closest('#dt-products-popover'))closeDetailsProducts(false);
+},true);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&DETAILS_PRODUCT_PREVIEW){e.preventDefault();closeDetailsProducts(true);}});
+document.addEventListener('scroll',function(e){if(DETAILS_PRODUCT_PREVIEW&&!(e.target.closest&&e.target.closest('#dt-products-popover')))closeDetailsProducts(false);},true);
+window.addEventListener('resize',function(){closeDetailsProducts(false);});
+var detailsProductsRender=render;render=function(){closeDetailsProducts(false);detailsProductsRender();};
+function detailsSortHeading(label){
+  if(label==='Acciones')return '<th scope="col">Acciones</th>';
+  var s=UI.detailsSort,active=s&&s.label===label,dir=active?s.direction:'none';
+  return '<th scope="col" aria-sort="'+dir+'"><button type="button" class="dt-sort-heading" data-details-sort="'+escapeHtml(label)+'" aria-label="Ordenar por '+escapeHtml(label)+' '+(dir==='ascending'?'descendente':'ascendente')+'">'+escapeHtml(label)+'<span aria-hidden="true">'+(active?(dir==='ascending'?'↑':'↓'):'↕')+'</span></button></th>';
+}
+function detailsSortValue(t,label){
+  switch(label){
+    case 'Ticket':return Number(t.seq);
+    case 'Cliente':return sidebarClienteLabel(t);
+    case 'Trabajo':return (t.productos||[]).map(detailsProductLabel).join(', ');
+    case 'Tareas':return planModel(t).pending.length;
+    case 'Estado':return ticketEstadoLabel(ticketEstado(t));
+    case 'Responsable':return t.responsable||null;
+    case 'Atender':return t.fechaAtencion||null;
+    case 'Compromiso':return t.fechaCompromiso||null;
+    case 'Total':return moneySummary(t).total;
+    case 'Cobrado':return (t.pagos||[]).reduce(function(sum,p){return sum+Number(p.monto||0);},0);
+    case 'Etiquetas':return activeMarkers(t).map(function(m){return markerLabel(m.type);}).join(', ');
+    case 'Última actividad':return t.lastActivityAt?Date.parse(t.lastActivityAt):null;
+  }
+  return null;
+}
+var detailsSortBase=ticketsExplorerFiltered;
+ticketsExplorerFiltered=function(){
+  var list=detailsSortBase(),s=UI.detailsSort;if(UI.ticketsView!=='details'||!s)return list;
+  return list.slice().sort(function(a,b){var av=detailsSortValue(a,s.label),bv=detailsSortValue(b,s.label),an=av==null||av===''||(typeof av==='number'&&!isFinite(av)),bn=bv==null||bv===''||(typeof bv==='number'&&!isFinite(bv));if(an||bn)return an===bn?0:an?1:-1;var cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'es',{numeric:true,sensitivity:'base'});return s.direction==='descending'?-cmp:cmp;});
+};
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-details-sort]');if(!b)return;var label=b.dataset.detailsSort,s=UI.detailsSort;UI.detailsSort={label:label,direction:s&&s.label===label&&s.direction==='ascending'?'descending':'ascending'};render();var next=document.querySelector('[data-details-sort="'+label+'"]');if(next)next.focus({preventScroll:true});});
 boot();
 
 })();
