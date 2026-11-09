@@ -1972,6 +1972,21 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .tickets-list-preview{position:static; max-width:none; width:100%; max-height:none;}
 }
 
+.ticket-mobile-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.ticket-mobile-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;min-height:88px;padding:10px;text-align:left;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);cursor:pointer}
+.ticket-mobile-card:active{background:var(--surface-2)}
+.ticket-mobile-thumb{width:48px;height:48px;display:grid;place-items:center;overflow:hidden;border-radius:9px;background:var(--surface-2);color:var(--text-muted)}
+.ticket-mobile-thumb img{width:100%;height:100%;object-fit:cover}
+.ticket-mobile-info{display:grid;gap:4px;min-width:0}
+.ticket-mobile-top,.ticket-mobile-meta{display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center}
+.ticket-mobile-top{font-size:12px;color:var(--text-muted)}
+.ticket-mobile-top .status-pill{white-space:normal}
+.ticket-mobile-client{font-size:15px;overflow-wrap:anywhere;line-height:1.2}
+.ticket-mobile-product{font-size:13px;color:var(--text-muted);overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.ticket-mobile-meta{font-size:12px;color:var(--text-muted)}
+.ticket-mobile-overdue{color:var(--gold);font-weight:700}
+.ticket-mobile-arrow{color:var(--text-muted);font-size:20px}
+
 /* ---- Vista Detalles: tabla en desktop, cards en mobile vía data-label
    (ver @media(max-width:880px) abajo) — mismo HTML/datos siempre. ---- */
 .tickets-details-wrap{overflow-x:auto;}
@@ -11551,6 +11566,29 @@ function ticketOperationalCellValues(t){
    marcadores. Cero mutación nueva. La fila sigue seleccionando (preview a la
    derecha) y doble clic / Enter abre el ticket. */
 var TICKETS_LIST_COLS = ["Foto","Ticket","Cliente","Trabajo","Qué sigue","Responsable","Atender","Compromiso","Marcadores","Total","Cobrado","Estado"];
+function renderMobileTicketsList(list){
+  var today = todayLocalYYYYMMDD();
+  return '<ul class="ticket-mobile-list" aria-label="Lista de tickets">' + list.map(function(t){
+    var state = ticketEstado(t);
+    var photo = ticketPhotos(t)[0];
+    var overdue = state === "abierto" && t.fechaCompromiso && t.fechaCompromiso < today;
+    var delivery = t.fechaCompromiso ? (overdue ? "Entrega vencida · " : "Entrega · ") + fmtDateOnlyShort(t.fechaCompromiso) : "Sin fecha de entrega";
+    var products = t.productos || [];
+    var work = sidebarProductoPrincipal(t) + (products.length > 1 ? " · +" + (products.length - 1) : "");
+    return '<li><button type="button" class="ticket-mobile-card" data-action="open-ticket" data-id="' + escapeHtml(t.id) + '">' +
+      '<span class="ticket-mobile-thumb" aria-hidden="true">' + (photo
+        ? '<img data-storage-bucket="' + escapeHtml(photo.bucket || FILES_BUCKET) + '" data-storage-path="' + escapeHtml(photo.storagePath) + '" loading="lazy" alt="">'
+        : icon("image")) + '</span>' +
+      '<span class="ticket-mobile-info">' +
+        '<span class="ticket-mobile-top"><span>#' + t.seq + '</span><span class="pill status-pill status-' + state + '">' + ticketEstadoLabel(state) + '</span></span>' +
+        '<strong class="ticket-mobile-client">' + escapeHtml(sidebarClienteLabel(t)) + '</strong>' +
+        '<span class="ticket-mobile-product">' + escapeHtml(work) + '</span>' +
+        '<span class="ticket-mobile-meta"><span' + (overdue ? ' class="ticket-mobile-overdue"' : '') + '>' + escapeHtml(delivery) + '</span>' +
+          (t.responsable ? '<span>' + escapeHtml(t.responsable) + '</span>' : '') + '</span>' +
+      '</span><span class="ticket-mobile-arrow" aria-hidden="true">›</span></button></li>';
+  }).join("") + '</ul>';
+}
+
 function renderTicketsListRow(t){
   var v = ticketOperationalCellValues(t);
   var photoPath = ticketThumbPhotoPath(t);
@@ -11715,6 +11753,8 @@ function renderTicketsExplorerView(){
     body = '<div class="empty-list tickets-empty">No encontramos tickets con estos filtros.</div>';
   } else if(view === "icons"){
     body = '<div class="tickets-grid-icons">' + list.map(renderTicketsIconCard).join("") + "</div>";
+  } else if(view === "list" && isMobileViewport()){
+    body = renderMobileTicketsList(list);
   } else if(view === "list"){
     /* UX Flow Patch §10-12: Lista = explorador split-view (panel izquierdo
        compacto + preview a la derecha, inspiración Windows Explorer).
@@ -26524,7 +26564,7 @@ document.addEventListener("keydown", function(e){
      realmente estemos viendo Lista sin un ticket abierto encima. Reusa
      ticketsExplorerFiltered() — el MISMO orden que ya ve la persona en la
      tabla, nunca un segundo cálculo de "qué está visible ahora". */
-  if(UI.mainView === "tickets" && !UI.selectedTicketId && UI.ticketsView === "list" &&
+  if(UI.mainView === "tickets" && !UI.selectedTicketId && UI.ticketsView === "list" && !isMobileViewport() &&
      (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") &&
      !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing &&
      !isTypingTarget(e.target) &&
@@ -28811,6 +28851,11 @@ window.addEventListener('click',function(e){
 },true);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&DETAILS_PRODUCT_PREVIEW){e.preventDefault();closeDetailsProducts(true);}});
 document.addEventListener('scroll',function(e){if(DETAILS_PRODUCT_PREVIEW&&!(e.target.closest&&e.target.closest('#dt-products-popover')))closeDetailsProducts(false);},true);
+if(window.matchMedia){
+  window.matchMedia("(max-width: 880px)").addEventListener("change", function(){
+    if(UI.mainView === "tickets" && UI.ticketsView === "list" && !UI.selectedTicketId) render();
+  });
+}
 window.addEventListener('resize',function(){closeDetailsProducts(false);});
 var detailsProductsRender=render;render=function(){closeDetailsProducts(false);detailsProductsRender();};
 function detailsSortHeading(label){

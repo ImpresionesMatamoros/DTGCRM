@@ -21,8 +21,16 @@ html=html.replace('<script>','<script>'+fs.readFileSync(__dirname+'/ops-menu.js'
  await page.getByRole('tab',{name:'Lista',exact:true}).click();
  assert.equal(await page.evaluate(()=>qa.ui().ticketsView),'list');
  assert.equal(await page.locator('.work-discover').isVisible(),false);
- await page.setViewportSize({width:390,height:844});
- await page.evaluate(()=>qa.render());
+ assert(await page.locator('.tickets-list-table').isVisible());
+ for(const width of [390,320]){
+   await page.setViewportSize({width,height:844});
+   await page.locator('.ticket-mobile-card').waitFor();
+   assert.equal(await page.locator('.tickets-list-table').count(),0);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ }
+ await page.locator('.ticket-mobile-card').click();
+ assert.equal(await page.evaluate(()=>qa.ui().selectedTicketId),'t0');
+ await page.evaluate(()=>qa.goToTickets());
  await page.getByRole('combobox',{name:'Vista de tickets'}).selectOption({label:'Detalles'});
  assert.equal(await page.evaluate(()=>qa.ui().ticketsView),'details');
  await page.setViewportSize({width:1440,height:900});
