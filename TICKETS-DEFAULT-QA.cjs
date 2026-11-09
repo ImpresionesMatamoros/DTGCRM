@@ -16,7 +16,18 @@ html=html.replace('<script>','<script>'+fs.readFileSync(__dirname+'/ops-menu.js'
   assert.deepEqual(await page.evaluate(()=>qa.filtered()),['t0']);assert.equal(await page.locator('.tickets-details tbody tr').count(),1);assert.equal(await page.locator('[data-action="tickets-view-pick"][data-view="details"]').getAttribute('aria-selected'),'true');
  }
  // Manual choices still work; reentering Tickets removes stale extra filters.
- await page.getByRole('button',{name:'Mostrar vistas y filtros',exact:true}).click();await page.getByRole('tab',{name:'Iconos',exact:true}).click();assert.equal(await page.evaluate(()=>qa.ui().ticketsView),'icons');
+ assert.equal(await page.locator('.work-discover').isVisible(),false);
+ await page.getByRole('tab',{name:'Responsables',exact:true}).click();
+ await page.getByRole('tab',{name:'Lista',exact:true}).click();
+ assert.equal(await page.evaluate(()=>qa.ui().ticketsView),'list');
+ assert.equal(await page.locator('.work-discover').isVisible(),false);
+ await page.setViewportSize({width:390,height:844});
+ await page.evaluate(()=>qa.render());
+ await page.getByRole('combobox',{name:'Vista de tickets'}).selectOption({label:'Detalles'});
+ assert.equal(await page.evaluate(()=>qa.ui().ticketsView),'details');
+ await page.setViewportSize({width:1440,height:900});
+ await page.evaluate(()=>qa.render());
+ await page.getByRole('tab',{name:'Iconos',exact:true}).click();assert.equal(await page.evaluate(()=>qa.ui().ticketsView),'icons');
  await page.evaluate(()=>{Object.assign(qa.ui().ticketsExplorer,{estado:'todos',responsable:'Otro',clienteId:'missing',marker:'urgent',fecha:'hoy'});qa.ui().search='vieja';qa.goToTickets();});
  assert.deepEqual(await page.evaluate(()=>qa.filtered()),['t0']);assert.equal(await page.locator('.tickets-details tbody tr').count(),1);
  await page.evaluate(()=>{qa.ui().ticketsExplorer.estado='todos';qa.render();});assert((await page.evaluate(()=>qa.filtered())).includes('t2'));
