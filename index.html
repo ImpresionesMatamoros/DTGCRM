@@ -1724,10 +1724,19 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
 .tickets-quickcreate-head{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--text);}
 .tickets-quickcreate-fields{display:grid; grid-template-columns:1fr 1fr; gap:8px 10px;}
 .tickets-quickcreate-field{display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--text-muted); font-weight:600;}
-.tickets-quickcreate-field input, .tickets-quickcreate-field select{
+.tickets-quickcreate-field input, .tickets-quickcreate-field select, .tickets-quickcreate-field textarea{
+  width:100%; min-width:0; box-sizing:border-box;
   border:1px solid var(--border-input); border-radius:var(--radius-s); padding:6px 8px; background:var(--surface); color:var(--text); font-size:13px;
 }
 .tickets-quickcreate-actions{display:flex; align-items:center; justify-content:flex-end; gap:8px;}
+.tickets-quickcreate-section{border:0; border-top:1px solid var(--border); margin:0; padding:8px 0 0; min-width:0;}
+.tickets-quickcreate-section legend{padding:0 6px 0 0; font-size:13px; font-weight:700;}
+.tickets-quickcreate-product{display:grid; grid-template-columns:minmax(0,1fr) 5.5rem 7rem auto; align-items:end; gap:6px; margin-bottom:6px;}
+@media(max-width:560px){
+  .tickets-quickcreate-product{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;}
+  .tickets-quickcreate-product label:first-child{grid-column:1/-1;}
+}
+
 
 /* ---- RONDA SHORTCUTS+AUTOCOMPLETE §B: dropdown de autocomplete de cliente,
    reutilizable — position:relative en el campo que lo hospeda (hoy solo
@@ -3358,7 +3367,17 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 
 /* ================= v0.20 §14 — formulario + vista previa de documento ================= */
 .docform-modal{ max-width:600px; border:1px solid var(--border); }
-.docform-modal-preview{ max-width:900px; background:var(--surface-2); }
+.docform-workspace{ max-width:1180px; width:100%; background:var(--surface-2); }
+.docform-toolbar{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 18px; border-bottom:1px solid var(--border); }
+.docform-kind{ display:flex; gap:10px; }
+.docform-kind label{ display:flex; align-items:center; gap:5px; cursor:pointer; }
+.docform-layout{ display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,320px); align-items:start; }
+.docform-settings{ min-width:0; margin:12px 14px 8px 0; border:1px solid var(--border); border-radius:var(--radius-m); }
+.docform-settings summary{ cursor:pointer; padding:10px; font-weight:600; }
+@media (max-width:760px){
+  .docform-layout{ grid-template-columns:minmax(0,1fr); }
+  .docform-settings{ grid-row:1; margin:8px 10px 0; }
+}
 .docform-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:14px 18px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:inherit; z-index:2; }
 .docform-title{ font-size:15.5px; }
 .docform-title-sub{ font-size:12px; color:var(--text-muted); font-weight:400; }
@@ -3409,7 +3428,6 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .doc-terms-field input{ max-width:140px; min-height:36px; }
 .doc-modal{ border:1px solid var(--border); }
 @media (max-width:640px){
-  .docform-modal-preview{ max-width:none; }
   .docform-preview-body{ padding:10px 10px 4px; }
   .docform-billto{ flex-direction:column; align-items:stretch; }
   .doc-item-price{ width:104px; }
@@ -4068,7 +4086,7 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .work-task-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);width:100%}.work-task-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;text-align:left;background:none;border:0;color:var(--text);min-height:60px}.work-task-copy strong{font-size:14px;overflow-wrap:anywhere}.work-task-copy span,.work-task-copy small{color:var(--text-muted);font-size:12px}.work-task-done{border:1px solid var(--accent);border-radius:50%;color:var(--accent);flex-shrink:0}
 .ops-ed-body>label,.work-dates label,.work-default-setting label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;margin:12px 0}.ops-ed-body select,.work-dates input,.work-default-setting select{width:100%;min-height:44px;font-size:16px}.work-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.work-date-grid small{font-weight:400;color:var(--text-muted)}
 .work-map-sheet{width:min(800px,calc(100vw - 24px))!important;max-height:90dvh;overflow-y:auto}.work-map-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.work-map{display:block;width:910px;height:470px}.work-map g{cursor:pointer}.work-map g:focus rect{stroke:var(--accent);stroke-width:3}.work-city-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.work-city-list button{min-height:44px}.work-city-list [hidden]{display:none!important}.work-map-sheet input{width:100%;font-size:16px;min-height:44px}.work-map-sheet h2{font-size:17px}.work-default-setting{padding:8px 4px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.work-default-setting small{display:block;font-size:11px;color:var(--text-muted)}
-.tk-next,[data-field="quesigue"],.kanban-card-quesigue-cell,.cxc-quesigue{display:none!important}
+[data-field="quesigue"]:not(.tk-next),.kanban-card-quesigue-cell,.cxc-quesigue{display:none!important}
 @media(max-width:640px){.work-date-grid{grid-template-columns:1fr}.work-kanban-toolbar{padding:8px 12px}.work-task-row{padding:10px}.work-task-toolbar{padding:10px 12px}.work-ticket-actions button{flex:1 1 120px}.work-map{width:820px;height:auto}}
 
 .work-label.marker-tone-danger{background:rgba(239,68,68,.15);color:#ff9393;border-color:rgba(239,68,68,.45)}.work-label.marker-tone-warn{background:rgba(245,158,11,.15);color:#efb64d;border-color:rgba(245,158,11,.5)}.work-label.marker-tone-ok{background:rgba(16,185,129,.15);color:#58d9ae;border-color:rgba(16,185,129,.45)}.work-label.marker-tone-info{background:rgba(59,130,246,.15);color:#90b9ff;border-color:rgba(59,130,246,.5)}.work-label.marker-tone-violet{background:rgba(139,92,246,.15);color:#c4a8ff;border-color:rgba(139,92,246,.45)}
@@ -4138,6 +4156,37 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 .tk-empty{color:var(--text-faint);font-size:13px;padding:14px 4px}
 .tk-add{border:1px dashed var(--border-strong,var(--border));background:none;color:var(--accent-ink);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .tk-add:hover{background:var(--accent-soft)}
+
+.tk-order-content{width:min(100%, 940px);margin-inline:auto;padding:16px;display:grid;gap:12px}
+.tk-order-content .tk-head,.tk-order-content .tk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);min-width:0}
+.tk-order-content .tk-card{padding:12px 16px}
+.tk-order-content .tk-sec-head{flex-wrap:wrap;margin-bottom:4px}
+.tk-order-content .tk-sec-head h2{color:var(--text);font-size:15px;letter-spacing:0;text-transform:none}
+.tk-order-content .tk-empty{margin:0;padding:8px 0}
+.tk-order-content .tk-prod-main{min-height:44px}
+.tk-order-content .tk-msgs{padding:0}
+.tk-order-screen > .chat-new-pill{bottom:68px}
+.tk-order-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0;padding:8px 16px;border-top:1px solid var(--border);background:var(--surface)}
+.tk-financials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+.tk-financials div{border:1px solid var(--border);border-radius:var(--radius-s);padding:8px;min-width:0}
+.tk-financials dt{font-size:12px;color:var(--text-muted)}
+.tk-financials dd{margin:3px 0 0;font-size:14px;font-weight:700;overflow-wrap:anywhere}
+.tk-section-actions{display:flex;flex-wrap:wrap;gap:6px}
+.tk-documents{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.tk-done-tasks summary{padding:8px 0;cursor:pointer;color:var(--text-muted)}
+.tk-finalize-dialog{max-height:calc(100dvh - 24px);overflow:auto}
+.tk-finalize-dialog h2{margin:0}
+.tk-finalize-delivery,.tk-finalize-notice{margin:8px 0;font-size:13px}
+.tk-finalize-notice{color:var(--text);background:var(--surface-2);border:1px solid var(--border);padding:8px;border-radius:var(--radius-s)}
+.tk-finalize-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+@media(max-width:640px){
+  .tk-order-content{padding:8px;gap:8px}
+  .tk-order-content .tk-card{padding:9px 10px}
+  .tk-order-footer{justify-content:space-between;padding:6px 8px}
+  .tk-order-footer .btn,.tk-section-actions .btn,.tk-order-content .tk-add{min-height:44px}
+  .tk-financials{gap:4px}
+  .tk-financials div{padding:6px}
+}
 
 /* Cabecera */
 .tk-head{padding:12px 18px 10px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid var(--border);background:var(--surface)}
@@ -6375,12 +6424,9 @@ function dtgCloseTopOverlay(){
   if(UI.ticketsExplorer.optionsOpen){ UI.ticketsExplorer.optionsOpen = false; render(); return true; }
   if(UI.ticketsExplorer.quickCreateOpen){ UI.ticketsExplorer.quickCreateOpen = false; render(); return true; }
   if(UI.cellEditor){ closeCellEditor(); return true; }
-  /* v0.20 §20: el modal de documento también cierra con Esc/Atrás — en
-     vista previa, Esc regresa primero a "Editar" (nunca se pierde el
-     borrador de un golpe). Va DESPUÉS de contacto/editor de celda porque
-     esos se abren encima de él. */
+  /* Close nested contact and product editors before the document. */
   if(UI.docFormOpen && UI.docDraft){
-    if(UI.docDraft.step === "preview") setDocFormStep("edit"); else closeDocFormModal();
+    closeDocFormModal();
     return true;
   }
   if(UI.docTermsEditor){ UI.docTermsEditor = null; render(); return true; }
@@ -7678,7 +7724,7 @@ function renderQueSigueSelect(t){
   var opts = STATE.meta.queSigueOptions.slice();
   if(t.queSigue && opts.indexOf(t.queSigue) === -1) opts.push(t.queSigue);
   var html = '<select id="field-quesigue">';
-  html += '<option value="">—</option>';
+  html += '<option value="">Sin definir</option>';
   opts.forEach(function(o){
     html += '<option value="' + escapeHtml(o) + '" ' + (t.queSigue===o?"selected":"") + '>' + escapeHtml(o) + "</option>";
   });
@@ -7828,6 +7874,10 @@ document.addEventListener('click',function(e){
   if(action==='product'&&t){UI.ticketProductOpen=UI.ticketProductOpen===id?null:id;render();}
   if(action==='product-task'&&t){openOpsEditor('create',null,t.id,null,id);}
   if(action==='back-thread'){UI.astraThreadRoot=null;UI.astraReplyTo=null;UI.chatStickBottom=true;render();}
+  if(action==='activity'){
+    var heading=document.getElementById('tk-activity-title');
+    if(heading){heading.scrollIntoView({block:'start'});heading.focus({preventScroll:true});}
+  }
   if(action==='note'){restoreComposerText('/nota ');}
   if(action==='file-pick'){var input=document.getElementById('ticket-chat-file');if(input)input.click();}
   if(action==='file-clear'){UI.ticketChatFile=null;renderKeepingLiveInputs();}
@@ -7891,27 +7941,40 @@ function tkProductTasks(t,p){
     return !!o&&o.productId===p.id;
   });
 }
-function tkMoneyFooter(t){
-  var prods=t.productos||[],pagos=t.pagos||[];
-  if(!prods.length&&!pagos.length)return '';
-  var f=ticketFinancials(t),pend=pagos.some(function(pg){return pg._pending;});
-  var out=[];
-  if(prods.length){
-    out.push(f.total!=null
-      ? '<span class="tk-money" title="'+escapeHtml(financialBasisLabel(f))+'">Total <b>'+fmtUsd(f.total)+'</b></span>'
-      : '<span class="tk-money warn">Total · falta precio ('+f.pendingPrices+')</span>');
-  }
-  out.push('<button type="button" class="tk-money'+(pend?' is-pending':'')+'" data-action="show-dinero" data-ticket="'+t.id+'" title="Ver pagos">Pagado <b>'+fmtUsd(f.cobrado)+'</b></button>');
-  if(f.saldo!=null){
-    out.push('<button type="button" class="tk-money tk-saldo'+(f.saldo>0.005?' owes':'')+'" data-open-form="pago" title="Registrar pago">Saldo <b>'+fmtUsd(f.saldo)+'</b></button>');
-  }
-  return '<div class="tk-totals" aria-label="Total, pagado y saldo">'+out.join(' <span class="tk-dot" aria-hidden="true">·</span> ')+'</div>';
+function ticketMoneySummary(t){
+  var f = ticketFinancials(t);
+  return '<dl class="tk-financials" title="' + escapeHtml(financialBasisLabel(f)) + '">' +
+    '<div><dt>Total</dt><dd>' + (f.total == null ? 'Por definir' : fmtUsd(f.total)) + '</dd></div>' +
+    '<div><dt>Cobrado</dt><dd>' + fmtUsd(f.cobrado) + '</dd></div>' +
+    '<div><dt>' + (f.saldo < 0 ? 'A favor' : 'Saldo') + '</dt><dd>' +
+      (f.saldo == null ? 'Por calcular' : fmtUsd(Math.abs(f.saldo))) + '</dd></div></dl>';
 }
+
+function renderTicketFinances(t){
+  var docs = (t.documentos || []).slice().sort(function(a,b){
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+  return '<section class="tk-card tk-finances" aria-labelledby="tk-finances-title">' +
+    '<div class="tk-sec-head"><h2 id="tk-finances-title">Pagos y documentos</h2></div>' +
+    ticketMoneySummary(t) +
+    '<div class="tk-section-actions">' +
+      '<button type="button" class="btn btn-ghost" data-action="cxc-pago-open" data-ticket="' + escapeHtml(t.id) + '" data-ticket-payment>' + icon("dollar") + ' Registrar pago</button>' +
+      '<button type="button" class="btn btn-ghost" data-doc-type="invoice">' + icon("file-text") + ' Preparar documento</button>' +
+      ((t.pagos || []).length ? '<button type="button" class="btn btn-ghost" data-action="show-dinero" data-ticket="' + escapeHtml(t.id) + '">Ver pagos</button>' : '') +
+    '</div>' +
+    (docs.length ? '<ul class="tk-documents">' + docs.map(function(d){
+      return '<li><button type="button" class="btn btn-ghost" data-action="open-doc" data-id="' + escapeHtml(d.id) + '">' +
+        icon("file-text") + ' ' + (d.tipo === "invoice" ? "Invoice" : "Quote") + ' ' + escapeHtml(d.numero || "") +
+        ' · ' + fmtUsd(d.total) + '</button></li>';
+    }).join("") + '</ul>' : '') +
+  '</section>';
+}
+
 function ticketProductBar(t){
   var prods=t.productos||[];
   var rows=prods.map(function(p){
     var open=UI.ticketProductOpen===p.id,pid=escapeHtml(p.id),tasks=tkProductTasks(t,p);
-    var price=p.precio==null?'<span class="tk-price pending">Precio pendiente</span>':'<span class="tk-price">'+fmtUsd((Number(p.cantidad)||0)*Number(p.precio))+'</span>';
+    var price=p.precio==null?'<span class="tk-price pending">Pendiente</span>':'<span class="tk-price">'+fmtUsd((Number(p.cantidad)||0)*Number(p.precio))+'</span>';
     var editor='';
     if(open){
       editor='<div class="tk-prod-edit"><div class="tk-prod-fields">'+
@@ -7926,35 +7989,25 @@ function ticketProductBar(t){
       '<button type="button" class="tk-plus" data-ticket-ux="product-task" data-product="'+pid+'" aria-label="Crear tarea para '+escapeHtml(p.desc)+'" title="Crear tarea para este producto">+</button></div>'+editor+'</div>';
   }).join('');
   var form=UI.composer==='producto'?popoverForm('producto').replace('class="popover" id="composer-popover"','class="popover tk-inline-form" id="composer-popover"'):'';
-  return '<section class="tk-products" aria-label="Productos">'+rows+form+
-    '<div class="tk-prod-foot"><button type="button" class="tk-add" data-open-form="producto">+ Producto</button>'+tkMoneyFooter(t)+'</div></section>';
+  return '<section class="tk-card tk-products" aria-labelledby="tk-products-title">' +
+    '<div class="tk-sec-head"><h2 id="tk-products-title">Productos</h2>' +
+    '<button type="button" class="tk-add" data-open-form="producto">+ Agregar producto</button></div>' +
+    (rows || '<p class="tk-empty">Todavía no hay productos.</p>') + form + '</section>';
 }
 function renderTasksPanel(t){
-  var all=(t.tareas||[]).slice().sort(function(a,b){return (a.estado==='terminado'?1:0)-(b.estado==='terminado'?1:0);});
-  var doneN=all.filter(function(x){return x.estado==='terminado';}).length;
-  var rows=all.map(function(task){
-    var m=DTGOps.meta(task),prod=m.productId?(t.productos||[]).find(function(p){return p.id===m.productId;}):null;
-    var ops=isOpsTask(task),done=task.estado==='terminado',bits=[];
-    if(prod)bits.push('<span class="tk-rel" title="Relacionada con este producto">'+escapeHtml(tkProductLabel(prod))+'</span>');
-    if(ops&&task.area)bits.push('<span class="tk-area tk-area-'+escapeHtml(task.area)+'">'+escapeHtml(AREA_LABEL[task.area]||task.area)+'</span>');
-    if(task.responsable)bits.push('<span class="tk-who">'+personAvatar(task.responsable,{size:'xs'})+escapeHtml(task.responsable)+'</span>');
-    if(task.fechaAtencion)bits.push('<span class="tk-when">'+fmtDateOnlyShort(task.fechaAtencion)+'</span>');
-    var pr=Number(task.progreso)||0;if(ops&&pr>0&&pr<100)bits.push('<span class="tk-pct">'+pr+'%</span>');
-    if(DTGOps.blocked(task,t))bits.push('<span class="tk-wait">Espera el paso anterior</span>');
-    var inner='<span class="tk-task-desc">'+escapeHtml(task.desc)+'</span>'+(bits.length?' <span class="tk-task-bits">'+bits.join(' ')+'</span>':'');
-    if(ops){
-      var st=OPS_ESTADOS.filter(function(e){return e.key===(task.estado||'pendiente');})[0]||OPS_ESTADOS[0];
-      return '<div class="tk-task'+(done?' done':'')+'"><button type="button" class="ops-state-pill ops-state-'+st.key+' tk-state" data-toggle-task="'+task.id+'" data-ticket="'+t.id+'" aria-haspopup="true" title="'+st.label+' · cambiar estado" aria-label="Estado: '+st.label+'. Cambiar estado">'+icon(st.icon)+'<span>'+st.label+'</span></button>'+
-        '<button type="button" class="tk-task-open" data-action="ops-task-edit" data-task="'+task.id+'" data-ticket="'+t.id+'">'+inner+'</button></div>';
-    }
-    return '<div class="tk-task'+(done?' done':'')+'"><button class="task-check'+(done?' on':'')+'" data-toggle-normal-task="'+task.id+'" data-ticket="'+t.id+'" aria-label="'+(done?'Marcar pendiente':'Marcar terminada')+'" aria-pressed="'+(done?'true':'false')+'">'+(done?icon('check'):'')+'</button><span class="tk-task-open">'+inner+'</span></div>';
-  }).join('');
-  var ops=all.filter(isOpsTask);
-  var suggest=ops.length&&ops.every(function(x){return x.estado==='terminado';})&&ticketEstado(t)==='abierto'
-    ?'<div class="tk-suggest"><span>Todas las tareas de operación están terminadas.</span><button type="button" class="btn btn-sm btn-ghost" data-action="marcar-entregado" data-ticket="'+t.id+'">Marcar entregado</button></div>':'';
-  return '<section class="tk-tasks" aria-label="Tareas"><div class="tk-sec-head"><h2>Tareas'+(all.length?' <small>'+doneN+'/'+all.length+'</small>':'')+'</h2>'+
-    '<button type="button" class="tk-add" data-action="ops-task-new" data-ticket="'+t.id+'">+ Nueva tarea</button></div>'+rows+suggest+'</section>';
+  var all = t.tareas || [];
+  var pending = all.filter(function(task){ return task.estado !== "terminado"; });
+  var done = all.filter(function(task){ return task.estado === "terminado"; });
+  return '<section class="tk-card tk-tasks" aria-labelledby="tk-tasks-title">' +
+    '<div class="tk-sec-head"><h2 id="tk-tasks-title">Pendientes <small>' + pending.length + '</small></h2>' +
+    '<button type="button" class="tk-add" data-action="ops-task-new" data-ticket="' + escapeHtml(t.id) + '">+ Agregar tarea</button></div>' +
+    (pending.length ? pending.map(function(task){ return workTaskRow(t, task, true); }).join("") : '<p class="tk-empty">Sin tareas pendientes.</p>') +
+    (done.length ? '<details class="tk-done-tasks" data-ticket="' + escapeHtml(t.id) + '"' +
+      (UI.ticketDoneOpen === t.id ? ' open' : '') + '><summary>Terminadas · ' + done.length + '</summary>' +
+      done.map(function(task){ return workTaskRow(t, task, true); }).join("") + '</details>' : '') +
+    '</section>';
 }
+
 function tkStream(t,root){
   var cid=ticketConversationId(t.id),items=[];
   if(cid)(STATE.teamPosts||[]).forEach(function(p){
@@ -7974,20 +8027,31 @@ function renderTicketConversation(t){
   return '<section class="tk-msgs" aria-label="Mensajes">'+astraSelectionBar()+astraRenderTicketLinks(t)+tkStream(t,UI.astraThreadRoot||null)+'</section>';
 }
 function renderTicketScreen(t){
-  var chat=!!TICKET_CHAT_AVAILABLE,root=chat?UI.astraThreadRoot:null;
-  var pill='<button type="button" class="chat-new-pill" id="chat-new-pill" data-action="chat-jump-bottom" hidden><span id="chat-new-pill-label">Mensajes nuevos</span></button>';
-  if(!chat){
-    return '<div class="chat-scroll-wrap tk-wrap"><div class="tk-scroll ticket-body" id="thread-scroll" data-scroll-ticket="'+escapeHtml(t.id)+'">'+
-      renderTicketHeader(t)+ticketProductBar(t)+renderTasksPanel(t)+
-      '<section class="tk-msgs" aria-label="Mensajes">'+astraRenderTicketLinks(t)+(mergedThreadHtml(t)||'<div class="tk-empty">Sin mensajes todavía.</div>')+'</section></div></div>';
-  }
+  var chat = !!TICKET_CHAT_AVAILABLE;
+  var root = chat ? UI.astraThreadRoot : null;
+  var pill = '<button type="button" class="chat-new-pill" id="chat-new-pill" data-action="chat-jump-bottom" hidden><span id="chat-new-pill-label">Mensajes nuevos</span></button>';
   if(root){
     return '<div class="chat-scroll-wrap tk-wrap"><div class="tk-scroll" id="chat-scroll" data-chat-context="ticket:'+escapeHtml(t.id)+':'+escapeHtml(root)+'" aria-label="Hilo">'+
       '<div class="tk-thread-bar"><button type="button" class="btn btn-sm" data-ticket-ux="back-thread">← #'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</button><strong>Hilo</strong></div>'+
       renderTicketConversation(t)+'</div>'+pill+'</div>';
   }
-  return '<div class="chat-scroll-wrap tk-wrap"><div class="tk-scroll" id="chat-scroll" data-chat-context="ticket:'+escapeHtml(t.id)+':root" aria-label="Ticket">'+
-    renderTicketHeader(t)+ticketProductBar(t)+renderTasksPanel(t)+renderTicketConversation(t)+'</div>'+pill+'</div>';
+  var scroll = chat
+    ? 'id="chat-scroll" data-chat-context="ticket:' + escapeHtml(t.id) + ':root"'
+    : 'id="thread-scroll" data-scroll-ticket="' + escapeHtml(t.id) + '"';
+  var activity = chat ? renderTicketConversation(t)
+    : '<section class="tk-msgs" aria-label="Mensajes">' + astraRenderTicketLinks(t) +
+      (mergedThreadHtml(t) || '<div class="tk-empty">Sin mensajes todavía.</div>') + '</section>';
+  return '<div class="chat-scroll-wrap tk-wrap tk-order-screen">' +
+    '<div class="tk-scroll ticket-body" ' + scroll + ' aria-label="Orden #' + t.seq + '">' +
+      '<div class="tk-order-content">' + renderTicketHeader(t) + ticketProductBar(t) +
+        renderTasksPanel(t) + renderTicketFinances(t) +
+        '<section class="tk-card tk-activity" aria-labelledby="tk-activity-title">' +
+          '<div class="tk-sec-head"><h2 id="tk-activity-title" tabindex="-1">Actividad</h2></div>' + activity + '</section>' +
+      '</div></div>' + (chat ? pill : '') +
+    '<div class="tk-order-footer">' +
+      '<button type="button" class="btn btn-ghost" data-ticket-ux="activity">' + icon("chat") + ' Actividad</button>' +
+      (!ticketIsCerrado(t) ? '<button type="button" class="btn btn-primary" id="tk-finalize" data-action="abrir-cierre">Finalizar orden</button>' : '') +
+    '</div></div>';
 }
 
 function renderTicketHeader(t){
@@ -8053,7 +8117,7 @@ function renderTicketHeader(t){
   /* Qué sigue: pieza central, siempre visible, opcional y de un toque. */
   var next = editing === "quesigue"
     ? '<div class="tk-next editing">' + renderQueSigueSelect(t) + '</div>'
-    : '<button type="button" class="tk-next' + (t.queSigue ? '' : ' empty') + '" data-action="header-edit" data-field="quesigue"><span class="tk-next-l">Qué sigue</span><span class="tk-next-v">' + (t.queSigue ? escapeHtml(t.queSigue) : "Sin definir") + '</span></button>';
+    : '<button type="button" class="tk-next' + (t.queSigue ? '' : ' empty') + '" data-action="header-edit" data-field="quesigue" aria-label="Editar qué sigue"><span class="tk-next-l">Qué sigue</span><span class="tk-next-v">' + (t.queSigue ? escapeHtml(t.queSigue) : "Sin definir") + '</span></button>';
   function chip(field, icn, label, valueHtml){
     if(editing === field) return '<span class="tk-chip editing">' + renderHeaderFieldInput(t, field) + '</span>';
     return '<button type="button" class="tk-chip' + (valueHtml ? '' : ' empty') + '" data-action="header-edit" data-field="' + field + '">' + icon(icn) + '<span>' + (valueHtml || label) + '</span></button>';
@@ -8064,19 +8128,16 @@ function renderTicketHeader(t){
       ? '<span class="tk-chip editing">' + renderHeaderFieldInput(t, "compromiso") + '</span>'
       : (function(){var td=todayLocalYYYYMMDD();var od=t.fechaCompromiso&&t.fechaCompromiso<td&&!ticketIsCerrado(t);return '<button type="button" class="tk-chip'+(t.fechaCompromiso?(od?' overdue':''):' empty')+'" data-action="header-edit" data-field="compromiso">'+icon("calendar")+'<span>'+(t.fechaCompromiso?'Entrega '+fmtDateOnlyShort(t.fechaCompromiso):'Fecha de entrega')+'</span></button>';})()) +
     renderMarkerChips(t, { max: 4 }) + renderZoneChip(t) +
-    '<button type="button" class="tk-chip" data-action="show-documentos" data-ticket="' + t.id + '">' + icon("file-text") + '<span>Documentos' + (t.documentos.length ? " · " + t.documentos.length : "") + '</span></button>' +
     renderTicketWarnings(t, { omitMoney: true, only: ["phone", "baddate"] });
   var closing = "";
-  if(estado === "abierto"){
-    closing = '<button type="button" class="tk-chip tk-act" data-action="marcar-entregado" data-ticket="' + t.id + '">' + icon("check") + '<span>Entregar</span></button>' +
-      '<button type="button" class="tk-chip tk-act" data-action="abrir-cierre"><span>Cerrar</span></button>';
-  } else if(estado === "entregado"){
-    closing = '<span class="tk-note">Entregado ' + fmtDateShort(t.entregadoAt) + (t.entregadoPor ? " · " + escapeHtml(t.entregadoPor) : "") + ' · <button type="button" data-action="deshacer-entrega" data-ticket="' + t.id + '">deshacer</button></span>' +
-      '<button type="button" class="tk-chip tk-act" data-action="abrir-cierre"><span>Cerrar</span></button>';
-  } else {
-    closing = '<span class="tk-note"><b>' + ticketEstadoLabel(estado) + '</b> · ' + fmtDateShort(t.cerradoAt) + (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") + (t.razonCierre ? " · " + escapeHtml(t.razonCierre) : "") + '</span>';
+  if(ticketIsCerrado(t)){
+    closing = '<span class="tk-note">' + fmtDateShort(t.cerradoAt) + (t.cerradoPor ? " · " + escapeHtml(t.cerradoPor) : "") +
+      (t.razonCierre ? " · " + escapeHtml(t.razonCierre) : "") + '</span>';
+  }else if(t.entregadoAt){
+    closing = '<span class="tk-note">Entregado ' + fmtDateShort(t.entregadoAt) +
+      ' · <button type="button" data-action="deshacer-entrega" data-ticket="' + escapeHtml(t.id) + '">Deshacer entrega</button></span>';
   }
-  return '<header class="tk-head"><div class="tk-line1">' + identity + meta + tools + '</div>' + next +
+  return '<header class="tk-head" id="tk-order-header" tabindex="-1"><div class="tk-line1">' + identity + meta + tools + '</div>' + next +
     '<div class="tk-chips">' + chips + '<span class="tk-chips-end">' + closing + '</span></div></header>';
 }
 
@@ -8090,17 +8151,7 @@ function popoverMenu(){
       '<button type="button" class="popover-menu-item" data-tk-menu="marker">' + icon("flame") + " Nota con marcador</button>" +
       '<button class="popover-menu-item" data-open-form="tarea">' + icon("list-checks") + " Tarea interna</button>" +
       '<button class="popover-menu-item" data-open-form="pago">' + icon("dollar") + " Pago</button>" +
-      '<button class="popover-menu-item" data-action="open-doc-choice">' + icon("file-text") + " Documento comercial</button>" +
-    "</div>"
-  );
-}
-
-function docChoiceMenu(){
-  return (
-    '<div class="popover" id="composer-popover">' +
-      '<div class="popover-title">Documento comercial</div>' +
-      '<button class="popover-menu-item" data-doc-type="cotizacion">' + icon("file-text") + " Cotización (Quote)</button>" +
-      '<button class="popover-menu-item" data-doc-type="invoice">' + icon("receipt") + " Invoice</button>" +
+      '<button class="popover-menu-item" data-doc-type="invoice">' + icon("file-text") + " Documento comercial</button>" +
     "</div>"
   );
 }
@@ -8131,8 +8182,8 @@ function docDraftPricing(d){
 }
 /* Modelo "documento" de la vista previa: mismo shape que un documento
    emitido (findDocumentoById), así renderDocPaper sirve para ambos. */
-function buildDraftDocModel(t, d){
-  var items = docDraftItems(t);
+function buildDraftDocModel(t, d, items){
+  items = items || docDraftItems(t);
   var clienteNombre = docDraftClienteNombre(t);
   var p = buildDocumentPayload(t, d.tipo, items, clienteNombre, docDraftPricing(d));
   return {
@@ -8143,8 +8194,7 @@ function buildDraftDocModel(t, d){
     createdAt: new Date().toISOString(), calc: p.calc
   };
 }
-/* Guarda en UI.docDraft lo que hay en el DOM del paso "edit". Solo toca
-   campos que existen (en el paso "preview" no hay inputs → no-op). */
+/* Keep document settings when the preview or surrounding UI rerenders. */
 function syncDocDraftFromDom(){
   var d = UI.docDraft;
   if(!d) return;
@@ -8260,16 +8310,25 @@ function renderDocFormTermsPicker(d){
   );
 }
 
-/* V0.5 §10-18/D10 + v0.20 §14: modal propio del documento, con dos pasos
-   (edit → preview). El paso "edit" nunca guarda nada en documentos; el
-   único INSERT ocurre en "Emitir" (submitDocFormCreate). */
+function renderDocFormPreview(t, d, items){
+  var saved = d.savedDocId && findDocumentoById(d.savedDocId);
+  if(saved) return renderDocPaper(saved);
+  var model = buildDraftDocModel(t, d, items);
+  var warnings = [];
+  if(!model.items.length) warnings.push("El documento no tiene productos.");
+  if(model.calc.pendingCount) warnings.push(model.calc.pendingCount + " sin precio. Esos renglones no suman al total.");
+  if(!model.billTo.nombre) warnings.push("Falta el cliente para Bill To.");
+  return (warnings.length ? '<div class="docform-warns">' + warnings.map(function(message){
+    return '<div class="docform-warn">' + icon("alert-triangle") + '<span>' + escapeHtml(message) + '</span></div>';
+  }).join("") + '</div>' : '') + renderDocPaper(model);
+}
+
 function renderDocFormModal(){
   if(!UI.docFormOpen || !UI.docDraft) return "";
   var d = UI.docDraft;
   var t = findTicket(d.ticketId);
   if(!t) return "";
   var isInvoice = d.tipo === "invoice";
-  var tipoWord = isInvoice ? "invoice" : "cotización";
   /* Si mientras el formulario está abierto se vincula OTRO cliente (atajo
      "Vincular cliente"), la propuesta de tax se recalcula con la exención
      del cliente nuevo — igual que si se hubiera abierto con él. */
@@ -8279,33 +8338,6 @@ function renderDocFormModal(){
     d.clientExempt = !!(linkedNow && linkedNow.taxExempt);
     d.clientExemptReason = (linkedNow && linkedNow.taxExemptReason) || "";
     d.taxApplied = !d.clientExempt;
-  }
-
-  if(d.step === "preview"){
-    var model = buildDraftDocModel(t, d);
-    var warns = [];
-    if(!t.productos.length) warns.push("El documento no tiene productos.");
-    if(model.calc.pendingCount) warns.push(model.calc.pendingCount + (model.calc.pendingCount === 1 ? " producto sin precio: aparecerá como “pending” y no suma al total." : " productos sin precio: aparecerán como “pending” y no suman al total."));
-    if(!model.billTo.nombre) warns.push("Sin cliente: el documento saldrá sin Bill To.");
-    return (
-      '<div class="docform-overlay" id="docform-overlay">' +
-        '<div class="docform-modal docform-modal-preview" role="dialog" aria-modal="true" aria-label="Vista previa del documento">' +
-          '<div class="docform-head">' +
-            '<div class="docform-title">Vista previa · ' + (isInvoice ? "Invoice" : "Cotización") +
-              '<span class="docform-title-sub">Todavía no emitido — así lo recibirá el cliente. Los datos se leen en vivo del ticket.</span></div>' +
-            '<button type="button" class="icon-btn" data-action="close-docform" aria-label="Cerrar">' + icon("x") + "</button>" +
-          "</div>" +
-          '<div class="docform-body docform-preview-body">' +
-            (warns.length ? '<div class="docform-warns">' + warns.map(function(w){ return '<div class="docform-warn">' + icon("alert-triangle") + "<span>" + escapeHtml(w) + "</span></div>"; }).join("") + "</div>" : "") +
-            renderDocPaper(model) +
-          "</div>" +
-          '<div class="docform-actions">' +
-            '<button type="button" class="btn btn-ghost" data-action="docform-step" data-step="edit">' + icon("arrow-left") + " Editar</button>" +
-            '<button type="button" class="btn btn-primary" data-action="docform-create">' + icon("check") + " Emitir " + tipoWord + "</button>" +
-          "</div>" +
-        "</div>" +
-      "</div>"
-    );
   }
 
   var datesBlock;
@@ -8328,11 +8360,21 @@ function renderDocFormModal(){
 
   return (
     '<div class="docform-overlay" id="docform-overlay">' +
-      '<div class="docform-modal" role="dialog" aria-modal="true" aria-label="' + (isInvoice ? "Nuevo invoice" : "Nueva cotización") + '">' +
+      '<div class="docform-modal docform-workspace" role="dialog" aria-modal="true" aria-label="Documento comercial">' +
         '<div class="docform-head">' +
-          '<div class="docform-title">' + (isInvoice ? "Nuevo invoice" : "Nueva cotización") + '<span class="docform-title-sub">' + escapeHtml(ticketLabel(t)) + " · #" + t.seq + " · paso 1 de 2</span></div>" +
+          '<div class="docform-title">Documento comercial<span class="docform-title-sub">' + escapeHtml(ticketLabel(t)) + " · #" + t.seq + "</span></div>" +
           '<button type="button" class="icon-btn" data-action="close-docform" aria-label="Cerrar">' + icon("x") + "</button>" +
         "</div>" +
+        '<div class="docform-toolbar">' +
+          '<div class="docform-kind" role="group" aria-label="Tipo de documento">' +
+            '<label><input type="radio" name="docform-tipo" value="invoice"' + (isInvoice ? ' checked' : '') + '> Invoice</label>' +
+            '<label><input type="radio" name="docform-tipo" value="cotizacion"' + (!isInvoice ? ' checked' : '') + '> Quote</label>' +
+          '</div>' +
+          '<label class="docform-chip' + (d.taxApplied ? " on" : "") + '" id="docform-tax-chip"><input type="checkbox" id="docform-tax-applied"' + (d.taxApplied ? " checked" : "") + '> Impuesto <span id="docform-tax-chip-rate">' + escapeHtml(String(d.taxRatePct)) + '%</span></label>' +
+        '</div>' +
+        '<div class="docform-layout">' +
+        '<div class="docform-preview-body" id="docform-live-paper">' + renderDocFormPreview(t, d) + '</div>' +
+        '<details class="docform-settings"' + (d.settingsOpen ? ' open' : '') + '><summary>Ajustes del documento</summary>' +
         '<div class="docform-body">' +
           '<div class="docform-section-title">Bill to</div>' +
           renderDocFormBillTo(t) +
@@ -8346,7 +8388,6 @@ function renderDocFormModal(){
           '<div class="docform-section-title">Impuesto y cargos</div>' +
           exemptHint +
           '<div class="docform-quickrow">' +
-            '<label class="docform-chip' + (d.taxApplied ? " on" : "") + '" id="docform-tax-chip"><input type="checkbox" id="docform-tax-applied"' + (d.taxApplied ? " checked" : "") + '> Sales Tax <span id="docform-tax-chip-rate">' + escapeHtml(String(d.taxRatePct)) + "%</span></label>" +
             '<div class="docform-fee-add">' +
               '<button type="button" class="docform-chip-btn" data-action="docform-add-fee-menu" aria-expanded="' + (d.feeMenuOpen ? "true" : "false") + '">' + icon("plus") + " Fee</button>" +
               (d.feeMenuOpen ? renderDocFormFeeMenu() : "") +
@@ -8357,23 +8398,19 @@ function renderDocFormModal(){
           '<label>Notas (opcional)<textarea id="docform-notas" rows="2" placeholder="Se imprimen en el documento">' + escapeHtml(d.notas || "") + "</textarea></label>" +
           '<div class="docform-section-title">Términos incluidos</div>' +
           renderDocFormTermsPicker(d) +
-          '<div class="docform-summary" id="docform-summary"></div>' +
-        "</div>" +
+        '</div></details></div>' +
         '<div class="docform-actions">' +
-          '<button type="button" class="btn btn-ghost" data-action="close-docform">Cancelar</button>' +
-          '<button type="button" class="btn btn-primary" data-action="docform-step" data-step="preview">' + icon("eye") + " Vista previa</button>" +
+          '<button type="button" class="btn btn-ghost" data-action="close-docform">Cerrar</button>' +
+          '<button type="button" class="btn btn-primary" data-action="docform-create"' + (d.emitting ? ' disabled' : '') + '>' +
+            icon("check") + (d.emitting ? " Guardando…" : d.savedDocId ? " Reintentar guardar PDF" : " Guardar PDF en el ticket") + '</button>' +
         "</div>" +
       "</div>" +
     "</div>"
   );
 }
-/* Recalcula el resumen del paso "edit" sin render() (no pierde cursor).
-   Usa computeDocPricing — el mismo cálculo que la vista previa y que el
-   documento emitido. Un precio que se está tecleando (todavía sin salir del
-   campo, así que aún no se guardó en el producto) ya cuenta en el resumen. */
 function refreshDocFormUI(){
   var d = UI.docDraft;
-  if(!d || d.step !== "edit") return;
+  if(!d) return;
   var t = findTicket(d.ticketId);
   if(!t) return;
   syncDocDraftFromDom();
@@ -8384,15 +8421,8 @@ function refreshDocFormUI(){
     return { desc: p.desc, cantidad: p.cantidad, precio: precio };
   });
   var calc = computeDocPricing(items, docDraftPricing(d));
-  var sumEl = document.getElementById("docform-summary");
-  if(sumEl){
-    var html = '<div class="docform-sum-row"><span>Subtotal</span><span>' + fmtUsd(calc.subtotal) + "</span></div>";
-    html += '<div class="docform-sum-row"><span>Sales Tax' + (calc.taxApplied ? " (" + fmtTaxRate(calc.taxRate) + "%)" : " — off") + "</span><span>" + fmtUsd(calc.taxAmount) + "</span></div>";
-    calc.fees.forEach(function(f){ html += '<div class="docform-sum-row"><span>' + escapeHtml(f.label || "Fee") + "</span><span>" + fmtUsd(f.amount) + "</span></div>"; });
-    html += '<div class="docform-sum-row docform-sum-total"><span>Total</span><span>' + fmtUsd(calc.total) + "</span></div>";
-    if(calc.pendingCount) html += '<div class="doc-pending-note">' + calc.pendingCount + (calc.pendingCount === 1 ? " producto sin precio" : " productos sin precio") + " — no suma al total.</div>";
-    sumEl.innerHTML = html;
-  }
+  var paper = document.getElementById("docform-live-paper");
+  if(paper) paper.innerHTML = renderDocFormPreview(t, d, items);
   var taxRateWrap = document.getElementById("docform-tax-rate-wrap");
   if(taxRateWrap) taxRateWrap.hidden = !calc.taxApplied;
   var taxChip = document.getElementById("docform-tax-chip");
@@ -8419,48 +8449,43 @@ function commitDocFormProductPrice(input){
   syncDocDraftFromDom();
   updateProductoCore(t, pid, { precio: precio }, { keepInputs: true });
 }
-function setDocFormStep(step){
-  var d = UI.docDraft;
-  if(!d) return;
-  syncDocDraftFromDom();
-  if(step === "preview"){
-    var p = docDraftPricing(d);
-    /* Addendum "Date Correctness" §9: una fecha absurda (año "0002") nunca
-       llega ni a la vista previa. */
-    if(!isSaneDateOnly(p.dueDate) || !isSaneDateOnly(p.validUntil)){
-      showToast("Fecha inválida en Due date / Valid until — revisa el año.");
-      return;
-    }
-  }
-  d.step = step === "preview" ? "preview" : "edit";
-  d.feeMenuOpen = false;
-  render();
-  var body = document.querySelector("#docform-overlay .docform-modal");
-  if(body) body.scrollTop = 0;
-}
-/* Emitir: se toman los productos del ticket TAL COMO ESTÁN en este momento
-   y se congela todo vía createDocumentoCore (el mismo núcleo de siempre). */
 async function submitDocFormCreate(){
   var d = UI.docDraft;
   if(!d || d.emitting) return;
   var t = findTicket(d.ticketId);
   if(!t) return;
   syncDocDraftFromDom();
+  var invalid = !d.savedDocId && document.querySelector("#docform-overlay input:invalid");
+  if(invalid){
+    showToast("Revisa las fechas y los importes del documento.");
+    return;
+  }
   var pricing = docDraftPricing(d);
   if(!isSaneDateOnly(pricing.dueDate) || !isSaneDateOnly(pricing.validUntil)){
     showToast("Fecha inválida en Due date / Valid until — revisa el año.");
     return;
   }
   d.emitting = true;
-  var items = docDraftItems(t);
-  var clienteNombre = docDraftClienteNombre(t);
-  var notas = (d.notas || "").trim();
-  var tipo = d.tipo;
-  UI.docFormOpen = false;
-  UI.docDraft = null;
   render();
-  var newDocId = await createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing);
-  if(newDocId) openDocumentViewer(newDocId, {refocus:true});
+  try{
+    if(!d.savedDocId){
+      d.savedDocId = await createDocumentoCore(t, d.tipo, docDraftItems(t), docDraftClienteNombre(t), (d.notas || "").trim(), pricing, d.documentId);
+    }
+    if(!d.savedDocId) return;
+    var doc = findDocumentoById(d.savedDocId);
+    if(!doc) throw Error("El documento está guardado. Vuelve a abrir el ticket para cargarlo.");
+    await archiveDocumentPdf(doc, t);
+    if(UI.docDraft !== d) return;
+    UI.docFormOpen = false;
+    UI.docDraft = null;
+    openDocumentViewer(doc.id, {refocus:true});
+    showToast("PDF guardado en el ticket.");
+  }catch(error){
+    userError("Guardar PDF · #" + t.seq, error);
+  }finally{
+    d.emitting = false;
+    if(UI.docDraft === d) render();
+  }
 }
 
 /* Fotos múltiples §1-11: el mismo overlay .popover de siempre (nunca uno
@@ -9405,7 +9430,6 @@ function renderComposer(){
   var pop = "";
   if(UI.composer === "producto" && hasTicket) pop = "";
   else if(UI.composer === "menu") pop = popoverMenu();
-  else if(UI.composer === "doc_choice") pop = docChoiceMenu();
   else if(UI.composer) pop = popoverForm(UI.composer);
   else if(UI.markerPicker && UI.markerPicker.source === "composer") pop = renderMarkerPickerPopover();
   else if(UI.dtgPatchPreview) pop = dtgPatchPreviewPopover();
@@ -9757,8 +9781,7 @@ function documentosEntryContent(entry){
   }
   html +=
     '<div class="doc-new-actions">' +
-      '<button class="help-cmd-btn" data-doc-type="cotizacion"><span class="desc">+ Nueva cotización</span></button>' +
-      '<button class="help-cmd-btn" data-doc-type="invoice"><span class="desc">+ Nuevo invoice</span></button>' +
+      '<button class="help-cmd-btn" data-doc-type="invoice"><span class="desc">+ Nuevo documento</span></button>' +
     "</div>";
   return { title: title, html: html };
 }
@@ -10916,7 +10939,7 @@ function renderCxcPagoModal(){
         (liquidado ? '<button class="btn btn-primary" data-action="cxc-cerrar-pagado" data-ticket="' + t.id + '">' + icon("check") + "Cerrar como pagado…</button>" : "") +
       "</div>";
   } else {
-    var sugerido = f.saldo != null && f.saldo > 0 ? f.saldo.toFixed(2) : "";
+    var sugerido = !m.fromTicket && f.saldo != null && f.saldo > 0 ? f.saldo.toFixed(2) : "";
     inner =
       '<div class="cierre-modal-title">Registrar pago</div>' +
       '<div class="cierre-modal-sub">' + escapeHtml(sidebarClienteLabel(t)) + " · #" + t.seq + (f.saldo != null ? " · saldo " + fmtMoney(f.saldo) : "") + "</div>" +
@@ -10926,7 +10949,7 @@ function renderCxcPagoModal(){
           '<label>Fecha<input type="date" id="cxc-pago-fecha" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + todayLocalYYYYMMDD() + '"></label>' +
         "</div>" +
         '<label>Método<select id="cxc-pago-metodo"><option value="">Sin especificar</option>' + PAYMENT_METHODS.map(function(pm){ return "<option>" + escapeHtml(pm) + "</option>"; }).join("") + "</select></label>" +
-        '<label>Concepto<input type="text" id="cxc-pago-concepto" value="' + (f.saldo != null ? "Liquidación" : "Abono") + '"></label>' +
+        '<label>Concepto<input type="text" id="cxc-pago-concepto" value="' + (m.fromTicket ? "" : f.saldo != null ? "Liquidación" : "Abono") + '"></label>' +
       "</div>" +
       '<div class="popover-actions"><button class="btn btn-ghost" data-action="cxc-pago-close">Cancelar</button><button class="btn btn-primary" data-action="cxc-pago-submit" data-ticket="' + t.id + '">Registrar</button></div>';
   }
@@ -10945,11 +10968,9 @@ async function submitCxcPago(ticketId){
   UI.pendingFocus = null;
   render();
 }
-function openCierrePagadoForTicket(ticketId, prefill){
+function openCierrePagadoForTicket(ticketId){
   UI.cxcPago = null;
-  UI.cierreModal = { step: "form", tipo: "pagado", ticketId: ticketId, prefill: prefill || "" };
-  UI.pendingFocus = { elId: "cierre-razon", userInitiated: true };
-  render();
+  openCierreModalForTicket(ticketId);
 }
 
 /* ================= TICKETS — explorador general (ronda "PWA + Tickets +
@@ -11136,42 +11157,63 @@ function renderQuickCreateQueSigueSelect(){
   html += "</select>";
   return html;
 }
-/* §18: panel del botón "+" — Cliente/Teléfono/Trabajo/Qué sigue, todos
-   opcionales, "Crear vacío" siempre disponible. Nunca autofocus al abrir
-   (Mobile Reading Mode): render() no fija UI.pendingFocus al abrir este
-   panel, así que el primer campo solo se enfoca si la persona lo toca. */
+function quickCreateProductRow(index){
+  return '<div class="tickets-quickcreate-product">' +
+    '<label class="tickets-quickcreate-field">Producto o servicio<input id="qc-product-' + index + '" name="producto" placeholder="Ej. Playera bordada"></label>' +
+    '<label class="tickets-quickcreate-field">Cantidad<input id="qc-qty-' + index + '" name="cantidad" type="number" min="1" step="1" placeholder="1"></label>' +
+    '<label class="tickets-quickcreate-field">Precio unitario<input id="qc-price-' + index + '" name="precio" type="number" min="0" step="0.01" placeholder="Pendiente"></label>' +
+    (index ? '<button type="button" class="btn btn-ghost" data-qc-remove aria-label="Quitar renglón">×</button>' : '') +
+    '</div>';
+}
+
+function restoreQuickCreateInputs(before){
+  var form = document.getElementById("tickets-quickcreate-panel");
+  if(!before || !form || form.dataset.actor !== before.dataset.actor) return;
+  var oldRows = before.querySelector("[data-qc-products]");
+  var rows = form.querySelector("[data-qc-products]");
+  rows.innerHTML = oldRows.innerHTML;
+  rows.dataset.nextRow = oldRows.dataset.nextRow || 1;
+  before.querySelectorAll("input[id], select[id], textarea[id]").forEach(function(input){
+    var next = document.getElementById(input.id);
+    if(next) next.value = input.value;
+  });
+}
+
 function renderTicketsQuickCreatePanel(){
+  var dates = ' min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '"';
   return (
-    '<div class="tickets-quickcreate-panel" id="tickets-quickcreate-panel">' +
+    '<form class="tickets-quickcreate-panel" id="tickets-quickcreate-panel" aria-label="Nueva orden" data-actor="' + escapeHtml(currentActorId() || "") + '">' +
       '<div class="tickets-quickcreate-head">' +
-        '<span>Ticket nuevo</span>' +
+        '<span>Nueva orden</span>' +
         '<button type="button" class="btn-plain" data-action="tickets-quickcreate-toggle" aria-label="Cerrar">&times;</button>' +
-      "</div>" +
-      '<div class="tickets-quickcreate-fields">' +
-        /* RONDA ACTUALIZACIÓN INTEGRAL §1: <div> en vez de <label> como
-           contenedor — antes el dropdown (con <button> reales dentro)
-           quedaba anidado dentro del <label for="…">, un control de
-           formulario que no debería envolver OTROS controles interactivos.
-           Ahora label/input/dropdown son hermanos explícitos dentro de
-           .cliente-ac-field (que ya tenía position:relative para anclar el
-           dropdown — eso no cambia). aria-controls apunta al id real del
-           contenedor del dropdown; aria-expanded/aria-activedescendant se
-           actualizan en vivo desde el wiring (ver wireEvents), nunca aquí
-           en el render inicial donde siempre está cerrado. */
+      '</div>' +
+      '<fieldset class="tickets-quickcreate-section"><legend>Cliente</legend><div class="tickets-quickcreate-fields">' +
         '<div class="tickets-quickcreate-field cliente-ac-field">' +
-          '<label for="quickcreate-cliente">Cliente</label>' +
-          '<input type="text" id="quickcreate-cliente" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="cliente-ac-dropdown-quickcreate" placeholder="Nombre o empresa">' +
+          '<label for="quickcreate-cliente">Nombre o empresa</label>' +
+          '<input type="text" id="quickcreate-cliente" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="cliente-ac-dropdown-quickcreate" placeholder="Buscar o escribir cliente">' +
           clienteAutocompleteDropdownHtml("quickcreate", "quickcreate-cliente") +
-        "</div>" +
-        '<label class="tickets-quickcreate-field"><span>Teléfono</span><input type="tel" id="quickcreate-telefono" placeholder="Número de teléfono"></label>' +
-        '<label class="tickets-quickcreate-field"><span>Trabajo</span><input type="text" id="quickcreate-trabajo" placeholder="Qué se va a hacer"></label>' +
-        "" +
-      "</div>" +
-      '<div class="tickets-quickcreate-actions">' +
-        '<button type="button" class="btn btn-ghost" data-action="new-ticket" title="Crear el ticket sin llenar nada">Crear vacío</button>' +
-        '<button type="button" class="btn btn-primary" data-action="tickets-quickcreate-submit">Crear</button>' +
-      "</div>" +
-    "</div>"
+        '</div>' +
+        '<label class="tickets-quickcreate-field">Teléfono<input type="tel" id="quickcreate-telefono"></label>' +
+      '</div></fieldset>' +
+      '<fieldset class="tickets-quickcreate-section"><legend>Productos y servicios</legend>' +
+        '<div data-qc-products>' + quickCreateProductRow(0) + '</div>' +
+        '<button type="button" class="btn btn-ghost" data-qc-add>+ Agregar renglón</button>' +
+      '</fieldset>' +
+      '<fieldset class="tickets-quickcreate-section"><legend>Seguimiento</legend><div class="tickets-quickcreate-fields">' +
+        '<label class="tickets-quickcreate-field">Fecha de entrega<input type="date" id="quickcreate-entrega"' + dates + '></label>' +
+        '<label class="tickets-quickcreate-field">Responsable<select id="quickcreate-responsable">' + responsableOptionsHtml("") + '</select></label>' +
+        '<label class="tickets-quickcreate-field">Qué sigue' + renderQuickCreateQueSigueSelect() + '</label>' +
+        '<label class="tickets-quickcreate-field">Nota interna<textarea id="quickcreate-nota" rows="2"></textarea></label>' +
+      '</div></fieldset>' +
+      '<fieldset class="tickets-quickcreate-section"><legend>Anticipo recibido</legend><div class="tickets-quickcreate-fields">' +
+        '<label class="tickets-quickcreate-field">Importe<input id="quickcreate-anticipo" type="number" min="0.01" step="0.01" placeholder="Sin anticipo"></label>' +
+        '<label class="tickets-quickcreate-field">Método<select id="quickcreate-metodo"><option value="">Sin especificar</option>' +
+        PAYMENT_METHODS.map(function(method){ return '<option>' + escapeHtml(method) + '</option>'; }).join("") +
+        '</select></label>' +
+      '</div></fieldset>' +
+      '<div class="tickets-quickcreate-actions"><button type="submit" class="btn btn-primary"' +
+        (UI.ticketsExplorer.quickCreateSaving ? ' disabled>Guardando…' : '>Crear orden') + '</button></div>' +
+    '</form>'
   );
 }
 
@@ -16995,7 +17037,6 @@ function polishMobileUI(){
     }
     fold(main.querySelectorAll('.cxc-aging'),'Antigüedad del saldo','cxc-aging',0);
     fold(main.querySelectorAll('.ficha-identity-controls'),'Personalizar cliente','client-style',0);
-    fold(main.querySelectorAll('.tk-chips'),'Fechas, documentos y estado','ticket-details',0);
     fold(main.querySelectorAll('.tk-tools'),'Más acciones','ticket-tools',0);
     main.querySelectorAll('.report-card').forEach(function(card,i){var head=card.querySelector('.report-card-head');if(!head)return;fold([card],head.textContent.trim(),'report-'+i,0);});
     main.querySelectorAll('.tickets-list-wrap,.tickets-details-wrap,.report-table-wrap').forEach(function(table){table.setAttribute('tabindex','0');table.setAttribute('role','region');if(!table.getAttribute('aria-label'))table.setAttribute('aria-label','Tabla: desliza horizontalmente para ver más');var hint=document.createElement('div');hint.className='mobile-table-hint';hint.textContent='Desliza la tabla para ver más →';table.parentNode.insertBefore(hint,table);});
@@ -17210,6 +17251,7 @@ function render(){
     kdsFit();
     return;
   }
+  var quickCreateBefore = app.querySelector("#tickets-quickcreate-panel");
   var composerSnap = captureComposerDraft();
   var hScrollSnap = captureHorizontalScrolls();
   /* Todo lo que se pinte de aquí a aparecidoPaseFin() cuenta como "lo que
@@ -17255,6 +17297,7 @@ function render(){
   polishMobileUI();
   aparecidoPaseFin();
   restoreComposerDraft(composerSnap);
+  restoreQuickCreateInputs(quickCreateBefore);
   restoreHorizontalScrolls(hScrollSnap);
   wireEvents();
   hydrateImages();
@@ -18242,26 +18285,13 @@ async function createTicketFromNuevo(data){
   }
 }
 
-/* Tickets Workbench §18-21: Quick Create — el "+" del toolbar de Tickets.
-   Reusa LITERALMENTE los mismos cores que ya usa /nuevo (createTicketCore/
-   applyDetectedPhoneToTicket/addProductoCore/updateQueSigueCore) en vez de
-   abrir una segunda ruta de creación — la única diferencia con /nuevo es la
-   FORMA de capturar los datos (campos explícitos de un formulario en vez de
-   una sola línea de texto libre que hay que parsear). "Trabajo" se guarda
-   como UN producto con cantidad 1 y precio pendiente (null) — exactamente lo
-   mismo que "/nuevo Piñata de Spiderman" sin la palabra "producto" jamás
-   podría expresar por sí solo, pero es el mismo shape de fila que ya usa
-   addProductoCore en cualquier otro lugar de la app (nunca un campo
-   "trabajo" nuevo en la tabla). El teléfono se valida con el MISMO
-   detectPhone() que usa /nuevo sobre texto libre — nunca una segunda regla
-   de qué es un teléfono válido. */
+/* Save the capture panel through the same operations used inside a ticket. */
 async function submitTicketQuickCreate(fields){
   var cliente = (fields.cliente || "").trim();
   var telefono = (fields.telefono || "").trim();
-  var trabajo = (fields.trabajo || "").trim();
+  var productos = fields.productos || [];
   var quesigue = (fields.quesigue || "").trim();
   var pickedClienteId = fields.clienteId || null;
-  if(!cliente && !pickedClienteId && !telefono && !trabajo){showToast('Llena al menos un campo. Usa "Crear vacío" si quieres crear sin datos.');return;}
   if(telefono && !detectPhone(telefono)){showToast("Revisa el teléfono antes de crear el ticket.");return;}
   var newId = await createTicketCore({ cliente: cliente, clienteId: pickedClienteId });
   if(!newId) return;
@@ -18338,16 +18368,27 @@ async function submitTicketQuickCreate(fields){
       }
     }
   }
-  if(trabajo){
+  for(var producto of productos){
     t = findTicket(newId);
-    if(t){
-      var prodOk = await addProductoCore(t, trabajo, 1, null);
-      if(!prodOk) failures.push('trabajo "' + trabajo + '"');
+    if(!t || !await addProductoCore(t, producto.desc, producto.cantidad, producto.precio)){
+      failures.push('producto "' + producto.desc + '"');
     }
   }
-  if(quesigue){
+  var seguimiento = [
+    ["field-fecha-compromiso", fields.entrega, "fecha de entrega"],
+    ["field-responsable", fields.responsable, "responsable"]
+  ];
+  for(var [fieldId, value, label] of seguimiento){
     t = findTicket(newId);
-    if(t) await updateQueSigueCore(t, quesigue);
+    if(value && (!t || !await updateTicketFieldCore(t, fieldId, value))) failures.push(label);
+  }
+  t = findTicket(newId);
+  if(quesigue && (!t || !await updateQueSigueCore(t, quesigue))) failures.push("Qué sigue");
+  t = findTicket(newId);
+  if(fields.nota && (!t || !await addNotaCore(t, fields.nota))) failures.push("nota interna");
+  t = findTicket(newId);
+  if(fields.anticipo && (!t || !await addPagoCore(t, fields.anticipo, todayLocalYYYYMMDD(), fields.metodo, "Anticipo"))){
+    failures.push("anticipo");
   }
   UI.ticketsExplorer.quickCreateOpen = false;
   UI.clienteAutocomplete = null;
@@ -19905,23 +19946,7 @@ async function startPhotoBatchUpload(){
 
 /* ---------------- documentos comerciales ---------------- */
 
-/* v0.20 Mega Update §14-17 — Quotes/Invoices con VISTA PREVIA antes de emitir.
-   Un solo flujo para los tres caminos de entrada (menú "+ → Documento",
-   /factura, /cotizacion): openDocumentForm() abre EL MISMO modal en dos pasos:
-     1) "edit": solo lo que es propio del documento (PO, fechas, tax, fees,
-        notas, términos). Bill To y productos NO se copian a un borrador: se
-        leen EN VIVO del cliente vinculado y de t.productos, y editarlos pasa
-        por los cores reales — openContactPanel (updateClienteCore),
-        openCellEditor("trabajo") (add/update/deleteProductoCore) y el precio
-        inline (updateProductoCore). Nunca existe una "copia fantasma" de items.
-     2) "preview": la MISMA hoja (renderDocPaper) que verá el cliente, armada
-        con buildDraftDocModel() — datos vivos, número todavía sin asignar.
-   Al emitir, createDocumentoCore congela todo en documentos.items +
-   pricing_snapshot (incluye termsBlocks y paymentInfo) y el documento
-   emitido ya no vuelve a leer nada vivo. UI.docDraft guarda cada campo al
-   escribir (syncDocDraftFromDom), así que un render() de cualquier origen
-   (Realtime, el write-through de un precio) no pierde lo escrito. */
-
+/* The document editor previews the live ticket until Save freezes its content. */
 /* §16 — términos/disclaimers centrales. Los textos viven en app_settings
    (doc_terms_<key>, sembrados por 0016) y se editan desde "Cuenta →
    Términos de documentos". Si la fila no existe (0016 sin aplicar), se usan
@@ -20033,7 +20058,8 @@ function openDocumentForm(tipo, opts){
   docTermSectionsFor(tipo).forEach(function(s){ termsOn[s.key] = true; });
   UI.docDraft = {
     tipo: tipo, ticketId: t.id,
-    step: opts.preview ? "preview" : "edit",
+    documentId: uuid4(),
+    settingsOpen: false,
     poReference: "", notas: opts.notas || "",
     taxApplied: !exempt, taxRatePct: round2(DEFAULT_SALES_TAX_RATE * 100),
     clientExempt: exempt, clientExemptReason: (linked && linked.taxExemptReason) || "",
@@ -20053,9 +20079,16 @@ function openDocumentForm(tipo, opts){
   render();
 }
 function closeDocFormModal(){
+  if(UI.docDraft && UI.docDraft.emitting) return;
+  var savedId = UI.docDraft && UI.docDraft.savedDocId;
   UI.docFormOpen = false;
   UI.docDraft = null;
   UI.pendingFocus = UI.pendingFocus || "composer";
+  if(savedId){
+    UI.docPdfRetryId = savedId;
+    openDocumentViewer(savedId);
+    return;
+  }
   render();
 }
 
@@ -20129,36 +20162,36 @@ async function saveDocTerms(){
   render();
 }
 
-/* Núcleo compartido de creación de documento (único INSERT a documentos en
-   toda la app). Desde v0.20 solo lo llama el paso "Emitir" de la vista
-   previa (submitDocFormCreate) — /factura y /cotizacion ahora abren esa
-   misma vista previa en vez de emitir a ciegas. Congela items, cobrado,
-   bill_to y pricing_snapshot (subtotal/tax/fees/fechas/PO/términos/pagos).
-   `total` = TOTAL FINAL (subtotal + tax + fees), igual que desde V0.5 (D2).
-   Devuelve el id del documento creado o null. */
-async function createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing){
+/* Reuse the draft ID on retry so a lost response cannot issue another folio. */
+async function createDocumentoCore(t, tipo, items, clienteNombre, notas, pricing, documentId){
   var payload = buildDocumentPayload(t, tipo, items, clienteNombre, pricing);
-  var total = payload.total;
-  showToast("Emitiendo " + (tipo === "invoice" ? "invoice" : "cotización") + "…");
-  var newDocId = null;
+  payload.pricingSnapshot.pdfArchive = true;
+  var doc;
   try{
-    var ins = await sb.from("documentos").insert({
-      ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
-      items: items, total: total, cobrado_al_crear: payload.cobradoAlCrear, bill_to: payload.billTo,
+    var result = await sb.from("documentos").insert({
+      id: documentId, ticket_id: t.id, tipo: tipo, cliente_nombre: clienteNombre, notas: notas || null,
+      items: items, total: payload.total, cobrado_al_crear: payload.cobradoAlCrear, bill_to: payload.billTo,
       pricing_snapshot: payload.pricingSnapshot, autor: currentActorName() || null
     }).select().single();
-    if(ins.error) throw ins.error;
-    var doc = ins.data;
-    newDocId = doc.id;
-    var r8 = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: currentActorName() || null,
-      payload: { documento_id: doc.id, tipo: tipo, numero: doc.numero, total: total, cliente_nombre: clienteNombre } });
-    if(r8.error) throw r8.error;
-  }catch(e){
-    if(/pricing_snapshot|column/.test((e && e.message) || "")) adminNote("Documentos: falta aplicar 0006 en Supabase.", e);
-    userError("Emitir documento · #" + t.seq, e);
+    if(result.error){
+      var existing = await sb.from("documentos").select("id,numero,tipo,total,cliente_nombre")
+        .eq("id", documentId).eq("ticket_id", t.id).maybeSingle();
+      if(existing.error || !existing.data) throw result.error;
+      doc = existing.data;
+    }else{
+      doc = result.data;
+      var log = await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "documento", autor: currentActorName() || null,
+        payload: { documento_id: doc.id, tipo: doc.tipo, numero: doc.numero, total: doc.total, cliente_nombre: doc.cliente_nombre } });
+      if(log.error) userError("Registrar en bitácora · #" + t.seq, log.error);
+    }
+  }catch(error){
+    if(!doc){
+      userError("Guardar documento · #" + t.seq, error);
+      return null;
+    }
   }
   await refreshFromServer({refocus:true});
-  return newDocId;
+  return doc.id;
 }
 
 /* opts.refocus: usado al abrir automáticamente el documento recién creado
@@ -20456,6 +20489,7 @@ function renderDocModal(){
           '<button type="button" class="doc-modal-back" data-action="close-doc">' + icon("arrow-left") + " Volver al ticket</button>" +
           '<div class="doc-modal-actions">' +
             '<button type="button" class="btn btn-ghost" data-action="print-doc">' + icon("printer") + " Imprimir</button>" +
+            (UI.docPdfRetryId === doc.id ? '<button type="button" class="btn btn-ghost" data-action="retry-doc-pdf" data-id="' + escapeHtml(doc.id) + '">Guardar PDF pendiente</button>' : '') +
             '<button type="button" class="btn btn-ghost" data-action="download-pdf" data-id="' + escapeHtml(doc.id) + '">' + icon("download") + " Descargar</button>" +
             /* X1.7: enviar es lo que se hace con un documento; por eso es el
                botón principal y está primero en el orden de lectura táctil. */
@@ -20859,10 +20893,48 @@ function documentPdfFile(doc){
     name: "DesignToGo-" + (doc.tipo==="invoice"?"Invoice-":"Quote-") + (doc.numero||doc.id) + ".pdf"
   };
 }
-function downloadDocumentPdf(docId){
-  var doc = findDocumentoById(docId);
-  if(!doc) return;
+var DOCUMENT_PDF_BUCKET = "ticket-document-pdfs";
+
+function documentPdfPath(doc, ticket){
+  return ticket.id + "/" + doc.id + ".pdf";
+}
+
+async function archiveDocumentPdf(doc, ticket){
   var f = documentPdfFile(doc);
+  var bucket = sb.storage.from(DOCUMENT_PDF_BUCKET);
+  var path = documentPdfPath(doc, ticket);
+  var upload = await bucket.upload(path, f.blob, {contentType:"application/pdf", upsert:false});
+  if(upload.error){
+    var saved = await bucket.download(path);
+    if(saved.error) throw upload.error;
+  }
+}
+
+async function storedDocumentPdf(doc, ticket){
+  if(!doc.pricingSnapshot || !doc.pricingSnapshot.pdfArchive) return documentPdfFile(doc);
+  var saved = await sb.storage.from(DOCUMENT_PDF_BUCKET).download(documentPdfPath(doc, ticket));
+  if(saved.error) throw saved.error;
+  return {
+    blob: saved.data,
+    name: "DesignToGo-" + (doc.tipo === "invoice" ? "Invoice-" : "Quote-") + (doc.numero || doc.id) + ".pdf"
+  };
+}
+
+async function downloadDocumentPdf(docId){
+  var doc = findDocumentoById(docId);
+  var ticket = documentTicket(docId);
+  if(!doc || !ticket) return;
+  var f;
+  try{
+    f = await storedDocumentPdf(doc, ticket);
+  }catch(error){
+    if(doc.pricingSnapshot && doc.pricingSnapshot.pdfArchive){
+      UI.docPdfRetryId = doc.id;
+      render();
+    }
+    userError("Abrir PDF guardado", error);
+    return;
+  }
   var url = URL.createObjectURL(f.blob);
   var a = document.createElement("a");
   a.href = url;
@@ -20892,9 +20964,9 @@ async function shareDocument(docId){
   var doc = findDocumentoById(docId);
   if(!doc) return false;
   var t = documentTicket(docId);
-  var f = documentPdfFile(doc);
   var texto = documentShareText(doc, t);
   try{
+    var f = await storedDocumentPdf(doc, t);
     if(typeof File === "function" && navigator.share && navigator.canShare){
       var file = new File([f.blob], f.name, { type: "application/pdf" });
       if(navigator.canShare({ files: [file] })){
@@ -21417,6 +21489,11 @@ async function cerrarTicketCore(t, tipo, razon){
     userError((tipo === "pagado" ? "Cerrar como pagado · #" : "Cancelar trabajo · #") + t.seq, e, function(){ cerrarTicketCore(t, tipo, razon); });
   }
   if(ok){
+    if(UI.cierreModal && UI.cierreModal.ticketId === t.id && UI.cierreModal.saving){
+      UI.cierreModal = null;
+      UI.pendingFocus = {elId:"tk-order-header", userInitiated:true};
+      render();
+    }
     /* X1.6: 10 s para arrepentirse. No es una confirmación previa (esas se
        ignoran); es la salida después del hecho. */
     UI.lastCierre = { ticketId: t.id, at: Date.now() };
@@ -21451,84 +21528,75 @@ async function reabrirTicketCore(t){
   return true;
 }
 
-/* Modal chico y centrado (no el popover del compositor) porque "Cerrar
-   ticket" se dispara desde el ENCABEZADO, no desde la barra de abajo — la
-   misma razón por la que el visor de documentos ya es un overlay propio en
-   vez de un popover del compositor. Dos pasos: elegir tipo, luego escribir
-   el motivo obligatorio (sección 7.2) — nunca se guarda sin ambos. */
-/* V0.5 §6: UI.cierreModal ahora siempre lleva su propio ticketId explícito
-   en vez de asumir UI.selectedTicketId — así el mismo modal sirve tanto
-   para "Cerrar ticket" (desde el encabezado del ticket abierto) como para
-   "Cancelar" con la × de una fila del sidebar que no está necesariamente
-   abierta en pantalla. Sigue siendo UNA sola función de cierre
-   (cerrarTicketCore) con un solo modal — nunca una segunda ruta. */
-/* §33/§42: variante con ticketId explícito — usada por el picker de Estado
-   de Detalles/Quick Edit sobre un ticket que puede no estar abierto. La
-   cabecera del ticket abierto sigue llamando openCierreModal() a secas. */
-function openCierreModalForTicket(ticketId){ UI.cierreModal = { step: "choice", ticketId: ticketId }; render(); }
-function openCierreModal(){ openCierreModalForTicket(UI.selectedTicketId); }
-function closeCierreModal(){ UI.cierreModal = null; render(); }
-function chooseCierreTipo(tipo){
-  UI.cierreModal = { step: "form", tipo: tipo, ticketId: UI.cierreModal && UI.cierreModal.ticketId };
-  UI.pendingFocus = { elId: "cierre-razon", userInitiated: true };
+function openCierreModalForTicket(ticketId){
+  var active = document.activeElement;
+  UI.cierreModal = {ticketId:ticketId, returnFocusId:active && active.id};
+  UI.pendingFocus = {elId:"tk-finalize-title", userInitiated:true};
   render();
 }
-/* X1.6: el motivo dejó de ser obligatorio. Cerrar o cancelar es una
-   decisión del taller, no un formulario: si Martín quiere explicar, hay
-   campo; si no, el ticket se cierra igual. */
-function submitCierreForm(){
-  var t = UI.cierreModal ? findTicket(UI.cierreModal.ticketId) : null;
-  var razonEl = document.getElementById("cierre-razon");
-  var razon = (razonEl && razonEl.value || "").trim();
-  if(!t || !UI.cierreModal) return;
-  var tipo = UI.cierreModal.tipo;
+function openCierreModal(){ openCierreModalForTicket(UI.selectedTicketId); }
+function closeCierreModal(){
+  var d = UI.cierreModal;
+  if(!d || d.saving) return;
   UI.cierreModal = null;
-  cerrarTicketCore(t, tipo, razon);
+  if(d.returnFocusId) UI.pendingFocus = {elId:d.returnFocusId, userInitiated:true};
+  render();
 }
-function renderCierreModal(){
-  if(!UI.cierreModal) return "";
-  var t = findTicket(UI.cierreModal.ticketId);
-  if(!t){ UI.cierreModal = null; return ""; }
-  var inner;
-  if(UI.cierreModal.step === "choice"){
-    inner =
-      '<div class="cierre-modal-title">Cerrar ticket</div>' +
-      '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + ' · #' + t.seq + "</div>" +
-      '<button class="cierre-tipo-btn cierre-tipo-pagado" data-action="cierre-tipo" data-tipo="pagado">' +
-        '<span class="cierre-tipo-label">Cerrado · Pagado</span>' +
-        '<span class="cierre-tipo-desc">El trabajo terminó y la situación económica quedó resuelta.</span>' +
-      "</button>" +
-      '<button class="cierre-tipo-btn cierre-tipo-cancelado" data-action="cierre-tipo" data-tipo="cancelado">' +
-        '<span class="cierre-tipo-label">Cerrado · Cancelado</span>' +
-        '<span class="cierre-tipo-desc">El trabajo no va a continuar.</span>' +
-      "</button>" +
-      '<div class="popover-actions"><button class="btn btn-ghost" data-action="cierre-cancel">Cancelar</button></div>';
-  } else {
-    /* X1.6: un solo formulario para los dos cierres. Cancelar es la acción
-       destructiva, así que va en rojo y dice lo que hace ("Cancelar
-       trabajo", no "Confirmar"). El motivo es opcional en ambos. */
-    var tipo = UI.cierreModal.tipo;
-    var esCancel = tipo === "cancelado";
-    inner =
-      '<div class="cierre-modal-title">' + (esCancel ? ("¿Cancelar el trabajo del ticket #" + t.seq + "?") : ("Cerrar como pagado · #" + t.seq)) + "</div>" +
-      '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
-      '<div class="ephemeral-sub">' + (esCancel
-        ? "El trabajo sale de lo activo. <strong>Nada se borra</strong>: historial, pagos y fotos se quedan."
-        : "El trabajo sale de lo activo y queda en la historia del cliente.") +
-      " Puedes deshacerlo.</div>" +
-      '<label class="cierre-razon-label">' + (esCancel ? "¿Por qué se canceló? (opcional)" : "Nota (opcional)") +
-        '<textarea id="cierre-razon" rows="3" placeholder="' +
-        (esCancel ? "Ej. El cliente cambió de presupuesto." : "Ej. Liquidado por transferencia.") + '">' +
-        escapeHtml(UI.cierreModal.prefill || (esCancel ? "" : "Pagado completo")) + "</textarea></label>" +
-      '<div class="popover-actions"><button class="btn btn-ghost" data-action="cierre-cancel">Volver</button>' +
-        '<button class="btn ' + (esCancel ? "btn-danger" : "btn-primary") + '" data-action="cierre-confirm">' +
-        (esCancel ? "Cancelar trabajo" : "Cerrar como pagado") + "</button></div>";
+
+async function submitCierreForm(tipo){
+  var d = UI.cierreModal;
+  var t = d && findTicket(d.ticketId);
+  if(!t || d.saving || ticketIsCerrado(t)) return;
+  if(tipo !== "entrega" && tipo !== "pagado" && tipo !== "cancelado") return;
+  var reason = document.getElementById("cierre-razon");
+  d.razon = reason ? reason.value.trim() : "";
+  d.saving = true;
+  d.error = "";
+  UI.pendingFocus = {elId:"tk-finalize-title", userInitiated:true};
+  render();
+  try{
+    var ok = tipo === "entrega" ? await marcarEntregadoCore(t) : await cerrarTicketCore(t, tipo, d.razon);
+    if(UI.cierreModal !== d) return;
+    if(ok){
+      UI.cierreModal = null;
+      UI.pendingFocus = {elId:tipo === "entrega" ? "tk-finalize" : "tk-order-header", userInitiated:true};
+      render();
+    }else{
+      d.error = "El cambio no quedó guardado. Puedes reintentar.";
+    }
+  }finally{
+    d.saving = false;
+    if(UI.cierreModal === d) render();
   }
-  return (
-    '<div class="cierre-modal-overlay" id="cierre-modal-overlay">' +
-      '<div class="cierre-modal">' + inner + "</div>" +
-    "</div>"
-  );
+}
+
+function renderCierreModal(){
+  var d = UI.cierreModal;
+  var t = d && findTicket(d.ticketId);
+  if(!t) return "";
+  var f = ticketFinancials(t);
+  var closed = ticketIsCerrado(t);
+  var disabled = d.saving ? ' disabled' : '';
+  var notice = f.saldo == null ? "El saldo está por calcular."
+    : f.saldo > 0 ? "Todavía aparece un saldo de " + fmtUsd(f.saldo) + "."
+    : f.saldo < 0 ? "La orden tiene un importe a favor." : "";
+  return '<div class="cierre-modal-overlay" id="cierre-modal-overlay">' +
+    '<div class="cierre-modal tk-finalize-dialog" role="dialog" aria-modal="true" aria-labelledby="tk-finalize-title">' +
+      '<h2 class="cierre-modal-title" id="tk-finalize-title" tabindex="-1">Finalizar orden</h2>' +
+      '<div class="cierre-modal-sub">#' + t.seq + ' · ' + escapeHtml(ticketLabel(t)) + '</div>' +
+      '<p class="tk-finalize-delivery">' + (closed ? ticketEstadoLabel(ticketEstado(t))
+        : t.entregadoAt ? "Entregada el " + fmtDateShort(t.entregadoAt) : "Pendiente de entrega") + '</p>' +
+      ticketMoneySummary(t) +
+      (notice && !closed ? '<p class="tk-finalize-notice">' + escapeHtml(notice) + '</p>' : '') +
+      (d.error ? '<p class="tk-finalize-notice" role="alert">' + escapeHtml(d.error) + '</p>' : '') +
+      (!closed ? '<label class="cierre-razon-label">Nota o motivo (opcional)' +
+        '<textarea id="cierre-razon" rows="2"' + disabled + '>' + escapeHtml(d.razon || "") + '</textarea></label>' : '') +
+      '<div class="tk-finalize-actions">' +
+        (!closed && !t.entregadoAt ? '<button type="button" class="btn btn-ghost" data-finalize="entrega"' + disabled + '>Marcar entregada y dejar abierta</button>' : '') +
+        (!closed ? '<button type="button" class="btn btn-primary" data-finalize="pagado"' + disabled + '>Cerrar como pagada</button>' +
+          '<button type="button" class="btn btn-ghost danger-text" data-finalize="cancelado"' + disabled + '>Cancelar orden</button>' : '') +
+        '<button type="button" class="btn btn-ghost" data-action="cierre-cancel"' + disabled + '>' + (d.saving ? 'Guardando…' : 'Volver') + '</button>' +
+      '</div></div></div>';
 }
 
 /* X1.6 — la pastilla de estado ya no cicla. Abre esta hoja: los 4 estados a
@@ -22229,7 +22297,7 @@ function parseDocCommand(arg, ctx, tipo){
 function runDocCommand(data, ctx){
   if(!ctx.ticket) return;
   UI.selectedTicketId = ctx.ticket.id;
-  openDocumentForm(data.tipo, { notas: data.notas, preview: !data.pending });
+  openDocumentForm(data.tipo, { notas: data.notas });
   if(data.pending) showToast(data.pending + (data.pending === 1 ? " producto sin precio" : " productos sin precio") + " — ponlo aquí y luego Vista previa.");
 }
 
@@ -24571,6 +24639,7 @@ function wireEvents(){
      bool en UI (ver comentario en UI.ticketsExplorer). */
   root.querySelectorAll('[data-action="tickets-quickcreate-toggle"]').forEach(function(b){
     b.addEventListener("click", function(){
+      if(UI.ticketsExplorer.quickCreateSaving) return;
       UI.ticketsExplorer.quickCreateOpen = !UI.ticketsExplorer.quickCreateOpen;
       if(UI.ticketsExplorer.quickCreateOpen) UI.ticketsExplorer.optionsOpen = false;
       /* Cerrar el panel también cierra/limpia el autocomplete de cliente —
@@ -24582,16 +24651,59 @@ function wireEvents(){
       render();
     });
   });
-  root.querySelectorAll('[data-action="tickets-quickcreate-submit"]').forEach(function(b){
-    b.addEventListener("click", function(){
-      var g = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
-      submitTicketQuickCreate({
-        cliente: g("quickcreate-cliente"), telefono: g("quickcreate-telefono"),
-        trabajo: g("quickcreate-trabajo"), quesigue: g("quickcreate-quesigue"),
-        clienteId: (UI.clienteAutocompletePicked.quickcreate || {}).id || null
-      });
+  var quickCreateForm = root.querySelector("#tickets-quickcreate-panel");
+  if(quickCreateForm){
+    var productRows = quickCreateForm.querySelector("[data-qc-products]");
+    quickCreateForm.addEventListener("click", function(e){
+      if(e.target.closest("[data-qc-add]")){
+        var nextRow = Number(productRows.dataset.nextRow || 1);
+        productRows.insertAdjacentHTML("beforeend", quickCreateProductRow(nextRow));
+        productRows.dataset.nextRow = nextRow + 1;
+        productRows.lastElementChild.querySelector("input").focus();
+      }
+      var remove = e.target.closest("[data-qc-remove]");
+      if(remove) remove.closest(".tickets-quickcreate-product").remove();
     });
-  });
+    quickCreateForm.addEventListener("submit", async function(e){
+      e.preventDefault();
+      var explorer = UI.ticketsExplorer;
+      if(explorer.quickCreateSaving) return;
+      var g = function(id){ return quickCreateForm.querySelector("#" + id).value.trim(); };
+      var productos = [];
+      for(var row of productRows.children){
+        var desc = row.querySelector('[name="producto"]').value.trim();
+        var qty = row.querySelector('[name="cantidad"]').value;
+        var price = row.querySelector('[name="precio"]').value;
+        if(!desc && (qty || price)){
+          showToast("Escribe el nombre del producto o servicio de ese renglón.");
+          row.querySelector('[name="producto"]').focus();
+          return;
+        }
+        if(desc) productos.push({ desc: desc, cantidad: qty ? Number(qty) : 1, precio: price ? Number(price) : null });
+      }
+      if(g("quickcreate-metodo") && !g("quickcreate-anticipo")){
+        showToast("Escribe el importe del anticipo o deja el método sin especificar.");
+        quickCreateForm.querySelector("#quickcreate-anticipo").focus();
+        return;
+      }
+      explorer.quickCreateSaving = true;
+      var button = quickCreateForm.querySelector('[type="submit"]');
+      button.disabled = true;
+      try{
+        await submitTicketQuickCreate({
+          cliente: g("quickcreate-cliente"), telefono: g("quickcreate-telefono"),
+          productos: productos, entrega: g("quickcreate-entrega"), responsable: g("quickcreate-responsable"),
+          quesigue: g("quickcreate-quesigue"), nota: g("quickcreate-nota"),
+          anticipo: Number(g("quickcreate-anticipo")), metodo: g("quickcreate-metodo"),
+          clienteId: (UI.clienteAutocompletePicked.quickcreate || {}).id || null
+        });
+      } finally {
+        explorer.quickCreateSaving = false;
+        var liveButton = document.querySelector('#tickets-quickcreate-panel [type="submit"]');
+        if(liveButton){ liveButton.disabled = false; liveButton.textContent = "Crear orden"; }
+      }
+    });
+  }
   /* RONDA SHORTCUTS+AUTOCOMPLETE §B: wiring del autocomplete de cliente de
      Quick Create — input/keydown/blur. Deliberadamente fuera del patrón
      "root.querySelectorAll(...)" de arriba para las actualizaciones del
@@ -25031,8 +25143,6 @@ function wireEvents(){
   var sendBtn = document.getElementById("composer-send");
   if(sendBtn) sendBtn.addEventListener("click", submitNote);
 
-  var docChoiceBtn = root.querySelector('[data-action="open-doc-choice"]');
-  if(docChoiceBtn) docChoiceBtn.addEventListener("click", function(){ UI.composer = "doc_choice"; render(); });
   root.querySelectorAll('[data-doc-type]').forEach(function(b){
     b.addEventListener("click", function(){ openDocumentForm(b.getAttribute("data-doc-type")); });
   });
@@ -25048,8 +25158,17 @@ function wireEvents(){
     docformOverlay.querySelectorAll('[data-action="close-docform"]').forEach(function(b){ b.addEventListener("click", closeDocFormModal); });
     var createDocformBtn = docformOverlay.querySelector('[data-action="docform-create"]');
     if(createDocformBtn) createDocformBtn.addEventListener("click", submitDocFormCreate);
-    docformOverlay.querySelectorAll('[data-action="docform-step"]').forEach(function(b){
-      b.addEventListener("click", function(){ setDocFormStep(b.getAttribute("data-step")); });
+    var settings = docformOverlay.querySelector(".docform-settings");
+    settings.addEventListener("toggle", function(){
+      if(UI.docDraft && settings.isConnected) UI.docDraft.settingsOpen = settings.open;
+    });
+    docformOverlay.querySelectorAll('[name="docform-tipo"]').forEach(function(input){
+      input.addEventListener("change", function(){
+        if(!input.checked || UI.docDraft.savedDocId) return;
+        syncDocDraftFromDom();
+        UI.docDraft.tipo = input.value;
+        render();
+      });
     });
     var addFeeMenuBtn = docformOverlay.querySelector('[data-action="docform-add-fee-menu"]');
     if(addFeeMenuBtn){
@@ -25105,10 +25224,15 @@ function wireEvents(){
       inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); inp.blur(); } });
     });
     docformOverlay.querySelectorAll("input, select, textarea").forEach(function(el){
-      if(el === termsSelEl || el.hasAttribute("data-docform-prod-price")) return;
+      if(el === termsSelEl || el.name === "docform-tipo" || el.hasAttribute("data-docform-prod-price")) return;
       var evt = (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "date") ? "change" : "input";
       el.addEventListener(evt, refreshDocFormUI);
     });
+    if(UI.docDraft.emitting || UI.docDraft.savedDocId){
+      docformOverlay.querySelectorAll(".docform-toolbar input, .docform-settings input, .docform-settings select, .docform-settings textarea, .docform-settings button").forEach(function(input){
+        input.disabled = true;
+      });
+    }
     refreshDocFormUI();
   }
 
@@ -25116,6 +25240,23 @@ function wireEvents(){
   if(closeDocBtn) closeDocBtn.addEventListener("click", closeDocumentViewer);
   var printDocBtn = root.querySelector('[data-action="print-doc"]');
   if(printDocBtn) printDocBtn.addEventListener("click", function(){ window.print(); });
+  var retryPdf = root.querySelector('[data-action="retry-doc-pdf"]');
+  if(retryPdf) retryPdf.addEventListener("click", async function(){
+    var docId = retryPdf.getAttribute("data-id");
+    var doc = findDocumentoById(docId);
+    var ticket = documentTicket(docId);
+    if(!doc || !ticket) return;
+    retryPdf.disabled = true;
+    try{
+      await archiveDocumentPdf(doc, ticket);
+      UI.docPdfRetryId = null;
+      render();
+      showToast("PDF guardado en el ticket.");
+    }catch(error){
+      retryPdf.disabled = false;
+      userError("Guardar PDF pendiente", error);
+    }
+  });
   root.querySelectorAll('[data-action="download-pdf"]').forEach(function(b){
     b.addEventListener("click", function(){ downloadDocumentPdf(b.getAttribute("data-id")); });
   });
@@ -25148,24 +25289,24 @@ function wireEvents(){
   }
   var abrirCierreBtn = root.querySelector('[data-action="abrir-cierre"]');
   if(abrirCierreBtn) abrirCierreBtn.addEventListener("click", openCierreModal);
-  root.querySelectorAll('[data-action="cierre-tipo"]').forEach(function(b){
-    b.addEventListener("click", function(){ chooseCierreTipo(b.getAttribute("data-tipo")); });
-  });
-  root.querySelectorAll('[data-action="cierre-cancel"]').forEach(function(b){
-    b.addEventListener("click", closeCierreModal);
-  });
-  root.querySelectorAll('[data-action="cierre-confirm"]').forEach(function(b){
-    b.addEventListener("click", submitCierreForm);
-  });
-  var cierreRazon = document.getElementById("cierre-razon");
-  if(cierreRazon){
-    cierreRazon.addEventListener("keydown", function(e){
-      if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); submitCierreForm(); }
-    });
-  }
   var cierreOverlay = document.getElementById("cierre-modal-overlay");
   if(cierreOverlay){
+    cierreOverlay.querySelectorAll("[data-finalize]").forEach(function(button){
+      button.addEventListener("click", function(){ submitCierreForm(button.dataset.finalize); });
+    });
+    cierreOverlay.querySelector('[data-action="cierre-cancel"]').addEventListener("click", closeCierreModal);
     cierreOverlay.addEventListener("click", function(e){ if(e.target === cierreOverlay) closeCierreModal(); });
+    cierreOverlay.addEventListener("keydown", function(e){
+      if(e.key !== "Tab") return;
+      var fields = Array.from(cierreOverlay.querySelectorAll("button:not(:disabled), textarea:not(:disabled)"));
+      var first = fields[0], last = fields[fields.length-1];
+      if(!first){ e.preventDefault(); return; }
+      if(e.shiftKey && (e.target === first || e.target.id === "tk-finalize-title")){
+        e.preventDefault(); last.focus();
+      }else if(!e.shiftKey && e.target === last){
+        e.preventDefault(); first.focus();
+      }
+    });
   }
   var taskStateOverlay = document.getElementById("task-state-overlay");
   if(taskStateOverlay){
@@ -25901,13 +26042,13 @@ document.addEventListener("click", function(e){
   var cxcSortBtn = e.target.closest && e.target.closest('[data-action="cxc-sort"]');
   if(cxcSortBtn){ UI.cxc.sort = cxcSortBtn.getAttribute("data-value"); render(); return; }
   var cxcPagoOpenBtn = e.target.closest && e.target.closest('[data-action="cxc-pago-open"]');
-  if(cxcPagoOpenBtn){ UI.cxcPago = { ticketId: cxcPagoOpenBtn.getAttribute("data-ticket"), done: false }; UI.pendingFocus = { elId: "cxc-pago-monto", userInitiated: true }; render(); return; }
+  if(cxcPagoOpenBtn){ UI.cxcPago = { ticketId: cxcPagoOpenBtn.getAttribute("data-ticket"), done: false, fromTicket:cxcPagoOpenBtn.hasAttribute("data-ticket-payment") }; UI.pendingFocus = { elId: "cxc-pago-monto", userInitiated: true }; render(); return; }
   var cxcPagoCloseBtn = e.target.closest && e.target.closest('[data-action="cxc-pago-close"]');
   if(cxcPagoCloseBtn){ UI.cxcPago = null; render(); return; }
   var cxcPagoSubmitBtn = e.target.closest && e.target.closest('[data-action="cxc-pago-submit"]');
   if(cxcPagoSubmitBtn){ submitCxcPago(cxcPagoSubmitBtn.getAttribute("data-ticket")); return; }
   var cxcCerrarBtn = e.target.closest && e.target.closest('[data-action="cxc-cerrar-pagado"]');
-  if(cxcCerrarBtn){ openCierrePagadoForTicket(cxcCerrarBtn.getAttribute("data-ticket"), "Pagado completo."); return; }
+  if(cxcCerrarBtn){ openCierrePagadoForTicket(cxcCerrarBtn.getAttribute("data-ticket")); return; }
   /* v0.20 — chat del equipo: paleta de reacciones, menú "⋯" por mensaje,
      franja de fijados, "↓ N mensajes nuevos", opciones del composer. Cada
      menú es single-slot (uno abierto a la vez) y se cierra con clic afuera o
@@ -27631,8 +27772,13 @@ renderOpsEditor=function(){var ed=UI.operaciones.editor;if(!ed)return '';var fou
 submitOpsEditor=async function(){var ed=UI.operaciones.editor;if(!ed||ed.saving)return;var t=findTicket(ed.ticketId);if(!t){showToast('Elige un ticket.');return;}var get=function(id){return document.getElementById(id).value;};var found=ed.mode==='edit'?findOpsTask(ed.ticketId,ed.taskId):null;var desc=get('ops-f-desc'),owner=get('ops-f-resp'),area=get('ops-f-area');if(!desc||(!found&&WORK_TASK_NAMES.indexOf(desc)===-1)||TASK_AREAS.indexOf(area)===-1){showToast('Elige nombre de tarea y destino.');return;}ed.draft={desc:desc,responsable:owner,area:area};ed.saving=true;var button=document.querySelector('[data-action="ops-ed-save"]');if(button)button.disabled=true;var ok=false;try{ok=found?await updateTareaCore(t,ed.taskId,ed.draft):await addTareaCore(t,'produccion',desc,owner,'',{area:area,workOrderId:ed.workOrderId,actionPath:ed.sourceIds?JSON.stringify({v:1,sourcePostIds:ed.sourceIds}):null,dependsOn:ed.dependsOn||null});}finally{ed.saving=false;if(ok&&UI.operaciones.editor===ed){UI.operaciones.editor=null;UI.astraSelected=[];}render();}};
 var workAddTask=addTareaCore;
 addTareaCore=async function(t,tipo,desc,owner,date,extra){if(WORK_TASK_NAMES.indexOf(desc)===-1){showToast('Elige una de las nuevas tareas del catálogo.');return false;}owner=owner||currentActorName();extra=Object.assign({},extra||{});if(!extra.area)extra.area=workDefaultArea(owner);DTG_AUTH_WRITES++;try{return await workAddTask(t,'produccion',desc,owner,date||todayLocalYYYYMMDD(),extra);}finally{DTG_AUTH_WRITES--;}};
-function workTaskRow(t,x){return '<article class="work-task-row" data-work-task="'+x.id+'"><button type="button" class="work-task-done icon-btn" data-workspace="task-done" data-ticket="'+t.id+'" data-task="'+x.id+'" aria-label="'+(x.estado==='terminado'?'Reabrir ':'Terminar ')+escapeHtml(x.desc)+'">'+icon(x.estado==='terminado'?'refresh':'check')+'</button><button type="button" class="work-task-copy" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'"><strong>'+escapeHtml(x.desc)+'</strong><span>#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</span><small>'+escapeHtml(x.responsable||'Sin asignar')+' · '+AREA_LABEL[taskArea(x)]+'</small></button></article>';}
-renderTasksPanel=function(t){var tasks=(t.tareas||[]).filter(function(x){return x.estado!=='terminado';});return '<section class="tk-tasks"><div class="tk-sec-head"><h2>Tareas · '+tasks.length+'</h2><button class="btn btn-ghost" data-action="ops-task-new" data-ticket="'+t.id+'">+ Tarea</button></div>'+tasks.map(function(x){return workTaskRow(t,x);}).join('')+'</section>';};
+function workTaskRow(t,x,insideTicket){return '<article class="work-task-row" data-work-task="'+x.id+'"><button type="button" class="work-task-done icon-btn" data-workspace="task-done" data-ticket="'+t.id+'" data-task="'+x.id+'" aria-label="'+(x.estado==='terminado'?'Reabrir ':'Terminar ')+escapeHtml(x.desc)+'">'+icon(x.estado==='terminado'?'refresh':'check')+'</button><button type="button" class="work-task-copy" data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'"><strong>'+escapeHtml(x.desc)+'</strong>'+(insideTicket?'':'<span>#'+t.seq+' · '+escapeHtml(sidebarClienteLabel(t))+'</span>')+'<small>'+escapeHtml(x.responsable||'Sin asignar')+' · '+AREA_LABEL[taskArea(x)]+'</small></button></article>';}
+document.addEventListener("toggle", function(e){
+  var node=e.target;
+  if(node.isConnected && node.classList.contains("tk-done-tasks")){
+    UI.ticketDoneOpen=node.open ? node.dataset.ticket : null;
+  }
+},true);
 renderOperacionesView=function(){var o=UI.operaciones,view=o.workView||'todas',rows=[];STATE.tickets.forEach(function(t){if(UI.search&&!ticketMatchesSearch(t,UI.search))return;(t.tareas||[]).forEach(function(x){if(view==='terminadas'?x.estado!=='terminado':x.estado==='terminado'||ticketIsCerrado(t))return;if((view==='planeacion'||view==='produccion')&&taskArea(x)!==view)return;if(view==='mias'&&x.responsable!==currentActorName())return;if(o.query&&normalizeWord(x.desc+' '+t.seq+' '+t.cliente+' '+x.responsable).indexOf(normalizeWord(o.query))===-1)return;rows.push({t:t,task:x});});});rows.sort(compareOpsItems);return '<div class="home-header"><h1>Tareas</h1><button class="btn btn-primary" data-action="ops-task-new">+ Tarea</button></div><div class="work-task-toolbar"><label class="search-wrap">'+icon('search')+'<input id="ops-search" placeholder="Buscar tarea, cliente o responsable" value="'+escapeHtml(o.query||'')+'"></label><div class="work-task-views" role="tablist" aria-label="Vistas de tareas">'+[['todas','Activas'],['planeacion','Planeación'],['produccion','Producción'],['mias','Mis tareas'],['terminadas','Terminadas']].map(function(v){return '<button type="button" role="tab" aria-selected="'+(view===v[0])+'" class="btn '+(view===v[0]?'btn-primary':'btn-ghost')+'" data-workspace="task-view" data-view="'+v[0]+'">'+v[1]+'</button>';}).join('')+'</div></div><div class="page-scroll work-task-list">'+(rows.length?rows.map(function(r){return workTaskRow(r.t,r.task);}).join(''):'<p class="empty-list">No hay tareas en esta vista.</p>')+'</div>';};
 var workAstraReview=astraReviewOverlay;
 astraReviewOverlay=function(){var r=UI.astraReview;if(!r||r.kind!=='task')return workAstraReview();var p=astraPost(r.postId);if(!p)return '';if(!UI.operaciones.editor)UI.operaciones.editor={mode:'create',ticketId:conversationTicketId(p.conversationId)||p.ticketId||null,draft:{},ticketQuery:'',sourceIds:r.selectedIds||[r.postId]};UI.astraReview=null;return renderOpsEditor();};
@@ -27642,7 +27788,7 @@ var workKanbanCard=renderKanbanCard;
 kanbanCardProductosContext=function(t){var products=t.productos||[];return {text:products.length?products.slice(0,3).map(function(p){return (p.cantidad?p.cantidad+' X ':'')+p.desc;}).join(' · '):'Agregar trabajo',empty:!products.length};};
 renderKanbanCard=function(t){var html=workKanbanCard(t);var start=html.indexOf('<div class="kanban-card-quesigue-cell');var end=html.indexOf('<div class="kanban-card-markers-row',start);if(start!==-1&&end!==-1)html=html.slice(0,start)+html.slice(end);if(!ticketThumbPhotoPath(t))html=html.replace('<div class="kanban-card-main" draggable="false">','<div class="kanban-card-main" draggable="false"><button class="work-add-photo" data-action="tickets-thumb-photo" data-ticket="'+t.id+'" aria-label="Agregar foto al ticket #'+t.seq+'">'+icon('image')+'<span>Agregar foto</span></button>');var f=ticketFinancials(t),tasks=(t.tareas||[]).filter(function(x){return x.estado!=='terminado';});var extra='<div class="work-ticket-actions"><button class="btn btn-ghost" data-workspace="dates" data-ticket="'+t.id+'">'+icon('calendar')+'<span>'+(t.fechaCompromiso?'Entrega '+fmtDateOnlyShort(t.fechaCompromiso):'Fecha de entrega')+'</span></button><button class="btn btn-ghost" data-action="cxc-pago-open" data-ticket="'+t.id+'">'+icon('wallet')+(f.saldo==null?'Revisar cobro':f.saldo>0?'Cobrar '+fmtMoney(f.saldo):'Pagado')+'</button>'+(!t.entregadoAt&&!ticketIsCerrado(t)?'<button class="btn btn-ghost" data-action="cell-editor-marcar-entregado" data-ticket="'+t.id+'">'+icon('truck')+'Marcar entregado</button>':'')+'</div>'+(tasks.length?'<div class="work-kanban-tasks">'+tasks.map(function(x){return '<div class="work-kanban-task"><button class="icon-btn" data-workspace="task-done" data-ticket="'+t.id+'" data-task="'+x.id+'" aria-label="Terminar '+escapeHtml(x.desc)+'">'+icon('check')+'</button><button data-action="ops-task-edit" data-ticket="'+t.id+'" data-task="'+x.id+'">'+escapeHtml(x.desc)+'<small>'+escapeHtml(x.responsable||'Sin asignar')+'</small></button></div>';}).join('')+'</div>':'');return html.slice(0,html.lastIndexOf('</div>'))+extra+'</div>';};
 var workToolbar=renderTicketsToolbar;
-renderTicketsToolbar=function(list){var toolbar=workToolbar(list);return '<div class="work-kanban-toolbar"><label class="search-wrap">'+icon('search')+'<input id="workspace-search" type="search" placeholder="Buscar cliente, folio o responsable" aria-label="Buscar en todos los tickets" value="'+escapeHtml(UI.search||'')+'"></label><button class="btn btn-primary" data-action="tickets-quickcreate-toggle" aria-label="Crear ticket">'+icon('plus')+'</button><button class="icon-btn" data-workspace="tools" aria-label="Mostrar vistas y filtros" aria-expanded="'+!!UI.workToolsOpen+'">'+icon('sliders')+'</button></div><div class="work-discover'+(UI.workToolsOpen||UI.ticketsExplorer.quickCreateOpen?' shown':'')+'">'+toolbar+'</div>';};
+renderTicketsToolbar=function(list){var toolbar=workToolbar(list);return '<div class="work-kanban-toolbar"><label class="search-wrap">'+icon('search')+'<input id="workspace-search" type="search" placeholder="Buscar cliente, folio o responsable" aria-label="Buscar en todos los tickets" value="'+escapeHtml(UI.search||'')+'"></label><button class="btn btn-primary" data-action="tickets-quickcreate-toggle" aria-label="Nueva orden">'+icon('plus')+' Nueva orden</button><button class="icon-btn" data-workspace="tools" aria-label="Mostrar vistas y filtros" aria-expanded="'+!!UI.workToolsOpen+'">'+icon('sliders')+'</button></div><div class="work-discover'+(UI.workToolsOpen||UI.ticketsExplorer.quickCreateOpen?' shown':'')+'">'+toolbar+'</div>';};
 var workFiltered=ticketsExplorerFiltered;
 ticketsExplorerFiltered=function(){return workFiltered().filter(function(t){return ticketMatchesSearch(t,UI.search||'');});};
 var workKanbanColumns=kanbanColumns;
@@ -27664,7 +27810,7 @@ document.addEventListener('click',async function(e){var b=e.target.closest&&e.ta
  if(a==='map-city')await setDeliveryZone(id,b.getAttribute('data-zone'));
  if(a==='financial-label'){closeMarkerToggle();if(t&&!t.entregadoAt)openCellEditor('estado',id);else if(t)openCellEditor('cobrado',id);}
  if(a==='task-view'){UI.operaciones.workView=b.getAttribute('data-view');render();}
- if(a==='task-done'&&t){var task=(t.tareas||[]).find(function(x){return x.id===b.getAttribute('data-task');});if(!task||WORK_PENDING_TASKS[task.id])return;WORK_PENDING_TASKS[task.id]=true;b.disabled=true;var becameDone=task.estado!=='terminado';DTG_AUTH_WRITES++;try{await updateTareaCore(t,task.id,{estado:becameDone?'terminado':'pendiente'});}finally{DTG_AUTH_WRITES--;delete WORK_PENDING_TASKS[task.id];render();}if(becameDone){var tt=findTicket(t.id);if(tt&&ticketSinTarea(tt))nextTaskPrompt(tt.id);}}
+ if(a==='task-done'&&t){var task=(t.tareas||[]).find(function(x){return x.id===b.getAttribute('data-task');});if(!task||WORK_PENDING_TASKS[task.id])return;WORK_PENDING_TASKS[task.id]=true;b.disabled=true;var becameDone=task.estado!=='terminado';DTG_AUTH_WRITES++;try{await updateTareaCore(t,task.id,{estado:becameDone?'terminado':'pendiente'});}finally{DTG_AUTH_WRITES--;delete WORK_PENDING_TASKS[task.id];render();}if(becameDone && UI.selectedTicketId!==t.id){var tt=findTicket(t.id);if(tt&&ticketSinTarea(tt))nextTaskPrompt(tt.id);}}
  if(a==='save-default'){var select=document.getElementById('work-default-area'),actor=currentActorId(),epoch=AUTH_EPOCH,client=sb;if(!select||TASK_AREAS.indexOf(select.value)===-1)return;b.disabled=true;DTG_AUTH_WRITES++;try{var res=await client.from('profiles').update({default_task_area:select.value}).eq('id',actor);if(res.error)throw res.error;if(epoch!==AUTH_EPOCH)return;CURRENT_PROFILE.default_task_area=select.value;var p=(STATE.profiles||[]).find(function(p){return p.id===actor;});if(p)p.defaultTaskArea=select.value;showToast('Destino predeterminado guardado. Se aplica solo a nuevas tareas.');}catch(err){userError('Destino de tareas',err);}finally{DTG_AUTH_WRITES--;b.disabled=false;}}
 },true);
 document.addEventListener('keydown',function(e){var b=e.target.closest&&e.target.closest('[data-workspace="map-city"]');if(b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();b.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
@@ -27678,7 +27824,7 @@ document.addEventListener('wheel',function(e){if(e.deltaY< -20&&e.target.closest
 var workAccountMenu=renderAccountMenu;
 renderAccountMenu=function(){var html=workAccountMenu();if(UI.editNameOpen)return html;var area=workDefaultArea(currentActorName());var settings='<div class="work-default-setting"><label>Destino de mis nuevas tareas<select id="work-default-area"><option value="planeacion"'+(area==='planeacion'?' selected':'')+'>Planeación</option><option value="produccion"'+(area==='produccion'?' selected':'')+'>Producción</option></select></label><button class="btn btn-ghost" data-workspace="save-default">Guardar destino</button><small>No mueve tareas existentes.</small></div>';return html.replace('<div class="account-menu-section-label">',settings+'<div class="account-menu-section-label">');};
 var workRender=render;
-render=function(){workRender();var drawer=document.querySelector('.sidebar');if(drawer){var hidden=isMobileViewport()&&!UI.sidebarOpen;drawer.inert=hidden;if(hidden)drawer.setAttribute('aria-hidden','true');else drawer.removeAttribute('aria-hidden');}document.querySelectorAll('[data-field="quesigue"],[data-action="field-quesigue"],.tk-next,.cxc-quesigue,.calendar-entry-quesigue,.kanban-card-quesigue-cell').forEach(function(n){n.remove();});document.querySelectorAll('th').forEach(function(th){if(normalizeWord(th.textContent)==='que sigue'){var i=th.cellIndex;th.closest('table').querySelectorAll('tr').forEach(function(r){if(r.children[i])r.children[i].remove();});}});document.querySelectorAll('.quickedit-row,.tickets-list-preview-row,.calendar-entrypanel-row').forEach(function(r){if(normalizeWord(r.textContent).indexOf('que sigue')===0)r.remove();});};
+render=function(){workRender();var drawer=document.querySelector('.sidebar');if(drawer){var hidden=isMobileViewport()&&!UI.sidebarOpen;drawer.inert=hidden;if(hidden)drawer.setAttribute('aria-hidden','true');else drawer.removeAttribute('aria-hidden');}document.querySelectorAll('[data-field="quesigue"],[data-action="field-quesigue"],.tk-next,.cxc-quesigue,.calendar-entry-quesigue,.kanban-card-quesigue-cell').forEach(function(n){if(!n.closest('.tk-order-screen'))n.remove();});document.querySelectorAll('th').forEach(function(th){if(normalizeWord(th.textContent)==='que sigue'){var i=th.cellIndex;th.closest('table').querySelectorAll('tr').forEach(function(r){if(r.children[i])r.children[i].remove();});}});document.querySelectorAll('.quickedit-row,.tickets-list-preview-row,.calendar-entrypanel-row').forEach(function(r){if(normalizeWord(r.textContent).indexOf('que sigue')===0)r.remove();});};
 
 /* Delivery calendar: a single date-only source, optional metadata and touch navigation. */
 var DC_PENDING=Object.create(null),DC_GESTURE=null,DC_HOLD=null,DC_SUPPRESS=0;
