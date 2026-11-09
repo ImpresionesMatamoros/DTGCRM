@@ -1972,6 +1972,14 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   .tickets-list-preview{position:static; max-width:none; width:100%; max-height:none;}
 }
 
+.ticket-mobile-list > li{display:flex;align-items:stretch;gap:4px;min-width:0}
+.ticket-mobile-list .ticket-mobile-card{flex:1;min-width:0;touch-action:pan-y;-webkit-touch-callout:none;user-select:none}
+.ticket-list-more{flex:none;min-width:44px;min-height:44px;align-self:stretch}
+.ticket-list-action-dialog{max-height:calc(100dvh - 24px);overflow:auto}
+.ticket-list-action-dialog form,.ticket-list-action-items{display:grid;gap:8px}
+.ticket-list-action-items .btn{text-align:left;justify-content:flex-start;min-height:44px}
+.ticket-list-action-dialog form label{display:grid;gap:4px}
+.ticket-list-action-dialog input,.ticket-list-action-dialog select{width:100%;min-width:0;min-height:44px}
 .ticket-mobile-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
 .ticket-mobile-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;min-height:88px;padding:10px;text-align:left;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);cursor:pointer}
 .ticket-mobile-card:active{background:var(--surface-2)}
@@ -4781,7 +4789,7 @@ var UI = { selectedTicketId: null, search: "", composer: null, sidebarOpen: fals
   /* Tickets comienza en Detalles + Abiertas para todos los miembros.
      Las vistas y filtros pueden cambiarse durante la sesión; al recargar,
      cambiar de cuenta o entrar al módulo se aplica resetTicketsEntry(). */
-  ticketsView: "details",
+  ticketsView: "list",
   detailsExpandedTicketId: null, detailsTeamOpen: false, detailsOnlyNoTasks: false,
   /* Ronda "Refinamiento operativo" §17-21: optionsOpen/sort son estado de
      SESIÓN (como el resto de ticketsExplorer, no localStorage) — "abierto/
@@ -5374,7 +5382,8 @@ function joinWithDaySeparators(items){
 // Shared entry policy for every member, including reloads and account switches.
 // In-session view/filter choices remain available until the next module entry.
 function resetTicketsEntry(){
-  UI.ticketsView = "details";
+  UI.ticketsView = "list";
+  UI.ticketListActions = null;
   UI.search = "";
   UI.detailsExpandedTicketId = null;
   UI.detailsTeamOpen = false;
@@ -6410,7 +6419,8 @@ function dtgRestoreNavContext(state){
 function dtgCloseTopOverlay(){
   if(UI.zonePicker){ closeZonePicker(); return true; }
   if(UI.markerToggle){ closeMarkerToggle(); return true; }
-  if(UI.cxcPago){ UI.cxcPago = null; render(); return true; }
+  if(UI.cxcPago){ closeCxcPago(); return true; }
+  if(UI.ticketListActions){ closeTicketListActions(); return true; }
   if(UI.operaciones.editor){ closeOpsEditor(); return true; }
   if(UI.operaciones.menuFor){ UI.operaciones.menuFor = null; render(); return true; }
   if(UI.chatReactFor || UI.chatMenuFor){ UI.chatReactFor = null; UI.chatMenuFor = null; render(); return true; }
@@ -9701,14 +9711,16 @@ function chooseCliSuggestion(idx, execute){
    camino de edición. Ahora vive DENTRO de productoRow() — solo se muestra
    cuando ese producto específico está en modo edición (UI.productoEditingId),
    nunca los 3 campos abiertos de siempre como antes de esta ronda. */
-function productoEditRow(t, p){
+function productoEditRow(t, p, fromList){
   return (
     '<div class="producto-edit-row">' +
-      '<input type="text" class="pe-desc" data-producto-edit="' + p.id + '" data-field="desc" data-ticket="' + t.id + '" value="' + escapeHtml(p.desc) + '">' +
-      '<input type="number" class="pe-cant" min="0" step="1" data-producto-edit="' + p.id + '" data-field="cantidad" data-ticket="' + t.id + '" value="' + p.cantidad + '">' +
-      '<input type="number" class="pe-precio" min="0" step="0.01" placeholder="pendiente" data-producto-edit="' + p.id + '" data-field="precio" data-ticket="' + t.id + '" value="' + (p.precio==null?"":p.precio) + '">' +
+      '<input type="text" class="pe-desc" aria-label="Descripción" data-producto-edit="' + p.id + '" data-field="desc" data-ticket="' + t.id + '" value="' + escapeHtml(p.desc) + '">' +
+      '<input type="number" class="pe-cant" aria-label="Cantidad" min="0" step="1" data-producto-edit="' + p.id + '" data-field="cantidad" data-ticket="' + t.id + '" value="' + p.cantidad + '">' +
+      '<input type="number" class="pe-precio" aria-label="Precio unitario" min="0" step="0.01" placeholder="pendiente" data-producto-edit="' + p.id + '" data-field="precio" data-ticket="' + t.id + '" value="' + (p.precio==null?"":p.precio) + '">' +
       '<span class="pe-total' + (p.precio==null?" pending":"") + '">' + (p.precio==null ? "pendiente" : fmtMoney(p.cantidad*p.precio)) + "</span>" +
-      '<button type="button" class="btn-plain producto-edit-done-btn" data-action="producto-edit-done">Listo</button>' +
+      (fromList ? '<button type="button" class="btn-plain danger-text" data-action="producto-delete-open" data-producto="' + escapeHtml(p.id) +
+        '" data-ticket="' + escapeHtml(t.id) + '" aria-label="Eliminar ' + escapeHtml(p.desc) + '">Eliminar</button>'
+        : '<button type="button" class="btn-plain producto-edit-done-btn" data-action="producto-edit-done">Listo</button>') +
     "</div>"
   );
 }
@@ -10937,6 +10949,19 @@ function renderCxcView(){
 /* Registrar pago desde CxC: el MISMO addPagoCore de siempre (mismo insert,
    misma bitácora). Si el saldo queda en cero se OFRECE cerrar como pagado —
    nunca se cierra solo (el sistema sugiere, la persona decide). */
+function openCxcPago(ticketId, fromTicket, fromList){
+  UI.cxcPago = {ticketId:ticketId, done:false, fromTicket:fromTicket, fromList:fromList};
+  UI.pendingFocus = {elId:"cxc-pago-monto",userInitiated:true};
+  render();
+}
+function closeCxcPago(){
+  var m=UI.cxcPago;
+  if(!m || m.saving) return;
+  if(m.fromList) ticketListReturnFocus(m.ticketId);
+  UI.cxcPago=null;
+  render();
+}
+
 function renderCxcPagoModal(){
   var m = UI.cxcPago;
   if(!m) return "";
@@ -10952,41 +10977,60 @@ function renderCxcPagoModal(){
       '<div class="pago-result">' + (f.saldo == null ? "Faltan precios para saber el saldo." : (liquidado ? "Saldo liquidado." : "Saldo restante: <b>" + fmtMoney(f.saldo) + "</b>")) + "</div>" +
       '<div class="popover-actions">' +
         '<button class="btn btn-ghost" data-action="cxc-pago-close">Listo</button>' +
-        (liquidado ? '<button class="btn btn-primary" data-action="cxc-cerrar-pagado" data-ticket="' + t.id + '">' + icon("check") + "Cerrar como pagado…</button>" : "") +
+        (liquidado && !ticketIsCerrado(t) ? '<button class="btn btn-primary" data-action="cxc-cerrar-pagado" data-ticket="' + t.id + '">' + icon("check") + "Cerrar como pagado…</button>" : "") +
       "</div>";
   } else {
-    var sugerido = !m.fromTicket && f.saldo != null && f.saldo > 0 ? f.saldo.toFixed(2) : "";
+    var draft = m.draft || {amount:!m.fromTicket && f.saldo != null && f.saldo > 0 ? f.saldo.toFixed(2) : "",
+      date:todayLocalYYYYMMDD(),method:"",memo:m.fromTicket ? "" : f.saldo != null ? "Liquidación" : "Abono"};
+    var disabled=m.saving ? ' disabled' : '';
     inner =
       '<div class="cierre-modal-title">Registrar pago</div>' +
       '<div class="cierre-modal-sub">' + escapeHtml(sidebarClienteLabel(t)) + " · #" + t.seq + (f.saldo != null ? " · saldo " + fmtMoney(f.saldo) : "") + "</div>" +
       '<div class="popover-form">' +
         '<div class="popover-row">' +
-          '<label>Monto<input type="number" id="cxc-pago-monto" min="0" step="0.01" inputmode="decimal" value="' + sugerido + '"></label>' +
-          '<label>Fecha<input type="date" id="cxc-pago-fecha" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + todayLocalYYYYMMDD() + '"></label>' +
+          '<label>Monto<input type="number" id="cxc-pago-monto" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(draft.amount) + '"' + disabled + '></label>' +
+          '<label>Fecha<input type="date" id="cxc-pago-fecha" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX + '" value="' + escapeHtml(draft.date) + '"' + disabled + '></label>' +
         "</div>" +
-        '<label>Método<select id="cxc-pago-metodo"><option value="">Sin especificar</option>' + PAYMENT_METHODS.map(function(pm){ return "<option>" + escapeHtml(pm) + "</option>"; }).join("") + "</select></label>" +
-        '<label>Concepto<input type="text" id="cxc-pago-concepto" value="' + (m.fromTicket ? "" : f.saldo != null ? "Liquidación" : "Abono") + '"></label>' +
-      "</div>" +
-      '<div class="popover-actions"><button class="btn btn-ghost" data-action="cxc-pago-close">Cancelar</button><button class="btn btn-primary" data-action="cxc-pago-submit" data-ticket="' + t.id + '">Registrar</button></div>';
+        '<label>Método<select id="cxc-pago-metodo"' + disabled + '><option value="">Sin especificar</option>' + PAYMENT_METHODS.map(function(pm){ return '<option' + (pm===draft.method?' selected':'') + '>' + escapeHtml(pm) + '</option>'; }).join("") + '</select></label>' +
+        '<label>Concepto<input type="text" id="cxc-pago-concepto" value="' + escapeHtml(draft.memo) + '"' + disabled + '></label>' +
+      '</div>' +
+      (m.error ? '<p role="alert">' + escapeHtml(m.error) + '</p>' : '') +
+      '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-action="cxc-pago-close"' + disabled + '>Cancelar</button>' +
+      '<button type="button" class="btn btn-primary" data-action="cxc-pago-submit" data-ticket="' + t.id + '"' + disabled + '>' + (m.saving ? 'Guardando…' : 'Registrar') + '</button></div>';
+
   }
   return '<div class="cierre-modal-overlay" id="cxc-pago-overlay"><div class="cierre-modal" role="dialog" aria-modal="true" aria-label="Registrar pago">' + inner + "</div></div>";
 }
 async function submitCxcPago(ticketId){
-  var t = findTicket(ticketId);
-  if(!t) return;
-  var val = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
-  var monto = parseFloat(val("cxc-pago-monto"));
-  if(!monto || isNaN(monto) || monto <= 0){ showToast("Ingresa un monto válido."); return; }
-  var fecha = val("cxc-pago-fecha") || todayLocalYYYYMMDD();
-  if(!isSaneDateOnly(fecha)){ showToast("Fecha inválida — revisa el año."); return; }
-  var ok = await addPagoCore(t, round2(monto), fecha, val("cxc-pago-metodo"), val("cxc-pago-concepto").trim());
-  UI.cxcPago = ok ? { ticketId: ticketId, done: true } : null;
-  UI.pendingFocus = null;
+  var m=UI.cxcPago;
+  var t=findTicket(ticketId);
+  if(!t || !m || m.saving || m.done || m.ticketId!==ticketId) return;
+  var val=function(id){var el=document.getElementById(id);return el ? el.value : "";};
+  var draft={amount:val("cxc-pago-monto"),date:val("cxc-pago-fecha"),method:val("cxc-pago-metodo"),memo:val("cxc-pago-concepto").trim()};
+  var amount=round2(Number(draft.amount));
+  var date=draft.date || todayLocalYYYYMMDD();
+  if(!Number.isFinite(amount) || amount<=0){showToast("Ingresa un monto válido.");return;}
+  if(!isSaneDateOnly(date)){showToast("Fecha inválida — revisa el año.");return;}
+  var paymentKey=JSON.stringify([amount,date,draft.method,draft.memo]);
+  if(m.paymentKey!==paymentKey){m.paymentKey=paymentKey;m.opId=uuid4();}
+  m.draft=draft;
+  m.saving=true;
+  m.error="";
   render();
+  try{
+    m.done=await addPagoCore(t,amount,date,draft.method,draft.memo,{opId:m.opId});
+    if(!m.done) m.error="No se pudo confirmar el pago. Reintenta para verificar el mismo registro.";
+  }catch(error){
+    m.error="No se pudo confirmar el pago. Reintenta para verificar el mismo registro.";
+  }finally{
+    m.saving=false;
+    if(UI.cxcPago===m) render();
+  }
 }
 function openCierrePagadoForTicket(ticketId){
-  UI.cxcPago = null;
-  openCierreModalForTicket(ticketId);
+  var fromList=UI.cxcPago && UI.cxcPago.fromList;
+  UI.cxcPago=null;
+  openCierreModalForTicket(ticketId,{fromList:fromList});
 }
 
 /* ================= TICKETS — explorador general (ronda "PWA + Tickets +
@@ -11566,6 +11610,193 @@ function ticketOperationalCellValues(t){
    marcadores. Cero mutación nueva. La fila sigue seleccionando (preview a la
    derecha) y doble clic / Enter abre el ticket. */
 var TICKETS_LIST_COLS = ["Foto","Ticket","Cliente","Trabajo","Qué sigue","Responsable","Atender","Compromiso","Marcadores","Total","Cobrado","Estado"];
+function ticketListMoreButton(t){
+  return '<button type="button" class="btn btn-ghost ticket-list-more" id="ticket-list-more-' + escapeHtml(t.id) +
+    '" data-ticket-list-action="open" data-ticket="' + escapeHtml(t.id) +
+    '" aria-haspopup="dialog" aria-label="Acciones rápidas de la orden #' + t.seq + '">⋯</button>';
+}
+
+function ticketListReturnFocus(ticketId){
+  var id = "ticket-list-more-" + ticketId;
+  UI.pendingFocus = {elId:id, fallbackId:"workspace-search", userInitiated:true};
+}
+
+function openTicketListActions(ticketId){
+  if(UI.mainView !== "tickets" || UI.ticketsView !== "list" || UI.selectedTicketId || !findTicket(ticketId)) return;
+  UI.ticketListActions = {ticketId:ticketId, page:"menu"};
+  UI.pendingFocus = {elId:"ticket-list-action-title", userInitiated:true};
+  render();
+}
+
+function closeTicketListActions(){
+  var d = UI.ticketListActions;
+  if(!d || d.saving) return;
+  UI.ticketListActions = null;
+  ticketListReturnFocus(d.ticketId);
+  render();
+}
+
+function renderTicketListActions(){
+  var d = UI.ticketListActions;
+  var t = d && findTicket(d.ticketId);
+  if(!t) return "";
+  var titles = {menu:"Acciones rápidas", delivery:"Cambiar entrega", tracking:"Actualizar seguimiento"};
+  var actions = [["products","Editar pedido"],["delivery","Cambiar entrega"],["tracking","Actualizar seguimiento"],
+    ["payment","Registrar pago"],["finalize","Finalizar orden"]];
+  var disabled = d.saving ? ' disabled' : '';
+  var body;
+  if(d.page === "menu"){
+    body = '<div class="ticket-list-action-items">' + actions.map(function(a){
+      return '<button type="button" class="btn btn-ghost" data-ticket-list-action="' + a[0] + '"' +
+        (a[0] === "finalize" && ticketIsCerrado(t) ? ' disabled' : '') + '>' + a[1] + '</button>';
+    }).join("") + '</div>';
+  }else{
+    var field;
+    if(d.page === "delivery"){
+      field = '<label>Fecha de entrega<input type="date" name="delivery" min="' + DATE_INPUT_MIN + '" max="' + DATE_INPUT_MAX +
+        '" value="' + escapeHtml(d.delivery) + '"' + disabled + '></label>';
+    }else{
+      field = '<label>Responsable<select name="owner"' + disabled + '>' + responsableOptionsHtml(d.owner) + '</select></label>' +
+        '<label>Qué sigue<input name="next" type="text" list="ticket-list-next-options" value="' + escapeHtml(d.next) + '"' + disabled + '></label>' +
+        '<datalist id="ticket-list-next-options">' + (STATE.meta.queSigueOptions || []).map(function(option){
+          return '<option value="' + escapeHtml(option) + '"></option>';
+        }).join("") + '</datalist>';
+    }
+    body = '<form id="ticket-list-action-form">' + field +
+      (d.error ? '<p role="alert">' + escapeHtml(d.error) + '</p>' : '') +
+      '<div class="popover-actions">' +
+        (d.page === "delivery" && d.delivery ? '<button type="button" class="btn btn-ghost" data-ticket-list-action="clear-date"' + disabled + '>Quitar fecha</button>' : '') +
+        '<button type="button" class="btn btn-ghost" data-ticket-list-action="back"' + disabled + '>Volver</button>' +
+        '<button type="submit" class="btn btn-primary"' + disabled + '>' + (d.saving ? "Guardando…" : "Guardar") + '</button></div></form>';
+  }
+  return '<div class="cierre-modal-overlay" id="ticket-list-action-overlay">' +
+    '<div class="cierre-modal ticket-list-action-dialog" role="dialog" aria-modal="true" aria-labelledby="ticket-list-action-title">' +
+      '<h2 class="cierre-modal-title" id="ticket-list-action-title" tabindex="-1">' + titles[d.page] + '</h2>' +
+      '<p class="cierre-modal-sub">#' + t.seq + ' · ' + escapeHtml(sidebarClienteLabel(t)) + '</p>' + body +
+      (d.page === "menu" ? '<div class="popover-actions"><button type="button" class="btn btn-ghost" data-ticket-list-action="close">Cerrar</button></div>' : '') +
+    '</div></div>';
+}
+
+async function saveTicketListActions(form, clearDate){
+  var d = UI.ticketListActions;
+  var t = d && findTicket(d.ticketId);
+  if(!t || d.saving) return;
+  if(d.page === "delivery"){
+    d.delivery = clearDate ? "" : form.elements.delivery.value;
+  }else{
+    d.owner = form.elements.owner.value;
+    d.next = form.elements.next.value.trim();
+  }
+  d.saving = true;
+  d.error = "";
+  render();
+  try{
+    var failed = [];
+    if(d.page === "delivery"){
+      if(d.delivery !== (t.fechaCompromiso || "") && !await dcPersistDates(t, d.delivery, null, null, false)) failed.push("la entrega");
+    }else{
+      if(d.owner !== (t.responsable || "") && !await updateTicketFieldCore(t, "field-responsable", d.owner)) failed.push("el responsable");
+      t = findTicket(d.ticketId);
+      if(t && d.next !== (t.queSigue || "") && !await updateQueSigueCore(t, d.next)) failed.push("Qué sigue");
+    }
+    if(UI.ticketListActions !== d) return;
+    if(failed.length){d.error = "No se pudo guardar " + failed.join(" y ") + ". Puedes reintentar.";return;}
+    UI.ticketListActions = null;
+    ticketListReturnFocus(d.ticketId);
+    render();
+    showToast("Orden actualizada.");
+  }catch(error){
+    d.error = "No se pudo guardar el cambio. Puedes reintentar.";
+  }finally{
+    d.saving = false;
+    if(UI.ticketListActions === d) render();
+  }
+}
+
+var ticketListHold = null;
+var ticketListSuppressClick = 0;
+function clearTicketListHold(){
+  if(ticketListHold) clearTimeout(ticketListHold.timer);
+  ticketListHold = null;
+}
+document.addEventListener("pointerdown",function(e){
+  var card=e.target.closest && e.target.closest(".ticket-mobile-card");
+  if(!card || !e.isPrimary || e.pointerType === "mouse") return;
+  clearTicketListHold();
+  ticketListSuppressClick = 0;
+  var hold={x:e.clientX,y:e.clientY,id:e.pointerId,ticket:card.dataset.id};
+  hold.timer=setTimeout(function(){
+    if(ticketListHold !== hold) return;
+    clearTicketListHold();
+    ticketListSuppressClick = Date.now() + 900;
+    openTicketListActions(hold.ticket);
+  },500);
+  ticketListHold=hold;
+},true);
+document.addEventListener("pointermove",function(e){
+  var hold=ticketListHold;
+  if(hold && e.pointerId===hold.id && (Math.abs(e.clientX-hold.x)>10 || Math.abs(e.clientY-hold.y)>10)) clearTicketListHold();
+},true);
+["pointerup","pointercancel","scroll"].forEach(function(type){
+  document.addEventListener(type,clearTicketListHold,true);
+});
+document.addEventListener("contextmenu",function(e){
+  var card=e.target.closest && e.target.closest(".ticket-mobile-card");
+  if(!card) return;
+  e.preventDefault();
+  clearTicketListHold();
+  ticketListSuppressClick = Date.now() + 900;
+  openTicketListActions(card.dataset.id);
+},true);
+document.addEventListener("click",function(e){
+  if(Date.now()<ticketListSuppressClick && e.target.closest && e.target.closest(".ticket-mobile-card")){
+    e.preventDefault();e.stopImmediatePropagation();return;
+  }
+  var b=e.target.closest && e.target.closest("[data-ticket-list-action]");
+  if(!b){
+    if(e.target.id==="ticket-list-action-overlay") closeTicketListActions();
+    return;
+  }
+  e.preventDefault();e.stopImmediatePropagation();
+  var a=b.dataset.ticketListAction;
+  if(a==="open"){openTicketListActions(b.dataset.ticket);return;}
+  var d=UI.ticketListActions,t=d&&findTicket(d.ticketId);
+  if(!t || d.saving) return;
+  if(a==="close"){closeTicketListActions();return;}
+  if(a==="clear-date"){saveTicketListActions(b.closest("form"),true);return;}
+  if(a==="delivery" || a==="tracking" || a==="back"){
+    d.page=a==="back"?"menu":a;
+    d.delivery=t.fechaCompromiso||"";
+    d.owner=t.responsable||"";
+    d.next=t.queSigue||"";
+    d.error="";
+    UI.pendingFocus={elId:"ticket-list-action-title",userInitiated:true};
+    render();return;
+  }
+  UI.ticketListActions=null;
+  if(a==="products"){openCellEditor("trabajo",t.id,{fromList:true});}
+  else if(a==="payment"){openCxcPago(t.id,true,true);}
+  else if(a==="finalize"){openCierreModalForTicket(t.id,{fromList:true});}
+},true);
+document.addEventListener("submit",function(e){
+  if(e.target.id!=="ticket-list-action-form") return;
+  e.preventDefault();
+  saveTicketListActions(e.target,false);
+},true);
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Tab") return;
+  var selector=".ticket-list-action-dialog";
+  if(UI.cellEditor && UI.cellEditor.fromList) selector+=",#cell-editor-overlay [role=dialog]";
+  if(UI.cxcPago && UI.cxcPago.fromList) selector+=",#cxc-pago-overlay [role=dialog]";
+  var dialog=e.target.closest && e.target.closest(selector);
+  if(!dialog) return;
+  var fields=dialog.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)");
+  if(!fields.length){e.preventDefault();return;}
+  var first=fields[0],last=fields[fields.length-1];
+  if(e.shiftKey && (e.target===first || (e.target.id==="ticket-list-action-title" || e.target.id==="list-product-editor-title"))){e.preventDefault();last.focus();}
+  else if(!e.shiftKey && e.target===last){e.preventDefault();first.focus();}
+});
+
 function renderMobileTicketsList(list){
   var today = todayLocalYYYYMMDD();
   return '<ul class="ticket-mobile-list" aria-label="Lista de tickets">' + list.map(function(t){
@@ -11585,7 +11816,7 @@ function renderMobileTicketsList(list){
         '<span class="ticket-mobile-product">' + escapeHtml(work) + '</span>' +
         '<span class="ticket-mobile-meta"><span' + (overdue ? ' class="ticket-mobile-overdue"' : '') + '>' + escapeHtml(delivery) + '</span>' +
           (t.responsable ? '<span>' + escapeHtml(t.responsable) + '</span>' : '') + '</span>' +
-      '</span><span class="ticket-mobile-arrow" aria-hidden="true">›</span></button></li>';
+      '</span><span class="ticket-mobile-arrow" aria-hidden="true">›</span></button>' + ticketListMoreButton(t) + '</li>';
   }).join("") + '</ul>';
 }
 
@@ -11600,6 +11831,7 @@ function renderTicketsListRow(t){
     '<span class="tickets-folio-cell">' +
       '<button type="button" class="tickets-details-open" data-action="open-ticket" data-id="' + t.id + '" title="Abrir ticket">#' + t.seq + "</button>" +
       '<button type="button" class="icon-btn tickets-copy-icon-btn" data-action="copy-ticket-summary" data-ticket="' + t.id + '" title="Copiar resumen" aria-label="Copiar resumen">' + icon("copy") + "</button>" +
+      ticketListMoreButton(t) +
       renderTicketWarnings(t) +
     "</span>",
     detailsModalCell(v.clienteHtml, "cliente", t.id),
@@ -17325,6 +17557,7 @@ function render(){
     renderBibliotecaViewer() +
     renderContactPanel() +
     renderCellEditorOverlay() +
+    renderTicketListActions() +
     renderMarkerPickerOverlay() +
     renderTicketsThumbPhotoOverlay() +
     renderTicketGalleryOverlay() +
@@ -17788,7 +18021,7 @@ function applyFocus(){
       if(UI.headerEditField !== wantField){ UI.headerEditField = wantField; render(); }
     }
     if(suppressAutoFocus) return;
-    var explicitEl = document.getElementById(target.elId);
+    var explicitEl = document.getElementById(target.elId) || (target.fallbackId && document.getElementById(target.fallbackId));
     if(explicitEl){
       explicitEl.focus(); try{ explicitEl.select(); }catch(e){}
       /* UX Flow Patch §13: "Agregar qué sigue" en Responsables tomaba 2
@@ -21458,7 +21691,8 @@ async function commitQueSigue(value, opts){
    "ENTREGADO NO SIGNIFICA CERRADO": marcarEntregadoCore nunca toca
    cierre_tipo. "PRECIO ≠ DEUDA": ninguna de estas funciones calcula ni
    guarda un saldo/deuda — solo registran hechos (se entregó, se cerró). */
-async function marcarEntregadoCore(t){
+async function marcarEntregadoCore(t, options){
+  options = options || {};
   if(!t || t.entregadoAt) return;
   var now = new Date().toISOString();
   t.entregadoAt = now; t.entregadoPor = currentActorName() || "";
@@ -21472,11 +21706,11 @@ async function marcarEntregadoCore(t){
        menor sin parsear payload.text. Eventos ya guardados antes de este
        cambio no tienen "kind" y se siguen viendo genéricos — no se
        reclasifican retroactivamente. */
-    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: "Marcado como entregado", kind: "entrega" } });
+    await sb.from("bitacora").insert({ ticket_id: t.id, tipo: "sistema", autor: currentActorName() || null, payload: { text: (options.pendingPayment ? "Entregado · pendiente de pago" : "Marcado como entregado") + (options.reason ? " — " + options.reason : ""), kind: "entrega" } });
   }catch(e){
     t.entregadoAt = null; t.entregadoPor = "";
     render();
-    userError("Marcar entregado · #" + t.seq, e, function(){ marcarEntregadoCore(t); });
+    userError("Marcar entregado · #" + t.seq, e, function(){ marcarEntregadoCore(t, options); });
     return false;
   }
   refreshFromServer();
@@ -21535,7 +21769,8 @@ async function cerrarTicketCore(t, tipo, razon){
   if(ok){
     if(UI.cierreModal && UI.cierreModal.ticketId === t.id && UI.cierreModal.saving){
       UI.cierreModal = null;
-      UI.pendingFocus = {elId:"tk-order-header", userInitiated:true};
+      if(UI.mainView === "tickets" && !UI.selectedTicketId) ticketListReturnFocus(t.id);
+      else UI.pendingFocus = {elId:"tk-order-header", userInitiated:true};
       render();
     }
     /* X1.6: 10 s para arrepentirse. No es una confirmación previa (esas se
@@ -21572,9 +21807,9 @@ async function reabrirTicketCore(t){
   return true;
 }
 
-function openCierreModalForTicket(ticketId){
+function openCierreModalForTicket(ticketId, options){
   var active = document.activeElement;
-  UI.cierreModal = {ticketId:ticketId, returnFocusId:active && active.id};
+  UI.cierreModal = {ticketId:ticketId, returnFocusId:active && active.id, fromList:!!(options && options.fromList)};
   UI.pendingFocus = {elId:"tk-finalize-title", userInitiated:true};
   render();
 }
@@ -21583,7 +21818,8 @@ function closeCierreModal(){
   var d = UI.cierreModal;
   if(!d || d.saving) return;
   UI.cierreModal = null;
-  if(d.returnFocusId) UI.pendingFocus = {elId:d.returnFocusId, userInitiated:true};
+  if(d.fromList) ticketListReturnFocus(d.ticketId);
+  else if(d.returnFocusId) UI.pendingFocus = {elId:d.returnFocusId, userInitiated:true};
   render();
 }
 
@@ -21591,7 +21827,11 @@ async function submitCierreForm(tipo){
   var d = UI.cierreModal;
   var t = d && findTicket(d.ticketId);
   if(!t || d.saving || ticketIsCerrado(t)) return;
-  if(tipo !== "entrega" && tipo !== "pagado" && tipo !== "cancelado") return;
+  if(tipo !== "pendiente_pago" && tipo !== "pagado" && tipo !== "cancelado") return;
+  if(tipo === "pendiente_pago"){
+    var saldo=ticketFinancials(t).saldo;
+    if(t.entregadoAt || (saldo!=null && saldo<=CXC_EPS)) return;
+  }
   var reason = document.getElementById("cierre-razon");
   d.razon = reason ? reason.value.trim() : "";
   d.saving = true;
@@ -21599,12 +21839,14 @@ async function submitCierreForm(tipo){
   UI.pendingFocus = {elId:"tk-finalize-title", userInitiated:true};
   render();
   try{
-    var ok = tipo === "entrega" ? await marcarEntregadoCore(t) : await cerrarTicketCore(t, tipo, d.razon);
+    var ok = tipo === "pendiente_pago" ? await marcarEntregadoCore(t,{pendingPayment:true,reason:d.razon}) : await cerrarTicketCore(t, tipo, d.razon);
     if(UI.cierreModal !== d) return;
     if(ok){
       UI.cierreModal = null;
-      UI.pendingFocus = {elId:tipo === "entrega" ? "tk-finalize" : "tk-order-header", userInitiated:true};
+      if(d.fromList) ticketListReturnFocus(d.ticketId);
+      else UI.pendingFocus = {elId:tipo === "pendiente_pago" ? "tk-finalize" : "tk-order-header", userInitiated:true};
       render();
+      if(tipo === "pendiente_pago") showToast("Orden entregada · pendiente de pago.");
     }else{
       d.error = "El cambio no quedó guardado. Puedes reintentar.";
     }
@@ -21632,11 +21874,13 @@ function renderCierreModal(){
         : t.entregadoAt ? "Entregada el " + fmtDateShort(t.entregadoAt) : "Pendiente de entrega") + '</p>' +
       ticketMoneySummary(t) +
       (notice && !closed ? '<p class="tk-finalize-notice">' + escapeHtml(notice) + '</p>' : '') +
+      (!closed && !t.entregadoAt ? '<p class="tk-finalize-delivery">Pendiente de pago marca la orden como entregada y la deja en Cuentas por cobrar.</p>' : '') +
       (d.error ? '<p class="tk-finalize-notice" role="alert">' + escapeHtml(d.error) + '</p>' : '') +
       (!closed ? '<label class="cierre-razon-label">Nota o motivo (opcional)' +
         '<textarea id="cierre-razon" rows="2"' + disabled + '>' + escapeHtml(d.razon || "") + '</textarea></label>' : '') +
       '<div class="tk-finalize-actions">' +
-        (!closed && !t.entregadoAt ? '<button type="button" class="btn btn-ghost" data-finalize="entrega"' + disabled + '>Marcar entregada y dejar abierta</button>' : '') +
+        (!closed && !t.entregadoAt ? '<button type="button" class="btn btn-ghost" data-finalize="pendiente_pago"' +
+          (f.saldo!=null && f.saldo<=CXC_EPS ? ' disabled title="No hay saldo pendiente"' : disabled) + '>Cerrar como pendiente de pago</button>' : '') +
         (!closed ? '<button type="button" class="btn btn-primary" data-finalize="pagado"' + disabled + '>Cerrar como pagada</button>' +
           '<button type="button" class="btn btn-ghost danger-text" data-finalize="cancelado"' + disabled + '>Cancelar orden</button>' : '') +
         '<button type="button" class="btn btn-ghost" data-action="cierre-cancel"' + disabled + '>' + (d.saving ? 'Guardando…' : 'Volver') + '</button>' +
@@ -21745,17 +21989,19 @@ function renderContactPanel(){
    conocido" (§37) y "Trabajo" (§32) comparten el MISMO panel "trabajo" —
    total siempre se deriva de productos, así que editar uno es editar el
    otro; no existe (ni debe existir) un input de "total" aparte. */
-function openCellEditor(kind, ticketId){
+function openCellEditor(kind, ticketId, options){
   /* §29: una sola edición activa a la vez en toda la app — abrir el editor
      modal cierra cualquier celda inline que hubiera quedado abierta (mismo
      criterio que openDetailsCellEdit hace a la inversa). */
   UI.headerEditField = null;
   UI.headerEditTicketId = null;
-  UI.cellEditor = { kind: kind, ticketId: ticketId, query: "" };
+  UI.cellEditor = { kind: kind, ticketId: ticketId, query: "", fromList:!!(options && options.fromList) };
+  if(UI.cellEditor.fromList) UI.pendingFocus = {elId:"list-product-editor-title",userInitiated:true};
   render();
 }
 function closeCellEditor(){
-  if(!UI.cellEditor) return;
+  if(!UI.cellEditor || UI.cellEditor.productSaving) return;
+  if(UI.cellEditor.fromList) ticketListReturnFocus(UI.cellEditor.ticketId);
   UI.cellEditor = null;
   render();
 }
@@ -21777,19 +22023,23 @@ function renderCellEditorCliente(t){
   );
 }
 function renderCellEditorTrabajo(t){
+  var editor=UI.cellEditor;
+  var draft=editor.productDraft || {desc:"",quantity:"1",price:""};
+  var disabled=editor.productSaving ? ' disabled' : '';
   var header = '<div class="producto-edit-row producto-edit-header"><span>Descripción</span><span>Cant.</span><span>Precio u.</span><span>Total</span></div>';
-  var rows = t.productos.length ? t.productos.map(function(p){ return productoEditRow(t, p); }).join("") : '<div class="empty-list">Sin productos todavía.</div>';
+  var rows = t.productos.length ? t.productos.map(function(p){ return productoEditRow(t, p, editor.fromList); }).join("") : '<div class="empty-list">Sin productos todavía.</div>';
   var addRow =
     '<div class="producto-edit-row producto-add-row">' +
-      '<input type="text" id="cell-editor-add-desc" placeholder="Descripción">' +
-      '<input type="number" id="cell-editor-add-cant" min="0" step="1" placeholder="Cant." value="1">' +
-      '<input type="number" id="cell-editor-add-precio" min="0" step="0.01" placeholder="pendiente">' +
-      '<button type="button" class="btn btn-ghost btn-sm" data-action="cell-editor-add-producto" data-ticket="' + t.id + '">+ Agregar</button>' +
+      '<input type="text" id="cell-editor-add-desc" aria-label="Descripción del nuevo producto" placeholder="Descripción" value="' + escapeHtml(draft.desc) + '"' + disabled + '>' +
+      '<input type="number" id="cell-editor-add-cant" aria-label="Cantidad del nuevo producto" min="1" step="1" placeholder="Cant." value="' + escapeHtml(draft.quantity) + '"' + disabled + '>' +
+      '<input type="number" id="cell-editor-add-precio" aria-label="Precio unitario del nuevo producto" min="0" step="0.01" placeholder="pendiente" value="' + escapeHtml(draft.price) + '"' + disabled + '>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-action="cell-editor-add-producto" data-ticket="' + t.id + '"' + disabled + '>' + (editor.productSaving ? "Agregando…" : "+ Agregar") + "</button>" +
     "</div>";
   return (
-    '<div class="cierre-modal-title">Trabajo</div>' +
+    '<h2 class="cierre-modal-title" id="list-product-editor-title" tabindex="-1">Editar pedido</h2>' +
     '<div class="cierre-modal-sub">' + escapeHtml(ticketLabel(t)) + "</div>" +
     header + rows + addRow +
+    (editor.productError ? '<p role="alert">' + escapeHtml(editor.productError) + "</p>" : "") +
     '<div class="ephemeral-sub">Editar aquí actualiza el producto del ticket — nunca modifica una cotización o invoice ya creado. El total siempre se calcula de estos productos.</div>'
   );
 }
@@ -21905,7 +22155,7 @@ function renderCellEditorOverlay(){
   var modalClass = "cierre-modal cell-editor-modal" + (UI.cellEditor.kind === "quickedit" ? " quickedit-modal" : "");
   return (
     '<div class="cierre-modal-overlay" id="cell-editor-overlay">' +
-      '<div class="' + modalClass + '">' + inner +
+      '<div class="' + modalClass + '" role="dialog" aria-modal="true"' + (UI.cellEditor.kind === "trabajo" ? ' aria-labelledby="list-product-editor-title"' : ' aria-label="Editar ticket"') + '>' + inner +
         '<div class="popover-actions"><button class="btn btn-ghost" data-action="cell-editor-close">Cerrar</button></div>' +
       "</div>" +
     "</div>"
@@ -25804,8 +26054,24 @@ document.addEventListener("click", function(e){
     var cantidad = cantEl ? parseFloat(cantEl.value) : NaN;
     var precio = (precioEl && precioEl.value !== "") ? parseFloat(precioEl.value) : null;
     if(!desc){ showToast("Escribe una descripción."); return; }
-    if(!cantidad || cantidad <= 0) cantidad = 1;
-    if(addT) addProductoCore(addT, desc, cantidad, precio);
+    if(cantEl && cantEl.value && (!Number.isInteger(cantidad) || cantidad <= 0)){showToast("Escribe una cantidad entera mayor a cero.");return;}
+    if(!cantidad) cantidad = 1;
+    if(precio != null && (!Number.isFinite(precio) || precio < 0)){showToast("Revisa el precio unitario.");return;}
+    var editor=UI.cellEditor;
+    if(!addT || !editor || editor.productSaving) return;
+    editor.productDraft={desc:desc,quantity:cantEl.value,price:precioEl.value};
+    editor.productSaving=true;
+    editor.productError="";
+    render();
+    addProductoCore(addT,desc,cantidad,precio).then(function(ok){
+      if(ok) editor.productDraft=null;
+      else editor.productError="El producto no se guardó. Puedes reintentar.";
+    }).catch(function(){
+      editor.productError="El producto no se guardó. Puedes reintentar.";
+    }).finally(function(){
+      editor.productSaving=false;
+      if(UI.cellEditor===editor) render();
+    });
     return;
   }
   var cellEditorEntregadoBtn = e.target.closest && e.target.closest('[data-action="cell-editor-marcar-entregado"]');
@@ -26086,9 +26352,9 @@ document.addEventListener("click", function(e){
   var cxcSortBtn = e.target.closest && e.target.closest('[data-action="cxc-sort"]');
   if(cxcSortBtn){ UI.cxc.sort = cxcSortBtn.getAttribute("data-value"); render(); return; }
   var cxcPagoOpenBtn = e.target.closest && e.target.closest('[data-action="cxc-pago-open"]');
-  if(cxcPagoOpenBtn){ UI.cxcPago = { ticketId: cxcPagoOpenBtn.getAttribute("data-ticket"), done: false, fromTicket:cxcPagoOpenBtn.hasAttribute("data-ticket-payment") }; UI.pendingFocus = { elId: "cxc-pago-monto", userInitiated: true }; render(); return; }
+  if(cxcPagoOpenBtn){ openCxcPago(cxcPagoOpenBtn.getAttribute("data-ticket"),cxcPagoOpenBtn.hasAttribute("data-ticket-payment"),false); return; }
   var cxcPagoCloseBtn = e.target.closest && e.target.closest('[data-action="cxc-pago-close"]');
-  if(cxcPagoCloseBtn){ UI.cxcPago = null; render(); return; }
+  if(cxcPagoCloseBtn){ closeCxcPago(); return; }
   var cxcPagoSubmitBtn = e.target.closest && e.target.closest('[data-action="cxc-pago-submit"]');
   if(cxcPagoSubmitBtn){ submitCxcPago(cxcPagoSubmitBtn.getAttribute("data-ticket")); return; }
   var cxcCerrarBtn = e.target.closest && e.target.closest('[data-action="cxc-cerrar-pagado"]');
@@ -28059,7 +28325,7 @@ async function wsPatchClient(id,patch,expected){
 }
 async function wsPatch(table,id,patch,expected){var epoch=AUTH_EPOCH;var r=table==='clientes'?await wsPatchClient(id,patch,expected):await sb.rpc('workspace_patch_record',{p_table:table,p_id:id,p_patch:patch,p_expected:expected});if(epoch!==AUTH_EPOCH)return {error:{message:'La cuenta cambió durante el guardado.'}};if(!r.error&&r.data&&r.data._conflict){UI.wsConflict={actor:currentActorId(),table:table,id:id,patch:patch,current:r.data.current||{},open:true};return {error:{code:'40001',message:'EDIT_CONFLICT'}};}if(!r.error)delete WS_EDIT_BASE[table+':'+id];else if(wsConflict(r.error)){var current;try{current=JSON.parse(r.error.details);}catch(e){}UI.wsConflict={actor:currentActorId(),table:table,id:id,patch:patch,current:current||{},open:true};}return r;}
 var wsCellOpen=openCellEditor;
-openCellEditor=function(kind,id){var t=findTicket(id);if(t){wsSnapshot('tickets',id,t);if(t.clienteId)wsSnapshot('clientes',t.clienteId,findCliente(t.clienteId));}return wsCellOpen(kind,id);};
+openCellEditor=function(kind,id,options){var t=findTicket(id);if(t){wsSnapshot('tickets',id,t);if(t.clienteId)wsSnapshot('clientes',t.clienteId,findCliente(t.clienteId));}return wsCellOpen(kind,id,options);};
 var wsDateOpen=dcOpenDate;
 dcOpenDate=function(id,date){wsSnapshot('tickets',id,findTicket(id));return wsDateOpen(id,date);};
 var wsOpsOpen=openOpsEditor;
@@ -28800,7 +29066,7 @@ document.addEventListener('click',function(e){
   else if(a==='collapse')UI.detailsExpandedTicketId=null;
   else if(a==='team')UI.detailsTeamOpen=!UI.detailsTeamOpen;
   else if(a==='no-tasks')UI.detailsOnlyNoTasks=!UI.detailsOnlyNoTasks;
-  else if(a==='owner'||a==='all-owners'){resetTicketsEntry();UI.detailsTeamOpen=true;UI.ticketsExplorer.responsable=a==='owner'?b.dataset.owner:'';UI.detailsUnassigned=a==='owner'&&!b.dataset.owner;}
+  else if(a==='owner'||a==='all-owners'){resetTicketsEntry();UI.ticketsView='details';UI.detailsTeamOpen=true;UI.ticketsExplorer.responsable=a==='owner'?b.dataset.owner:'';UI.detailsUnassigned=a==='owner'&&!b.dataset.owner;}
   render();var target=a==='expand'&&UI.detailsExpandedTicketId?document.querySelector('#dt-detail-panel-'+id+' [data-detail="collapse"]'):a==='collapse'?document.querySelector('.dt-detail-task-summary[data-ticket="'+id+'"]'):document.querySelector('[data-detail="'+a+'"]');if(target)target.focus({preventScroll:true});
 });
 var detailsOwnerBase=ticketsExplorerFiltered;

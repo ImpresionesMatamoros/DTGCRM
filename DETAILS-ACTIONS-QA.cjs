@@ -1,11 +1,11 @@
 const fs=require('fs'),assert=require('assert'),{chromium}=require('playwright');
 let fixture=fs.readFileSync(__dirname+'/CHAT-INBOX-QA.cjs','utf8').match(/const fixture=`([\s\S]*?)`;/)[1];
 fixture=fixture.slice(0,fixture.lastIndexOf('render();'))+fs.readFileSync(__dirname+'/MOBILE-APP-QA.cjs','utf8').match(/fixture=fixture.slice[^`]+`([\s\S]*?)`;/)[1]+`
-resetTicketsEntry();UI.mainView='tickets';UI.selectedTicketId=null;UI.sidebarOpen=false;
+resetTicketsEntry();UI.ticketsView='details';UI.mainView='tickets';UI.selectedTicketId=null;UI.sidebarOpen=false;
 STATE.tickets=STATE.tickets.slice(0,3);STATE.tickets[0].responsable='Martin';STATE.tickets[1].responsable='Jonathan';STATE.tickets[2].responsable='';STATE.tickets[2].tareas=[];
 var t=STATE.tickets[0],one=t.tareas[0];one.desc='Preparar diseño';one.dependsOn=null;t.tareas.push(Object.assign({},one,{id:'task-next',desc:'Imprimir pedido',dependsOn:one.id}));
 window.writes=[];updateTareaCore=async(t,id,patch)=>{writes.push({ticket:t.id,id,patch});Object.assign(t.tareas.find(x=>x.id===id),patch);render();return true;};
-Object.assign(qa,{ui:()=>UI,filtered:()=>ticketsExplorerFiltered().map(t=>t.id),reset:()=>{UI.operaciones.editor=null;UI.cxcPago=null;UI.cierreModal=null;UI.ticketsExplorer.thumbPhoto=null;UI.ticketsThumbPhoto=null;UI.cellEditor=null;UI.headerEditField=null;resetTicketsEntry();render();}});render();
+Object.assign(qa,{ui:()=>UI,filtered:()=>ticketsExplorerFiltered().map(t=>t.id),reset:()=>{UI.operaciones.editor=null;UI.cxcPago=null;UI.cierreModal=null;UI.ticketsExplorer.thumbPhoto=null;UI.ticketsThumbPhoto=null;UI.cellEditor=null;UI.headerEditField=null;resetTicketsEntry();UI.ticketsView='details';render();}});render();
 qa.spyGallery=()=>{ticketThumbPhotoPath=t=>t.id==='t0'?'fixture.jpg':null;openTicketGallery=id=>window.galleryTicket=id;render();};marcarEntregadoCore=t=>{window.deliveredTicket=t.id;};
 `;
 let html=fs.readFileSync(__dirname+'/index.html','utf8').replace(/<script[^>]*src=[^>]*><\/script>/g,'').replace(/\bboot\(\);(?=\s*\n\}\)\(\);)/,fixture).replace('<script>','<script>'+fs.readFileSync(__dirname+'/ops-menu.js','utf8')+'</script><script>');
