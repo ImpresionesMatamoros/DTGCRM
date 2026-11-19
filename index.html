@@ -161,6 +161,10 @@
 .pc-indigo,.resp-theme-indigo{--pc:#818CF8; --pc-soft:rgba(129,140,248,.16); --resp-color:#818CF8;}
 .pc-periwinkle,.resp-theme-periwinkle{--pc:#A5B4FC; --pc-soft:rgba(165,180,252,.16); --resp-color:#A5B4FC;}
 .pc-slate,.resp-theme-slate{--pc:#94A3B8; --pc-soft:rgba(148,163,184,.16); --resp-color:#94A3B8;}
+.pc-navy,.resp-theme-navy{--pc:#1E3A5F; --pc-soft:rgba(30,58,95,.16); --resp-color:#1E3A5F;}
+.pc-burgundy,.resp-theme-burgundy{--pc:#7B2544; --pc-soft:rgba(123,37,68,.16); --resp-color:#7B2544;}
+.pc-brown,.resp-theme-brown{--pc:#6B442E; --pc-soft:rgba(107,68,46,.16); --resp-color:#6B442E;}
+.pc-charcoal,.resp-theme-charcoal{--pc:#374151; --pc-soft:rgba(55,65,81,.16); --resp-color:#374151;}
 /* Iconografía v0.20: UNA familia SVG (trazo 2px, esquinas redondas, estilo
    Lucide, dibujada a mano dentro de este archivo — cero dependencia). El
    ícono hereda color del texto (currentColor) y tamaño de font-size (1em)
@@ -5188,7 +5192,11 @@ var PERSON_COLORS = [
   { id:"lavender", label:"Lavanda", hex:"#DDD6FE" },
   { id:"indigo", label:"Índigo", hex:"#818CF8" },
   { id:"periwinkle", label:"Azul lavanda", hex:"#A5B4FC" },
-  { id:"slate", label:"Gris azulado", hex:"#94A3B8" }
+  { id:"slate", label:"Gris azulado", hex:"#94A3B8" },
+  { id:"navy", label:"Azul marino", hex:"#1E3A5F" },
+  { id:"burgundy", label:"Vino", hex:"#7B2544" },
+  { id:"brown", label:"Café", hex:"#6B442E" },
+  { id:"charcoal", label:"Gris carbón", hex:"#374151" }
 ];
 var PERSON_COLOR_IDS = PERSON_COLORS.map(function(c){ return c.id; });
 function isValidPersonColor(id){ return PERSON_COLOR_IDS.indexOf(id) !== -1; }
@@ -7490,7 +7498,7 @@ function renderAccountMenu(){
       '<div class="color-swatch-grid" role="group" aria-label="Mi color">' + swatches + "</div>" +
       '<div class="color-name-preview pc-' + myColor + '" aria-live="polite"><small>Así se verá tu nombre</small><strong>' + escapeHtml(currentActorName() || '') + '</strong></div>' +
       '<button type="button" class="btn btn-sm btn-primary color-save" data-action="my-color-save"' + ((!UI.myColorDraft || UI.myColorDraft === myChosen || UI.myColorSaving) ? ' disabled' : '') + '>' + (UI.myColorSaving ? 'Guardando…' : 'Guardar color') + '</button>' +
-      '<div class="account-menu-hint-line">Elige entre 28 colores para tu nombre y avatar en el chat, Responsables y Kanban.</div>' +
+      '<div class="account-menu-hint-line">Elige entre ' + PERSON_COLORS.length + ' colores para tu nombre y avatar en el chat, Responsables y Kanban.</div>' +
       '<input id="wa-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><button type="button" class="menu-item" data-wa="avatar-pick">'+icon('camera')+'<span>Cambiar foto de perfil</span></button>'+
       '<button type="button" class="menu-item" data-action="edit-name-open">' + icon("pencil") + "<span>Editar nombre</span></button>" +
       '<button type="button" class="menu-item" data-action="doc-terms-open">' + icon("file-text") + "<span>Términos de documentos</span></button>" +
