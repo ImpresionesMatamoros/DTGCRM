@@ -8021,7 +8021,7 @@ function ticketProductBar(t){
     }
     return '<div class="tk-prod'+(open?' open':'')+'"><div class="tk-prod-line">'+
       '<button type="button" class="tk-prod-main" data-ticket-ux="product" data-product="'+pid+'" aria-expanded="'+open+'"><span class="tk-qty">'+escapeHtml(String(p.cantidad))+' ×</span> <span class="tk-name">'+escapeHtml(p.desc)+'</span> '+price+(tasks.length?' <span class="tk-count" title="'+tasks.length+' tarea'+(tasks.length===1?'':'s')+'">'+tasks.length+'</span>':'')+'</button>'+
-      '<button type="button" class="tk-plus" data-ticket-ux="product-task" data-product="'+pid+'" aria-label="Crear tarea para '+escapeHtml(p.desc)+'" title="Crear tarea para este producto">+</button></div>'+editor+'</div>';
+      '</div>'+editor+'</div>';
   }).join('');
   var form=UI.composer==='producto'?popoverForm('producto').replace('class="popover" id="composer-popover"','class="popover tk-inline-form" id="composer-popover"'):'';
   return '<section class="tk-card tk-products" aria-labelledby="tk-products-title">' +
@@ -8034,8 +8034,7 @@ function renderTasksPanel(t){
   var pending = all.filter(function(task){ return task.estado !== "terminado"; });
   var done = all.filter(function(task){ return task.estado === "terminado"; });
   return '<section class="tk-card tk-tasks" aria-labelledby="tk-tasks-title">' +
-    '<div class="tk-sec-head"><h2 id="tk-tasks-title">Pendientes <small>' + pending.length + '</small></h2>' +
-    '<button type="button" class="tk-add" data-action="ops-task-new" data-ticket="' + escapeHtml(t.id) + '">+ Agregar tarea</button></div>' +
+    '<div class="tk-sec-head"><h2 id="tk-tasks-title">Pendientes <small>' + pending.length + '</small></h2></div>' +
     (pending.length ? pending.map(function(task){ return workTaskRow(t, task, true); }).join("") : '<p class="tk-empty">Sin tareas pendientes.</p>') +
     (done.length ? '<details class="tk-done-tasks" data-ticket="' + escapeHtml(t.id) + '"' +
       (UI.ticketDoneOpen === t.id ? ' open' : '') + '><summary>Terminadas · ' + done.length + '</summary>' +
