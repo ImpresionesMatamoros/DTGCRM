@@ -3395,6 +3395,7 @@ body{ font-feature-settings:"cv11","ss01"; letter-spacing:-.003em; }
 /* ================= v0.20 §14 — formulario + vista previa de documento ================= */
 .docform-modal{ max-width:600px; border:1px solid var(--border); }
 .docform-workspace{ max-width:1180px; width:100%; background:var(--surface-2); }
+.docform-toolbar .docform-currency select{ color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:3px 6px; font:inherit; }
 .docform-toolbar{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 18px; border-bottom:1px solid var(--border); }
 .docform-kind{ display:flex; gap:10px; }
 .docform-kind label{ display:flex; align-items:center; gap:5px; cursor:pointer; }
@@ -8000,7 +8001,7 @@ function renderTicketFinances(t){
     (docs.length ? '<ul class="tk-documents">' + docs.map(function(d){
       return '<li><button type="button" class="btn btn-ghost" data-action="open-doc" data-id="' + escapeHtml(d.id) + '">' +
         icon("file-text") + ' ' + (d.tipo === "invoice" ? "Invoice" : "Quote") + ' ' + escapeHtml(d.numero || "") +
-        ' · ' + fmtUsd(d.total) + '</button></li>';
+        ' · ' + fmtUsd(d.total) + (d.pricingSnapshot && d.pricingSnapshot.currency ? " " + normalizeDocCurrency(d.pricingSnapshot.currency) : "") + '</button></li>';
     }).join("") + '</ul>' : '') +
   '</section>';
 }
@@ -8203,6 +8204,7 @@ function docDraftClienteNombre(t){
 function docDraftPricing(d){
   var isInvoice = d.tipo === "invoice";
   return {
+    currency: normalizeDocCurrency(d.currency),
     taxApplied: !!d.taxApplied, taxRate: (Number(d.taxRatePct) || 0) / 100,
     taxExempt: !!d.clientExempt, taxExemptReason: d.clientExemptReason || "",
     fees: (d.fees || []).map(function(f){ return { label: (f.label || "").trim(), type: f.type === "fixed" ? "fixed" : "percentage", value: parseFloat(f.value) || 0 }; }),
@@ -8232,6 +8234,7 @@ function syncDocDraftFromDom(){
   var d = UI.docDraft;
   if(!d) return;
   var el = function(id){ return document.getElementById(id); };
+  if(el("docform-currency")) d.currency = normalizeDocCurrency(el("docform-currency").value);
   if(el("docform-po")) d.poReference = el("docform-po").value;
   if(el("docform-notas")) d.notas = el("docform-notas").value;
   if(el("docform-tax-applied")) d.taxApplied = !!el("docform-tax-applied").checked;
@@ -8403,6 +8406,7 @@ function renderDocFormModal(){
             '<label><input type="radio" name="docform-tipo" value="invoice"' + (isInvoice ? ' checked' : '') + '> Invoice</label>' +
             '<label><input type="radio" name="docform-tipo" value="cotizacion"' + (!isInvoice ? ' checked' : '') + '> Quote</label>' +
           '</div>' +
+          '<label class="docform-chip docform-currency">Moneda <select id="docform-currency" title="Moneda de los importes capturados"><option value="USD"' + (d.currency === "USD" ? " selected" : "") + '>USD · Dólares</option><option value="MXN"' + (d.currency === "MXN" ? " selected" : "") + '>MXN · Pesos mexicanos</option></select></label>' +
           '<label class="docform-chip' + (d.taxApplied ? " on" : "") + '" id="docform-tax-chip"><input type="checkbox" id="docform-tax-applied"' + (d.taxApplied ? " checked" : "") + '> Impuesto <span id="docform-tax-chip-rate">' + escapeHtml(String(d.taxRatePct)) + '%</span></label>' +
         '</div>' +
         '<div class="docform-layout">' +
@@ -20313,6 +20317,7 @@ function buildDocumentPayload(t, tipo, items, clienteNombre, pricing){
   var calc = computeDocPricing(items, pricing);
   var cobradoAlCrear = (t.pagos || []).reduce(function(s, p){ return s + p.monto; }, 0);
   var pricingSnapshot = {
+    currency: normalizeDocCurrency(pricing.currency),
     subtotal: calc.subtotal,
     dueDate: pricing.dueDate || null,
     terms: pricing.terms || null,
@@ -20338,7 +20343,7 @@ function openDocumentForm(tipo, opts){
   var termsOn = {};
   docTermSectionsFor(tipo).forEach(function(s){ termsOn[s.key] = true; });
   UI.docDraft = {
-    tipo: tipo, ticketId: t.id,
+    tipo: tipo, ticketId: t.id, currency: "USD",
     documentId: uuid4(),
     settingsOpen: false,
     poReference: "", notas: opts.notas || "",
@@ -20625,7 +20630,7 @@ function computeFeeAmount(base, fee){
 /* ---------------- v0.20 §15 — hoja del documento (HTML) ----------------
    renderDocPaper(doc) es el ÚNICO renderer de la hoja: lo usan el visor de
    un documento emitido (renderDocModal) y la vista previa antes de emitir
-   (renderDocFormModal, paso "preview"). Inglés por defecto, USD, US Letter
+   (renderDocFormModal, paso "preview"). Inglés por defecto, US Letter
    en impresión. La información que se muestra sale de los mismos helpers que
    usa el PDF (docDetailPairs / docTotalsRows / docPaymentInfo /
    docTermsBlocks), así pantalla, impresión y PDF no pueden contar cosas
@@ -20635,6 +20640,7 @@ function fmtUsd(n){
   var v = Number(n);
   return (v < 0 ? "-" : "") + "$" + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function normalizeDocCurrency(currency){ return currency === "MXN" ? "MXN" : "USD"; }
 function fmtTaxRate(rate){ return (Number(rate) * 100).toFixed(3).replace(/\.?0+$/, ""); }
 function docTypeLabel(doc){ return doc.tipo === "invoice" ? "INVOICE" : "QUOTE"; }
 function docNumberLabel(doc){ return doc.numero ? "#" + doc.numero : (doc.preview ? "DRAFT" : ""); }
@@ -20668,6 +20674,7 @@ function docDetailPairs(doc){
   } else if(ps.validUntil){
     pairs.push(["Valid until", pdfDateOnlyShort(ps.validUntil)]);
   }
+  if(ps.currency) pairs.push(["Currency", normalizeDocCurrency(ps.currency)]);
   if(ps.poReference) pairs.push(["PO / Reference", ps.poReference]);
   return pairs;
 }
@@ -25527,7 +25534,7 @@ function wireEvents(){
       el.addEventListener(evt, refreshDocFormUI);
     });
     if(UI.docDraft.emitting || UI.docDraft.savedDocId){
-      docformOverlay.querySelectorAll(".docform-toolbar input, .docform-settings input, .docform-settings select, .docform-settings textarea, .docform-settings button").forEach(function(input){
+      docformOverlay.querySelectorAll(".docform-toolbar input, .docform-toolbar select, .docform-settings input, .docform-settings select, .docform-settings textarea, .docform-settings button").forEach(function(input){
         input.disabled = true;
       });
     }
