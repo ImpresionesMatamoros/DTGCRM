@@ -2485,6 +2485,7 @@ button.hist-producto-line:hover, button.hist-producto-line:active{text-decoratio
   font-size:13px!important; color:var(--text-muted)!important; background:var(--surface-2);
   border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; user-select:none;
 }
+.docform-chip[hidden]{ display:none!important; }
 .docform-chip input{ width:auto; }
 .docform-chip.on{ color:var(--text)!important; border-color:var(--accent,#4f7cff); background:var(--surface); }
 .docform-fee-add{ position:relative; }
@@ -8391,7 +8392,7 @@ function renderDocFormModal(){
   }
 
   var exemptHint = d.clientExempt
-    ? '<div class="ephemeral-sub">Cliente registrado como tax exempt' + (d.clientExemptReason ? " (" + escapeHtml(d.clientExemptReason) + ")" : "") + " — tax propuesto en OFF, puedes cambiarlo.</div>"
+    ? '<div class="ephemeral-sub" id="docform-exempt-hint">Cliente registrado como tax exempt' + (d.clientExemptReason ? " (" + escapeHtml(d.clientExemptReason) + ")" : "") + " — tax propuesto en OFF, puedes cambiarlo.</div>"
     : "";
 
   return (
@@ -8461,9 +8462,20 @@ function refreshDocFormUI(){
   var paper = document.getElementById("docform-live-paper");
   if(paper) paper.innerHTML = renderDocFormPreview(t, d, items);
   var taxRateWrap = document.getElementById("docform-tax-rate-wrap");
+  var hideTax = d.currency === "MXN";
+  var taxLocked = hideTax || !!(d.emitting || d.savedDocId);
   if(taxRateWrap) taxRateWrap.hidden = !calc.taxApplied;
+  var taxRate = document.getElementById("docform-tax-rate");
+  if(taxRate) taxRate.disabled = taxLocked;
   var taxChip = document.getElementById("docform-tax-chip");
-  if(taxChip) taxChip.classList.toggle("on", calc.taxApplied);
+  if(taxChip){
+    taxChip.hidden = hideTax;
+    taxChip.classList.toggle("on", calc.taxApplied);
+  }
+  var taxToggle = document.getElementById("docform-tax-applied");
+  if(taxToggle) taxToggle.disabled = taxLocked;
+  var exemptHint = document.getElementById("docform-exempt-hint");
+  if(exemptHint) exemptHint.hidden = hideTax;
   var taxChipRate = document.getElementById("docform-tax-chip-rate");
   if(taxChipRate) taxChipRate.textContent = (Number(d.taxRatePct) || 0) + "%";
   var termsCustomWrap = document.getElementById("docform-terms-custom-wrap");
@@ -20283,8 +20295,9 @@ function computeDocPricing(items, pricing){
   pricing = pricing || {};
   items = items || [];
   var subtotal = items.reduce(function(sum, it){ return sum + (it.precio == null ? 0 : it.precio * it.cantidad); }, 0);
-  var taxApplied = !!pricing.taxApplied;
-  var taxRate = pricing.taxRate != null ? Number(pricing.taxRate) : 0;
+  var usesSalesTax = normalizeDocCurrency(pricing.currency) === "USD";
+  var taxApplied = usesSalesTax && !!pricing.taxApplied;
+  var taxRate = usesSalesTax && pricing.taxRate != null ? Number(pricing.taxRate) : 0;
   var taxAmount = computeTaxAmount(subtotal, taxRate, taxApplied);
   var feeBase = subtotal + taxAmount;
   var fees = (pricing.fees || []).map(function(f){
@@ -20316,14 +20329,16 @@ function buildDocumentPayload(t, tipo, items, clienteNombre, pricing){
   pricing = pricing || {};
   var calc = computeDocPricing(items, pricing);
   var cobradoAlCrear = (t.pagos || []).reduce(function(s, p){ return s + p.monto; }, 0);
+  var currency = normalizeDocCurrency(pricing.currency);
+  var taxExempt = currency === "USD" && !!pricing.taxExempt;
   var pricingSnapshot = {
-    currency: normalizeDocCurrency(pricing.currency),
+    currency: currency,
     subtotal: calc.subtotal,
     dueDate: pricing.dueDate || null,
     terms: pricing.terms || null,
     validUntil: pricing.validUntil || null,
     poReference: pricing.poReference || null,
-    tax: { applied: calc.taxApplied, rate: calc.taxRate, amount: calc.taxAmount, exempt: !!pricing.taxExempt, exemptReason: pricing.taxExemptReason || null },
+    tax: { applied: calc.taxApplied, rate: calc.taxRate, amount: calc.taxAmount, exempt: taxExempt, exemptReason: taxExempt ? (pricing.taxExemptReason || null) : null },
     fees: calc.fees,
     /* v0.20 §16/§17: términos y métodos de pago también quedan congelados —
        cambiar los textos centrales mañana no reescribe un documento de hoy. */
